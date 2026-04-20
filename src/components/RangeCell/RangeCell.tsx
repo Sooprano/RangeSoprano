@@ -14,9 +14,9 @@ type RangeCellProps = {
 };
 
 const CATEGORY_BG: Record<HandCategory, string> = {
-  pair: 'bg-surface-hover',
-  suited: 'bg-surface',
-  offsuit: 'bg-bg-subtle',
+  pair: 'bg-cell-empty-pair',
+  suited: 'bg-cell-empty-suited',
+  offsuit: 'bg-cell-empty-offsuit',
 };
 
 const CATEGORY_TEXT: Record<HandCategory, string> = {

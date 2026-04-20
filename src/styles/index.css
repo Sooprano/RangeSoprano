@@ -30,6 +30,10 @@
     --color-action-call: 6 182 212;
     --color-action-fold: 63 58 92;
 
+    --color-cell-empty-pair: 42 42 50;
+    --color-cell-empty-suited: 28 28 34;
+    --color-cell-empty-offsuit: 20 20 26;
+
     --color-success: 16 185 129;
     --color-danger: 239 68 68;
 
@@ -56,6 +60,10 @@
     --color-action-allin: 217 119 6;
     --color-action-call: 8 145 178;
     --color-action-fold: 203 196 222;
+
+    --color-cell-empty-pair: 236 236 240;
+    --color-cell-empty-suited: 226 226 232;
+    --color-cell-empty-offsuit: 216 216 224;
 
     --color-success: 5 150 105;
     --color-danger: 220 38 38;

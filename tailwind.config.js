@@ -34,6 +34,13 @@ export default {
           call: 'rgb(var(--color-action-call) / <alpha-value>)',
           fold: 'rgb(var(--color-action-fold) / <alpha-value>)',
         },
+        cell: {
+          empty: {
+            pair: 'rgb(var(--color-cell-empty-pair) / <alpha-value>)',
+            suited: 'rgb(var(--color-cell-empty-suited) / <alpha-value>)',
+            offsuit: 'rgb(var(--color-cell-empty-offsuit) / <alpha-value>)',
+          },
+        },
         success: 'rgb(var(--color-success) / <alpha-value>)',
         danger: 'rgb(var(--color-danger) / <alpha-value>)',
       },
