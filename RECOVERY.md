@@ -27,7 +27,9 @@ Se interrumpió la fase anterior. Para retomar:
 
 ## Commits importantes del proyecto
 
+- `edb1728` → Setup inicial (CLAUDE.md, prompts.md, .gitignore)
 - `02f65ff` → Fase 1 completa (project setup, design tokens, routing, layout)
+- `a6059f8` → RECOVERY.md añadido
 - [ir añadiendo aquí los hashes de cada fase completada]
 
 ## Buenas prácticas durante el desarrollo
