@@ -30,7 +30,12 @@ Se interrumpió la fase anterior. Para retomar:
 - `edb1728` → Setup inicial (CLAUDE.md, prompts.md, .gitignore)
 - `02f65ff` → Fase 1 completa (project setup, design tokens, routing, layout)
 - `a6059f8` → RECOVERY.md añadido
-- [ir añadiendo aquí los hashes de cada fase completada]
+- `544cc87` → RECOVERY.md actualizado
+- `8f66180` → Sub-fase 2A: RangeGrid base structure
+- `7360d03` → Sub-fase 2B: RangeCell visual states
+- `5f5396c` → Fix: neutralize empty cell backgrounds
+- `12df1b9` → Fix: increase dark cell contrast and restore pair dot ← último
+- [Próximo: Sub-fase 2C]
 
 ## Buenas prácticas durante el desarrollo
 
