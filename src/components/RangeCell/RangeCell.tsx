@@ -88,7 +88,7 @@ function RangeCellBase({
       )}
       style={background ? { backgroundImage: background } : undefined}
     >
-      {category === 'pair' && !hasActions && (
+      {category === 'pair' && (
         <span
           aria-hidden
           className="pointer-events-none absolute right-1 top-1 h-[3px] w-[3px] rounded-full bg-accent/60"
