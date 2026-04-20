@@ -18,7 +18,7 @@ export type HandAction = {
   weight: number;
 };
 
-export type RangeCell = {
+export type RangeCellData = {
   hand: HandNotation;
   actions: HandAction[];
 };
@@ -38,7 +38,7 @@ export type Range = {
   situation: Situation;
   villainPosition?: Position;
   /** Sparse map keyed by hand notation; missing hands are implicit FOLD. */
-  cells: Record<HandNotation, RangeCell>;
+  cells: Record<HandNotation, RangeCellData>;
   createdAt: string;
   updatedAt: string;
   group?: string;
