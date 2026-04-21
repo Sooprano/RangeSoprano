@@ -27,8 +27,8 @@ Se interrumpió la fase anterior. Para retomar:
 
 ## Commits importantes del proyecto
 
-- `edb1728` → Setup inicial
-- `02f65ff` → Fase 1 completa
+- `edb1728` → Setup inicial (CLAUDE.md, prompts.md, .gitignore)
+- `02f65ff` → Fase 1 completa (project setup, design tokens, routing, layout)
 - `a6059f8` → RECOVERY.md añadido
 - `544cc87` → RECOVERY.md actualizado
 - `8f66180` → Sub-fase 2A: RangeGrid base structure
@@ -36,8 +36,8 @@ Se interrumpió la fase anterior. Para retomar:
 - `5f5396c` → Fix: neutralize empty cell backgrounds
 - `12df1b9` → Fix: increase dark cell contrast and restore pair dot
 - `2234f69` → Recovery log actualizado con commits Fase 2
-- `6a3cf0e` → Sub-fase 2C: keyboard navigation, ARIA, visual polish ← último (Fase 2 COMPLETA)
-- [Próximo: Fase 3 - Zustand store y persistencia]
+- `6a3cf0e` → Sub-fase 2C: keyboard navigation, ARIA, visual polish — FASE 2 COMPLETA
+- [Próximo: Fase 3 - Zustand stores y persistencia]
 
 ## Buenas prácticas durante el desarrollo
 
@@ -45,3 +45,15 @@ Se interrumpió la fase anterior. Para retomar:
 - No agregar features nuevas en medio de una fase, anotarlas en TODO.md
 - Siempre probar en navegador antes de aprobar la siguiente fase
 - Verificar consola sin errores antes de avanzar
+
+---
+
+## Fase 2 — RangeGrid (COMPLETA)
+
+Resumen ejecutivo del componente más importante del proyecto:
+
+- **2A** (`8f66180`): Grid 13×13 base con `ALL_HANDS` en row-major, pares diferenciados (borde/peso tipográfico), categorías suited/offsuit/pair con fondos distintos.
+- **2B** (`7360d03` + fixes `5f5396c`, `12df1b9`): franjas de acción ponderadas por `linear-gradient`, tooltip CSS con detalle de acciones/pesos, `ActionLegend` y `RangeStats` con breakdown por combos, puntito adaptativo en pares y contraste reforzado en celdas vacías.
+- **2C** (`6a3cf0e`): roving tabindex + navegación completa por teclado (flechas, Home/End, PageUp/PageDown), focus-visible con ring morado, ARIA `grid`/`gridcell` con `aria-label` rico, tooltip accesible vía `focus-within`.
+- **Pulido transversal**: micro-animaciones con `motion-safe`/`motion-reduce`, grid responsive (`max-w-[min(640px,92vw)]`), `React.memo` preservado en cada celda con callback refs estables.
+- **Resultado**: `RangeGrid` + `RangeCell` listos para reutilizarse en modo lectura (Viewer) y en edición (Editor, Fase 4) sin rehacer accesibilidad; typecheck + build verdes, consola limpia.
