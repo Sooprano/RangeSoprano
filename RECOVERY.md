@@ -27,15 +27,17 @@ Se interrumpió la fase anterior. Para retomar:
 
 ## Commits importantes del proyecto
 
-- `edb1728` → Setup inicial (CLAUDE.md, prompts.md, .gitignore)
-- `02f65ff` → Fase 1 completa (project setup, design tokens, routing, layout)
+- `edb1728` → Setup inicial
+- `02f65ff` → Fase 1 completa
 - `a6059f8` → RECOVERY.md añadido
 - `544cc87` → RECOVERY.md actualizado
 - `8f66180` → Sub-fase 2A: RangeGrid base structure
 - `7360d03` → Sub-fase 2B: RangeCell visual states
 - `5f5396c` → Fix: neutralize empty cell backgrounds
-- `12df1b9` → Fix: increase dark cell contrast and restore pair dot ← último
-- [Próximo: Sub-fase 2C]
+- `12df1b9` → Fix: increase dark cell contrast and restore pair dot
+- `2234f69` → Recovery log actualizado con commits Fase 2
+- `6a3cf0e` → Sub-fase 2C: keyboard navigation, ARIA, visual polish ← último (Fase 2 COMPLETA)
+- [Próximo: Fase 3 - Zustand store y persistencia]
 
 ## Buenas prácticas durante el desarrollo
 
