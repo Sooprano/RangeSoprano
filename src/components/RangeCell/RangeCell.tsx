@@ -1,4 +1,4 @@
-import { memo, useId, useMemo } from 'react';
+import { memo, useId, useMemo, type Ref } from 'react';
 import { cn } from '@/lib/cn';
 import type { HandAction, HandCategory, HandNotation } from '@/types/poker';
 import { ACTION_META } from '@/utils/actionMeta';
@@ -11,6 +11,14 @@ type RangeCellProps = {
   actions?: HandAction[];
   tooltipSide?: TooltipSide;
   className?: string;
+  /** 1-based row index for ARIA. */
+  rowIndex: number;
+  /** 1-based column index for ARIA. */
+  colIndex: number;
+  /** Roving tabindex: 0 only for the currently focused cell. */
+  tabIndex: 0 | -1;
+  /** Ref setter injected by parent so it can focus the cell imperatively. */
+  cellRef?: Ref<HTMLDivElement>;
 };
 
 const CATEGORY_BG: Record<HandCategory, string> = {
@@ -51,12 +59,29 @@ function buildBackground(actions: HandAction[]): string | undefined {
   return `linear-gradient(to right, ${stops.join(', ')})`;
 }
 
+function buildAriaLabel(
+  hand: HandNotation,
+  category: HandCategory,
+  sorted: HandAction[],
+): string {
+  const base = `${hand}, ${CATEGORY_LABEL[category]}`;
+  if (sorted.length === 0) return `${base}, no action`;
+  const parts = sorted.map(
+    (a) => `${ACTION_META[a.action].label} ${Math.round(a.weight)}%`,
+  );
+  return `${base}, ${parts.join(', ')}`;
+}
+
 function RangeCellBase({
   hand,
   category,
   actions,
   tooltipSide = 'top',
   className,
+  rowIndex,
+  colIndex,
+  tabIndex,
+  cellRef,
 }: RangeCellProps) {
   const tooltipId = useId();
   const hasActions = !!actions && actions.length > 0;
@@ -73,16 +98,32 @@ function RangeCellBase({
     );
   }, [hasActions, actions]);
 
+  const ariaLabel = useMemo(
+    () => buildAriaLabel(hand, category, sortedForTooltip),
+    [hand, category, sortedForTooltip],
+  );
+
   return (
     <div
+      ref={cellRef}
+      role="gridcell"
+      aria-rowindex={rowIndex}
+      aria-colindex={colIndex}
+      aria-label={ariaLabel}
+      aria-describedby={hasActions ? tooltipId : undefined}
+      tabIndex={tabIndex}
       data-hand={hand}
       data-category={category}
-      aria-describedby={hasActions ? tooltipId : undefined}
       className={cn(
         'group relative flex items-center justify-center select-none',
         'text-[11px] leading-none tracking-tight tabular-nums',
-        hasActions && 'hover:z-30',
+        'outline-none',
+        'focus-visible:z-30 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-surface',
+        'motion-safe:transition-transform motion-safe:duration-150 motion-safe:ease-out-soft',
+        hasActions &&
+          'hover:z-30 motion-safe:hover:scale-[1.04] motion-safe:focus-visible:scale-[1.04]',
         !hasActions && CATEGORY_BG[category],
+        !hasActions && 'hover:brightness-110',
         hasActions ? 'text-white/95' : CATEGORY_TEXT[category],
         className,
       )}
@@ -113,8 +154,10 @@ function RangeCellBase({
             'bg-surface/95 backdrop-blur-sm',
             'border border-accent/30 shadow-surface',
             'text-xs text-content',
-            'opacity-0 transition-opacity duration-150 ease-out-soft',
-            'group-hover:opacity-100',
+            'opacity-0 motion-safe:translate-y-0.5',
+            'motion-safe:transition motion-safe:duration-150 motion-safe:ease-out-soft',
+            'group-hover:opacity-100 group-hover:translate-y-0',
+            'group-focus-within:opacity-100 group-focus-within:translate-y-0',
             tooltipSide === 'top'
               ? 'bottom-full mb-1.5'
               : 'top-full mt-1.5',
