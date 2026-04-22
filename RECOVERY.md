@@ -37,7 +37,10 @@ Se interrumpió la fase anterior. Para retomar:
 - `12df1b9` → Fix: increase dark cell contrast and restore pair dot
 - `2234f69` → Recovery log actualizado con commits Fase 2
 - `6a3cf0e` → Sub-fase 2C: keyboard navigation, ARIA, visual polish — FASE 2 COMPLETA
+- `e1d10bf` → Recovery log actualizado con resumen Fase 2
+- `e6fd006` → Fase 2 marcada como completa en recovery log
 - `e0278c6` → Fase 3: Zustand stores con rangos persistidos y preferencias UI — FASE 3 COMPLETA
+- `e191ac9` → Recovery log actualizado con resumen Fase 3
 - [Próximo: Fase 4 - Editor interactivo]
 
 ## Buenas prácticas durante el desarrollo
