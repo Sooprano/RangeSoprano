@@ -77,8 +77,9 @@ Sistema de estado global y persistencia local como columna vertebral del Editor 
 ---
 
 ## Fase 3 — Stores y Persistencia (COMPLETA)
-Stores Zustand: useRangeStore con CRUD completo (create/update/delete/duplicate, edición de celdas, importRanges con cap 100 KB) y useUiStore con theme + flags UI. Ambos persistidos vía middleware persist.
-Validación Zod al hidratar: schemas .strict(), regex de hand notation, caps (500 rangos, 169 cells, 5 actions/cell), sanitización de strings; recuperación por-rango si el state raíz falla (descarta los inválidos, conserva los buenos).
-Storage resiliente: createSafeJSONStorage() con fallback in-memory ante SSR / quota / localStorage deshabilitado; migrate() versionado en CURRENT_RANGE_STORE_VERSION = 1.
-Theme anti-flash: script inline en index.html aplica data-theme antes del primer paint; hook useApplyTheme() lo mantiene sincronizado y escucha matchMedia en modo system.
-Viewer con estado vacío: <EmptyState /> con CTA "Load demo range" (siembra desde SAMPLE_BTN_RFI con UUID fresco) y link al Editor. No autocarga — el usuario decide.
+
+- **Stores Zustand**: useRangeStore con CRUD completo (create/update/delete/duplicate, edición de celdas, importRanges con cap 100 KB) y useUiStore con theme + flags UI. Ambos persistidos vía middleware persist.
+- **Validación Zod al hidratar**: schemas .strict(), regex de hand notation, caps (500 rangos, 169 cells, 5 actions/cell), sanitización de strings; recuperación por-rango si el state raíz falla (descarta los inválidos, conserva los buenos).
+- **Storage resiliente**: createSafeJSONStorage() con fallback in-memory ante SSR / quota / localStorage deshabilitado; migrate() versionado en CURRENT_RANGE_STORE_VERSION = 1.
+- **Theme anti-flash**: script inline en index.html aplica data-theme antes del primer paint; hook useApplyTheme() lo mantiene sincronizado y escucha matchMedia en modo system.
+- **Viewer con estado vacío**: `<EmptyState />` con CTA "Load demo range" (siembra desde SAMPLE_BTN_RFI con UUID fresco) y link al Editor. No autocarga — el usuario decide.
