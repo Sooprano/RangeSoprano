@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Plus, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useRangeStore } from '@/store/rangeStore';
@@ -28,12 +28,15 @@ export function RangeManager({ className, openFormSignal }: RangeManagerProps) {
   const deleteRange = useRangeStore((s) => s.deleteRange);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [lastSignal, setLastSignal] = useState<number | undefined>(openFormSignal);
 
-  if (openFormSignal !== lastSignal) {
-    setLastSignal(openFormSignal);
-    setIsFormOpen(true);
-  }
+  useEffect(() => {
+    // Monotonic counter from the parent: any non-zero value means the parent
+    // explicitly asked to open the form (e.g. clicking "New range" from the
+    // empty state). The initial 0 on mount is ignored.
+    if (openFormSignal !== undefined && openFormSignal > 0) {
+      setIsFormOpen(true);
+    }
+  }, [openFormSignal]);
 
   const handleCreate = (payload: NewRangePayload) => {
     const id = createRange(payload);
