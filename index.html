@@ -10,6 +10,27 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      (function () {
+        try {
+          var raw = localStorage.getItem('range-soprano/ui');
+          var theme = 'dark';
+          if (raw) {
+            var parsed = JSON.parse(raw);
+            var t = parsed && parsed.state && parsed.state.theme;
+            if (t === 'dark' || t === 'light' || t === 'system') theme = t;
+          }
+          if (theme === 'system') {
+            theme = window.matchMedia('(prefers-color-scheme: dark)').matches
+              ? 'dark'
+              : 'light';
+          }
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (_) {
+          /* default already set on <html> */
+        }
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

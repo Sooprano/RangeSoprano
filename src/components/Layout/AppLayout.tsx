@@ -1,7 +1,10 @@
 import { Outlet } from 'react-router-dom';
+import { useApplyTheme } from '@/hooks/useApplyTheme';
 import { Sidebar } from './Sidebar';
 
 export function AppLayout() {
+  useApplyTheme();
+
   return (
     <div className="flex h-full w-full bg-bg text-content">
       <Sidebar />

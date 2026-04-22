@@ -23,13 +23,15 @@ export type RangeCellData = {
   actions: HandAction[];
 };
 
-export type Situation =
-  | 'RFI'
-  | 'vs_RFI'
-  | 'vs_3BET'
-  | 'vs_4BET'
-  | 'SQUEEZE'
-  | 'DEFEND_BB';
+export const SITUATIONS = [
+  'RFI',
+  'vs_RFI',
+  'vs_3BET',
+  'vs_4BET',
+  'SQUEEZE',
+  'DEFEND_BB',
+] as const;
+export type Situation = (typeof SITUATIONS)[number];
 
 export type Range = {
   id: string;

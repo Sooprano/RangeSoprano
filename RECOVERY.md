@@ -37,7 +37,8 @@ Se interrumpió la fase anterior. Para retomar:
 - `12df1b9` → Fix: increase dark cell contrast and restore pair dot
 - `2234f69` → Recovery log actualizado con commits Fase 2
 - `6a3cf0e` → Sub-fase 2C: keyboard navigation, ARIA, visual polish — FASE 2 COMPLETA
-- [Próximo: Fase 3 - Zustand stores y persistencia]
+- [pendiente de hash] → Fase 3: Zustand stores con rangos persistidos y preferencias UI
+- [Próximo: Fase 4 - Editor interactivo]
 
 ## Buenas prácticas durante el desarrollo
 
@@ -57,3 +58,18 @@ Resumen ejecutivo del componente más importante del proyecto:
 - **2C** (`6a3cf0e`): roving tabindex + navegación completa por teclado (flechas, Home/End, PageUp/PageDown), focus-visible con ring morado, ARIA `grid`/`gridcell` con `aria-label` rico, tooltip accesible vía `focus-within`.
 - **Pulido transversal**: micro-animaciones con `motion-safe`/`motion-reduce`, grid responsive (`max-w-[min(640px,92vw)]`), `React.memo` preservado en cada celda con callback refs estables.
 - **Resultado**: `RangeGrid` + `RangeCell` listos para reutilizarse en modo lectura (Viewer) y en edición (Editor, Fase 4) sin rehacer accesibilidad; typecheck + build verdes, consola limpia.
+
+---
+
+## Fase 3 — Zustand Stores y Persistencia (COMPLETA)
+
+Sistema de estado global y persistencia local como columna vertebral del Editor (Fase 4).
+
+- **Stores**: `useRangeStore` (`ranges[]` + `activeRangeId`, CRUD completo: create/update/delete/duplicate, edición granular de celdas `upsertCell`/`clearCell`/`clearAllCells`, `importRanges` con cap de 100 KB, `resetStore`); `useUiStore` (`theme` dark/light/system + flags `showActionLegend`, `gridTooltipEnabled`).
+- **Schemas Zod** (`src/store/schemas.ts`): `.strict()` en todos los objetos, regex de hand notation, suma de pesos ≤100, sanitización de strings (strip control chars + trim), caps duros (500 rangos, 169 cells, 5 actions/cell, 80 chars name, 40 chars group).
+- **Persistencia**: middleware `persist` con `createSafeJSONStorage()` tolerante (SSR / quota / disabled → fallback in-memory); `merge` corre `safeParse` con recuperación por-rango (descarta el inválido, conserva el resto); `migrate` con `CURRENT_RANGE_STORE_VERSION = 1`; keys `range-soprano/ranges` y `range-soprano/ui`.
+- **Selectores memoizados** (`src/store/selectors.ts`): `useActiveRange`, `useRangeById`, `useRangeSummaries` con `useShallow`, `useRangesByGroup` con `useMemo`.
+- **Theme sync**: hook `useApplyTheme` aplica `data-theme` a `<html>` y escucha cambios de `matchMedia` cuando `theme === 'system'`; script inline en `index.html` resuelve el tema antes del primer paint (anti-flash, try/catch silencioso).
+- **Viewer vacío**: `EmptyState` con CTA "Load demo range" (sembrado desde `SAMPLE_BTN_RFI` vía `createRange` + `setActiveRange`) y link al Editor. No autocargo: el usuario decide.
+- **Seguridad**: `MAX_IMPORT_BYTES = 100 * 1024` validado con `TextEncoder`; IDs regenerados ante colisión; exceso sobre cap a `rejected[]`.
+- **Resultado**: `npm run typecheck` y `npm run build` verdes; stores listos para ser consumidos por el Editor en Fase 4 sin tocar la lógica de persistencia.

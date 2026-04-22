@@ -3,15 +3,28 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { RangeGrid } from '@/components/RangeGrid';
 import { RangeStats } from '@/components/RangeStats';
 import { ActionLegend } from '@/components/ActionLegend';
-import { SAMPLE_BTN_RFI } from '@/data/sampleRanges';
 import { computeRangeStats } from '@/utils/rangeStats';
+import { useActiveRange } from '@/store/selectors';
+import { EmptyState } from './EmptyState';
 
 export default function ViewerPage() {
-  const range = SAMPLE_BTN_RFI;
+  const range = useActiveRange();
   const presentActions = useMemo(
-    () => computeRangeStats(range.cells).presentActions,
-    [range.cells],
+    () => (range ? computeRangeStats(range.cells).presentActions : []),
+    [range],
   );
+
+  if (!range) {
+    return (
+      <>
+        <PageHeader
+          title="Viewer"
+          description="Explore preflop ranges by format, position, and situation."
+        />
+        <EmptyState />
+      </>
+    );
+  }
 
   return (
     <>
