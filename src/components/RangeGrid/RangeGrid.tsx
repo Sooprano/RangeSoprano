@@ -11,10 +11,15 @@ import { cn } from '@/lib/cn';
 import { RangeCell } from '@/components/RangeCell';
 import { ALL_HANDS, categoryOf, handToGridCoords } from '@/utils/handUtils';
 import type { HandNotation, RangeCellData } from '@/types/poker';
+import { useRangePainter } from './useRangePainter';
 
 type RangeGridProps = {
   cells?: Record<HandNotation, RangeCellData>;
   className?: string;
+  /** When true the grid responds to mouse paint/erase and exposes paint shortcuts. */
+  editable?: boolean;
+  onCellPaint?: (hand: HandNotation) => void;
+  onCellErase?: (hand: HandNotation) => void;
 };
 
 const SIZE = 13;
@@ -23,10 +28,22 @@ function clamp(n: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, n));
 }
 
-function RangeGridBase({ cells, className }: RangeGridProps) {
+function RangeGridBase({
+  cells,
+  className,
+  editable = false,
+  onCellPaint,
+  onCellErase,
+}: RangeGridProps) {
   const [focusedIndex, setFocusedIndex] = useState(0);
   const cellRefs = useRef<(HTMLDivElement | null)[]>([]);
   const shouldFocusRef = useRef(false);
+
+  const painter = useRangePainter({
+    enabled: editable,
+    ...(onCellPaint && { onPaint: onCellPaint }),
+    ...(onCellErase && { onErase: onCellErase }),
+  });
 
   // Stable per-index ref setters so RangeCell memo isn't invalidated each render.
   const refSetters = useMemo(
@@ -85,6 +102,7 @@ function RangeGridBase({ cells, className }: RangeGridProps) {
           nextCol = SIZE - 1;
           break;
         default:
+          if (editable) painter.onKeyDown(e);
           return;
       }
 
@@ -92,7 +110,7 @@ function RangeGridBase({ cells, className }: RangeGridProps) {
       const next = nextRow * SIZE + nextCol;
       if (next !== focusedIndex) moveFocus(next);
     },
-    [focusedIndex, moveFocus],
+    [focusedIndex, moveFocus, editable, painter],
   );
 
   const handleFocus = useCallback(
@@ -111,15 +129,24 @@ function RangeGridBase({ cells, className }: RangeGridProps) {
   return (
     <div
       role="grid"
-      aria-label="Poker range grid, 13 by 13. Use arrow keys to navigate."
+      aria-label={
+        editable
+          ? 'Editable poker range grid, 13 by 13. Click or drag to paint, right-click to erase. Use arrow keys to navigate.'
+          : 'Poker range grid, 13 by 13. Use arrow keys to navigate.'
+      }
       aria-rowcount={SIZE}
       aria-colcount={SIZE}
+      data-editable={editable || undefined}
       onKeyDown={handleKeyDown}
       onFocus={handleFocus}
+      onMouseDown={editable ? painter.onMouseDown : undefined}
+      onMouseOver={editable ? painter.onMouseOver : undefined}
+      onContextMenu={editable ? painter.onContextMenu : undefined}
       className={cn(
         'relative mx-auto grid aspect-square w-full max-w-[min(640px,92vw)]',
         'grid-cols-[repeat(13,minmax(0,1fr))] gap-px',
         'rounded-xl border border-border bg-border/60 shadow-surface',
+        editable && 'cursor-crosshair touch-none select-none',
         className,
       )}
     >
