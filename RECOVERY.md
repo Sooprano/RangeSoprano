@@ -19,7 +19,7 @@ Plan de contingencia y log de estado por fase.
 - Fase 1 (setup): `02f65ff`
 - Fase 2 (RangeGrid completo): `6a3cf0e`
 - Fase 3 (stores + persist): `e0278c6`
-- Sub-fase 4A (editor base con bug): `38628da` base · `6d9da97` fix parcial
+- Sub-fase 4A (editor base): `38628da` base · `6d9da97` fix parcial · fix definitivo del loop en `useRangeSummaries`
 
 ## Fase 2 — RangeGrid (COMPLETA)
 
@@ -37,9 +37,9 @@ Commit: `e0278c6`.
 - Viewer con `<EmptyState />`: CTA "Load demo range" (sembra SAMPLE_BTN_RFI con UUID fresco)
 - Selectores en `src/store/selectors.ts`: `useActiveRange`, `useRangeById`, `useRangeSummaries` (useShallow), `useRangesByGroup` (useMemo)
 
-## Sub-fase 4A — Editor base (EN CURSO · BUG ACTIVO)
+## Sub-fase 4A — Editor base (COMPLETA)
 
-Commits: `38628da` (base) + `6d9da97` (fix parcial).
+Commits: `38628da` (base) + `6d9da97` (mejora de `openFormSignal`) + fix definitivo del loop.
 
 ### Lo construido
 - `useRangePainter` hook (drag-to-paint por delegación, visitedRef anti-duplicados, mouseup/blur globales, atajos Space/Enter/Delete/Backspace)
@@ -50,28 +50,20 @@ Commits: `38628da` (base) + `6d9da97` (fix parcial).
 - `EmptyEditorState` (CTA "New range")
 - `EditorPage` (layout 3 columnas, callbacks memoizados, signal para abrir form desde empty state)
 
-### BUG ACTIVO: loop infinito en /editor
+### Bug histórico: loop infinito en /editor (RESUELTO)
 
-**Síntomas**:
-1. Crash "Maximum update depth exceeded" cuando hay rango activo en /editor
-2. Error apunta a `<RangeManager>`
-3. Tras el crash, /viewer queda con grid VACÍO (estado corrupto)
-4. Crear rango nuevo en /editor → crash al activarlo
+**Síntomas (pre-fix)**: `Maximum update depth exceeded` en `<RangeManager>` al activar rango; `/viewer` quedaba con grid vacío tras el crash.
 
-**Intentado en `6d9da97`** (NO resolvió causa raíz):
-- En `RangeManager`, `openFormSignal` se movió de setState-en-render a `useEffect([openFormSignal])`
-- Arregló un problema secundario pero el loop persiste
+**Causa raíz**: `useRangeSummaries` combinaba `useShallow` con `.map(r => ({...}))`. Cada render creaba objetos summary nuevos (referencias distintas), lo que hacía fallar la comparación shallow por índice. Combinado con la identidad nueva del wrapper de `useShallow` en cada render (que invalida el `useMemo` interno del shim de `useSyncExternalStoreWithSelector`), el selector devolvía una array ref nueva cada render sin cambio de store → React detectaba "snapshot cambiado" → loop.
 
-**Hipótesis a investigar**:
-- `useActiveRange` en `src/store/selectors.ts` NO usa useShallow → devuelve nueva referencia de objeto cada render
-- `useMemo` de `presentActions` en EditorPage depende de `activeRange` (objeto completo) en vez de `activeRange?.cells`
-- Posible efecto cascada entre selectores que corrompe el store tras el crash (explicaría viewer vacío)
+El grid vacío en `/viewer` era síntoma colateral de React roto tras el crash — no corrupción del store ni de `localStorage`.
 
-### Próximo paso
-Diagnosticar causa raíz REAL sin parchear síntomas. Leer `selectors.ts`, `rangeStore.ts`, `EditorPage.tsx`, `RangeManager.tsx`, `ViewerPage.tsx`. Entender el flujo completo antes de proponer fix.
+**Fix**: suscribirse a `s.ranges` (ref estable por Object.is de zustand) y derivar summaries con `useMemo([ranges])` en el hook. Mismo patrón que ya usaba `useRangesByGroup` en el fichero.
 
-### Plan B si el fix falla
-`git reset --hard 38628da` (revertir fix parcial, volver a base de 4A) o `git reset --hard f56bce8` (antes de 4A).
+Hipótesis previas refutadas:
+- `useActiveRange` **no** era el problema: `find()` devuelve la misma ref del objeto existente.
+- La dep `activeRange` vs `activeRange.cells` en `presentActions` era irrelevante.
+- No hay cascada entre selectores ni corrupción de store.
 
 ## Siguientes sub-fases (pendientes)
 

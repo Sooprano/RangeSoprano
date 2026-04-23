@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { useShallow } from 'zustand/react/shallow';
 import type { Range } from '@/types/poker';
 import { useRangeStore } from './rangeStore';
 
@@ -24,9 +23,10 @@ export function useRangeById(id: string | null): Range | null {
 }
 
 export function useRangeSummaries(): RangeSummary[] {
-  return useRangeStore(
-    useShallow((s) =>
-      s.ranges.map<RangeSummary>((r) => {
+  const ranges = useRangeStore((s) => s.ranges);
+  return useMemo(
+    () =>
+      ranges.map<RangeSummary>((r) => {
         const base: RangeSummary = {
           id: r.id,
           name: r.name,
@@ -37,7 +37,7 @@ export function useRangeSummaries(): RangeSummary[] {
         if (r.group !== undefined) base.group = r.group;
         return base;
       }),
-    ),
+    [ranges],
   );
 }
 
