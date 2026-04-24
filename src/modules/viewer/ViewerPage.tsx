@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { RangeGrid } from '@/components/RangeGrid';
 import { RangeStats } from '@/components/RangeStats';
@@ -16,6 +16,8 @@ import {
   matchesFilters,
   type ViewerFilters,
 } from './SituationSelector';
+import { CompareToolbar } from './CompareToolbar';
+import { RangePanel } from './RangePanel';
 
 const SITUATION_LABEL: Record<string, string> = {
   RFI: 'RFI',
@@ -34,6 +36,8 @@ export default function ViewerPage() {
   const range = useViewerRange();
 
   const [filters, setFilters] = useState<ViewerFilters>(EMPTY_FILTERS);
+  const [compareEnabled, setCompareEnabled] = useState(false);
+  const [compareRangeId, setCompareRangeId] = useState<string | null>(null);
 
   const filteredSummaries = useMemo(
     () =>
@@ -56,6 +60,28 @@ export default function ViewerPage() {
     }
   }, [ranges, viewerRangeId, setViewerRangeId]);
 
+  useEffect(() => {
+    if (compareRangeId && !ranges.some((r) => r.id === compareRangeId)) {
+      setCompareRangeId(null);
+    }
+  }, [ranges, compareRangeId]);
+
+  const compareRange = useMemo(
+    () => ranges.find((r) => r.id === compareRangeId) ?? null,
+    [ranges, compareRangeId],
+  );
+
+  const handleToggleCompare = useCallback(
+    (next: boolean) => {
+      setCompareEnabled(next);
+      if (next && !compareRangeId) {
+        const candidate = ranges.find((r) => r.id !== viewerRangeId);
+        if (candidate) setCompareRangeId(candidate.id);
+      }
+    },
+    [compareRangeId, ranges, viewerRangeId],
+  );
+
   const presentActions = useMemo(
     () => (range ? computeRangeStats(range.cells).presentActions : []),
     [range],
@@ -73,8 +99,7 @@ export default function ViewerPage() {
     );
   }
 
-  const selectionInFilter =
-    range !== null && matchesFilters(range, filters);
+  const selectionInFilter = range !== null && matchesFilters(range, filters);
 
   return (
     <>
@@ -88,7 +113,13 @@ export default function ViewerPage() {
         description="Explore preflop ranges by format, position, and situation."
       />
 
-      <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)_300px]">
+      <div
+        className={
+          compareEnabled
+            ? 'grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)]'
+            : 'grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)_300px]'
+        }
+      >
         <ViewerRangeList
           summaries={filteredSummaries}
           selectedId={viewerRangeId}
@@ -100,9 +131,32 @@ export default function ViewerPage() {
           }
         />
 
-        <div className="flex flex-col gap-4">
-          <SituationSelector filters={filters} onChange={setFilters} />
-          {range ? (
+        <div className="flex min-w-0 flex-col gap-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <SituationSelector filters={filters} onChange={setFilters} />
+            <CompareToolbar
+              enabled={compareEnabled}
+              onToggle={handleToggleCompare}
+              summaries={summaries}
+              compareId={compareRangeId}
+              onChangeCompareId={setCompareRangeId}
+            />
+          </div>
+
+          {compareEnabled ? (
+            <div className="grid gap-6 xl:grid-cols-2">
+              {range ? (
+                <RangePanel range={range} badge="A" />
+              ) : (
+                <CompareSlot label="Pick a range from the list" />
+              )}
+              {compareRange ? (
+                <RangePanel range={compareRange} badge="B" />
+              ) : (
+                <CompareSlot label="Pick a range to compare with" />
+              )}
+            </div>
+          ) : range ? (
             <>
               {!selectionInFilter && hasAnyFilter(filters) && (
                 <p className="rounded-md border border-dashed border-border px-3 py-2 text-center text-xs text-content-muted">
@@ -112,13 +166,11 @@ export default function ViewerPage() {
               <RangeGrid cells={range.cells} />
             </>
           ) : (
-            <div className="flex min-h-[40vh] items-center justify-center rounded-xl border border-dashed border-border p-6 text-center text-sm text-content-muted">
-              Select a range from the list to view it.
-            </div>
+            <CompareSlot label="Select a range from the list to view it." />
           )}
         </div>
 
-        {range && (
+        {!compareEnabled && range && (
           <aside className="flex flex-col gap-4">
             <RangeStats cells={range.cells} />
             <ActionLegend actions={presentActions} />
@@ -126,5 +178,13 @@ export default function ViewerPage() {
         )}
       </div>
     </>
+  );
+}
+
+function CompareSlot({ label }: { label: string }) {
+  return (
+    <div className="flex min-h-[40vh] items-center justify-center rounded-xl border border-dashed border-border p-6 text-center text-sm text-content-muted">
+      {label}
+    </div>
   );
 }
