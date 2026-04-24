@@ -13,8 +13,9 @@ const RANK_INDEX: Record<Rank, number> = RANKS.reduce(
   {} as Record<Rank, number>,
 );
 
-// Accepts e.g. "[98%]AQs[/98%]" or "[12.5%]KK-88[/12.5%]".
-const WRAPPER_RE = /^\[(\d+(?:\.\d+)?)%\](.+?)\[\/\1%\]$/;
+// Open tag accepts optional % sign: [98%] and [98] both work.
+const OPEN_TAG_RE = /^\[(\d+(?:\.\d+)?)%?\]/;
+const SEPARATOR_CHARS = new Set([' ', '\t', '\n', '\r', ',']);
 
 function isRankChar(c: string): c is Rank {
   return Object.prototype.hasOwnProperty.call(RANK_INDEX, c);
@@ -145,49 +146,84 @@ function parsePlus(input: string): HandNotation[] | null {
   return out;
 }
 
-export function parseHandRange(input: string): ParseResult {
+type TokenEntry = { text: string; weight: number; raw: string };
+
+function tokenize(input: string): { entries: TokenEntry[]; errors: ParseError[] } {
+  const entries: TokenEntry[] = [];
   const errors: ParseError[] = [];
-  const seen = new Map<HandNotation, number>();
+  let i = 0;
+  const n = input.length;
 
-  const tokens = input
-    .split(',')
-    .map((t) => t.trim())
-    .filter((t) => t.length > 0);
+  while (i < n) {
+    while (i < n && SEPARATOR_CHARS.has(input[i]!)) i++;
+    if (i >= n) break;
 
-  for (const rawToken of tokens) {
-    let weight = 100;
-    let inner = rawToken;
-
-    const m = rawToken.match(WRAPPER_RE);
-    if (m) {
-      const wStr = m[1];
-      const payload = m[2];
-      if (wStr === undefined || payload === undefined) {
-        errors.push({ token: rawToken, reason: 'malformed weight tag' });
+    // Weight wrapper: [N]...[/N] or [N%]...[/N%] (percent sign independent per side).
+    const openMatch = input.slice(i).match(OPEN_TAG_RE);
+    if (openMatch) {
+      const weightStr = openMatch[1]!;
+      const openLen = openMatch[0].length;
+      const escaped = weightStr.replace(/\./g, '\\.');
+      const closeRe = new RegExp(`\\[/${escaped}%?\\]`);
+      const afterOpen = input.slice(i + openLen);
+      const closeMatch = afterOpen.match(closeRe);
+      if (closeMatch && closeMatch.index !== undefined) {
+        const innerText = afterOpen.slice(0, closeMatch.index);
+        const rawEnd = i + openLen + closeMatch.index + closeMatch[0].length;
+        const raw = input.slice(i, rawEnd);
+        const weight = Number(weightStr);
+        if (!Number.isFinite(weight) || weight <= 0 || weight > 100) {
+          errors.push({ token: raw, reason: 'weight must be in (0, 100]' });
+        } else {
+          const subs = innerText
+            .split(',')
+            .map((t) => t.trim())
+            .filter((t) => t.length > 0);
+          if (subs.length === 0) {
+            errors.push({ token: raw, reason: 'empty weighted token' });
+          }
+          for (const sub of subs) {
+            entries.push({ text: sub, weight, raw });
+          }
+        }
+        i = rawEnd;
         continue;
       }
-      const w = Number(wStr);
-      if (!Number.isFinite(w) || w <= 0 || w > 100) {
-        errors.push({ token: rawToken, reason: 'weight must be in (0, 100]' });
-        continue;
-      }
-      weight = w;
-      inner = payload.trim();
+      errors.push({ token: openMatch[0], reason: 'unmatched weight wrapper' });
+      i += openLen;
+      continue;
     }
 
-    let expanded: HandNotation[] | null = parseSingle(inner)
-      ? [parseSingle(inner)!]
-      : null;
-    if (!expanded) expanded = parseRange(inner);
-    if (!expanded) expanded = parsePlus(inner);
+    // Plain top-level token: read until next comma.
+    const start = i;
+    while (i < n && input[i] !== ',') i++;
+    const text = input.slice(start, i).trim();
+    if (text.length > 0) {
+      entries.push({ text, weight: 100, raw: text });
+    }
+  }
+
+  return { entries, errors };
+}
+
+export function parseHandRange(input: string): ParseResult {
+  const { entries, errors } = tokenize(input);
+  const seen = new Map<HandNotation, number>();
+
+  for (const { text, weight, raw } of entries) {
+    let expanded: HandNotation[] | null = null;
+    const single = parseSingle(text);
+    if (single) expanded = [single];
+    if (!expanded) expanded = parseRange(text);
+    if (!expanded) expanded = parsePlus(text);
 
     if (!expanded || expanded.length === 0) {
-      errors.push({ token: rawToken, reason: 'unrecognized notation' });
+      errors.push({ token: raw, reason: 'unrecognized notation' });
       continue;
     }
 
     for (const h of expanded) {
-      // Later occurrences override earlier ones.
+      // Later occurrences override earlier weights for the same hand.
       seen.set(h, weight);
     }
   }
