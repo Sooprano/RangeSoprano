@@ -31,6 +31,7 @@ export default function EditorPage() {
   const totalRanges = useRangeStore((s) => s.ranges.length);
   const upsertCell = useRangeStore((s) => s.upsertCell);
   const clearCell = useRangeStore((s) => s.clearCell);
+  const pushHistory = useRangeStore((s) => s.pushHistory);
 
   const [activeAction, setActiveAction] = useState<Action>('RAISE');
   const [weight, setWeight] = useState(100);
@@ -105,6 +106,7 @@ export default function EditorPage() {
               editable
               onCellPaint={handleCellPaint}
               onCellErase={handleCellErase}
+              onSessionStart={pushHistory}
             />
             <p className="text-xs text-content-muted">
               Click paints · drag to paint multiple · right-click to erase ·

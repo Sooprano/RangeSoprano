@@ -20,6 +20,8 @@ type RangeGridProps = {
   editable?: boolean;
   onCellPaint?: (hand: HandNotation) => void;
   onCellErase?: (hand: HandNotation) => void;
+  /** Fired once at the start of a discrete paint/erase session for history checkpoints. */
+  onSessionStart?: () => void;
 };
 
 const SIZE = 13;
@@ -34,6 +36,7 @@ function RangeGridBase({
   editable = false,
   onCellPaint,
   onCellErase,
+  onSessionStart,
 }: RangeGridProps) {
   const [focusedIndex, setFocusedIndex] = useState(0);
   const cellRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -43,6 +46,7 @@ function RangeGridBase({
     enabled: editable,
     ...(onCellPaint && { onPaint: onCellPaint }),
     ...(onCellErase && { onErase: onCellErase }),
+    ...(onSessionStart && { onSessionStart }),
   });
 
   // Stable per-index ref setters so RangeCell memo isn't invalidated each render.

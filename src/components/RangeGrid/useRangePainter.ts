@@ -11,6 +11,13 @@ export type RangePainterOptions = {
   enabled: boolean;
   onPaint?: (hand: HandNotation) => void;
   onErase?: (hand: HandNotation) => void;
+  /**
+   * Invoked once at the start of a discrete paint/erase session so the
+   * caller can checkpoint for undo. Fired on mousedown, right-click, and
+   * each qualifying keydown (Space/Enter/Delete/Backspace). Drag moves
+   * do NOT fire it — they belong to the same session as the mousedown.
+   */
+  onSessionStart?: () => void;
 };
 
 export type RangePainterHandlers = {
@@ -33,6 +40,7 @@ export function useRangePainter({
   enabled,
   onPaint,
   onErase,
+  onSessionStart,
 }: RangePainterOptions): RangePainterHandlers {
   const modeRef = useRef<PaintMode>(null);
   const visitedRef = useRef<Set<HandNotation>>(new Set());
@@ -41,10 +49,12 @@ export function useRangePainter({
   // and don't bust RangeGrid's React.memo on every parent render.
   const onPaintRef = useRef(onPaint);
   const onEraseRef = useRef(onErase);
+  const onSessionStartRef = useRef(onSessionStart);
   useEffect(() => {
     onPaintRef.current = onPaint;
     onEraseRef.current = onErase;
-  }, [onPaint, onErase]);
+    onSessionStartRef.current = onSessionStart;
+  }, [onPaint, onErase, onSessionStart]);
 
   const reset = useCallback(() => {
     modeRef.current = null;
@@ -74,6 +84,7 @@ export function useRangePainter({
       modeRef.current = 'paint';
       visitedRef.current.clear();
       visitedRef.current.add(hand);
+      onSessionStartRef.current?.();
       onPaintRef.current?.(hand);
     },
     [enabled],
@@ -102,6 +113,7 @@ export function useRangePainter({
       const hand = handFromTarget(e.target);
       if (!hand) return;
       e.preventDefault();
+      onSessionStartRef.current?.();
       onEraseRef.current?.(hand);
     },
     [enabled],
@@ -115,9 +127,11 @@ export function useRangePainter({
       if (!hand) return;
       if (e.key === ' ' || e.key === 'Enter') {
         e.preventDefault();
+        onSessionStartRef.current?.();
         onPaintRef.current?.(hand);
       } else if (e.key === 'Delete' || e.key === 'Backspace') {
         e.preventDefault();
+        onSessionStartRef.current?.();
         onEraseRef.current?.(hand);
       }
     },
