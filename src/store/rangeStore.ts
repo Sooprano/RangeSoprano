@@ -35,7 +35,16 @@ export type CreateRangeInput = {
   cells?: Record<HandNotation, RangeCellData>;
 };
 
+export const MAX_HISTORY = 50;
+
+type HistorySnapshot = {
+  ranges: Range[];
+  activeRangeId: string | null;
+};
+
 type RangeStoreState = PersistedRangeState & {
+  past: HistorySnapshot[];
+  future: HistorySnapshot[];
   createRange: (input: CreateRangeInput) => string;
   updateRange: (
     id: string,
@@ -51,6 +60,9 @@ type RangeStoreState = PersistedRangeState & {
     payload: unknown,
     opts?: { replace?: boolean },
   ) => ImportResult;
+  pushHistory: () => void;
+  undo: () => void;
+  redo: () => void;
   resetStore: () => void;
 };
 
@@ -58,6 +70,12 @@ const INITIAL: PersistedRangeState = {
   ranges: [],
   activeRangeId: null,
 };
+
+function cappedPush<T>(stack: T[], item: T): T[] {
+  const next = stack.length >= MAX_HISTORY ? stack.slice(stack.length - MAX_HISTORY + 1) : stack.slice();
+  next.push(item);
+  return next;
+}
 
 function newId(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
@@ -90,6 +108,51 @@ export const useRangeStore = create<RangeStoreState>()(
   persist(
     (set, get) => ({
       ...INITIAL,
+      past: [],
+      future: [],
+
+      pushHistory: () => {
+        set((s) => ({
+          past: cappedPush(s.past, { ranges: s.ranges, activeRangeId: s.activeRangeId }),
+          future: [],
+        }));
+      },
+
+      undo: () => {
+        set((s) => {
+          if (s.past.length === 0) return {};
+          const prev = s.past[s.past.length - 1]!;
+          const newPast = s.past.slice(0, -1);
+          const future = cappedPush(s.future, {
+            ranges: s.ranges,
+            activeRangeId: s.activeRangeId,
+          });
+          return {
+            past: newPast,
+            future,
+            ranges: prev.ranges,
+            activeRangeId: prev.activeRangeId,
+          };
+        });
+      },
+
+      redo: () => {
+        set((s) => {
+          if (s.future.length === 0) return {};
+          const next = s.future[s.future.length - 1]!;
+          const newFuture = s.future.slice(0, -1);
+          const past = cappedPush(s.past, {
+            ranges: s.ranges,
+            activeRangeId: s.activeRangeId,
+          });
+          return {
+            past,
+            future: newFuture,
+            ranges: next.ranges,
+            activeRangeId: next.activeRangeId,
+          };
+        });
+      },
 
       createRange: (input) => {
         const id = newId();
@@ -252,7 +315,7 @@ export const useRangeStore = create<RangeStoreState>()(
         return { accepted: accepted.length, rejected };
       },
 
-      resetStore: () => set({ ...INITIAL }),
+      resetStore: () => set({ ...INITIAL, past: [], future: [] }),
     }),
     {
       name: RANGE_STORE_KEY,

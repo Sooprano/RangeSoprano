@@ -41,6 +41,14 @@ export function useRangeSummaries(): RangeSummary[] {
   );
 }
 
+export function useCanUndo(): boolean {
+  return useRangeStore((s) => s.past.length > 0);
+}
+
+export function useCanRedo(): boolean {
+  return useRangeStore((s) => s.future.length > 0);
+}
+
 export function useRangesByGroup(): Map<string | null, Range[]> {
   const ranges = useRangeStore((s) => s.ranges);
   return useMemo(() => {
