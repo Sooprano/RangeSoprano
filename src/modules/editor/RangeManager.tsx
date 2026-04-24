@@ -1,4 +1,5 @@
-import { Plus, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Copy, MoreHorizontal, Plus, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useRangeStore } from '@/store/rangeStore';
 import { useRangeSummaries } from '@/store/selectors';
@@ -29,15 +30,48 @@ export function RangeManager({
   const createRange = useRangeStore((s) => s.createRange);
   const setActiveRange = useRangeStore((s) => s.setActiveRange);
   const deleteRange = useRangeStore((s) => s.deleteRange);
+  const duplicateRange = useRangeStore((s) => s.duplicateRange);
+  const pushHistory = useRangeStore((s) => s.pushHistory);
+
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!openMenuId) return;
+    const handleDown = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (!target?.closest(`[data-menu-scope="${openMenuId}"]`)) {
+        setOpenMenuId(null);
+      }
+    };
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpenMenuId(null);
+    };
+    window.addEventListener('mousedown', handleDown);
+    window.addEventListener('keydown', handleKey);
+    return () => {
+      window.removeEventListener('mousedown', handleDown);
+      window.removeEventListener('keydown', handleKey);
+    };
+  }, [openMenuId]);
 
   const handleCreate = (payload: NewRangePayload) => {
+    pushHistory();
     const id = createRange(payload);
     setActiveRange(id);
     onFormOpenChange(false);
   };
 
+  const handleDuplicate = (id: string) => {
+    pushHistory();
+    const newId = duplicateRange(id);
+    if (newId) setActiveRange(newId);
+    setOpenMenuId(null);
+  };
+
   const handleDelete = (id: string, name: string) => {
-    if (window.confirm(`Delete range "${name}"? This can't be undone.`)) {
+    setOpenMenuId(null);
+    if (window.confirm(`Delete range "${name}"? You can undo with Ctrl+Z.`)) {
+      pushHistory();
       deleteRange(id);
     }
   };
@@ -80,6 +114,7 @@ export function RangeManager({
         <ul className="flex flex-col gap-1">
           {summaries.map((s) => {
             const isActive = s.id === activeRangeId;
+            const isMenuOpen = openMenuId === s.id;
             return (
               <li key={s.id}>
                 <div
@@ -103,14 +138,53 @@ export function RangeManager({
                       {s.position} · {SITUATION_LABEL[s.situation] ?? s.situation}
                     </span>
                   </button>
-                  <button
-                    type="button"
-                    aria-label={`Delete ${s.name}`}
-                    onClick={() => handleDelete(s.id, s.name)}
-                    className="mr-1 hidden rounded-md p-1 text-content-muted hover:bg-surface hover:text-content group-hover:inline-flex focus-visible:inline-flex focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
+                  <div
+                    data-menu-scope={s.id}
+                    className="relative mr-1"
                   >
-                    <X className="h-3.5 w-3.5" strokeWidth={2.25} />
-                  </button>
+                    <button
+                      type="button"
+                      aria-label={`Actions for ${s.name}`}
+                      aria-haspopup="menu"
+                      aria-expanded={isMenuOpen}
+                      onClick={() =>
+                        setOpenMenuId(isMenuOpen ? null : s.id)
+                      }
+                      className={cn(
+                        'rounded-md p-1 text-content-muted hover:bg-surface hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light',
+                        isMenuOpen
+                          ? 'inline-flex bg-surface text-content'
+                          : 'hidden group-hover:inline-flex focus-visible:inline-flex',
+                      )}
+                    >
+                      <MoreHorizontal className="h-3.5 w-3.5" strokeWidth={2.25} />
+                    </button>
+                    {isMenuOpen && (
+                      <div
+                        role="menu"
+                        className="absolute right-0 top-full z-20 mt-1 flex min-w-[140px] flex-col rounded-lg border border-border bg-surface p-1 shadow-surface"
+                      >
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={() => handleDuplicate(s.id)}
+                          className="inline-flex items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs text-content hover:bg-surface-hover focus-visible:bg-surface-hover focus-visible:outline-none"
+                        >
+                          <Copy className="h-3.5 w-3.5" strokeWidth={2} />
+                          Duplicate
+                        </button>
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={() => handleDelete(s.id, s.name)}
+                          className="inline-flex items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs text-red-400 hover:bg-surface-hover focus-visible:bg-surface-hover focus-visible:outline-none"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" strokeWidth={2} />
+                          Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </li>
             );
