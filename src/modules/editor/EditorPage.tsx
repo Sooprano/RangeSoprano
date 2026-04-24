@@ -5,10 +5,12 @@ import { RangeStats } from '@/components/RangeStats';
 import { ActionLegend } from '@/components/ActionLegend';
 import { computeRangeStats } from '@/utils/rangeStats';
 import { ORDERED_ACTIONS } from '@/utils/actionMeta';
+import { upsertActionInCell } from '@/utils/cellUtils';
 import { useRangeStore } from '@/store/rangeStore';
 import { useActiveRange } from '@/store/selectors';
 import type { Action, HandNotation } from '@/types/poker';
 import { ActionToolbar } from './ActionToolbar';
+import { WeightSlider } from './WeightSlider';
 import { RangeManager } from './RangeManager';
 import { EmptyEditorState } from './EmptyEditorState';
 
@@ -31,17 +33,18 @@ export default function EditorPage() {
   const clearCell = useRangeStore((s) => s.clearCell);
 
   const [activeAction, setActiveAction] = useState<Action>('RAISE');
+  const [weight, setWeight] = useState(100);
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   const handleCellPaint = useCallback(
     (hand: HandNotation) => {
       if (!activeRangeId) return;
-      upsertCell(activeRangeId, {
-        hand,
-        actions: [{ action: activeAction, weight: 100 }],
-      });
+      const existing = activeRange?.cells[hand];
+      const result = upsertActionInCell(existing, hand, activeAction, weight);
+      if (result.kind === 'clear') clearCell(activeRangeId, hand);
+      else upsertCell(activeRangeId, result.cell);
     },
-    [activeRangeId, activeAction, upsertCell],
+    [activeRangeId, activeRange, activeAction, weight, upsertCell, clearCell],
   );
 
   const handleCellErase = useCallback(
@@ -96,6 +99,7 @@ export default function EditorPage() {
         {activeRange ? (
           <div className="flex flex-col gap-4">
             <ActionToolbar active={activeAction} onChange={setActiveAction} />
+            <WeightSlider value={weight} onChange={setWeight} />
             <RangeGrid
               cells={activeRange.cells}
               editable
@@ -104,7 +108,8 @@ export default function EditorPage() {
             />
             <p className="text-xs text-content-muted">
               Click paints · drag to paint multiple · right-click to erase ·
-              arrow keys + Space/Enter · press 1-5 to switch action.
+              arrow keys + Space/Enter · press 1-5 to switch action · weight
+              &lt; 100 stacks with existing actions.
             </p>
           </div>
         ) : (

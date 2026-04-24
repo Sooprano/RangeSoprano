@@ -43,21 +43,20 @@ function buildBackground(actions: HandAction[]): string | undefined {
   const sorted = [...actions].sort(
     (a, b) => ACTION_META[a.action].order - ACTION_META[b.action].order,
   );
-  const total = sorted.reduce((acc, a) => acc + a.weight, 0);
-  if (total <= 0) return undefined;
-
-  if (sorted.length === 1) {
-    const color = ACTION_META[sorted[0]!.action].cssColor;
-    return `linear-gradient(${color}, ${color})`;
-  }
-
   const stops: string[] = [];
   let cursor = 0;
   for (const a of sorted) {
+    const w = Math.max(0, Math.min(100 - cursor, a.weight));
+    if (w <= 0) continue;
     const start = cursor;
-    const end = cursor + (a.weight / total) * 100;
+    const end = cursor + w;
     stops.push(`${ACTION_META[a.action].cssColor} ${start}% ${end}%`);
     cursor = end;
+    if (cursor >= 100) break;
+  }
+  if (stops.length === 0) return undefined;
+  if (cursor < 100) {
+    stops.push(`transparent ${cursor}% 100%`);
   }
   return `linear-gradient(to right, ${stops.join(', ')})`;
 }
@@ -125,7 +124,7 @@ function RangeCellBase({
         'motion-safe:transition-transform motion-safe:duration-150 motion-safe:ease-out-soft',
         hasActions &&
           'hover:z-30 motion-safe:hover:scale-[1.04] motion-safe:focus-visible:scale-[1.04]',
-        !hasActions && CATEGORY_BG[category],
+        CATEGORY_BG[category],
         !hasActions && 'hover:brightness-110',
         hasActions ? 'text-white/95' : CATEGORY_TEXT[category],
         className,
