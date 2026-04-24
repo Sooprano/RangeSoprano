@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
-import { Copy, MoreHorizontal, Plus, Trash2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Copy, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useRangeStore } from '@/store/rangeStore';
 import { useRangeSummaries } from '@/store/selectors';
+import { MAX_NAME_LEN, sanitizeText } from '@/store/schemas';
 import { NewRangeForm, type NewRangePayload } from './NewRangeForm';
 
 const SITUATION_LABEL: Record<string, string> = {
@@ -31,9 +32,20 @@ export function RangeManager({
   const setActiveRange = useRangeStore((s) => s.setActiveRange);
   const deleteRange = useRangeStore((s) => s.deleteRange);
   const duplicateRange = useRangeStore((s) => s.duplicateRange);
+  const updateRange = useRangeStore((s) => s.updateRange);
   const pushHistory = useRangeStore((s) => s.pushHistory);
 
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameDraft, setRenameDraft] = useState('');
+  const renameInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (renamingId && renameInputRef.current) {
+      renameInputRef.current.focus();
+      renameInputRef.current.select();
+    }
+  }, [renamingId]);
 
   useEffect(() => {
     if (!openMenuId) return;
@@ -76,6 +88,27 @@ export function RangeManager({
     }
   };
 
+  const startRename = (id: string, currentName: string) => {
+    setRenamingId(id);
+    setRenameDraft(currentName);
+    setOpenMenuId(null);
+  };
+
+  const commitRename = (id: string, currentName: string) => {
+    const next = sanitizeText(renameDraft).slice(0, MAX_NAME_LEN);
+    if (next.length > 0 && next !== currentName) {
+      pushHistory();
+      updateRange(id, { name: next });
+    }
+    setRenamingId(null);
+    setRenameDraft('');
+  };
+
+  const cancelRename = () => {
+    setRenamingId(null);
+    setRenameDraft('');
+  };
+
   return (
     <aside
       aria-label="Saved ranges"
@@ -115,6 +148,7 @@ export function RangeManager({
           {summaries.map((s) => {
             const isActive = s.id === activeRangeId;
             const isMenuOpen = openMenuId === s.id;
+            const isRenaming = renamingId === s.id;
             return (
               <li key={s.id}>
                 <div
@@ -125,66 +159,105 @@ export function RangeManager({
                       : 'text-content-muted hover:bg-surface-hover hover:text-content',
                   )}
                 >
-                  <button
-                    type="button"
-                    onClick={() => setActiveRange(s.id)}
-                    aria-current={isActive || undefined}
-                    className="flex min-w-0 flex-1 flex-col items-start gap-0.5 px-2.5 py-2 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
-                  >
-                    <span className="w-full truncate text-sm font-medium">
-                      {s.name}
-                    </span>
-                    <span className="text-[10px] uppercase tracking-wider text-content-muted">
-                      {s.position} · {SITUATION_LABEL[s.situation] ?? s.situation}
-                    </span>
-                  </button>
-                  <div
-                    data-menu-scope={s.id}
-                    className="relative mr-1"
-                  >
+                  {isRenaming ? (
+                    <div className="flex min-w-0 flex-1 flex-col items-start gap-0.5 px-2.5 py-2">
+                      <input
+                        ref={renameInputRef}
+                        type="text"
+                        value={renameDraft}
+                        maxLength={MAX_NAME_LEN}
+                        onChange={(e) => setRenameDraft(e.target.value)}
+                        onBlur={() => commitRename(s.id, s.name)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            commitRename(s.id, s.name);
+                          } else if (e.key === 'Escape') {
+                            e.preventDefault();
+                            cancelRename();
+                          }
+                        }}
+                        aria-label={`Rename ${s.name}`}
+                        className="w-full rounded-md border border-accent/50 bg-bg px-1.5 py-0.5 text-sm text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
+                      />
+                      <span className="text-[10px] uppercase tracking-wider text-content-muted">
+                        {s.position} · {SITUATION_LABEL[s.situation] ?? s.situation}
+                      </span>
+                    </div>
+                  ) : (
                     <button
                       type="button"
-                      aria-label={`Actions for ${s.name}`}
-                      aria-haspopup="menu"
-                      aria-expanded={isMenuOpen}
-                      onClick={() =>
-                        setOpenMenuId(isMenuOpen ? null : s.id)
-                      }
-                      className={cn(
-                        'rounded-md p-1 text-content-muted hover:bg-surface hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light',
-                        isMenuOpen
-                          ? 'inline-flex bg-surface text-content'
-                          : 'hidden group-hover:inline-flex focus-visible:inline-flex',
-                      )}
+                      onClick={() => setActiveRange(s.id)}
+                      onDoubleClick={() => startRename(s.id, s.name)}
+                      aria-current={isActive || undefined}
+                      className="flex min-w-0 flex-1 flex-col items-start gap-0.5 px-2.5 py-2 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
                     >
-                      <MoreHorizontal className="h-3.5 w-3.5" strokeWidth={2.25} />
+                      <span className="w-full truncate text-sm font-medium">
+                        {s.name}
+                      </span>
+                      <span className="text-[10px] uppercase tracking-wider text-content-muted">
+                        {s.position} · {SITUATION_LABEL[s.situation] ?? s.situation}
+                      </span>
                     </button>
-                    {isMenuOpen && (
-                      <div
-                        role="menu"
-                        className="absolute right-0 top-full z-20 mt-1 flex min-w-[140px] flex-col rounded-lg border border-border bg-surface p-1 shadow-surface"
+                  )}
+                  {!isRenaming && (
+                    <div
+                      data-menu-scope={s.id}
+                      className="relative mr-1"
+                    >
+                      <button
+                        type="button"
+                        aria-label={`Actions for ${s.name}`}
+                        aria-haspopup="menu"
+                        aria-expanded={isMenuOpen}
+                        onClick={() =>
+                          setOpenMenuId(isMenuOpen ? null : s.id)
+                        }
+                        className={cn(
+                          'rounded-md p-1 text-content-muted hover:bg-surface hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light',
+                          isMenuOpen
+                            ? 'inline-flex bg-surface text-content'
+                            : 'hidden group-hover:inline-flex focus-visible:inline-flex',
+                        )}
                       >
-                        <button
-                          type="button"
-                          role="menuitem"
-                          onClick={() => handleDuplicate(s.id)}
-                          className="inline-flex items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs text-content hover:bg-surface-hover focus-visible:bg-surface-hover focus-visible:outline-none"
+                        <MoreHorizontal className="h-3.5 w-3.5" strokeWidth={2.25} />
+                      </button>
+                      {isMenuOpen && (
+                        <div
+                          role="menu"
+                          className="absolute right-0 top-full z-20 mt-1 flex min-w-[140px] flex-col rounded-lg border border-border bg-surface p-1 shadow-surface"
                         >
-                          <Copy className="h-3.5 w-3.5" strokeWidth={2} />
-                          Duplicate
-                        </button>
-                        <button
-                          type="button"
-                          role="menuitem"
-                          onClick={() => handleDelete(s.id, s.name)}
-                          className="inline-flex items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs text-red-400 hover:bg-surface-hover focus-visible:bg-surface-hover focus-visible:outline-none"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" strokeWidth={2} />
-                          Delete
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                          <button
+                            type="button"
+                            role="menuitem"
+                            onClick={() => startRename(s.id, s.name)}
+                            className="inline-flex items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs text-content hover:bg-surface-hover focus-visible:bg-surface-hover focus-visible:outline-none"
+                          >
+                            <Pencil className="h-3.5 w-3.5" strokeWidth={2} />
+                            Rename
+                          </button>
+                          <button
+                            type="button"
+                            role="menuitem"
+                            onClick={() => handleDuplicate(s.id)}
+                            className="inline-flex items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs text-content hover:bg-surface-hover focus-visible:bg-surface-hover focus-visible:outline-none"
+                          >
+                            <Copy className="h-3.5 w-3.5" strokeWidth={2} />
+                            Duplicate
+                          </button>
+                          <button
+                            type="button"
+                            role="menuitem"
+                            onClick={() => handleDelete(s.id, s.name)}
+                            className="inline-flex items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs text-red-400 hover:bg-surface-hover focus-visible:bg-surface-hover focus-visible:outline-none"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" strokeWidth={2} />
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </li>
             );
