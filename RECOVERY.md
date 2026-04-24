@@ -42,9 +42,18 @@
 2. Celdas transparentes con una sola acción (`acda2a4`). Causa: `buildBackground` devolvía color sólido en `backgroundImage` (CSS inválido). Fix en `ecc2652`: siempre gradient.
 3. `react-hooks/set-state-in-effect` en RangeManager (`acda2a4`). Fix: levantar `isFormOpen` a EditorPage, fully-controlled.
 
-## Siguiente: Sub-fase 4C
+## Sub-fase 4C en curso
 
-Parser import tolerante (AA,KK,AKs+,98s-65s), Import modal con preview, Export a clipboard/JSON/PNG (html-to-image).
+### Commits 4C
+- `d042a65` parser tolerante (AA,KK,AKs+,98s-65s con pesos `[w%]…[/w%]`)
+- `0ceb924` `serializeWeightedHands` (colapsa pares y kickers, runs `X-Y` / `Y+`)
+- `955a139` Import modal con preview de hands/errores
+- `3210498` chore: untrack `.claude/` local settings
+- `1951b3c` Export menu: Copy notation + Download JSON (rango activo / todos)
+- `008294e` Export PNG (html-to-image) con wrapper ref sobre el grid
+
+### Pendiente 4C
+- Nada bloqueante. Falta solo el round-trip real de JSON por UI (el selector de import solo acepta notación); queda para 5/7 si se prioriza.
 
 ## Pendientes fases 5-7
 
