@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Download } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { RangeGrid } from '@/components/RangeGrid';
 import { RangeStats } from '@/components/RangeStats';
@@ -7,6 +8,7 @@ import { computeRangeStats } from '@/utils/rangeStats';
 import { useRangeStore } from '@/store/rangeStore';
 import { useUiStore } from '@/store/uiStore';
 import { useRangeSummaries, useViewerRange } from '@/store/selectors';
+import { exportNodeToPng, slugify } from '@/utils/exportRange';
 import { EmptyState } from './EmptyState';
 import { ViewerRangeList } from './ViewerRangeList';
 import {
@@ -38,6 +40,7 @@ export default function ViewerPage() {
   const [filters, setFilters] = useState<ViewerFilters>(EMPTY_FILTERS);
   const [compareEnabled, setCompareEnabled] = useState(false);
   const [compareRangeId, setCompareRangeId] = useState<string | null>(null);
+  const captureRef = useRef<HTMLDivElement | null>(null);
 
   const filteredSummaries = useMemo(
     () =>
@@ -82,6 +85,45 @@ export default function ViewerPage() {
     [compareRangeId, ranges, viewerRangeId],
   );
 
+  const handleExportPng = useCallback(async () => {
+    const node = captureRef.current;
+    if (!node || !range) return;
+    const baseName = compareEnabled && compareRange
+      ? `${slugify(range.name)}-vs-${slugify(compareRange.name)}`
+      : slugify(range.name);
+    try {
+      await exportNodeToPng(node, `${baseName}.png`);
+    } catch {
+      // best-effort; no toast infra yet
+    }
+  }, [range, compareRange, compareEnabled]);
+
+  useEffect(() => {
+    if (compareEnabled) return;
+    if (filteredSummaries.length < 2) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      const target = e.target as HTMLElement | null;
+      if (
+        target?.closest(
+          'input, textarea, select, [contenteditable="true"], [role="grid"]',
+        )
+      ) {
+        return;
+      }
+      e.preventDefault();
+      const idx = filteredSummaries.findIndex((s) => s.id === viewerRangeId);
+      const dir = e.key === 'ArrowRight' ? 1 : -1;
+      const len = filteredSummaries.length;
+      const nextIdx = idx < 0 ? 0 : (idx + dir + len) % len;
+      const next = filteredSummaries[nextIdx];
+      if (next) setViewerRangeId(next.id);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [compareEnabled, filteredSummaries, viewerRangeId, setViewerRangeId]);
+
   const presentActions = useMemo(
     () => (range ? computeRangeStats(range.cells).presentActions : []),
     [range],
@@ -100,6 +142,8 @@ export default function ViewerPage() {
   }
 
   const selectionInFilter = range !== null && matchesFilters(range, filters);
+  const canExport =
+    !!range && (!compareEnabled || compareRange !== null);
 
   return (
     <>
@@ -134,17 +178,34 @@ export default function ViewerPage() {
         <div className="flex min-w-0 flex-col gap-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <SituationSelector filters={filters} onChange={setFilters} />
-            <CompareToolbar
-              enabled={compareEnabled}
-              onToggle={handleToggleCompare}
-              summaries={summaries}
-              compareId={compareRangeId}
-              onChangeCompareId={setCompareRangeId}
-            />
+            <div className="flex flex-wrap items-center gap-2">
+              <CompareToolbar
+                enabled={compareEnabled}
+                onToggle={handleToggleCompare}
+                summaries={summaries}
+                compareId={compareRangeId}
+                onChangeCompareId={setCompareRangeId}
+              />
+              <button
+                type="button"
+                onClick={handleExportPng}
+                disabled={!canExport}
+                title="Export PNG"
+                className={
+                  'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light ' +
+                  (canExport
+                    ? 'text-content-muted hover:bg-surface-hover hover:text-content'
+                    : 'cursor-not-allowed text-content-disabled')
+                }
+              >
+                <Download className="h-3.5 w-3.5" strokeWidth={2.25} />
+                Export PNG
+              </button>
+            </div>
           </div>
 
           {compareEnabled ? (
-            <div className="grid gap-6 xl:grid-cols-2">
+            <div ref={captureRef} className="grid gap-6 rounded-xl bg-bg p-2 xl:grid-cols-2">
               {range ? (
                 <RangePanel range={range} badge="A" />
               ) : (
@@ -163,7 +224,14 @@ export default function ViewerPage() {
                   Showing a range that does not match the current filters.
                 </p>
               )}
-              <RangeGrid cells={range.cells} />
+              <div ref={captureRef} className="rounded-xl bg-bg p-2">
+                <RangeGrid cells={range.cells} />
+              </div>
+              {filteredSummaries.length > 1 && (
+                <p className="text-xs text-content-muted">
+                  Use ← / → to step through the filtered list.
+                </p>
+              )}
             </>
           ) : (
             <CompareSlot label="Select a range from the list to view it." />
