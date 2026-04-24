@@ -15,6 +15,7 @@ import { ActionToolbar } from './ActionToolbar';
 import { WeightSlider } from './WeightSlider';
 import { HistoryToolbar } from './HistoryToolbar';
 import { ImportModal } from './ImportModal';
+import { ExportMenu } from './ExportMenu';
 import { RangeManager } from './RangeManager';
 import { EmptyEditorState } from './EmptyEditorState';
 
@@ -32,7 +33,8 @@ const SITUATION_LABEL: Record<string, string> = {
 export default function EditorPage() {
   const activeRange = useActiveRange();
   const activeRangeId = activeRange?.id ?? null;
-  const totalRanges = useRangeStore((s) => s.ranges.length);
+  const allRanges = useRangeStore((s) => s.ranges);
+  const totalRanges = allRanges.length;
   const upsertCell = useRangeStore((s) => s.upsertCell);
   const clearCell = useRangeStore((s) => s.clearCell);
   const clearAllCells = useRangeStore((s) => s.clearAllCells);
@@ -166,6 +168,7 @@ export default function EditorPage() {
                   <Upload className="h-3.5 w-3.5" strokeWidth={2.25} />
                   Import
                 </button>
+                <ExportMenu activeRange={activeRange} allRanges={allRanges} />
                 <HistoryToolbar />
               </div>
             </div>
