@@ -11,6 +11,7 @@ import { useActiveRange } from '@/store/selectors';
 import type { Action, HandNotation } from '@/types/poker';
 import { ActionToolbar } from './ActionToolbar';
 import { WeightSlider } from './WeightSlider';
+import { HistoryToolbar } from './HistoryToolbar';
 import { RangeManager } from './RangeManager';
 import { EmptyEditorState } from './EmptyEditorState';
 
@@ -32,6 +33,8 @@ export default function EditorPage() {
   const upsertCell = useRangeStore((s) => s.upsertCell);
   const clearCell = useRangeStore((s) => s.clearCell);
   const pushHistory = useRangeStore((s) => s.pushHistory);
+  const undo = useRangeStore((s) => s.undo);
+  const redo = useRangeStore((s) => s.redo);
 
   const [activeAction, setActiveAction] = useState<Action>('RAISE');
   const [weight, setWeight] = useState(100);
@@ -67,9 +70,23 @@ export default function EditorPage() {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.ctrlKey || e.metaKey || e.altKey) return;
       const target = e.target as HTMLElement | null;
       if (target?.closest('input, textarea, [contenteditable="true"]')) return;
+
+      const cmd = e.ctrlKey || e.metaKey;
+      if (cmd && !e.altKey && (e.key === 'z' || e.key === 'Z')) {
+        e.preventDefault();
+        if (e.shiftKey) redo();
+        else undo();
+        return;
+      }
+      if (cmd && !e.altKey && !e.shiftKey && (e.key === 'y' || e.key === 'Y')) {
+        e.preventDefault();
+        redo();
+        return;
+      }
+
+      if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
       const idx = DIGIT_KEYS.indexOf(e.key);
       if (idx < 0 || idx >= ORDERED_ACTIONS.length) return;
       e.preventDefault();
@@ -77,7 +94,7 @@ export default function EditorPage() {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, []);
+  }, [undo, redo]);
 
   return (
     <>
@@ -99,7 +116,10 @@ export default function EditorPage() {
 
         {activeRange ? (
           <div className="flex flex-col gap-4">
-            <ActionToolbar active={activeAction} onChange={setActiveAction} />
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <ActionToolbar active={activeAction} onChange={setActiveAction} />
+              <HistoryToolbar />
+            </div>
             <WeightSlider value={weight} onChange={setWeight} />
             <RangeGrid
               cells={activeRange.cells}
@@ -111,7 +131,8 @@ export default function EditorPage() {
             <p className="text-xs text-content-muted">
               Click paints · drag to paint multiple · right-click to erase ·
               arrow keys + Space/Enter · press 1-5 to switch action · weight
-              &lt; 100 stacks with existing actions.
+              &lt; 100 stacks with existing actions · Ctrl+Z undo · Ctrl+Shift+Z
+              redo.
             </p>
           </div>
         ) : (
