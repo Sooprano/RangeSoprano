@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { RangeGrid } from '@/components/RangeGrid';
 import { RangeStats } from '@/components/RangeStats';
@@ -6,9 +6,16 @@ import { ActionLegend } from '@/components/ActionLegend';
 import { computeRangeStats } from '@/utils/rangeStats';
 import { useRangeStore } from '@/store/rangeStore';
 import { useUiStore } from '@/store/uiStore';
-import { useViewerRange } from '@/store/selectors';
+import { useRangeSummaries, useViewerRange } from '@/store/selectors';
 import { EmptyState } from './EmptyState';
 import { ViewerRangeList } from './ViewerRangeList';
+import {
+  EMPTY_FILTERS,
+  SituationSelector,
+  hasAnyFilter,
+  matchesFilters,
+  type ViewerFilters,
+} from './SituationSelector';
 
 const SITUATION_LABEL: Record<string, string> = {
   RFI: 'RFI',
@@ -21,9 +28,20 @@ const SITUATION_LABEL: Record<string, string> = {
 
 export default function ViewerPage() {
   const ranges = useRangeStore((s) => s.ranges);
+  const summaries = useRangeSummaries();
   const viewerRangeId = useUiStore((s) => s.viewerRangeId);
   const setViewerRangeId = useUiStore((s) => s.setViewerRangeId);
   const range = useViewerRange();
+
+  const [filters, setFilters] = useState<ViewerFilters>(EMPTY_FILTERS);
+
+  const filteredSummaries = useMemo(
+    () =>
+      hasAnyFilter(filters)
+        ? summaries.filter((s) => matchesFilters(s, filters))
+        : summaries,
+    [summaries, filters],
+  );
 
   useEffect(() => {
     if (ranges.length === 0) {
@@ -55,6 +73,9 @@ export default function ViewerPage() {
     );
   }
 
+  const selectionInFilter =
+    range !== null && matchesFilters(range, filters);
+
   return (
     <>
       <PageHeader
@@ -69,19 +90,33 @@ export default function ViewerPage() {
 
       <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)_300px]">
         <ViewerRangeList
+          summaries={filteredSummaries}
           selectedId={viewerRangeId}
           onSelect={setViewerRangeId}
+          emptyMessage={
+            hasAnyFilter(filters)
+              ? 'No ranges match the current filters.'
+              : 'No ranges yet. Create one in the Editor.'
+          }
         />
 
-        {range ? (
-          <div className="flex flex-col gap-4">
-            <RangeGrid cells={range.cells} />
-          </div>
-        ) : (
-          <div className="flex min-h-[40vh] items-center justify-center rounded-xl border border-dashed border-border p-6 text-center text-sm text-content-muted">
-            Select a range from the list to view it.
-          </div>
-        )}
+        <div className="flex flex-col gap-4">
+          <SituationSelector filters={filters} onChange={setFilters} />
+          {range ? (
+            <>
+              {!selectionInFilter && hasAnyFilter(filters) && (
+                <p className="rounded-md border border-dashed border-border px-3 py-2 text-center text-xs text-content-muted">
+                  Showing a range that does not match the current filters.
+                </p>
+              )}
+              <RangeGrid cells={range.cells} />
+            </>
+          ) : (
+            <div className="flex min-h-[40vh] items-center justify-center rounded-xl border border-dashed border-border p-6 text-center text-sm text-content-muted">
+              Select a range from the list to view it.
+            </div>
+          )}
+        </div>
 
         {range && (
           <aside className="flex flex-col gap-4">

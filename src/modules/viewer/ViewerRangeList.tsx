@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import { useRangeSummaries, type RangeSummary } from '@/store/selectors';
+import type { RangeSummary } from '@/store/selectors';
 
 const SITUATION_LABEL: Record<string, string> = {
   RFI: 'RFI',
@@ -13,8 +13,10 @@ const SITUATION_LABEL: Record<string, string> = {
 };
 
 type ViewerRangeListProps = {
+  summaries: RangeSummary[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  emptyMessage?: string;
   className?: string;
 };
 
@@ -24,11 +26,12 @@ type Grouped = {
 };
 
 export function ViewerRangeList({
+  summaries,
   selectedId,
   onSelect,
+  emptyMessage = 'No ranges yet. Create one in the Editor.',
   className,
 }: ViewerRangeListProps) {
-  const summaries = useRangeSummaries();
   const [query, setQuery] = useState('');
 
   const filtered = useMemo(() => {
@@ -118,7 +121,7 @@ export function ViewerRangeList({
 
       {summaries.length === 0 ? (
         <p className="rounded-md border border-dashed border-border px-3 py-4 text-center text-xs text-content-muted">
-          No ranges yet. Create one in the Editor.
+          {emptyMessage}
         </p>
       ) : filtered.length === 0 ? (
         <p className="rounded-md border border-dashed border-border px-3 py-4 text-center text-xs text-content-muted">
