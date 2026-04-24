@@ -14,12 +14,14 @@ type UiStoreState = PersistedUiState & {
   toggleTheme: () => void;
   setShowActionLegend: (v: boolean) => void;
   setGridTooltipEnabled: (v: boolean) => void;
+  setViewerRangeId: (id: string | null) => void;
 };
 
 const INITIAL: PersistedUiState = {
   theme: 'dark',
   showActionLegend: true,
   gridTooltipEnabled: true,
+  viewerRangeId: null,
 };
 
 export const useUiStore = create<UiStoreState>()(
@@ -36,6 +38,7 @@ export const useUiStore = create<UiStoreState>()(
 
       setShowActionLegend: (v) => set({ showActionLegend: v }),
       setGridTooltipEnabled: (v) => set({ gridTooltipEnabled: v }),
+      setViewerRangeId: (id) => set({ viewerRangeId: id }),
     }),
     {
       name: UI_STORE_KEY,
@@ -45,6 +48,7 @@ export const useUiStore = create<UiStoreState>()(
         theme: s.theme,
         showActionLegend: s.showActionLegend,
         gridTooltipEnabled: s.gridTooltipEnabled,
+        viewerRangeId: s.viewerRangeId,
       }),
       migrate: (persisted, fromVersion) => {
         if (fromVersion < CURRENT_UI_STORE_VERSION) return { ...INITIAL };

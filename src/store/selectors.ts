@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import type { Range } from '@/types/poker';
 import { useRangeStore } from './rangeStore';
+import { useUiStore } from './uiStore';
 
 export type RangeSummary = {
   id: string;
@@ -15,6 +16,14 @@ export function useActiveRange(): Range | null {
   return useRangeStore((s) => {
     if (!s.activeRangeId) return null;
     return s.ranges.find((r) => r.id === s.activeRangeId) ?? null;
+  });
+}
+
+export function useViewerRange(): Range | null {
+  const viewerRangeId = useUiStore((s) => s.viewerRangeId);
+  return useRangeStore((s) => {
+    if (!viewerRangeId) return null;
+    return s.ranges.find((r) => r.id === viewerRangeId) ?? null;
   });
 }
 

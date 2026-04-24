@@ -99,6 +99,7 @@ export const zPersistedUiState = z
     theme: zTheme,
     showActionLegend: z.boolean(),
     gridTooltipEnabled: z.boolean(),
+    viewerRangeId: z.string().nullable().default(null),
   })
   .strict();
 
