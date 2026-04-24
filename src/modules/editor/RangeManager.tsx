@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
-import { Copy, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Copy, FolderInput, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useRangeStore } from '@/store/rangeStore';
-import { useRangeSummaries } from '@/store/selectors';
-import { MAX_NAME_LEN, sanitizeText } from '@/store/schemas';
+import { useRangeSummaries, type RangeSummary } from '@/store/selectors';
+import { MAX_GROUP_LEN, MAX_NAME_LEN, sanitizeText } from '@/store/schemas';
+import type { Range } from '@/types/poker';
 import { NewRangeForm, type NewRangePayload } from './NewRangeForm';
 
 const SITUATION_LABEL: Record<string, string> = {
@@ -15,10 +16,17 @@ const SITUATION_LABEL: Record<string, string> = {
   DEFEND_BB: 'Defend BB',
 };
 
+const GROUP_SUGGESTIONS_ID = 'range-group-suggestions';
+
 type RangeManagerProps = {
   className?: string;
   isFormOpen: boolean;
   onFormOpenChange: (open: boolean) => void;
+};
+
+type GroupedSummaries = {
+  ungrouped: RangeSummary[];
+  groups: Array<{ name: string; items: RangeSummary[] }>;
 };
 
 export function RangeManager({
@@ -38,7 +46,31 @@ export function RangeManager({
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameDraft, setRenameDraft] = useState('');
+  const [groupingId, setGroupingId] = useState<string | null>(null);
+  const [groupDraft, setGroupDraft] = useState('');
   const renameInputRef = useRef<HTMLInputElement | null>(null);
+  const groupInputRef = useRef<HTMLInputElement | null>(null);
+
+  const { ungrouped, groups }: GroupedSummaries = useMemo(() => {
+    const byGroup = new Map<string, RangeSummary[]>();
+    const un: RangeSummary[] = [];
+    for (const s of summaries) {
+      if (s.group) {
+        const bucket = byGroup.get(s.group);
+        if (bucket) bucket.push(s);
+        else byGroup.set(s.group, [s]);
+      } else {
+        un.push(s);
+      }
+    }
+    const sortedNames = Array.from(byGroup.keys()).sort((a, b) => a.localeCompare(b));
+    return {
+      ungrouped: un,
+      groups: sortedNames.map((name) => ({ name, items: byGroup.get(name)! })),
+    };
+  }, [summaries]);
+
+  const groupSuggestions = useMemo(() => groups.map((g) => g.name), [groups]);
 
   useEffect(() => {
     if (renamingId && renameInputRef.current) {
@@ -46,6 +78,13 @@ export function RangeManager({
       renameInputRef.current.select();
     }
   }, [renamingId]);
+
+  useEffect(() => {
+    if (groupingId && groupInputRef.current) {
+      groupInputRef.current.focus();
+      groupInputRef.current.select();
+    }
+  }, [groupingId]);
 
   useEffect(() => {
     if (!openMenuId) return;
@@ -91,6 +130,7 @@ export function RangeManager({
   const startRename = (id: string, currentName: string) => {
     setRenamingId(id);
     setRenameDraft(currentName);
+    setGroupingId(null);
     setOpenMenuId(null);
   };
 
@@ -107,6 +147,179 @@ export function RangeManager({
   const cancelRename = () => {
     setRenamingId(null);
     setRenameDraft('');
+  };
+
+  const startGroupEdit = (id: string, currentGroup: string | undefined) => {
+    setGroupingId(id);
+    setGroupDraft(currentGroup ?? '');
+    setRenamingId(null);
+    setOpenMenuId(null);
+  };
+
+  const commitGroup = (id: string, currentGroup: string | undefined) => {
+    const next = sanitizeText(groupDraft).slice(0, MAX_GROUP_LEN);
+    const nextValue = next.length === 0 ? undefined : next;
+    if (nextValue !== currentGroup) {
+      pushHistory();
+      updateRange(id, { group: nextValue } as Partial<Range>);
+    }
+    setGroupingId(null);
+    setGroupDraft('');
+  };
+
+  const cancelGroup = () => {
+    setGroupingId(null);
+    setGroupDraft('');
+  };
+
+  const renderRow = (s: RangeSummary) => {
+    const isActive = s.id === activeRangeId;
+    const isMenuOpen = openMenuId === s.id;
+    const isRenaming = renamingId === s.id;
+    const isGrouping = groupingId === s.id;
+    return (
+      <li key={s.id}>
+        <div
+          className={cn(
+            'group flex items-center gap-1 rounded-lg border border-transparent text-sm transition-colors',
+            isActive
+              ? 'border-accent/40 bg-accent/10 text-content'
+              : 'text-content-muted hover:bg-surface-hover hover:text-content',
+          )}
+        >
+          {isRenaming ? (
+            <div className="flex min-w-0 flex-1 flex-col items-start gap-0.5 px-2.5 py-2">
+              <input
+                ref={renameInputRef}
+                type="text"
+                value={renameDraft}
+                maxLength={MAX_NAME_LEN}
+                onChange={(e) => setRenameDraft(e.target.value)}
+                onBlur={() => commitRename(s.id, s.name)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    commitRename(s.id, s.name);
+                  } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    cancelRename();
+                  }
+                }}
+                aria-label={`Rename ${s.name}`}
+                className="w-full rounded-md border border-accent/50 bg-bg px-1.5 py-0.5 text-sm text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
+              />
+              <span className="text-[10px] uppercase tracking-wider text-content-muted">
+                {s.position} · {SITUATION_LABEL[s.situation] ?? s.situation}
+              </span>
+            </div>
+          ) : isGrouping ? (
+            <div className="flex min-w-0 flex-1 flex-col items-start gap-0.5 px-2.5 py-2">
+              <span className="w-full truncate text-sm font-medium text-content">
+                {s.name}
+              </span>
+              <input
+                ref={groupInputRef}
+                type="text"
+                list={GROUP_SUGGESTIONS_ID}
+                value={groupDraft}
+                maxLength={MAX_GROUP_LEN}
+                placeholder="Group (empty = ungroup)"
+                onChange={(e) => setGroupDraft(e.target.value)}
+                onBlur={() => commitGroup(s.id, s.group)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    commitGroup(s.id, s.group);
+                  } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    cancelGroup();
+                  }
+                }}
+                aria-label={`Group for ${s.name}`}
+                className="w-full rounded-md border border-accent/50 bg-bg px-1.5 py-0.5 text-xs text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
+              />
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setActiveRange(s.id)}
+              onDoubleClick={() => startRename(s.id, s.name)}
+              aria-current={isActive || undefined}
+              className="flex min-w-0 flex-1 flex-col items-start gap-0.5 px-2.5 py-2 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
+            >
+              <span className="w-full truncate text-sm font-medium">
+                {s.name}
+              </span>
+              <span className="text-[10px] uppercase tracking-wider text-content-muted">
+                {s.position} · {SITUATION_LABEL[s.situation] ?? s.situation}
+              </span>
+            </button>
+          )}
+          {!isRenaming && !isGrouping && (
+            <div data-menu-scope={s.id} className="relative mr-1">
+              <button
+                type="button"
+                aria-label={`Actions for ${s.name}`}
+                aria-haspopup="menu"
+                aria-expanded={isMenuOpen}
+                onClick={() => setOpenMenuId(isMenuOpen ? null : s.id)}
+                className={cn(
+                  'rounded-md p-1 text-content-muted hover:bg-surface hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light',
+                  isMenuOpen
+                    ? 'inline-flex bg-surface text-content'
+                    : 'hidden group-hover:inline-flex focus-visible:inline-flex',
+                )}
+              >
+                <MoreHorizontal className="h-3.5 w-3.5" strokeWidth={2.25} />
+              </button>
+              {isMenuOpen && (
+                <div
+                  role="menu"
+                  className="absolute right-0 top-full z-20 mt-1 flex min-w-[160px] flex-col rounded-lg border border-border bg-surface p-1 shadow-surface"
+                >
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => startRename(s.id, s.name)}
+                    className="inline-flex items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs text-content hover:bg-surface-hover focus-visible:bg-surface-hover focus-visible:outline-none"
+                  >
+                    <Pencil className="h-3.5 w-3.5" strokeWidth={2} />
+                    Rename
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => startGroupEdit(s.id, s.group)}
+                    className="inline-flex items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs text-content hover:bg-surface-hover focus-visible:bg-surface-hover focus-visible:outline-none"
+                  >
+                    <FolderInput className="h-3.5 w-3.5" strokeWidth={2} />
+                    Move to group…
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => handleDuplicate(s.id)}
+                    className="inline-flex items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs text-content hover:bg-surface-hover focus-visible:bg-surface-hover focus-visible:outline-none"
+                  >
+                    <Copy className="h-3.5 w-3.5" strokeWidth={2} />
+                    Duplicate
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => handleDelete(s.id, s.name)}
+                    className="inline-flex items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs text-red-400 hover:bg-surface-hover focus-visible:bg-surface-hover focus-visible:outline-none"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" strokeWidth={2} />
+                    Delete
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </li>
+    );
   };
 
   return (
@@ -144,125 +357,27 @@ export function RangeManager({
           No ranges yet. Create one to start painting.
         </p>
       ) : (
-        <ul className="flex flex-col gap-1">
-          {summaries.map((s) => {
-            const isActive = s.id === activeRangeId;
-            const isMenuOpen = openMenuId === s.id;
-            const isRenaming = renamingId === s.id;
-            return (
-              <li key={s.id}>
-                <div
-                  className={cn(
-                    'group flex items-center gap-1 rounded-lg border border-transparent text-sm transition-colors',
-                    isActive
-                      ? 'border-accent/40 bg-accent/10 text-content'
-                      : 'text-content-muted hover:bg-surface-hover hover:text-content',
-                  )}
-                >
-                  {isRenaming ? (
-                    <div className="flex min-w-0 flex-1 flex-col items-start gap-0.5 px-2.5 py-2">
-                      <input
-                        ref={renameInputRef}
-                        type="text"
-                        value={renameDraft}
-                        maxLength={MAX_NAME_LEN}
-                        onChange={(e) => setRenameDraft(e.target.value)}
-                        onBlur={() => commitRename(s.id, s.name)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            commitRename(s.id, s.name);
-                          } else if (e.key === 'Escape') {
-                            e.preventDefault();
-                            cancelRename();
-                          }
-                        }}
-                        aria-label={`Rename ${s.name}`}
-                        className="w-full rounded-md border border-accent/50 bg-bg px-1.5 py-0.5 text-sm text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
-                      />
-                      <span className="text-[10px] uppercase tracking-wider text-content-muted">
-                        {s.position} · {SITUATION_LABEL[s.situation] ?? s.situation}
-                      </span>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setActiveRange(s.id)}
-                      onDoubleClick={() => startRename(s.id, s.name)}
-                      aria-current={isActive || undefined}
-                      className="flex min-w-0 flex-1 flex-col items-start gap-0.5 px-2.5 py-2 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
-                    >
-                      <span className="w-full truncate text-sm font-medium">
-                        {s.name}
-                      </span>
-                      <span className="text-[10px] uppercase tracking-wider text-content-muted">
-                        {s.position} · {SITUATION_LABEL[s.situation] ?? s.situation}
-                      </span>
-                    </button>
-                  )}
-                  {!isRenaming && (
-                    <div
-                      data-menu-scope={s.id}
-                      className="relative mr-1"
-                    >
-                      <button
-                        type="button"
-                        aria-label={`Actions for ${s.name}`}
-                        aria-haspopup="menu"
-                        aria-expanded={isMenuOpen}
-                        onClick={() =>
-                          setOpenMenuId(isMenuOpen ? null : s.id)
-                        }
-                        className={cn(
-                          'rounded-md p-1 text-content-muted hover:bg-surface hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light',
-                          isMenuOpen
-                            ? 'inline-flex bg-surface text-content'
-                            : 'hidden group-hover:inline-flex focus-visible:inline-flex',
-                        )}
-                      >
-                        <MoreHorizontal className="h-3.5 w-3.5" strokeWidth={2.25} />
-                      </button>
-                      {isMenuOpen && (
-                        <div
-                          role="menu"
-                          className="absolute right-0 top-full z-20 mt-1 flex min-w-[140px] flex-col rounded-lg border border-border bg-surface p-1 shadow-surface"
-                        >
-                          <button
-                            type="button"
-                            role="menuitem"
-                            onClick={() => startRename(s.id, s.name)}
-                            className="inline-flex items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs text-content hover:bg-surface-hover focus-visible:bg-surface-hover focus-visible:outline-none"
-                          >
-                            <Pencil className="h-3.5 w-3.5" strokeWidth={2} />
-                            Rename
-                          </button>
-                          <button
-                            type="button"
-                            role="menuitem"
-                            onClick={() => handleDuplicate(s.id)}
-                            className="inline-flex items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs text-content hover:bg-surface-hover focus-visible:bg-surface-hover focus-visible:outline-none"
-                          >
-                            <Copy className="h-3.5 w-3.5" strokeWidth={2} />
-                            Duplicate
-                          </button>
-                          <button
-                            type="button"
-                            role="menuitem"
-                            onClick={() => handleDelete(s.id, s.name)}
-                            className="inline-flex items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs text-red-400 hover:bg-surface-hover focus-visible:bg-surface-hover focus-visible:outline-none"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" strokeWidth={2} />
-                            Delete
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+        <>
+          {ungrouped.length > 0 && (
+            <ul className="flex flex-col gap-1">{ungrouped.map(renderRow)}</ul>
+          )}
+          {groups.map((g) => (
+            <section key={g.name} className="flex flex-col gap-1">
+              <h3 className="px-1 pt-1 text-[10px] font-semibold uppercase tracking-wider text-content-muted">
+                {g.name}
+              </h3>
+              <ul className="flex flex-col gap-1">{g.items.map(renderRow)}</ul>
+            </section>
+          ))}
+        </>
+      )}
+
+      {groupSuggestions.length > 0 && (
+        <datalist id={GROUP_SUGGESTIONS_ID}>
+          {groupSuggestions.map((g) => (
+            <option key={g} value={g} />
+          ))}
+        </datalist>
       )}
     </aside>
   );
