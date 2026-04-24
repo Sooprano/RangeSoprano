@@ -1,15 +1,18 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { RangeGrid } from '@/components/RangeGrid';
 import { RangeStats } from '@/components/RangeStats';
 import { ActionLegend } from '@/components/ActionLegend';
 import { computeRangeStats } from '@/utils/rangeStats';
+import { ORDERED_ACTIONS } from '@/utils/actionMeta';
 import { useRangeStore } from '@/store/rangeStore';
 import { useActiveRange } from '@/store/selectors';
 import type { Action, HandNotation } from '@/types/poker';
 import { ActionToolbar } from './ActionToolbar';
 import { RangeManager } from './RangeManager';
 import { EmptyEditorState } from './EmptyEditorState';
+
+const DIGIT_KEYS = '12345';
 
 const SITUATION_LABEL: Record<string, string> = {
   RFI: 'RFI',
@@ -58,6 +61,20 @@ export default function EditorPage() {
     setIsFormOpen(true);
   }, []);
 
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const target = e.target as HTMLElement | null;
+      if (target?.closest('input, textarea, [contenteditable="true"]')) return;
+      const idx = DIGIT_KEYS.indexOf(e.key);
+      if (idx < 0 || idx >= ORDERED_ACTIONS.length) return;
+      e.preventDefault();
+      setActiveAction(ORDERED_ACTIONS[idx]!);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
+
   return (
     <>
       <PageHeader
@@ -87,7 +104,7 @@ export default function EditorPage() {
             />
             <p className="text-xs text-content-muted">
               Click paints · drag to paint multiple · right-click to erase ·
-              arrow keys + Space/Enter from the keyboard.
+              arrow keys + Space/Enter · press 1-5 to switch action.
             </p>
           </div>
         ) : (
