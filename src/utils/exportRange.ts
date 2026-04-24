@@ -1,3 +1,4 @@
+import { toPng } from 'html-to-image';
 import type { Range } from '@/types/poker';
 import { CURRENT_RANGE_STORE_VERSION } from '@/store/schemas';
 import { serializeWeightedHands } from './handRangeSerializer';
@@ -68,6 +69,27 @@ export function downloadBlob(
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+function resolveBackground(node: HTMLElement): string {
+  const own = getComputedStyle(node).backgroundColor;
+  if (own && own !== 'rgba(0, 0, 0, 0)' && own !== 'transparent') return own;
+  const body = getComputedStyle(document.body).backgroundColor;
+  if (body && body !== 'rgba(0, 0, 0, 0)' && body !== 'transparent') return body;
+  return '#0b0f14';
+}
+
+export async function exportNodeToPng(
+  node: HTMLElement,
+  filename: string,
+): Promise<void> {
+  const dataUrl = await toPng(node, {
+    backgroundColor: resolveBackground(node),
+    pixelRatio: 2,
+    cacheBust: true,
+  });
+  const blob = await (await fetch(dataUrl)).blob();
+  downloadBlob(blob, filename, 'image/png');
 }
 
 export async function copyToClipboard(text: string): Promise<boolean> {

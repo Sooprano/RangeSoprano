@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Upload } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { RangeGrid } from '@/components/RangeGrid';
@@ -46,6 +46,7 @@ export default function EditorPage() {
   const [weight, setWeight] = useState(100);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const gridRef = useRef<HTMLDivElement | null>(null);
 
   const handleCellPaint = useCallback(
     (hand: HandNotation) => {
@@ -168,18 +169,24 @@ export default function EditorPage() {
                   <Upload className="h-3.5 w-3.5" strokeWidth={2.25} />
                   Import
                 </button>
-                <ExportMenu activeRange={activeRange} allRanges={allRanges} />
+                <ExportMenu
+                  activeRange={activeRange}
+                  allRanges={allRanges}
+                  gridRef={gridRef}
+                />
                 <HistoryToolbar />
               </div>
             </div>
             <WeightSlider value={weight} onChange={setWeight} />
-            <RangeGrid
-              cells={activeRange.cells}
-              editable
-              onCellPaint={handleCellPaint}
-              onCellErase={handleCellErase}
-              onSessionStart={pushHistory}
-            />
+            <div ref={gridRef} className="rounded-xl bg-bg p-2">
+              <RangeGrid
+                cells={activeRange.cells}
+                editable
+                onCellPaint={handleCellPaint}
+                onCellErase={handleCellErase}
+                onSessionStart={pushHistory}
+              />
+            </div>
             <p className="text-xs text-content-muted">
               Click paints · drag to paint multiple · right-click to erase ·
               arrow keys + Space/Enter · press 1-5 to switch action · weight

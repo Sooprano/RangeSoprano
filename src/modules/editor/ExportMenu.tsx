@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type RefObject,
+} from 'react';
 import { Download, Check } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import type { Range } from '@/types/poker';
@@ -6,6 +12,7 @@ import {
   allRangesToJson,
   copyToClipboard,
   downloadBlob,
+  exportNodeToPng,
   rangeToJson,
   rangeToNotation,
   slugify,
@@ -15,11 +22,12 @@ import {
 type ExportMenuProps = {
   activeRange: Range | null;
   allRanges: Range[];
+  gridRef: RefObject<HTMLDivElement | null>;
 };
 
 type Feedback = { key: string; label: string };
 
-export function ExportMenu({ activeRange, allRanges }: ExportMenuProps) {
+export function ExportMenu({ activeRange, allRanges, gridRef }: ExportMenuProps) {
   const [open, setOpen] = useState(false);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -65,6 +73,7 @@ export function ExportMenu({ activeRange, allRanges }: ExportMenuProps) {
   const canCopy = !!activeRange;
   const canDownloadOne = !!activeRange;
   const canDownloadAll = allRanges.length > 0;
+  const canExportPng = !!activeRange;
 
   const handleCopy = useCallback(async () => {
     if (!activeRange) return;
@@ -93,6 +102,18 @@ export function ExportMenu({ activeRange, allRanges }: ExportMenuProps) {
     );
     setOpen(false);
   }, [allRanges]);
+
+  const handleExportPng = useCallback(async () => {
+    const node = gridRef.current;
+    if (!activeRange || !node) return;
+    setOpen(false);
+    try {
+      await exportNodeToPng(node, `${slugify(activeRange.name)}.png`);
+      flash('png', 'Saved PNG');
+    } catch {
+      flash('png', 'PNG failed');
+    }
+  }, [activeRange, gridRef, flash]);
 
   return (
     <div ref={rootRef} className="relative">
@@ -129,6 +150,11 @@ export function ExportMenu({ activeRange, allRanges }: ExportMenuProps) {
             label="Download all ranges JSON"
             disabled={!canDownloadAll}
             onClick={handleDownloadAll}
+          />
+          <MenuItem
+            label="Export PNG"
+            disabled={!canExportPng}
+            onClick={handleExportPng}
           />
         </ul>
       )}
