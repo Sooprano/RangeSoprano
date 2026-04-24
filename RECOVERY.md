@@ -1,88 +1,53 @@
 # RECOVERY — Range Soprano
 
-Plan de contingencia y log de estado por fase.
+## Retomar sesión
 
-## Si se interrumpe una sesión
+> Lee CLAUDE.md + RECOVERY.md. Ejecuta `git log --oneline -5` y `git status`. Preséntame estado + plan. Espera confirmación antes de codificar.
 
-1. NO cerrar VS Code
-2. Terminal: `git status` → si hay cambios útiles, commitear como `wip: <descripción>`
-3. Al retomar, pegar a Claude Code:
+## Plan B
 
-> Retomamos Range Soprano. Lee CLAUDE.md + RECOVERY.md. Ejecuta `git log --oneline -5` y `git status`. Preséntame el estado actual y un plan para continuar. Espera mi confirmación antes de codificar.
+`git reset --hard <hash>` al último commit estable.
 
-## Plan B si todo falla
+## Últimos commits estables por fase
 
-`git reset --hard <hash>` al último commit estable. Hashes clave abajo.
-
-## Último commit estable por fase
-
-- Fase 1 (setup): `02f65ff`
-- Fase 2 (RangeGrid completo): `6a3cf0e`
+- Fase 1: `02f65ff`
+- Fase 2 (RangeGrid): `6a3cf0e`
 - Fase 3 (stores + persist): `e0278c6`
-- Sub-fase 4A (editor base): `38628da` base · `6d9da97` fix parcial · fix definitivo del loop en `useRangeSummaries`
+- Sub-fase 4A (editor base): `acda2a4`
+- Sub-fase 4B (editor avanzado): `9a9bc4a`
 
-## Fase 2 — RangeGrid (COMPLETA)
+## Estado: Sub-fase 4B COMPLETA (9a9bc4a)
 
-Grid 13×13 reutilizable. Commits 2A (`8f66180`), 2B (`7360d03` + fixes), 2C (`6a3cf0e`). Franjas ponderadas con linear-gradient, tooltip CSS, keyboard navigation (roving tabindex + flechas + Home/End + PageUp/Down), ARIA grid/gridcell, focus-visible con ring morado, motion-safe/reduce, responsive. React.memo preservado en cada celda.
+### Commits 4B
+- `f8b60e0` shortcuts 1-5 (swap de acción)
+- `c33aeff` util pura `upsertActionInCell` (pesos mixtos)
+- `ecc2652` WeightSlider + pintado acumulativo + fix visual de gradients parciales (transparent + CATEGORY_BG siempre)
+- `c5b5f1b` infra undo/redo en store (past/future, cap 50, no persisted)
+- `530d566` checkpoints en `useRangePainter` (onSessionStart en mousedown/contextmenu/keydown)
+- `bb91c5b` HistoryToolbar + atajos Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y
+- `c392d7b` menú ⋯ por rango con Duplicate y Delete undoable
+- `37e30b9` rename inline (Enter/Escape/blur, double-click en el nombre)
+- `9a9bc4a` group inline + render agrupado (ungrouped primero, grupos alfabéticos con header; datalist para sugerencias)
 
-## Fase 3 — Stores y Persistencia (COMPLETA)
+### Decisiones de diseño clave
+- History = `{ ranges, activeRangeId }[]`; NO persistido; snapshot por sesión de drag (no por celda).
+- `pushHistory()` lo llama el UI antes de cada mutación imperativa (create/duplicate/delete/rename/group).
+- WeightSlider global en toolbar (step 5). weight=100 → reemplaza celda; weight<100 → acumula hasta sum≤100 (trunca al hueco disponible, no reduce otras acciones).
+- RangeCell siempre aplica CATEGORY_BG; `buildBackground` usa weights como % absolutos y mete `transparent` trailing si sum<100.
+- Keyboard listener a nivel window en EditorPage ignora input/textarea/contenteditable (permite undo nativo en inputs).
 
-Commit: `e0278c6`.
+## Histórico 4A (bugs resueltos)
 
-- `useRangeStore`: CRUD (create/update/delete/duplicate), edición granular (upsertCell/clearCell/clearAllCells), `importRanges` con cap 100KB
-- `useUiStore`: theme (dark/light/system) + flags UI
-- Validación Zod `.strict()` al hidratar: regex de hand notation, caps (500 rangos · 169 cells · 5 actions/cell · 80 chars name), sanitización de strings
-- Storage resiliente: `createSafeJSONStorage()` con fallback in-memory; `migrate()` versionado en `CURRENT_RANGE_STORE_VERSION = 1`
-- Tema anti-flash: script inline en index.html + hook `useApplyTheme` + listener matchMedia
-- Viewer con `<EmptyState />`: CTA "Load demo range" (sembra SAMPLE_BTN_RFI con UUID fresco)
-- Selectores en `src/store/selectors.ts`: `useActiveRange`, `useRangeById`, `useRangeSummaries` (useShallow), `useRangesByGroup` (useMemo)
+1. Loop infinito en RangeManager (`70b95b8`). Causa: `useRangeSummaries` con `useShallow` sobre `.map(r => ({...}))` — el shim de useSyncExternalStoreWithSelector invalida su memo por identidad del selector. Fix: subscribir a `s.ranges` (ref estable) + `useMemo`.
+2. Celdas transparentes con una sola acción (`acda2a4`). Causa: `buildBackground` devolvía color sólido en `backgroundImage` (CSS inválido). Fix en `ecc2652`: siempre gradient.
+3. `react-hooks/set-state-in-effect` en RangeManager (`acda2a4`). Fix: levantar `isFormOpen` a EditorPage, fully-controlled.
 
-## Sub-fase 4A — Editor base (COMPLETA)
+## Siguiente: Sub-fase 4C
 
-Commits: `38628da` (base) + `6d9da97` (mejora de `openFormSignal`) + fix definitivo del loop.
+Parser import tolerante (AA,KK,AKs+,98s-65s), Import modal con preview, Export a clipboard/JSON/PNG (html-to-image).
 
-### Lo construido
-- `useRangePainter` hook (drag-to-paint por delegación, visitedRef anti-duplicados, mouseup/blur globales, atajos Space/Enter/Delete/Backspace)
-- `RangeGrid` con props `editable`, `onCellPaint`, `onCellErase` (RangeCell no se tocó)
-- `ActionToolbar` (selector de acción con swatches, aria-pressed)
-- `NewRangeForm` (name/position/situation con sanitización)
-- `RangeManager` (lista CRUD con useRangeSummaries, delete con confirm)
-- `EmptyEditorState` (CTA "New range")
-- `EditorPage` (layout 3 columnas, callbacks memoizados, signal para abrir form desde empty state)
+## Pendientes fases 5-7
 
-### Bug histórico: loop infinito en /editor (RESUELTO)
-
-**Síntomas (pre-fix)**: `Maximum update depth exceeded` en `<RangeManager>` al activar rango; `/viewer` quedaba con grid vacío tras el crash.
-
-**Causa raíz**: `useRangeSummaries` combinaba `useShallow` con `.map(r => ({...}))`. Cada render creaba objetos summary nuevos (referencias distintas), lo que hacía fallar la comparación shallow por índice. Combinado con la identidad nueva del wrapper de `useShallow` en cada render (que invalida el `useMemo` interno del shim de `useSyncExternalStoreWithSelector`), el selector devolvía una array ref nueva cada render sin cambio de store → React detectaba "snapshot cambiado" → loop.
-
-El grid vacío en `/viewer` era síntoma colateral de React roto tras el crash — no corrupción del store ni de `localStorage`.
-
-**Fix**: suscribirse a `s.ranges` (ref estable por Object.is de zustand) y derivar summaries con `useMemo([ranges])` en el hook. Mismo patrón que ya usaba `useRangesByGroup` en el fichero.
-
-Hipótesis previas refutadas:
-- `useActiveRange` **no** era el problema: `find()` devuelve la misma ref del objeto existente.
-- La dep `activeRange` vs `activeRange.cells` en `presentActions` era irrelevante.
-- No hay cascada entre selectores ni corrupción de store.
-
-### Bug histórico: celdas transparentes con una sola acción (RESUELTO)
-
-**Síntoma**: tras resolver el loop y poder pintar, las celdas con exactamente una acción quedaban transparentes (sin color de fondo). Los stats y tooltips sí mostraban la data. Con ≥2 acciones sí se veía el gradient.
-
-**Causa raíz**: en `RangeCell.tsx`, `buildBackground` devolvía el color sólido (`rgb(var(--color-action-raise))`) para una sola acción, y luego se asignaba vía `style.backgroundImage`. Un color sólido no es un valor válido para `background-image` → CSS lo ignora silenciosamente. Bug pre-existente de fase 2 que quedó oculto porque la fase 2 sembraba rangos de demo y no se había probado el flujo real de pintado.
-
-**Fix**: normalizar a gradient siempre. Para una acción: `linear-gradient(color, color)`.
-
-### Bug histórico: `react-hooks/set-state-in-effect` en `RangeManager` (RESUELTO)
-
-El patrón `openFormSignal` (contador monotónico + `useEffect` que llamaba `setState`) introducido en `6d9da97` violaba la regla nueva de `eslint-plugin-react-hooks` 7.x.
-
-**Fix**: levantar `isFormOpen` a `EditorPage` y pasar `isFormOpen` + `onFormOpenChange` como props. Se eliminaron el `useState` local y el `useEffect` — el form ahora es fully-controlled desde el padre.
-
-## Siguientes sub-fases (pendientes)
-
-- **4B**: WeightSlider (pesos mixtos), duplicate/rename/group ranges, Undo/Redo 50 pasos, atajos 1-5 para acciones, Delete para borrar
-- **4C**: Parser import tolerante (AA,KK,AKs+,98s-65s), Import modal con preview, Export a clipboard/JSON/PNG (html-to-image)
-- **5**: Visualizador mejorado (SituationSelector, multi-range)
-- **6**: Trainer clásico (reparto ponderado) + dibujo (comparación por combinaciones)
-- **7**: Pulido, toasts, a11y, deploy
+- **5**: Visualizador mejorado (SituationSelector, multi-range).
+- **6**: Trainer clásico (reparto ponderado) + dibujo (comparación por combinaciones).
+- **7**: Pulido, toasts, a11y, deploy.
