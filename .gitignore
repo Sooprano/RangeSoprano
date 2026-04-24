@@ -33,3 +33,6 @@ lerna-debug.log*
 
 # Temp
 .vite-temp/
+
+# Claude Code local
+.claude/
