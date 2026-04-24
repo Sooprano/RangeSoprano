@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { Plus, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useRangeStore } from '@/store/rangeStore';
@@ -16,32 +15,25 @@ const SITUATION_LABEL: Record<string, string> = {
 
 type RangeManagerProps = {
   className?: string;
-  /** When the parent triggers this with a value, the inline form is forced open. */
-  openFormSignal?: number;
+  isFormOpen: boolean;
+  onFormOpenChange: (open: boolean) => void;
 };
 
-export function RangeManager({ className, openFormSignal }: RangeManagerProps) {
+export function RangeManager({
+  className,
+  isFormOpen,
+  onFormOpenChange,
+}: RangeManagerProps) {
   const summaries = useRangeSummaries();
   const activeRangeId = useRangeStore((s) => s.activeRangeId);
   const createRange = useRangeStore((s) => s.createRange);
   const setActiveRange = useRangeStore((s) => s.setActiveRange);
   const deleteRange = useRangeStore((s) => s.deleteRange);
 
-  const [isFormOpen, setIsFormOpen] = useState(false);
-
-  useEffect(() => {
-    // Monotonic counter from the parent: any non-zero value means the parent
-    // explicitly asked to open the form (e.g. clicking "New range" from the
-    // empty state). The initial 0 on mount is ignored.
-    if (openFormSignal !== undefined && openFormSignal > 0) {
-      setIsFormOpen(true);
-    }
-  }, [openFormSignal]);
-
   const handleCreate = (payload: NewRangePayload) => {
     const id = createRange(payload);
     setActiveRange(id);
-    setIsFormOpen(false);
+    onFormOpenChange(false);
   };
 
   const handleDelete = (id: string, name: string) => {
@@ -64,7 +56,7 @@ export function RangeManager({ className, openFormSignal }: RangeManagerProps) {
         </h2>
         <button
           type="button"
-          onClick={() => setIsFormOpen((v) => !v)}
+          onClick={() => onFormOpenChange(!isFormOpen)}
           aria-expanded={isFormOpen}
           className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-accent-light hover:bg-surface-hover"
         >
@@ -76,7 +68,7 @@ export function RangeManager({ className, openFormSignal }: RangeManagerProps) {
       {isFormOpen && (
         <NewRangeForm
           onCreate={handleCreate}
-          onCancel={() => setIsFormOpen(false)}
+          onCancel={() => onFormOpenChange(false)}
         />
       )}
 

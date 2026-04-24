@@ -65,6 +65,20 @@ Hipótesis previas refutadas:
 - La dep `activeRange` vs `activeRange.cells` en `presentActions` era irrelevante.
 - No hay cascada entre selectores ni corrupción de store.
 
+### Bug histórico: celdas transparentes con una sola acción (RESUELTO)
+
+**Síntoma**: tras resolver el loop y poder pintar, las celdas con exactamente una acción quedaban transparentes (sin color de fondo). Los stats y tooltips sí mostraban la data. Con ≥2 acciones sí se veía el gradient.
+
+**Causa raíz**: en `RangeCell.tsx`, `buildBackground` devolvía el color sólido (`rgb(var(--color-action-raise))`) para una sola acción, y luego se asignaba vía `style.backgroundImage`. Un color sólido no es un valor válido para `background-image` → CSS lo ignora silenciosamente. Bug pre-existente de fase 2 que quedó oculto porque la fase 2 sembraba rangos de demo y no se había probado el flujo real de pintado.
+
+**Fix**: normalizar a gradient siempre. Para una acción: `linear-gradient(color, color)`.
+
+### Bug histórico: `react-hooks/set-state-in-effect` en `RangeManager` (RESUELTO)
+
+El patrón `openFormSignal` (contador monotónico + `useEffect` que llamaba `setState`) introducido en `6d9da97` violaba la regla nueva de `eslint-plugin-react-hooks` 7.x.
+
+**Fix**: levantar `isFormOpen` a `EditorPage` y pasar `isFormOpen` + `onFormOpenChange` como props. Se eliminaron el `useState` local y el `useEffect` — el form ahora es fully-controlled desde el padre.
+
 ## Siguientes sub-fases (pendientes)
 
 - **4B**: WeightSlider (pesos mixtos), duplicate/rename/group ranges, Undo/Redo 50 pasos, atajos 1-5 para acciones, Delete para borrar

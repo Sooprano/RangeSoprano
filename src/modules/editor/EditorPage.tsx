@@ -28,7 +28,7 @@ export default function EditorPage() {
   const clearCell = useRangeStore((s) => s.clearCell);
 
   const [activeAction, setActiveAction] = useState<Action>('RAISE');
-  const [openFormSignal, setOpenFormSignal] = useState(0);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   const handleCellPaint = useCallback(
     (hand: HandNotation) => {
@@ -55,7 +55,7 @@ export default function EditorPage() {
   );
 
   const requestNewRange = useCallback(() => {
-    setOpenFormSignal((n) => n + 1);
+    setIsFormOpen(true);
   }, []);
 
   return (
@@ -71,7 +71,10 @@ export default function EditorPage() {
       />
 
       <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)_300px]">
-        <RangeManager openFormSignal={openFormSignal} />
+        <RangeManager
+          isFormOpen={isFormOpen}
+          onFormOpenChange={setIsFormOpen}
+        />
 
         {activeRange ? (
           <div className="flex flex-col gap-4">

@@ -46,7 +46,10 @@ function buildBackground(actions: HandAction[]): string | undefined {
   const total = sorted.reduce((acc, a) => acc + a.weight, 0);
   if (total <= 0) return undefined;
 
-  if (sorted.length === 1) return ACTION_META[sorted[0]!.action].cssColor;
+  if (sorted.length === 1) {
+    const color = ACTION_META[sorted[0]!.action].cssColor;
+    return `linear-gradient(${color}, ${color})`;
+  }
 
   const stops: string[] = [];
   let cursor = 0;
