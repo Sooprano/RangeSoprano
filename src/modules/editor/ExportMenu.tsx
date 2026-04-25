@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type RefObject,
@@ -26,55 +27,46 @@ type ExportMenuProps = {
   gridRef: RefObject<HTMLDivElement | null>;
 };
 
+type MenuEntry = {
+  label: string;
+  disabled: boolean;
+  onSelect: () => void;
+};
+
 export function ExportMenu({ activeRange, allRanges, gridRef }: ExportMenuProps) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const menuRef = useRef<HTMLUListElement | null>(null);
 
-  useEffect(() => {
-    if (!open) return;
-    const onDocClick = (e: MouseEvent) => {
-      if (!rootRef.current) return;
-      if (!rootRef.current.contains(e.target as Node)) setOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
-    };
-    window.addEventListener('mousedown', onDocClick);
-    window.addEventListener('keydown', onKey);
-    return () => {
-      window.removeEventListener('mousedown', onDocClick);
-      window.removeEventListener('keydown', onKey);
-    };
-  }, [open]);
-
-  const canCopy = !!activeRange;
-  const canDownloadOne = !!activeRange;
-  const canDownloadAll = allRanges.length > 0;
-  const canExportPng = !!activeRange;
+  const closeAndRestore = useCallback(() => {
+    setOpen(false);
+    triggerRef.current?.focus();
+  }, []);
 
   const handleCopy = useCallback(async () => {
     if (!activeRange) return;
-    setOpen(false);
+    closeAndRestore();
     const text = rangeToNotation(activeRange);
     const ok = await copyToClipboard(text);
     if (ok) pushToast({ kind: 'success', message: 'Notation copied to clipboard' });
     else pushToast({ kind: 'error', message: 'Could not copy notation' });
-  }, [activeRange]);
+  }, [activeRange, closeAndRestore]);
 
   const handleDownloadOne = useCallback(() => {
     if (!activeRange) return;
-    setOpen(false);
+    closeAndRestore();
     downloadBlob(
       rangeToJson(activeRange),
       `${slugify(activeRange.name)}.json`,
       'application/json',
     );
     pushToast({ kind: 'success', message: `Downloaded "${activeRange.name}.json"` });
-  }, [activeRange]);
+  }, [activeRange, closeAndRestore]);
 
   const handleDownloadAll = useCallback(() => {
     if (allRanges.length === 0) return;
-    setOpen(false);
+    closeAndRestore();
     downloadBlob(
       allRangesToJson(allRanges),
       `range-soprano-${todayIsoDate()}.json`,
@@ -84,23 +76,96 @@ export function ExportMenu({ activeRange, allRanges, gridRef }: ExportMenuProps)
       kind: 'success',
       message: `Downloaded ${allRanges.length} range${allRanges.length === 1 ? '' : 's'} as JSON`,
     });
-  }, [allRanges]);
+  }, [allRanges, closeAndRestore]);
 
   const handleExportPng = useCallback(async () => {
     const node = gridRef.current;
     if (!activeRange || !node) return;
-    setOpen(false);
+    closeAndRestore();
     try {
       await exportNodeToPng(node, `${slugify(activeRange.name)}.png`);
       pushToast({ kind: 'success', message: 'PNG saved' });
     } catch {
       pushToast({ kind: 'error', message: 'Could not export PNG' });
     }
-  }, [activeRange, gridRef]);
+  }, [activeRange, gridRef, closeAndRestore]);
+
+  const entries: MenuEntry[] = useMemo(
+    () => [
+      { label: 'Copy notation', disabled: !activeRange, onSelect: handleCopy },
+      { label: 'Download JSON', disabled: !activeRange, onSelect: handleDownloadOne },
+      {
+        label: 'Download all ranges JSON',
+        disabled: allRanges.length === 0,
+        onSelect: handleDownloadAll,
+      },
+      { label: 'Export PNG', disabled: !activeRange, onSelect: handleExportPng },
+    ],
+    [
+      activeRange,
+      allRanges.length,
+      handleCopy,
+      handleDownloadOne,
+      handleDownloadAll,
+      handleExportPng,
+    ],
+  );
+
+  useEffect(() => {
+    if (!open) return;
+    const onDocClick = (e: MouseEvent) => {
+      if (!rootRef.current) return;
+      if (!rootRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeAndRestore();
+      }
+    };
+    window.addEventListener('mousedown', onDocClick);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('mousedown', onDocClick);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [open, closeAndRestore]);
+
+  useEffect(() => {
+    if (!open) return;
+    const items = menuItemElements(menuRef.current);
+    const firstEnabled = items.find((el) => !el.disabled);
+    firstEnabled?.focus();
+  }, [open]);
+
+  const onMenuKeyDown = (e: React.KeyboardEvent<HTMLUListElement>) => {
+    const items = menuItemElements(menuRef.current).filter((el) => !el.disabled);
+    if (items.length === 0) return;
+    const active = document.activeElement as HTMLElement | null;
+    const idx = items.findIndex((el) => el === active);
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const next = items[(idx + 1 + items.length) % items.length]!;
+      next.focus();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const prev = items[(idx - 1 + items.length) % items.length]!;
+      prev.focus();
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      items[0]!.focus();
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      items[items.length - 1]!.focus();
+    } else if (e.key === 'Tab') {
+      setOpen(false);
+    }
+  };
 
   return (
     <div ref={rootRef} className="relative">
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="menu"
@@ -112,33 +177,29 @@ export function ExportMenu({ activeRange, allRanges, gridRef }: ExportMenuProps)
       </button>
       {open && (
         <ul
+          ref={menuRef}
           role="menu"
+          aria-label="Export options"
+          onKeyDown={onMenuKeyDown}
           className="absolute right-0 z-30 mt-1 flex w-60 flex-col rounded-lg border border-border bg-surface p-1 text-sm shadow-surface"
         >
-          <MenuItem
-            label="Copy notation"
-            disabled={!canCopy}
-            onClick={handleCopy}
-          />
-          <MenuItem
-            label="Download JSON"
-            disabled={!canDownloadOne}
-            onClick={handleDownloadOne}
-          />
-          <MenuItem
-            label="Download all ranges JSON"
-            disabled={!canDownloadAll}
-            onClick={handleDownloadAll}
-          />
-          <MenuItem
-            label="Export PNG"
-            disabled={!canExportPng}
-            onClick={handleExportPng}
-          />
+          {entries.map((entry) => (
+            <MenuItem
+              key={entry.label}
+              label={entry.label}
+              disabled={entry.disabled}
+              onClick={entry.onSelect}
+            />
+          ))}
         </ul>
       )}
     </div>
   );
+}
+
+function menuItemElements(root: HTMLElement | null): HTMLButtonElement[] {
+  if (!root) return [];
+  return Array.from(root.querySelectorAll<HTMLButtonElement>('button[role="menuitem"]'));
 }
 
 type MenuItemProps = {
@@ -155,6 +216,7 @@ function MenuItem({ label, disabled = false, onClick }: MenuItemProps) {
         role="menuitem"
         disabled={disabled}
         onClick={onClick}
+        aria-label={label}
         className={cn(
           'w-full rounded-md px-2.5 py-1.5 text-left text-sm',
           'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light',

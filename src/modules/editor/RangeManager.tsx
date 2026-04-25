@@ -51,6 +51,13 @@ export function RangeManager({
   const [groupDraft, setGroupDraft] = useState('');
   const renameInputRef = useRef<HTMLInputElement | null>(null);
   const groupInputRef = useRef<HTMLInputElement | null>(null);
+  const menuTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const menuPanelRef = useRef<HTMLDivElement | null>(null);
+
+  const closeMenuAndRestoreFocus = (restore = true) => {
+    setOpenMenuId(null);
+    if (restore) menuTriggerRef.current?.focus();
+  };
 
   const { ungrouped, groups }: GroupedSummaries = useMemo(() => {
     const byGroup = new Map<string, RangeSummary[]>();
@@ -96,7 +103,10 @@ export function RangeManager({
       }
     };
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpenMenuId(null);
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeMenuAndRestoreFocus();
+      }
     };
     window.addEventListener('mousedown', handleDown);
     window.addEventListener('keydown', handleKey);
@@ -105,6 +115,40 @@ export function RangeManager({
       window.removeEventListener('keydown', handleKey);
     };
   }, [openMenuId]);
+
+  useEffect(() => {
+    if (!openMenuId) return;
+    const items = menuPanelRef.current?.querySelectorAll<HTMLButtonElement>(
+      'button[role="menuitem"]',
+    );
+    items?.[0]?.focus();
+  }, [openMenuId]);
+
+  const onMenuKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const items = Array.from(
+      menuPanelRef.current?.querySelectorAll<HTMLButtonElement>(
+        'button[role="menuitem"]',
+      ) ?? [],
+    );
+    if (items.length === 0) return;
+    const active = document.activeElement as HTMLElement | null;
+    const idx = items.findIndex((el) => el === active);
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      items[(idx + 1 + items.length) % items.length]!.focus();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      items[(idx - 1 + items.length) % items.length]!.focus();
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      items[0]!.focus();
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      items[items.length - 1]!.focus();
+    } else if (e.key === 'Tab') {
+      setOpenMenuId(null);
+    }
+  };
 
   const handleCreate = (payload: NewRangePayload) => {
     pushHistory();
@@ -264,7 +308,14 @@ export function RangeManager({
                 aria-label={`Actions for ${s.name}`}
                 aria-haspopup="menu"
                 aria-expanded={isMenuOpen}
-                onClick={() => setOpenMenuId(isMenuOpen ? null : s.id)}
+                onClick={(e) => {
+                  if (isMenuOpen) {
+                    closeMenuAndRestoreFocus(false);
+                  } else {
+                    menuTriggerRef.current = e.currentTarget;
+                    setOpenMenuId(s.id);
+                  }
+                }}
                 className={cn(
                   'rounded-md p-1 text-content-muted hover:bg-surface hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light',
                   isMenuOpen
@@ -276,7 +327,10 @@ export function RangeManager({
               </button>
               {isMenuOpen && (
                 <div
+                  ref={menuPanelRef}
                   role="menu"
+                  aria-label={`Actions for ${s.name}`}
+                  onKeyDown={onMenuKeyDown}
                   className="absolute right-0 top-full z-20 mt-1 flex min-w-[160px] flex-col rounded-lg border border-border bg-surface p-1 shadow-surface"
                 >
                   <button

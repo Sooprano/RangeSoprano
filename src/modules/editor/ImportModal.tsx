@@ -13,18 +13,51 @@ type ImportModalProps = {
 
 const MAX_ERROR_LIST = 8;
 
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 export function ImportModal({ action, onImport, onClose }: ImportModalProps) {
   const [text, setText] = useState('');
   const [replace, setReplace] = useState(false);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const previouslyFocused = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
+    previouslyFocused.current = document.activeElement as HTMLElement | null;
     textareaRef.current?.focus();
+    return () => {
+      previouslyFocused.current?.focus?.();
+    };
   }, []);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      const root = dialogRef.current;
+      if (!root) return;
+      const focusables = Array.from(
+        root.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
+      ).filter((el) => !el.hasAttribute('aria-hidden') && el.offsetParent !== null);
+      if (focusables.length === 0) {
+        e.preventDefault();
+        return;
+      }
+      const first = focusables[0]!;
+      const last = focusables[focusables.length - 1]!;
+      const active = document.activeElement as HTMLElement | null;
+      if (e.shiftKey && (active === first || !root.contains(active))) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && (active === last || !root.contains(active))) {
+        e.preventDefault();
+        first.focus();
+      }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
@@ -45,9 +78,11 @@ export function ImportModal({ action, onImport, onClose }: ImportModalProps) {
       role="presentation"
     >
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="import-title"
+        aria-describedby="import-desc"
         onClick={(e) => e.stopPropagation()}
         className="flex w-full max-w-xl flex-col gap-3 rounded-xl border border-border bg-surface p-5 shadow-surface"
       >
@@ -56,7 +91,7 @@ export function ImportModal({ action, onImport, onClose }: ImportModalProps) {
             <h2 id="import-title" className="text-base font-semibold text-content">
               Import range
             </h2>
-            <p className="text-xs text-content-muted">
+            <p id="import-desc" className="text-xs text-content-muted">
               Parsed hands will be painted as{' '}
               <span className="inline-flex items-center gap-1 font-medium text-content">
                 <span
@@ -84,11 +119,16 @@ export function ImportModal({ action, onImport, onClose }: ImportModalProps) {
           onChange={(e) => setText(e.target.value)}
           rows={10}
           spellCheck={false}
+          aria-label="Hand range tokens"
+          aria-describedby="import-result"
           placeholder="AA,AKs,KK,[98%]AQs[/98%],[45%]A7s[/45%],88+,T9s-65s"
           className="w-full resize-y rounded-md border border-border bg-bg px-3 py-2 font-mono text-xs text-content placeholder:text-content-disabled focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
         />
 
-        <div className="flex flex-col gap-2 rounded-md border border-border bg-bg/40 px-3 py-2 text-xs">
+        <div
+          id="import-result"
+          className="flex flex-col gap-2 rounded-md border border-border bg-bg/40 px-3 py-2 text-xs"
+        >
           <div className="flex items-center gap-3">
             <span className="text-content">
               <span className="font-semibold">{result.hands.length}</span> hand
@@ -130,7 +170,7 @@ export function ImportModal({ action, onImport, onClose }: ImportModalProps) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded-md px-3 py-1.5 text-sm font-medium text-content-muted hover:bg-surface-hover hover:text-content"
+            className="rounded-md px-3 py-1.5 text-sm font-medium text-content-muted hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
           >
             Cancel
           </button>
