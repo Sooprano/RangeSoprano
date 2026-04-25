@@ -11,10 +11,10 @@ React 19 + TypeScript estricto (noUncheckedIndexedAccess, exactOptionalPropertyT
 1. ✅ Setup y fundamentos
 2. ✅ RangeGrid completo (2A base, 2B stats, 2C a11y)
 3. ✅ Zustand stores + persistencia
-4. 🔄 Editor (4A: base painting EN CURSO CON BUG · 4B: pesos mixtos, undo/redo · 4C: import/export)
-5. ⏳ Visualizador mejorado
-6. ⏳ Entrenador (clásico + dibujo)
-7. ⏳ Pulido final
+4. ✅ Editor (4A base · 4B pesos mixtos + undo/redo · 4C import/export)
+5. ✅ Visualizador mejorado (5A scope · 5B filtros · 5C compare · 5D export PNG + atajos)
+6. ✅ Entrenador (6A shell · 6B clásico · 6C dibujo · 6D filtros)
+7. 🔄 Pulido final (7A toasts ✅ · 7B a11y modals/menus ✅ · 7C error boundary + 404 + meta ✅ · 7D deploy ⏳)
 
 ## Convenciones
 
