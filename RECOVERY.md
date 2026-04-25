@@ -20,6 +20,10 @@
 - Sub-fase 5B (viewer filtros): `6fafc9b`
 - Sub-fase 5C (compare side-by-side): `b4eefea`
 - Sub-fase 5D (export PNG + atajos): `f9374b9`
+- Sub-fase 6A (trainer shell): `e9e9bca`
+- Sub-fase 6B (classic trainer): `13ed254`
+- Sub-fase 6C (drawing trainer): `e15ab9b`
+- Sub-fase 6D (trainer filters): `e6a6bbb`
 
 ## Estado: Sub-fase 4B COMPLETA (9a9bc4a)
 
@@ -79,7 +83,29 @@
 - Schema `zPersistedUiState.viewerRangeId` agregado con `.nullable().default(null)`; persisted state viejo hidrata limpio sin migración.
 - En compare mode el sidebar derecho desaparece; cada `RangePanel` lleva sus propias stats/legend.
 
-## Pendientes fases 6-7
+## Fase 6 COMPLETA (e6a6bbb) — Trainer
 
-- **6**: Trainer clásico (reparto ponderado) + dibujo (comparación por combinaciones).
+### Subdivisión
+- **6A** Shell + selector de rango + mode toggle ✅
+- **6B** Modo clásico (sampling ponderado + feedback) ✅
+- **6C** Modo dibujo + diff por combos ✅
+- **6D** Filtros situation reusados ✅
+
+### Commits 6
+- `e9e9bca` **6A** `trainerRangeId` en uiStore (mismo patrón que viewer). `useTrainerRange`. TrainerPage 2-col reutilizando `ViewerRangeList`. Mode toggle Classic/Drawing.
+- `13ed254` **6B** `sampleTrainerHand`: muestrea por `combosOf(hand)` (P uniforme por combo en 52 cartas), luego acción esperada por pesos del cell con FOLD residual. ClassicTrainer con score (accuracy, streak, best), feedback panel con breakdown de mixed cells. Atajos 1-5 / Enter/Space/N / S.
+- `e15ab9b` **6C** DrawingTrainer pinta con CALL@100 sobre RangeGrid editable; al revelar muestra DiffGrid (read-only 13×13) con match/fp/fn. `computeRangeDiff` binario in/out por combos (Jaccard). Reset limpia.
+- `e6a6bbb` **6D** `SituationSelector` reusado en TrainerPage para filtrar la lista. Filtros locales (no persistidos). Sin auto-jump si la selección actual cae fuera del filtro.
+
+### Decisiones de diseño 6
+- Sampling: P(hand) ∝ combos del hand, no ∝ peso de la celda. Esto reproduce la frecuencia natural de reparto en una mesa real.
+- Acción esperada por draw: muestreada de la celda. Para celda 60% RAISE / 40% 3BET, el 60% de los draws espera RAISE y 40% espera 3BET. Feedback binario, breakdown educativo después.
+- Hands fuera del rango: implícito FOLD, expected = FOLD.
+- Drawing trainer: comparación binaria. Cualquier acción presente en la celda truth la cuenta como "in", sin importar pesos. Simplifica el ejercicio "play vs fold".
+- Score de session NO persistido. Switching range → reset score. Switching hand dentro de la misma range → score continúa.
+- DiffGrid es un componente nuevo independiente del RangeGrid para no contaminarlo con estados ajenos a las acciones.
+- Filtros viewer/trainer NO persistidos por la misma razón que en Viewer (sesión limpia al abrir).
+
+## Pendientes fase 7
+
 - **7**: Pulido, toasts, a11y, deploy.
