@@ -3,6 +3,31 @@ import { Search } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import type { RangeSummary } from '@/store/selectors';
 
+/**
+ * Flatten summaries the same way the list renders them: ungrouped first
+ * (in store order), then groups sorted alphabetically by name (items in
+ * store order). Used for arrow key navigation so it follows the visual flow.
+ */
+export function displayOrderFor(summaries: RangeSummary[]): RangeSummary[] {
+  const byGroup = new Map<string, RangeSummary[]>();
+  const ungrouped: RangeSummary[] = [];
+  for (const s of summaries) {
+    if (s.group) {
+      const bucket = byGroup.get(s.group);
+      if (bucket) bucket.push(s);
+      else byGroup.set(s.group, [s]);
+    } else {
+      ungrouped.push(s);
+    }
+  }
+  const sortedNames = Array.from(byGroup.keys()).sort((a, b) =>
+    a.localeCompare(b),
+  );
+  const out: RangeSummary[] = [...ungrouped];
+  for (const name of sortedNames) out.push(...byGroup.get(name)!);
+  return out;
+}
+
 const SITUATION_LABEL: Record<string, string> = {
   RFI: 'RFI',
   vs_RFI: 'vs RFI',
@@ -57,7 +82,10 @@ export function ViewerRangeList({
     );
     return {
       ungrouped: un,
-      groups: sortedNames.map((name) => ({ name, items: byGroup.get(name)! })),
+      groups: sortedNames.map((name) => ({
+        name,
+        items: byGroup.get(name)!,
+      })),
     };
   }, [filtered]);
 

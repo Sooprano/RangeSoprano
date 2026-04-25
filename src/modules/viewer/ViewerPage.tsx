@@ -10,7 +10,7 @@ import { useUiStore } from '@/store/uiStore';
 import { useRangeSummaries, useViewerRange } from '@/store/selectors';
 import { exportNodeToPng, slugify } from '@/utils/exportRange';
 import { EmptyState } from './EmptyState';
-import { ViewerRangeList } from './ViewerRangeList';
+import { ViewerRangeList, displayOrderFor } from './ViewerRangeList';
 import {
   EMPTY_FILTERS,
   SituationSelector,
@@ -98,9 +98,14 @@ export default function ViewerPage() {
     }
   }, [range, compareRange, compareEnabled]);
 
+  const orderedForNav = useMemo(
+    () => displayOrderFor(filteredSummaries),
+    [filteredSummaries],
+  );
+
   useEffect(() => {
     if (compareEnabled) return;
-    if (filteredSummaries.length < 2) return;
+    if (orderedForNav.length < 2) return;
     const handler = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
       if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
@@ -113,16 +118,16 @@ export default function ViewerPage() {
         return;
       }
       e.preventDefault();
-      const idx = filteredSummaries.findIndex((s) => s.id === viewerRangeId);
+      const idx = orderedForNav.findIndex((s) => s.id === viewerRangeId);
       const dir = e.key === 'ArrowRight' ? 1 : -1;
-      const len = filteredSummaries.length;
+      const len = orderedForNav.length;
       const nextIdx = idx < 0 ? 0 : (idx + dir + len) % len;
-      const next = filteredSummaries[nextIdx];
+      const next = orderedForNav[nextIdx];
       if (next) setViewerRangeId(next.id);
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [compareEnabled, filteredSummaries, viewerRangeId, setViewerRangeId]);
+  }, [compareEnabled, orderedForNav, viewerRangeId, setViewerRangeId]);
 
   const presentActions = useMemo(
     () => (range ? computeRangeStats(range.cells).presentActions : []),
