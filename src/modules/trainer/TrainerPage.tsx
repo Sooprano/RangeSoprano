@@ -8,6 +8,7 @@ import { useRangeSummaries, useTrainerRange } from '@/store/selectors';
 import { ViewerRangeList } from '@/modules/viewer/ViewerRangeList';
 import { TrainerEmptyState } from './TrainerEmptyState';
 import { ClassicTrainer } from './ClassicTrainer';
+import { DrawingTrainer } from './DrawingTrainer';
 
 const SITUATION_LABEL: Record<string, string> = {
   RFI: 'RFI',
@@ -80,7 +81,7 @@ export default function TrainerPage() {
             mode === 'classic' ? (
               <ClassicTrainer key={range.id} range={range} />
             ) : (
-              <ModePlaceholder mode={mode} />
+              <DrawingTrainer key={range.id} range={range} />
             )
           ) : (
             <div className="flex min-h-[40vh] items-center justify-center rounded-xl border border-dashed border-border p-6 text-center text-sm text-content-muted">
@@ -153,11 +154,3 @@ function ModeButton({
   );
 }
 
-function ModePlaceholder({ mode }: { mode: TrainerMode }) {
-  const label = mode === 'classic' ? 'Classic mode' : 'Drawing mode';
-  return (
-    <div className="flex min-h-[40vh] items-center justify-center rounded-xl border border-dashed border-border p-6 text-center text-sm text-content-muted">
-      {label} arrives in the next sub-phase.
-    </div>
-  );
-}
