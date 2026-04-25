@@ -24,6 +24,9 @@
 - Sub-fase 6B (classic trainer): `13ed254`
 - Sub-fase 6C (drawing trainer): `e15ab9b`
 - Sub-fase 6D (trainer filters): `e6a6bbb`
+- Sub-fase 7A (toast system): `1359878`
+- Sub-fase 7B (a11y modals/menus): `2f1d368`
+- Sub-fase 7C (error boundary + 404 + meta): `caa190b`
 
 ## Estado: Sub-fase 4B COMPLETA (9a9bc4a)
 
@@ -106,6 +109,27 @@
 - DiffGrid es un componente nuevo independiente del RangeGrid para no contaminarlo con estados ajenos a las acciones.
 - Filtros viewer/trainer NO persistidos por la misma razón que en Viewer (sesión limpia al abrir).
 
+## Fase 7 EN CURSO (7A/7B/7C completas, 7D pendiente)
+
+### Subdivisión
+- **7A** Toast system + integración ✅
+- **7B** A11y modal/menus polish ✅
+- **7C** ErrorBoundary + 404 + meta ✅
+- **7D** Deploy (GitHub Pages) ⏳ — pausado: falta crear repo y remote
+
+### Commits 7
+- `1359878` **7A** `toastStore` (zustand, NOT persisted, cap 4). `Toaster` con `aria-live` polite/assertive split (errores en assertive). Montado en `AppLayout`. ExportMenu sustituye su `setTimeout`/`useState` por toasts; EditorPage emite toast post-import; ViewerPage idem PNG; RangeManager toast info post-delete (recordando undo).
+- `2f1d368` **7B** ImportModal: focus trap (Tab/Shift+Tab loop sobre `FOCUSABLE_SELECTOR`), restore focus en unmount, `aria-describedby` en textarea (apunta al panel de resultados). ExportMenu y RangeManager menu: ArrowUp/Down/Home/End/Tab nav, focus al primer item al abrir, restore focus al trigger en Escape. NavLink ya provee `aria-current="page"` (no se tocó Sidebar).
+- `caa190b` **7C** `ErrorBoundary` (class component con override modifiers, fallback con botón Reload, log en DEV) envolviendo `<RouterProvider>` en `main.tsx`. `*` route ahora renderiza `NotFoundPage` (antes era redirect silencioso a /viewer). `index.html`: `theme-color` + `og:title|description|image|type` + `twitter:card`.
+
+### Decisiones de diseño 7
+- Toasts NO persistidos. Cap 4 (slice por la cola). Errores en region `aria-live="assertive"` separada para que SR los anuncie sin esperar al éxito previo.
+- Toast hover/focus cancela el auto-dismiss (sin reanudación al salir — el usuario debe cerrar manualmente). Simple y suficiente para la app.
+- ImportModal: aria-describedby apunta al panel de resultados que ya tenía info de hands/errores. Doble efecto: SR lee resumen al recibir foco el textarea.
+- Menu nav inline en cada componente (no se extrajo hook): sólo 2 menús, refactor sería prematuro.
+- `closeMenuAndRestoreFocus(false)` en RangeManager se usa cuando el toggle vuelve a cerrar (el botón ya tiene foco). Restore=true sólo en Escape.
+- ErrorBoundary log a `console.error` SOLO en DEV (no spamea producción).
+
 ## Pendientes fase 7
 
-- **7**: Pulido, toasts, a11y, deploy.
+- **7D**: Deploy a GitHub Pages — bloqueado hasta crear repo en GitHub y configurar remote. Después: `vite.config.ts` con `base` condicional, `.github/workflows/deploy.yml`, `basename` en router, README.
