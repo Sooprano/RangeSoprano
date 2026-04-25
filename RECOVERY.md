@@ -18,6 +18,8 @@
 - Sub-fase 4C (import/export): `eb9969a`
 - Sub-fase 5A (viewer scope): `7161958`
 - Sub-fase 5B (viewer filtros): `6fafc9b`
+- Sub-fase 5C (compare side-by-side): `b4eefea`
+- Sub-fase 5D (export PNG + atajos): `f9374b9`
 
 ## Estado: Sub-fase 4B COMPLETA (9a9bc4a)
 
@@ -56,30 +58,26 @@
 - `008294e` Export PNG (html-to-image) con wrapper ref sobre el grid
 - `eb9969a` docs RECOVERY
 
-## Fase 5 en curso — Visualizador mejorado
+## Fase 5 COMPLETA (f9374b9) — Visualizador mejorado
 
 ### Subdivisión
 - **5A** Selector de rango + scope independiente del editor ✅
 - **5B** SituationSelector (Position · Situation · Villain) ✅
-- **5C** Modo comparación side-by-side (pendiente)
-- **5D** Pulido: export PNG, atajos ←/→, mensajes vacíos (pendiente)
+- **5C** Modo comparación side-by-side ✅
+- **5D** Export PNG + atajos ←/→ ✅
 
 ### Commits 5
 - `7161958` **5A** viewerRangeId en uiStore (nullable, default null, sin bump de versión). `useViewerRange`. ViewerPage 3-col con ViewerRangeList (search + groups). Auto-selección del primer rango si el id persistido es stale.
-- `6fafc9b` **5B** SituationSelector con selects para Position/Situation/Villain + Clear. Villain deshabilitado cuando situation=RFI. Filtros LOCALES (no persistidos). Hint cuando la selección cae fuera del filtro. `matchesFilters` / `hasAnyFilter` exportados para reuso en 5C.
+- `6fafc9b` **5B** SituationSelector con selects para Position/Situation/Villain + Clear. Villain deshabilitado cuando situation=RFI. Filtros LOCALES (no persistidos). Hint cuando la selección cae fuera del filtro. `matchesFilters` / `hasAnyFilter` exportados.
+- `b4eefea` **5C** `RangePanel` (header + grid + stats/legend) y `CompareToolbar` (toggle + select B + Exit). ViewerPage swap a 2-col en compare; B autoselect al primer rango distinto de A; effect que nulea ids stale.
+- `f9374b9` **5D** Export PNG en Viewer reutilizando `exportNodeToPng` sobre un `captureRef` que envuelve grid (single) o dual-panel (compare); filename `nameA-vs-nameB.png` en compare. Atajos ←/→ recorren la lista filtrada (single mode, sin modificadores, ignora inputs/grid focus).
 
 ### Decisiones de diseño 5
 - `ViewerRangeList` acepta `summaries` por prop (lift a `ViewerPage`) para separar filtro vs. búsqueda interna.
 - Filtros del viewer NO persistidos a propósito — abrir app debe arrancar sin sesgo.
+- Compare state (toggle + B id) NO persistido por la misma razón.
 - Schema `zPersistedUiState.viewerRangeId` agregado con `.nullable().default(null)`; persisted state viejo hidrata limpio sin migración.
-
-## Siguiente: 5C — Compare side-by-side
-
-Pendiente:
-- Extraer `RangePanel` (grid + stats + legend compactos) de ViewerPage.
-- Toggle "Compare" + selector de rango B local (no persistido inicialmente; persistir en 5D si se decide).
-- Layout dual: dos `<RangePanel>` en paralelo. Cuando compare=off, volver a 3-col actual.
-- Listo para reutilizar `matchesFilters` si se quiere filtrar la lista del rango B.
+- En compare mode el sidebar derecho desaparece; cada `RangePanel` lleva sus propias stats/legend.
 
 ## Pendientes fases 6-7
 
