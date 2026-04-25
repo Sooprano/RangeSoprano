@@ -7,6 +7,7 @@ import { useUiStore } from '@/store/uiStore';
 import { useRangeSummaries, useTrainerRange } from '@/store/selectors';
 import { ViewerRangeList } from '@/modules/viewer/ViewerRangeList';
 import { TrainerEmptyState } from './TrainerEmptyState';
+import { ClassicTrainer } from './ClassicTrainer';
 
 const SITUATION_LABEL: Record<string, string> = {
   RFI: 'RFI',
@@ -76,7 +77,11 @@ export default function TrainerPage() {
         <div className="flex min-w-0 flex-col gap-4">
           <ModeToggle value={mode} onChange={setMode} />
           {range ? (
-            <ModePlaceholder mode={mode} />
+            mode === 'classic' ? (
+              <ClassicTrainer key={range.id} range={range} />
+            ) : (
+              <ModePlaceholder mode={mode} />
+            )
           ) : (
             <div className="flex min-h-[40vh] items-center justify-center rounded-xl border border-dashed border-border p-6 text-center text-sm text-content-muted">
               Pick a range from the list to start a session.
