@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Brush, Dices } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -6,6 +6,13 @@ import { useRangeStore } from '@/store/rangeStore';
 import { useUiStore } from '@/store/uiStore';
 import { useRangeSummaries, useTrainerRange } from '@/store/selectors';
 import { ViewerRangeList } from '@/modules/viewer/ViewerRangeList';
+import {
+  EMPTY_FILTERS,
+  SituationSelector,
+  hasAnyFilter,
+  matchesFilters,
+  type ViewerFilters,
+} from '@/modules/viewer/SituationSelector';
 import { TrainerEmptyState } from './TrainerEmptyState';
 import { ClassicTrainer } from './ClassicTrainer';
 import { DrawingTrainer } from './DrawingTrainer';
@@ -29,6 +36,15 @@ export default function TrainerPage() {
   const range = useTrainerRange();
 
   const [mode, setMode] = useState<TrainerMode>('classic');
+  const [filters, setFilters] = useState<ViewerFilters>(EMPTY_FILTERS);
+
+  const filteredSummaries = useMemo(
+    () =>
+      hasAnyFilter(filters)
+        ? summaries.filter((s) => matchesFilters(s, filters))
+        : summaries,
+    [summaries, filters],
+  );
 
   useEffect(() => {
     if (ranges.length === 0) {
@@ -69,14 +85,21 @@ export default function TrainerPage() {
 
       <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
         <ViewerRangeList
-          summaries={summaries}
+          summaries={filteredSummaries}
           selectedId={trainerRangeId}
           onSelect={setTrainerRangeId}
-          emptyMessage="No ranges yet. Create one in the Editor."
+          emptyMessage={
+            hasAnyFilter(filters)
+              ? 'No ranges match the current filters.'
+              : 'No ranges yet. Create one in the Editor.'
+          }
         />
 
         <div className="flex min-w-0 flex-col gap-4">
-          <ModeToggle value={mode} onChange={setMode} />
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <SituationSelector filters={filters} onChange={setFilters} />
+            <ModeToggle value={mode} onChange={setMode} />
+          </div>
           {range ? (
             mode === 'classic' ? (
               <ClassicTrainer key={range.id} range={range} />
