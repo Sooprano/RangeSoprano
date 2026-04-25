@@ -9,6 +9,7 @@ import { ORDERED_ACTIONS } from '@/utils/actionMeta';
 import { upsertActionInCell } from '@/utils/cellUtils';
 import type { WeightedHand } from '@/utils/handRangeParser';
 import { useRangeStore } from '@/store/rangeStore';
+import { pushToast } from '@/store/toastStore';
 import { useActiveRange } from '@/store/selectors';
 import type { Action, HandNotation } from '@/types/poker';
 import { ActionToolbar } from './ActionToolbar';
@@ -98,6 +99,12 @@ export default function EditorPage() {
         }
       }
       setIsImportOpen(false);
+      pushToast({
+        kind: 'success',
+        message: `Imported ${hands.length} hand${hands.length === 1 ? '' : 's'}${
+          replace ? ' (replaced existing)' : ''
+        }`,
+      });
     },
     [
       activeRangeId,

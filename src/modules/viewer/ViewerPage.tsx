@@ -6,6 +6,7 @@ import { RangeStats } from '@/components/RangeStats';
 import { ActionLegend } from '@/components/ActionLegend';
 import { computeRangeStats } from '@/utils/rangeStats';
 import { useRangeStore } from '@/store/rangeStore';
+import { pushToast } from '@/store/toastStore';
 import { useUiStore } from '@/store/uiStore';
 import { useRangeSummaries, useViewerRange } from '@/store/selectors';
 import { exportNodeToPng, slugify } from '@/utils/exportRange';
@@ -93,8 +94,9 @@ export default function ViewerPage() {
       : slugify(range.name);
     try {
       await exportNodeToPng(node, `${baseName}.png`);
+      pushToast({ kind: 'success', message: 'PNG saved' });
     } catch {
-      // best-effort; no toast infra yet
+      pushToast({ kind: 'error', message: 'Could not export PNG' });
     }
   }, [range, compareRange, compareEnabled]);
 

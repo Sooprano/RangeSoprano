@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Copy, FolderInput, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useRangeStore } from '@/store/rangeStore';
+import { pushToast } from '@/store/toastStore';
 import { useRangeSummaries, type RangeSummary } from '@/store/selectors';
 import { MAX_GROUP_LEN, MAX_NAME_LEN, sanitizeText } from '@/store/schemas';
 import type { Range } from '@/types/poker';
@@ -124,6 +125,7 @@ export function RangeManager({
     if (window.confirm(`Delete range "${name}"? You can undo with Ctrl+Z.`)) {
       pushHistory();
       deleteRange(id);
+      pushToast({ kind: 'info', message: `Deleted "${name}" — Ctrl+Z to undo` });
     }
   };
 

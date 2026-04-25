@@ -5,8 +5,9 @@ import {
   useState,
   type RefObject,
 } from 'react';
-import { Download, Check } from 'lucide-react';
+import { Download } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { pushToast } from '@/store/toastStore';
 import type { Range } from '@/types/poker';
 import {
   allRangesToJson,
@@ -25,13 +26,9 @@ type ExportMenuProps = {
   gridRef: RefObject<HTMLDivElement | null>;
 };
 
-type Feedback = { key: string; label: string };
-
 export function ExportMenu({ activeRange, allRanges, gridRef }: ExportMenuProps) {
   const [open, setOpen] = useState(false);
-  const [feedback, setFeedback] = useState<Feedback | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
-  const feedbackTimer = useRef<number | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -50,26 +47,6 @@ export function ExportMenu({ activeRange, allRanges, gridRef }: ExportMenuProps)
     };
   }, [open]);
 
-  useEffect(
-    () => () => {
-      if (feedbackTimer.current !== null) {
-        window.clearTimeout(feedbackTimer.current);
-      }
-    },
-    [],
-  );
-
-  const flash = useCallback((key: string, label: string) => {
-    setFeedback({ key, label });
-    if (feedbackTimer.current !== null) {
-      window.clearTimeout(feedbackTimer.current);
-    }
-    feedbackTimer.current = window.setTimeout(() => {
-      setFeedback(null);
-      feedbackTimer.current = null;
-    }, 1500);
-  }, []);
-
   const canCopy = !!activeRange;
   const canDownloadOne = !!activeRange;
   const canDownloadAll = allRanges.length > 0;
@@ -77,30 +54,36 @@ export function ExportMenu({ activeRange, allRanges, gridRef }: ExportMenuProps)
 
   const handleCopy = useCallback(async () => {
     if (!activeRange) return;
+    setOpen(false);
     const text = rangeToNotation(activeRange);
     const ok = await copyToClipboard(text);
-    flash('copy', ok ? 'Copied' : 'Copy failed');
-    setOpen(false);
-  }, [activeRange, flash]);
+    if (ok) pushToast({ kind: 'success', message: 'Notation copied to clipboard' });
+    else pushToast({ kind: 'error', message: 'Could not copy notation' });
+  }, [activeRange]);
 
   const handleDownloadOne = useCallback(() => {
     if (!activeRange) return;
+    setOpen(false);
     downloadBlob(
       rangeToJson(activeRange),
       `${slugify(activeRange.name)}.json`,
       'application/json',
     );
-    setOpen(false);
+    pushToast({ kind: 'success', message: `Downloaded "${activeRange.name}.json"` });
   }, [activeRange]);
 
   const handleDownloadAll = useCallback(() => {
     if (allRanges.length === 0) return;
+    setOpen(false);
     downloadBlob(
       allRangesToJson(allRanges),
       `range-soprano-${todayIsoDate()}.json`,
       'application/json',
     );
-    setOpen(false);
+    pushToast({
+      kind: 'success',
+      message: `Downloaded ${allRanges.length} range${allRanges.length === 1 ? '' : 's'} as JSON`,
+    });
   }, [allRanges]);
 
   const handleExportPng = useCallback(async () => {
@@ -109,11 +92,11 @@ export function ExportMenu({ activeRange, allRanges, gridRef }: ExportMenuProps)
     setOpen(false);
     try {
       await exportNodeToPng(node, `${slugify(activeRange.name)}.png`);
-      flash('png', 'Saved PNG');
+      pushToast({ kind: 'success', message: 'PNG saved' });
     } catch {
-      flash('png', 'PNG failed');
+      pushToast({ kind: 'error', message: 'Could not export PNG' });
     }
-  }, [activeRange, gridRef, flash]);
+  }, [activeRange, gridRef]);
 
   return (
     <div ref={rootRef} className="relative">
@@ -124,12 +107,8 @@ export function ExportMenu({ activeRange, allRanges, gridRef }: ExportMenuProps)
         aria-expanded={open}
         className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-content-muted hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
       >
-        {feedback ? (
-          <Check className="h-3.5 w-3.5" strokeWidth={2.25} />
-        ) : (
-          <Download className="h-3.5 w-3.5" strokeWidth={2.25} />
-        )}
-        {feedback ? feedback.label : 'Export'}
+        <Download className="h-3.5 w-3.5" strokeWidth={2.25} />
+        Export
       </button>
       {open && (
         <ul

@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import { useApplyTheme } from '@/hooks/useApplyTheme';
+import { Toaster } from '@/components/Toaster';
 import { Sidebar } from './Sidebar';
 
 export function AppLayout() {
@@ -13,6 +14,7 @@ export function AppLayout() {
           <Outlet />
         </div>
       </main>
+      <Toaster />
     </div>
   );
 }
