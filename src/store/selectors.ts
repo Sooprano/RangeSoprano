@@ -27,6 +27,14 @@ export function useViewerRange(): Range | null {
   });
 }
 
+export function useTrainerRange(): Range | null {
+  const trainerRangeId = useUiStore((s) => s.trainerRangeId);
+  return useRangeStore((s) => {
+    if (!trainerRangeId) return null;
+    return s.ranges.find((r) => r.id === trainerRangeId) ?? null;
+  });
+}
+
 export function useRangeById(id: string | null): Range | null {
   return useRangeStore((s) => (id ? s.ranges.find((r) => r.id === id) ?? null : null));
 }

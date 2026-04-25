@@ -15,6 +15,7 @@ type UiStoreState = PersistedUiState & {
   setShowActionLegend: (v: boolean) => void;
   setGridTooltipEnabled: (v: boolean) => void;
   setViewerRangeId: (id: string | null) => void;
+  setTrainerRangeId: (id: string | null) => void;
 };
 
 const INITIAL: PersistedUiState = {
@@ -22,6 +23,7 @@ const INITIAL: PersistedUiState = {
   showActionLegend: true,
   gridTooltipEnabled: true,
   viewerRangeId: null,
+  trainerRangeId: null,
 };
 
 export const useUiStore = create<UiStoreState>()(
@@ -39,6 +41,7 @@ export const useUiStore = create<UiStoreState>()(
       setShowActionLegend: (v) => set({ showActionLegend: v }),
       setGridTooltipEnabled: (v) => set({ gridTooltipEnabled: v }),
       setViewerRangeId: (id) => set({ viewerRangeId: id }),
+      setTrainerRangeId: (id) => set({ trainerRangeId: id }),
     }),
     {
       name: UI_STORE_KEY,
@@ -49,6 +52,7 @@ export const useUiStore = create<UiStoreState>()(
         showActionLegend: s.showActionLegend,
         gridTooltipEnabled: s.gridTooltipEnabled,
         viewerRangeId: s.viewerRangeId,
+        trainerRangeId: s.trainerRangeId,
       }),
       migrate: (persisted, fromVersion) => {
         if (fromVersion < CURRENT_UI_STORE_VERSION) return { ...INITIAL };

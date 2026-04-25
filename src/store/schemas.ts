@@ -100,6 +100,7 @@ export const zPersistedUiState = z
     showActionLegend: z.boolean(),
     gridTooltipEnabled: z.boolean(),
     viewerRangeId: z.string().nullable().default(null),
+    trainerRangeId: z.string().nullable().default(null),
   })
   .strict();
 
