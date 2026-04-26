@@ -42,17 +42,23 @@ function CardFace({ rank, suit }: { rank: string; suit: Suit }) {
 // POSITIONS is already in clockwise seat order: UTG → HJ → CO → BTN → SB → BB
 const N = POSITIONS.length; // 6
 
-// Fixed visual slots.
-// Slot 0 = hero (always bottom-center).
-// Slots 1-5 go counter-clockwise in seating order (right → top-right → top-left → left).
+// Stadium shape: paddingBottom=42% → container is 2.38:1 (W × 0.42W).
+// Felt: inset-x-[3%] inset-y-[8%] → felt is 94% × 84% of container = 0.94W × 0.353W → ratio 2.66:1.
+// border-radius:9999px on 2.66:1 element → long straight top/bottom + semicircular ends.
+// Right semicircle center: (~79%, 50%). Left: (~21%, 50%). r ≈ 0.176W.
+//
+// 6-seat layout with bilateral symmetry:
+// - Slot 0 (hero) at bottom-center; slot 3 directly across at top-center.
+// - Slots 2 & 4 at same y (upper-right/upper-left corners) — BTN/HJ same height.
+// - Slots 1 & 5 at same y (lower-right/lower-left corners) — SB/UTG same height.
 type Slot = { x: number; y: number };
 const VISUAL_SLOTS: Slot[] = [
-  { x: 50, y: 91 }, // 0 — hero, bottom-center
-  { x: 84, y: 79 }, // 1 — bottom-right
-  { x: 97, y: 47 }, // 2 — right
-  { x: 80, y: 11 }, // 3 — top-right
-  { x: 20, y: 11 }, // 4 — top-left
-  { x: 3,  y: 47 }, // 5 — left
+  { x: 50, y: 96 }, // 0 — hero (bottom-center, just below felt bottom rail)
+  { x: 91, y: 78 }, // 1 — lower-right corner  ← same y as slot 5
+  { x: 91, y: 22 }, // 2 — upper-right corner  ← same y as slot 4
+  { x: 50, y:  4 }, // 3 — top-center (directly across hero)
+  { x:  9, y: 22 }, // 4 — upper-left corner   ← mirrors slot 2
+  { x:  9, y: 78 }, // 5 — lower-left corner   ← mirrors slot 1
 ];
 
 function getTableLayout(heroPosition: Position): { position: Position; slot: Slot }[] {
@@ -78,30 +84,20 @@ export function PokerTable({ heroPosition, villainPosition, hand }: PokerTablePr
   const layout = getTableLayout(heroPosition);
 
   return (
-    // Aspect-ratio container via padding-bottom trick; all children absolute.
-    <div className="relative mx-auto w-full max-w-md" style={{ paddingBottom: '52%' }}>
+    // Container 2.38:1 (W × 0.42W). All children absolute.
+    // mb-12 reserves space for the hero seat which overflows below the felt
+    // (cards + combos text + badge stack ~110px tall, anchored at y=96%).
+    <div className="relative mx-auto mb-12 w-full max-w-md" style={{ paddingBottom: '42%' }}>
 
-      {/* ── Oval felt ── */}
+      {/* ── Stadium felt: long straight top/bottom, semicircular left/right ends ── */}
       <div
-        className="absolute inset-x-[4%] inset-y-[10%] rounded-[50%]"
+        className="absolute inset-x-[3%] inset-y-[8%] rounded-full"
         style={{
-          background: 'radial-gradient(ellipse at center, #122a1a 0%, #0d1f12 100%)',
-          border: '3px solid #1e3d26',
-          boxShadow: '0 4px 24px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04)',
+          background: 'radial-gradient(ellipse at 50% 35%, #1e3a4a 0%, #112233 55%, #0b1928 100%)',
+          border: '3px solid #2a5070',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 5px #0d2030',
         }}
       />
-
-      {/* ── Cards: just above the hero seat ── */}
-      <div
-        className="absolute flex flex-col items-center gap-1"
-        style={{ left: '50%', top: '62%', transform: 'translate(-50%, -50%)' }}
-      >
-        <div className="flex items-center gap-2">
-          <CardFace rank={card1.rank} suit={card1.suit} />
-          <CardFace rank={card2.rank} suit={card2.suit} />
-        </div>
-        <span className="text-[10px] text-white/30">{combos} combos</span>
-      </div>
 
       {/* ── Seat tokens ── */}
       {layout.map(({ position, slot }) => {
@@ -113,18 +109,30 @@ export function PokerTable({ heroPosition, villainPosition, hand }: PokerTablePr
             className="absolute -translate-x-1/2 -translate-y-1/2"
             style={{ left: `${slot.x}%`, top: `${slot.y}%` }}
           >
-            <div
-              className={cn(
-                'rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
-                isHero
-                  ? 'bg-accent text-white shadow-sm'
-                  : isVillain
+            {isHero ? (
+              // Hero: cards stacked directly above the position badge
+              <div className="flex flex-col items-center gap-1.5">
+                <div className="flex items-center gap-2">
+                  <CardFace rank={card1.rank} suit={card1.suit} />
+                  <CardFace rank={card2.rank} suit={card2.suit} />
+                </div>
+                <span className="text-[10px] text-white/30">{combos} combos</span>
+                <div className="rounded-md px-4 py-2.5 text-sm font-semibold uppercase tracking-wide bg-accent text-white shadow-sm">
+                  {position}
+                </div>
+              </div>
+            ) : (
+              <div
+                className={cn(
+                  'rounded-md px-4 py-2.5 text-sm font-semibold uppercase tracking-wide',
+                  isVillain
                     ? 'border border-accent/50 bg-surface text-content'
                     : 'border border-border bg-surface/80 text-content-disabled',
-              )}
-            >
-              {position}
-            </div>
+                )}
+              >
+                {position}
+              </div>
+            )}
           </div>
         );
       })}
