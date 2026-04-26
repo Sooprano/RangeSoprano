@@ -45,6 +45,8 @@ type HistorySnapshot = {
 type RangeStoreState = PersistedRangeState & {
   past: HistorySnapshot[];
   future: HistorySnapshot[];
+  /** In-memory checkpoints per range. Used by Save/Discard. Not persisted. */
+  snapshots: Record<string, Range>;
   createRange: (input: CreateRangeInput) => string;
   updateRange: (
     id: string,
@@ -63,6 +65,12 @@ type RangeStoreState = PersistedRangeState & {
   pushHistory: () => void;
   undo: () => void;
   redo: () => void;
+  /** Capture current state of a range as the revert checkpoint. */
+  snapshotRange: (id: string) => void;
+  /** Restore a range from its last checkpoint. No-op if none exists. */
+  revertRange: (id: string) => void;
+  /** True if range state differs from its checkpoint. */
+  hasUnsavedChanges: (id: string) => boolean;
   resetStore: () => void;
 };
 
@@ -104,12 +112,42 @@ function deepCloneCells(
   return out;
 }
 
+function deepCloneRange(r: Range): Range {
+  return { ...r, cells: deepCloneCells(r.cells) };
+}
+
+function rangesAreEqual(a: Range, b: Range): boolean {
+  if (a.id !== b.id) return false;
+  if (a.name !== b.name) return false;
+  if (a.position !== b.position) return false;
+  if (a.situation !== b.situation) return false;
+  if (a.villainPosition !== b.villainPosition) return false;
+  if (a.group !== b.group) return false;
+  if ((a.notes ?? '') !== (b.notes ?? '')) return false;
+  const ka = Object.keys(a.cells);
+  const kb = Object.keys(b.cells);
+  if (ka.length !== kb.length) return false;
+  for (const k of ka) {
+    const ca = a.cells[k];
+    const cb = b.cells[k];
+    if (!cb || !ca) return false;
+    if (ca.actions.length !== cb.actions.length) return false;
+    for (let i = 0; i < ca.actions.length; i++) {
+      const aa = ca.actions[i]!;
+      const bb = cb.actions[i]!;
+      if (aa.action !== bb.action || aa.weight !== bb.weight) return false;
+    }
+  }
+  return true;
+}
+
 export const useRangeStore = create<RangeStoreState>()(
   persist(
     (set, get) => ({
       ...INITIAL,
       past: [],
       future: [],
+      snapshots: {},
 
       pushHistory: () => {
         set((s) => ({
@@ -190,7 +228,9 @@ export const useRangeStore = create<RangeStoreState>()(
         set((s) => {
           const ranges = s.ranges.filter((r) => r.id !== id);
           const activeRangeId = s.activeRangeId === id ? null : s.activeRangeId;
-          return { ranges, activeRangeId };
+          const { [id]: _omit, ...snapshots } = s.snapshots;
+          void _omit;
+          return { ranges, activeRangeId, snapshots };
         });
       },
 
@@ -212,8 +252,46 @@ export const useRangeStore = create<RangeStoreState>()(
       },
 
       setActiveRange: (id) => {
-        if (id !== null && !get().ranges.some((r) => r.id === id)) return;
+        const s = get();
+        if (id !== null && !s.ranges.some((r) => r.id === id)) return;
+        // Auto-snapshot the range on first activation so Discard has a baseline.
+        if (id !== null && !s.snapshots[id]) {
+          const r = s.ranges.find((x) => x.id === id);
+          if (r) {
+            set({
+              activeRangeId: id,
+              snapshots: { ...s.snapshots, [id]: deepCloneRange(r) },
+            });
+            return;
+          }
+        }
         set({ activeRangeId: id });
+      },
+
+      snapshotRange: (id) => {
+        set((s) => {
+          const r = s.ranges.find((x) => x.id === id);
+          if (!r) return {};
+          return { snapshots: { ...s.snapshots, [id]: deepCloneRange(r) } };
+        });
+      },
+
+      revertRange: (id) => {
+        set((s) => {
+          const snap = s.snapshots[id];
+          if (!snap) return {};
+          return {
+            ranges: s.ranges.map((r) => (r.id === id ? deepCloneRange(snap) : r)),
+          };
+        });
+      },
+
+      hasUnsavedChanges: (id) => {
+        const s = get();
+        const r = s.ranges.find((x) => x.id === id);
+        const snap = s.snapshots[id];
+        if (!r || !snap) return false;
+        return !rangesAreEqual(r, snap);
       },
 
       upsertCell: (rangeId, cell) => {
@@ -315,7 +393,7 @@ export const useRangeStore = create<RangeStoreState>()(
         return { accepted: accepted.length, rejected };
       },
 
-      resetStore: () => set({ ...INITIAL, past: [], future: [] }),
+      resetStore: () => set({ ...INITIAL, past: [], future: [], snapshots: {} }),
     }),
     {
       name: RANGE_STORE_KEY,

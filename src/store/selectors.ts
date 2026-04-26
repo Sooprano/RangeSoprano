@@ -66,6 +66,37 @@ export function useCanRedo(): boolean {
   return useRangeStore((s) => s.future.length > 0);
 }
 
+export function useHasUnsavedChanges(rangeId: string | null): boolean {
+  return useRangeStore((s) => {
+    if (!rangeId) return false;
+    const r = s.ranges.find((x) => x.id === rangeId);
+    const snap = s.snapshots[rangeId];
+    if (!r || !snap) return false;
+    if (r === snap) return false;
+    if (r.name !== snap.name) return true;
+    if (r.position !== snap.position) return true;
+    if (r.situation !== snap.situation) return true;
+    if (r.villainPosition !== snap.villainPosition) return true;
+    if (r.group !== snap.group) return true;
+    if ((r.notes ?? '') !== (snap.notes ?? '')) return true;
+    const ka = Object.keys(r.cells);
+    const kb = Object.keys(snap.cells);
+    if (ka.length !== kb.length) return true;
+    for (const k of ka) {
+      const ca = r.cells[k];
+      const cb = snap.cells[k];
+      if (!cb || !ca) return true;
+      if (ca.actions.length !== cb.actions.length) return true;
+      for (let i = 0; i < ca.actions.length; i++) {
+        const aa = ca.actions[i]!;
+        const bb = cb.actions[i]!;
+        if (aa.action !== bb.action || aa.weight !== bb.weight) return true;
+      }
+    }
+    return false;
+  });
+}
+
 export function useRangesByGroup(): Map<string | null, Range[]> {
   const ranges = useRangeStore((s) => s.ranges);
   return useMemo(() => {

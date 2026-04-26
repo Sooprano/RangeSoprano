@@ -17,6 +17,7 @@ import { WeightSlider } from './WeightSlider';
 import { HistoryToolbar } from './HistoryToolbar';
 import { ImportModal } from './ImportModal';
 import { ExportMenu } from './ExportMenu';
+import { EditActionsToolbar } from './EditActionsToolbar';
 import { NotesButton } from './NotesButton';
 import { RangeManager } from './RangeManager';
 import { EmptyEditorState } from './EmptyEditorState';
@@ -41,6 +42,7 @@ export default function EditorPage() {
   const clearCell = useRangeStore((s) => s.clearCell);
   const clearAllCells = useRangeStore((s) => s.clearAllCells);
   const pushHistory = useRangeStore((s) => s.pushHistory);
+  const snapshotRange = useRangeStore((s) => s.snapshotRange);
   const undo = useRangeStore((s) => s.undo);
   const redo = useRangeStore((s) => s.redo);
 
@@ -142,6 +144,13 @@ export default function EditorPage() {
     ],
   );
 
+  // Ensure the active range has a baseline snapshot for Discard.
+  useEffect(() => {
+    if (activeRangeId) snapshotRange(activeRangeId);
+    // Only on range switch: capture the on-entry state once per id.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeRangeId]);
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
@@ -191,7 +200,7 @@ export default function EditorPage() {
         {activeRange ? (
           <div className="flex flex-col gap-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <ActionToolbar active={activeAction} onChange={setActiveAction} />
+              <EditActionsToolbar range={activeRange} />
               <div className="flex items-center gap-2">
                 <button
                   type="button"
@@ -210,6 +219,7 @@ export default function EditorPage() {
                 <HistoryToolbar />
               </div>
             </div>
+            <ActionToolbar active={activeAction} onChange={setActiveAction} />
             <WeightSlider value={weight} onChange={setWeight} />
             <div ref={gridRef} className="rounded-xl bg-bg p-2">
               <RangeGrid
