@@ -11,6 +11,8 @@ export type RangePainterOptions = {
   enabled: boolean;
   onPaint?: (hand: HandNotation) => void;
   onErase?: (hand: HandNotation) => void;
+  /** Ctrl/Meta + right-click: paint the "hand+" expansion (A5o → A5o..AKo, 44 → 44..AA). */
+  onPaintPlus?: (hand: HandNotation) => void;
   /**
    * Invoked once at the start of a discrete paint/erase session so the
    * caller can checkpoint for undo. Fired on mousedown, right-click, and
@@ -40,6 +42,7 @@ export function useRangePainter({
   enabled,
   onPaint,
   onErase,
+  onPaintPlus,
   onSessionStart,
 }: RangePainterOptions): RangePainterHandlers {
   const modeRef = useRef<PaintMode>(null);
@@ -49,12 +52,14 @@ export function useRangePainter({
   // and don't bust RangeGrid's React.memo on every parent render.
   const onPaintRef = useRef(onPaint);
   const onEraseRef = useRef(onErase);
+  const onPaintPlusRef = useRef(onPaintPlus);
   const onSessionStartRef = useRef(onSessionStart);
   useEffect(() => {
     onPaintRef.current = onPaint;
     onEraseRef.current = onErase;
+    onPaintPlusRef.current = onPaintPlus;
     onSessionStartRef.current = onSessionStart;
-  }, [onPaint, onErase, onSessionStart]);
+  }, [onPaint, onErase, onPaintPlus, onSessionStart]);
 
   const reset = useCallback(() => {
     modeRef.current = null;
@@ -114,6 +119,10 @@ export function useRangePainter({
       if (!hand) return;
       e.preventDefault();
       onSessionStartRef.current?.();
+      if ((e.ctrlKey || e.metaKey) && onPaintPlusRef.current) {
+        onPaintPlusRef.current(hand);
+        return;
+      }
       onEraseRef.current?.(hand);
     },
     [enabled],

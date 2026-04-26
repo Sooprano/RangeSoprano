@@ -7,7 +7,7 @@ import { ActionLegend } from '@/components/ActionLegend';
 import { computeRangeStats } from '@/utils/rangeStats';
 import { ORDERED_ACTIONS } from '@/utils/actionMeta';
 import { upsertActionInCell } from '@/utils/cellUtils';
-import type { WeightedHand } from '@/utils/handRangeParser';
+import { expandPlus, type WeightedHand } from '@/utils/handRangeParser';
 import { useRangeStore } from '@/store/rangeStore';
 import { pushToast } from '@/store/toastStore';
 import { useActiveRange } from '@/store/selectors';
@@ -66,6 +66,30 @@ export default function EditorPage() {
       clearCell(activeRangeId, hand);
     },
     [activeRangeId, clearCell],
+  );
+
+  const handleCellPaintPlus = useCallback(
+    (hand: HandNotation) => {
+      if (!activeRangeId) return;
+      const hands = expandPlus(hand);
+      let cells = activeRange?.cells ?? {};
+      for (const h of hands) {
+        const existing = cells[h];
+        const result = upsertActionInCell(existing, h, activeAction, weight);
+        if (result.kind === 'clear') {
+          clearCell(activeRangeId, h);
+          if (h in cells) {
+            const { [h]: _omit, ...rest } = cells;
+            void _omit;
+            cells = rest;
+          }
+        } else {
+          upsertCell(activeRangeId, result.cell);
+          cells = { ...cells, [h]: result.cell };
+        }
+      }
+    },
+    [activeRangeId, activeRange, activeAction, weight, upsertCell, clearCell],
   );
 
   const presentActions = useMemo(
@@ -191,11 +215,13 @@ export default function EditorPage() {
                 editable
                 onCellPaint={handleCellPaint}
                 onCellErase={handleCellErase}
+                onCellPaintPlus={handleCellPaintPlus}
                 onSessionStart={pushHistory}
               />
             </div>
             <p className="text-xs text-content-muted">
               Click paints · drag to paint multiple · right-click to erase ·
+              Ctrl+right-click fills hand+ (e.g. A5o → A5o..AKo, 44 → 44..AA) ·
               arrow keys + Space/Enter · press 1-5 to switch action · weight
               &lt; 100 stacks with existing actions · Ctrl+Z undo · Ctrl+Shift+Z
               redo.

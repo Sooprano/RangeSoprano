@@ -116,6 +116,14 @@ function parseRange(input: string): HandNotation[] | null {
   return null;
 }
 
+/**
+ * Expands a hand into its "+" range (e.g. "A5o" → ["A5o","A6o",...,"AKo"];
+ * "44" → ["44","55",...,"AA"]). Returns [hand] if it's the top of its run.
+ */
+export function expandPlus(hand: HandNotation): HandNotation[] {
+  return parsePlus(`${hand}+`) ?? [hand];
+}
+
 function parsePlus(input: string): HandNotation[] | null {
   if (!input.endsWith('+')) return null;
   const base = parseSingle(input.slice(0, -1));

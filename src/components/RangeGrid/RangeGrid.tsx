@@ -20,6 +20,8 @@ type RangeGridProps = {
   editable?: boolean;
   onCellPaint?: (hand: HandNotation) => void;
   onCellErase?: (hand: HandNotation) => void;
+  /** Ctrl/Meta + right-click on a cell: paint the "hand+" expansion. */
+  onCellPaintPlus?: (hand: HandNotation) => void;
   /** Fired once at the start of a discrete paint/erase session for history checkpoints. */
   onSessionStart?: () => void;
 };
@@ -36,6 +38,7 @@ function RangeGridBase({
   editable = false,
   onCellPaint,
   onCellErase,
+  onCellPaintPlus,
   onSessionStart,
 }: RangeGridProps) {
   const [focusedIndex, setFocusedIndex] = useState(0);
@@ -46,6 +49,7 @@ function RangeGridBase({
     enabled: editable,
     ...(onCellPaint && { onPaint: onCellPaint }),
     ...(onCellErase && { onErase: onCellErase }),
+    ...(onCellPaintPlus && { onPaintPlus: onCellPaintPlus }),
     ...(onSessionStart && { onSessionStart }),
   });
 
