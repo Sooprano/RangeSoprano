@@ -17,6 +17,7 @@ import { WeightSlider } from './WeightSlider';
 import { HistoryToolbar } from './HistoryToolbar';
 import { ImportModal } from './ImportModal';
 import { ExportMenu } from './ExportMenu';
+import { NotesButton } from './NotesButton';
 import { RangeManager } from './RangeManager';
 import { EmptyEditorState } from './EmptyEditorState';
 
@@ -205,6 +206,7 @@ export default function EditorPage() {
                   allRanges={allRanges}
                   gridRef={gridRef}
                 />
+                <NotesButton range={activeRange} />
                 <HistoryToolbar />
               </div>
             </div>

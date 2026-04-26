@@ -44,4 +44,6 @@ export type Range = {
   createdAt: string;
   updatedAt: string;
   group?: string;
+  /** Free-form notes about the range. */
+  notes?: string;
 };

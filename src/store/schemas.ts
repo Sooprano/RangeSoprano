@@ -10,6 +10,7 @@ export const MAX_CELLS_PER_RANGE = 169;
 export const MAX_ACTIONS_PER_CELL = 5;
 export const MAX_NAME_LEN = 80;
 export const MAX_GROUP_LEN = 80;
+export const MAX_NOTES_LEN = 5000;
 
 export const GROUP_FOLDER_COLORS = [
   '#8b5cf6', '#a855f7', '#ec4899', '#ef4444',
@@ -78,6 +79,7 @@ export const zRange = z
       .max(MAX_GROUP_LEN)
       .transform(sanitizeText)
       .optional(),
+    notes: z.string().max(MAX_NOTES_LEN).optional(),
   })
   .strict()
   .superRefine((r, ctx) => {
