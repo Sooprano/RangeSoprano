@@ -14,7 +14,10 @@ export type GroupTree = {
   roots: GroupTreeNode[];
 };
 
-export function buildGroupTree(summaries: RangeSummary[]): GroupTree {
+export function buildGroupTree(
+  summaries: RangeSummary[],
+  groupMeta: Record<string, GroupMeta> = {},
+): GroupTree {
   const ungrouped: RangeSummary[] = [];
   const nodeMap = new Map<string, GroupTreeNode>();
 
@@ -59,8 +62,30 @@ export function buildGroupTree(summaries: RangeSummary[]): GroupTree {
     if (leaf) leaf.rangeIds.push(s.id);
   }
 
+  const summaryById = new Map(summaries.map((s) => [s.id, s]));
+
+  const folderOrder = (path: string): number =>
+    groupMeta[path]?.order ?? Number.POSITIVE_INFINITY;
+
+  const compareFolders = (a: GroupTreeNode, b: GroupTreeNode): number => {
+    const oa = folderOrder(a.path);
+    const ob = folderOrder(b.path);
+    if (oa !== ob) return oa - ob;
+    return a.label.localeCompare(b.label);
+  };
+
+  const compareRangeIds = (aId: string, bId: string): number => {
+    const a = summaryById.get(aId);
+    const b = summaryById.get(bId);
+    const oa = a?.order ?? Number.POSITIVE_INFINITY;
+    const ob = b?.order ?? Number.POSITIVE_INFINITY;
+    if (oa !== ob) return oa - ob;
+    return (a?.name ?? '').localeCompare(b?.name ?? '');
+  };
+
   const sortChildren = (node: GroupTreeNode): void => {
-    node.children.sort((a, b) => a.label.localeCompare(b.label));
+    node.children.sort(compareFolders);
+    node.rangeIds.sort(compareRangeIds);
     node.children.forEach(sortChildren);
   };
 
@@ -68,8 +93,15 @@ export function buildGroupTree(summaries: RangeSummary[]): GroupTree {
   for (const node of nodeMap.values()) {
     if (node.depth === 0) roots.push(node);
   }
-  roots.sort((a, b) => a.label.localeCompare(b.label));
+  roots.sort(compareFolders);
   roots.forEach(sortChildren);
+
+  ungrouped.sort((a, b) => {
+    const oa = a.order ?? Number.POSITIVE_INFINITY;
+    const ob = b.order ?? Number.POSITIVE_INFINITY;
+    if (oa !== ob) return oa - ob;
+    return a.name.localeCompare(b.name);
+  });
 
   return { ungrouped, roots };
 }

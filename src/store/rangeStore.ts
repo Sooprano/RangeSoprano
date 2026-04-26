@@ -71,6 +71,8 @@ type RangeStoreState = PersistedRangeState & {
   revertRange: (id: string) => void;
   /** True if range state differs from its checkpoint. */
   hasUnsavedChanges: (id: string) => boolean;
+  /** Set per-scope order for ranges (group key = group string or null for ungrouped). */
+  reorderRanges: (groupKey: string | null, orderedIds: string[]) => void;
   resetStore: () => void;
 };
 
@@ -282,6 +284,22 @@ export const useRangeStore = create<RangeStoreState>()(
           if (!snap) return {};
           return {
             ranges: s.ranges.map((r) => (r.id === id ? deepCloneRange(snap) : r)),
+          };
+        });
+      },
+
+      reorderRanges: (groupKey, orderedIds) => {
+        set((s) => {
+          const orderMap = new Map(orderedIds.map((id, idx) => [id, idx]));
+          return {
+            ranges: s.ranges.map((r) => {
+              const rGroup = r.group ?? null;
+              if (rGroup !== groupKey) return r;
+              const next = orderMap.get(r.id);
+              if (next === undefined) return r;
+              if (r.order === next) return r;
+              return { ...r, order: next };
+            }),
           };
         });
       },

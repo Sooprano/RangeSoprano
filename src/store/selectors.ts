@@ -10,6 +10,7 @@ export type RangeSummary = {
   situation: Range['situation'];
   villainPosition?: Range['villainPosition'];
   group?: string;
+  order?: number;
 };
 
 export function useActiveRange(): Range | null {
@@ -52,6 +53,7 @@ export function useRangeSummaries(): RangeSummary[] {
         };
         if (r.villainPosition !== undefined) base.villainPosition = r.villainPosition;
         if (r.group !== undefined) base.group = r.group;
+        if (r.order !== undefined) base.order = r.order;
         return base;
       }),
     [ranges],

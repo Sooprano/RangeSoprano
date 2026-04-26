@@ -46,4 +46,6 @@ export type Range = {
   group?: string;
   /** Free-form notes about the range. */
   notes?: string;
+  /** Manual sort order within the range's parent scope (group or ungrouped). */
+  order?: number;
 };

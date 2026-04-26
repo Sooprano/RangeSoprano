@@ -11,7 +11,7 @@ export function displayOrderFor(
   summaries: RangeSummary[],
   groupMeta: Record<string, GroupMeta> = {},
 ): RangeSummary[] {
-  const tree = buildGroupTree(summaries);
+  const tree = buildGroupTree(summaries, groupMeta);
   const byId = new Map(summaries.map((s) => [s.id, s]));
   return flattenVisibleTree(tree, byId, groupMeta);
 }
@@ -50,7 +50,7 @@ export function ViewerRangeList({
     return summaries.filter((s) => s.name.toLowerCase().includes(q));
   }, [summaries, query]);
 
-  const tree = useMemo(() => buildGroupTree(filtered), [filtered]);
+  const tree = useMemo(() => buildGroupTree(filtered, groupMeta), [filtered, groupMeta]);
   const summaryById = useMemo(
     () => new Map(filtered.map((s) => [s.id, s])),
     [filtered],

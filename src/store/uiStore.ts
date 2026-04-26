@@ -20,6 +20,8 @@ type UiStoreState = PersistedUiState & {
   setGroupColor: (path: string, color: string | undefined) => void;
   toggleGroupCollapsed: (path: string) => void;
   setGroupCollapsed: (path: string, collapsed: boolean) => void;
+  /** Reorder folders at a given parent path (use null for roots). */
+  reorderFolders: (parentPath: string | null, orderedPaths: string[]) => void;
 };
 
 const INITIAL: PersistedUiState = {
@@ -55,6 +57,8 @@ export const useUiStore = create<UiStoreState>()(
           if (color !== undefined) next.color = color;
           const prevCollapsed = existing?.collapsed;
           if (prevCollapsed !== undefined) next.collapsed = prevCollapsed;
+          const prevOrder = existing?.order;
+          if (prevOrder !== undefined) next.order = prevOrder;
           return { groupMeta: { ...s.groupMeta, [path]: next } };
         }),
 
@@ -64,6 +68,8 @@ export const useUiStore = create<UiStoreState>()(
           const next: GroupMeta = { collapsed: !(existing?.collapsed ?? false) };
           const prevColor = existing?.color;
           if (prevColor !== undefined) next.color = prevColor;
+          const prevOrder = existing?.order;
+          if (prevOrder !== undefined) next.order = prevOrder;
           return { groupMeta: { ...s.groupMeta, [path]: next } };
         }),
 
@@ -73,7 +79,22 @@ export const useUiStore = create<UiStoreState>()(
           const next: GroupMeta = { collapsed };
           const prevColor = existing?.color;
           if (prevColor !== undefined) next.color = prevColor;
+          const prevOrder = existing?.order;
+          if (prevOrder !== undefined) next.order = prevOrder;
           return { groupMeta: { ...s.groupMeta, [path]: next } };
+        }),
+
+      reorderFolders: (_parentPath, orderedPaths) =>
+        set((s) => {
+          const next = { ...s.groupMeta };
+          orderedPaths.forEach((path, idx) => {
+            const existing = next[path] ?? {};
+            const merged: GroupMeta = { order: idx };
+            if (existing.color !== undefined) merged.color = existing.color;
+            if (existing.collapsed !== undefined) merged.collapsed = existing.collapsed;
+            next[path] = merged;
+          });
+          return { groupMeta: next };
         }),
     }),
     {

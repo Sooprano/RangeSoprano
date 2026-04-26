@@ -9,6 +9,7 @@ import { MAX_GROUP_LEN, MAX_NAME_LEN, sanitizeText } from '@/store/schemas';
 import type { Range } from '@/types/poker';
 import { buildGroupTree, type GroupTreeNode } from '@/utils/groupUtils';
 import { FolderRow } from '@/components/FolderRow';
+import { SortableItem, SortableList } from '@/components/dnd/SortableList';
 import { NewRangeForm, type NewRangePayload } from './NewRangeForm';
 
 const SITUATION_LABEL: Record<string, string> = {
@@ -41,10 +42,12 @@ export function RangeManager({
   const duplicateRange = useRangeStore((s) => s.duplicateRange);
   const updateRange = useRangeStore((s) => s.updateRange);
   const pushHistory = useRangeStore((s) => s.pushHistory);
+  const reorderRanges = useRangeStore((s) => s.reorderRanges);
 
   const groupMeta = useUiStore((s) => s.groupMeta);
   const toggleGroupCollapsed = useUiStore((s) => s.toggleGroupCollapsed);
   const setGroupColor = useUiStore((s) => s.setGroupColor);
+  const reorderFolders = useUiStore((s) => s.reorderFolders);
 
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
@@ -62,7 +65,7 @@ export function RangeManager({
     if (restore) menuTriggerRef.current?.focus();
   };
 
-  const tree = useMemo(() => buildGroupTree(summaries), [summaries]);
+  const tree = useMemo(() => buildGroupTree(summaries, groupMeta), [summaries, groupMeta]);
   const summaryById = useMemo(
     () => new Map(summaries.map((s) => [s.id, s])),
     [summaries],
@@ -224,7 +227,8 @@ export function RangeManager({
     const isRenaming = renamingId === s.id;
     const isGrouping = groupingId === s.id;
     return (
-      <li key={s.id}>
+      <li key={s.id} className="group">
+        <SortableItem id={s.id} ariaLabel={`Drag ${s.name}`}>
         <div
           className={cn(
             'group flex items-center gap-1 rounded-lg border border-transparent text-sm transition-colors',
@@ -374,6 +378,7 @@ export function RangeManager({
             </div>
           )}
         </div>
+        </SortableItem>
       </li>
     );
   };
@@ -381,9 +386,11 @@ export function RangeManager({
   const renderFolder = (node: GroupTreeNode): React.ReactNode => {
     const meta = groupMeta[node.path];
     const isCollapsed = meta?.collapsed ?? false;
+    const childFolderIds = node.children.map((c) => c.path);
 
     return (
-      <li key={node.path} className="flex flex-col">
+      <li key={node.path} className="group flex flex-col">
+        <SortableItem id={node.path} ariaLabel={`Drag folder ${node.label}`}>
         <FolderRow
           node={node}
           meta={meta}
@@ -395,23 +402,34 @@ export function RangeManager({
           onColorChange={(color) => setGroupColor(node.path, color)}
           onColorPickerClose={() => setColorPickerPath(null)}
         />
+        </SortableItem>
         {!isCollapsed && (
           <div
             className="border-l border-border"
             style={{ marginLeft: (node.depth + 1) * 16 + 4, paddingLeft: 8 }}
           >
             {node.rangeIds.length > 0 && (
-              <ul className="flex flex-col gap-0.5">
-                {node.rangeIds.map((id) => {
-                  const s = summaryById.get(id);
-                  return s ? renderRangeRow(s) : null;
-                })}
-              </ul>
+              <SortableList
+                ids={node.rangeIds}
+                onReorder={(orderedIds) => reorderRanges(node.path, orderedIds)}
+              >
+                <ul className="flex flex-col gap-0.5">
+                  {node.rangeIds.map((id) => {
+                    const s = summaryById.get(id);
+                    return s ? renderRangeRow(s) : null;
+                  })}
+                </ul>
+              </SortableList>
             )}
             {node.children.length > 0 && (
-              <ul className="mt-0.5 flex flex-col gap-0.5">
-                {node.children.map(renderFolder)}
-              </ul>
+              <SortableList
+                ids={childFolderIds}
+                onReorder={(orderedPaths) => reorderFolders(node.path, orderedPaths)}
+              >
+                <ul className="mt-0.5 flex flex-col gap-0.5">
+                  {node.children.map(renderFolder)}
+                </ul>
+              </SortableList>
             )}
           </div>
         )}
@@ -456,14 +474,24 @@ export function RangeManager({
       ) : (
         <div className="flex flex-col gap-1">
           {tree.ungrouped.length > 0 && (
-            <ul className="flex flex-col gap-1">
-              {tree.ungrouped.map(renderRangeRow)}
-            </ul>
+            <SortableList
+              ids={tree.ungrouped.map((s) => s.id)}
+              onReorder={(orderedIds) => reorderRanges(null, orderedIds)}
+            >
+              <ul className="flex flex-col gap-1">
+                {tree.ungrouped.map(renderRangeRow)}
+              </ul>
+            </SortableList>
           )}
           {tree.roots.length > 0 && (
-            <ul className="flex flex-col gap-1">
-              {tree.roots.map(renderFolder)}
-            </ul>
+            <SortableList
+              ids={tree.roots.map((n) => n.path)}
+              onReorder={(orderedPaths) => reorderFolders(null, orderedPaths)}
+            >
+              <ul className="flex flex-col gap-1">
+                {tree.roots.map(renderFolder)}
+              </ul>
+            </SortableList>
           )}
         </div>
       )}

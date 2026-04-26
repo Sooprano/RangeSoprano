@@ -22,6 +22,7 @@ export type GroupFolderColor = (typeof GROUP_FOLDER_COLORS)[number];
 export const zGroupMeta = z.object({
   color: z.string().optional(),
   collapsed: z.boolean().optional(),
+  order: z.number().finite().optional(),
 });
 export type GroupMeta = z.infer<typeof zGroupMeta>;
 
@@ -80,6 +81,7 @@ export const zRange = z
       .transform(sanitizeText)
       .optional(),
     notes: z.string().max(MAX_NOTES_LEN).optional(),
+    order: z.number().finite().optional(),
   })
   .strict()
   .superRefine((r, ctx) => {
