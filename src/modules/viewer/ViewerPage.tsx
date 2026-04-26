@@ -100,9 +100,10 @@ export default function ViewerPage() {
     }
   }, [range, compareRange, compareEnabled]);
 
+  const groupMeta = useUiStore((s) => s.groupMeta);
   const orderedForNav = useMemo(
-    () => displayOrderFor(filteredSummaries),
-    [filteredSummaries],
+    () => displayOrderFor(filteredSummaries, groupMeta),
+    [filteredSummaries, groupMeta],
   );
 
   useEffect(() => {

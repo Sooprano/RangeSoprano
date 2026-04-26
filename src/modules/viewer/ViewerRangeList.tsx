@@ -2,30 +2,18 @@ import { useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import type { RangeSummary } from '@/store/selectors';
+import { useUiStore } from '@/store/uiStore';
+import type { GroupMeta } from '@/store/schemas';
+import { buildGroupTree, flattenVisibleTree, type GroupTreeNode } from '@/utils/groupUtils';
+import { FolderRow } from '@/components/FolderRow';
 
-/**
- * Flatten summaries the same way the list renders them: ungrouped first
- * (in store order), then groups sorted alphabetically by name (items in
- * store order). Used for arrow key navigation so it follows the visual flow.
- */
-export function displayOrderFor(summaries: RangeSummary[]): RangeSummary[] {
-  const byGroup = new Map<string, RangeSummary[]>();
-  const ungrouped: RangeSummary[] = [];
-  for (const s of summaries) {
-    if (s.group) {
-      const bucket = byGroup.get(s.group);
-      if (bucket) bucket.push(s);
-      else byGroup.set(s.group, [s]);
-    } else {
-      ungrouped.push(s);
-    }
-  }
-  const sortedNames = Array.from(byGroup.keys()).sort((a, b) =>
-    a.localeCompare(b),
-  );
-  const out: RangeSummary[] = [...ungrouped];
-  for (const name of sortedNames) out.push(...byGroup.get(name)!);
-  return out;
+export function displayOrderFor(
+  summaries: RangeSummary[],
+  groupMeta: Record<string, GroupMeta> = {},
+): RangeSummary[] {
+  const tree = buildGroupTree(summaries);
+  const byId = new Map(summaries.map((s) => [s.id, s]));
+  return flattenVisibleTree(tree, byId, groupMeta);
 }
 
 const SITUATION_LABEL: Record<string, string> = {
@@ -45,11 +33,6 @@ type ViewerRangeListProps = {
   className?: string;
 };
 
-type Grouped = {
-  ungrouped: RangeSummary[];
-  groups: Array<{ name: string; items: RangeSummary[] }>;
-};
-
 export function ViewerRangeList({
   summaries,
   selectedId,
@@ -58,6 +41,8 @@ export function ViewerRangeList({
   className,
 }: ViewerRangeListProps) {
   const [query, setQuery] = useState('');
+  const groupMeta = useUiStore((s) => s.groupMeta);
+  const toggleGroupCollapsed = useUiStore((s) => s.toggleGroupCollapsed);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -65,31 +50,14 @@ export function ViewerRangeList({
     return summaries.filter((s) => s.name.toLowerCase().includes(q));
   }, [summaries, query]);
 
-  const { ungrouped, groups }: Grouped = useMemo(() => {
-    const byGroup = new Map<string, RangeSummary[]>();
-    const un: RangeSummary[] = [];
-    for (const s of filtered) {
-      if (s.group) {
-        const bucket = byGroup.get(s.group);
-        if (bucket) bucket.push(s);
-        else byGroup.set(s.group, [s]);
-      } else {
-        un.push(s);
-      }
-    }
-    const sortedNames = Array.from(byGroup.keys()).sort((a, b) =>
-      a.localeCompare(b),
-    );
-    return {
-      ungrouped: un,
-      groups: sortedNames.map((name) => ({
-        name,
-        items: byGroup.get(name)!,
-      })),
-    };
-  }, [filtered]);
+  const tree = useMemo(() => buildGroupTree(filtered), [filtered]);
+  const summaryById = useMemo(
+    () => new Map(filtered.map((s) => [s.id, s])),
+    [filtered],
+  );
+  const isSearching = query.trim().length > 0;
 
-  const renderRow = (s: RangeSummary) => {
+  const renderRangeRow = (s: RangeSummary) => {
     const isSelected = s.id === selectedId;
     return (
       <li key={s.id}>
@@ -110,6 +78,42 @@ export function ViewerRangeList({
             {s.position} · {SITUATION_LABEL[s.situation] ?? s.situation}
           </span>
         </button>
+      </li>
+    );
+  };
+
+  const renderFolder = (node: GroupTreeNode): React.ReactNode => {
+    const meta = groupMeta[node.path];
+    const isCollapsed = !isSearching && (meta?.collapsed ?? false);
+
+    return (
+      <li key={node.path} className="flex flex-col">
+        <FolderRow
+          node={node}
+          meta={meta}
+          forceExpand={isSearching}
+          onToggleCollapse={() => toggleGroupCollapsed(node.path)}
+        />
+        {!isCollapsed && (
+          <div
+            className="border-l border-border"
+            style={{ marginLeft: (node.depth + 1) * 16 + 4, paddingLeft: 8 }}
+          >
+            {node.rangeIds.length > 0 && (
+              <ul className="flex flex-col gap-0.5">
+                {node.rangeIds.map((id) => {
+                  const s = summaryById.get(id);
+                  return s ? renderRangeRow(s) : null;
+                })}
+              </ul>
+            )}
+            {node.children.length > 0 && (
+              <ul className="mt-0.5 flex flex-col gap-0.5">
+                {node.children.map(renderFolder)}
+              </ul>
+            )}
+          </div>
+        )}
       </li>
     );
   };
@@ -153,22 +157,21 @@ export function ViewerRangeList({
         </p>
       ) : filtered.length === 0 ? (
         <p className="rounded-md border border-dashed border-border px-3 py-4 text-center text-xs text-content-muted">
-          No ranges match "{query}".
+          No ranges match &ldquo;{query}&rdquo;.
         </p>
       ) : (
-        <>
-          {ungrouped.length > 0 && (
-            <ul className="flex flex-col gap-1">{ungrouped.map(renderRow)}</ul>
+        <div className="flex flex-col gap-1">
+          {tree.ungrouped.length > 0 && (
+            <ul className="flex flex-col gap-1">
+              {tree.ungrouped.map(renderRangeRow)}
+            </ul>
           )}
-          {groups.map((g) => (
-            <section key={g.name} className="flex flex-col gap-1">
-              <h3 className="px-1 pt-1 text-[10px] font-semibold uppercase tracking-wider text-content-muted">
-                {g.name}
-              </h3>
-              <ul className="flex flex-col gap-1">{g.items.map(renderRow)}</ul>
-            </section>
-          ))}
-        </>
+          {tree.roots.length > 0 && (
+            <ul className="flex flex-col gap-1">
+              {tree.roots.map(renderFolder)}
+            </ul>
+          )}
+        </div>
       )}
     </aside>
   );

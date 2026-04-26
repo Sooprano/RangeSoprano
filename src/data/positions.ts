@@ -2,8 +2,6 @@ import type { Position, Situation } from '@/types/poker';
 
 export const POSITION_LABELS: Record<Position, string> = {
   UTG: 'UTG',
-  'UTG+1': 'UTG+1',
-  'UTG+2': 'UTG+2',
   HJ: 'Hijack',
   CO: 'Cutoff',
   BTN: 'Button',

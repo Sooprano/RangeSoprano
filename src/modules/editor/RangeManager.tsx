@@ -2,10 +2,13 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Copy, FolderInput, MoreHorizontal, Pencil, Plus, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useRangeStore } from '@/store/rangeStore';
+import { useUiStore } from '@/store/uiStore';
 import { pushToast } from '@/store/toastStore';
 import { useRangeSummaries, type RangeSummary } from '@/store/selectors';
 import { MAX_GROUP_LEN, MAX_NAME_LEN, sanitizeText } from '@/store/schemas';
 import type { Range } from '@/types/poker';
+import { buildGroupTree, type GroupTreeNode } from '@/utils/groupUtils';
+import { FolderRow } from '@/components/FolderRow';
 import { NewRangeForm, type NewRangePayload } from './NewRangeForm';
 
 const SITUATION_LABEL: Record<string, string> = {
@@ -25,11 +28,6 @@ type RangeManagerProps = {
   onFormOpenChange: (open: boolean) => void;
 };
 
-type GroupedSummaries = {
-  ungrouped: RangeSummary[];
-  groups: Array<{ name: string; items: RangeSummary[] }>;
-};
-
 export function RangeManager({
   className,
   isFormOpen,
@@ -44,11 +42,16 @@ export function RangeManager({
   const updateRange = useRangeStore((s) => s.updateRange);
   const pushHistory = useRangeStore((s) => s.pushHistory);
 
+  const groupMeta = useUiStore((s) => s.groupMeta);
+  const toggleGroupCollapsed = useUiStore((s) => s.toggleGroupCollapsed);
+  const setGroupColor = useUiStore((s) => s.setGroupColor);
+
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameDraft, setRenameDraft] = useState('');
   const [groupingId, setGroupingId] = useState<string | null>(null);
   const [groupDraft, setGroupDraft] = useState('');
+  const [colorPickerPath, setColorPickerPath] = useState<string | null>(null);
   const renameInputRef = useRef<HTMLInputElement | null>(null);
   const groupInputRef = useRef<HTMLInputElement | null>(null);
   const menuTriggerRef = useRef<HTMLButtonElement | null>(null);
@@ -59,26 +62,23 @@ export function RangeManager({
     if (restore) menuTriggerRef.current?.focus();
   };
 
-  const { ungrouped, groups }: GroupedSummaries = useMemo(() => {
-    const byGroup = new Map<string, RangeSummary[]>();
-    const un: RangeSummary[] = [];
-    for (const s of summaries) {
-      if (s.group) {
-        const bucket = byGroup.get(s.group);
-        if (bucket) bucket.push(s);
-        else byGroup.set(s.group, [s]);
-      } else {
-        un.push(s);
-      }
-    }
-    const sortedNames = Array.from(byGroup.keys()).sort((a, b) => a.localeCompare(b));
-    return {
-      ungrouped: un,
-      groups: sortedNames.map((name) => ({ name, items: byGroup.get(name)! })),
-    };
-  }, [summaries]);
+  const tree = useMemo(() => buildGroupTree(summaries), [summaries]);
+  const summaryById = useMemo(
+    () => new Map(summaries.map((s) => [s.id, s])),
+    [summaries],
+  );
 
-  const groupSuggestions = useMemo(() => groups.map((g) => g.name), [groups]);
+  const groupSuggestions = useMemo(() => {
+    const paths = new Set<string>();
+    const collect = (nodes: GroupTreeNode[]) => {
+      for (const n of nodes) {
+        paths.add(n.path);
+        collect(n.children);
+      }
+    };
+    collect(tree.roots);
+    return Array.from(paths).sort();
+  }, [tree]);
 
   useEffect(() => {
     if (renamingId && renameInputRef.current) {
@@ -218,7 +218,7 @@ export function RangeManager({
     setGroupDraft('');
   };
 
-  const renderRow = (s: RangeSummary) => {
+  const renderRangeRow = (s: RangeSummary) => {
     const isActive = s.id === activeRangeId;
     const isMenuOpen = openMenuId === s.id;
     const isRenaming = renamingId === s.id;
@@ -378,6 +378,47 @@ export function RangeManager({
     );
   };
 
+  const renderFolder = (node: GroupTreeNode): React.ReactNode => {
+    const meta = groupMeta[node.path];
+    const isCollapsed = meta?.collapsed ?? false;
+
+    return (
+      <li key={node.path} className="flex flex-col">
+        <FolderRow
+          node={node}
+          meta={meta}
+          onToggleCollapse={() => toggleGroupCollapsed(node.path)}
+          onColorDotClick={() =>
+            setColorPickerPath((prev) => (prev === node.path ? null : node.path))
+          }
+          colorPickerOpen={colorPickerPath === node.path}
+          onColorChange={(color) => setGroupColor(node.path, color)}
+          onColorPickerClose={() => setColorPickerPath(null)}
+        />
+        {!isCollapsed && (
+          <div
+            className="border-l border-border"
+            style={{ marginLeft: (node.depth + 1) * 16 + 4, paddingLeft: 8 }}
+          >
+            {node.rangeIds.length > 0 && (
+              <ul className="flex flex-col gap-0.5">
+                {node.rangeIds.map((id) => {
+                  const s = summaryById.get(id);
+                  return s ? renderRangeRow(s) : null;
+                })}
+              </ul>
+            )}
+            {node.children.length > 0 && (
+              <ul className="mt-0.5 flex flex-col gap-0.5">
+                {node.children.map(renderFolder)}
+              </ul>
+            )}
+          </div>
+        )}
+      </li>
+    );
+  };
+
   return (
     <aside
       aria-label="Saved ranges"
@@ -413,19 +454,18 @@ export function RangeManager({
           No ranges yet. Create one to start painting.
         </p>
       ) : (
-        <>
-          {ungrouped.length > 0 && (
-            <ul className="flex flex-col gap-1">{ungrouped.map(renderRow)}</ul>
+        <div className="flex flex-col gap-1">
+          {tree.ungrouped.length > 0 && (
+            <ul className="flex flex-col gap-1">
+              {tree.ungrouped.map(renderRangeRow)}
+            </ul>
           )}
-          {groups.map((g) => (
-            <section key={g.name} className="flex flex-col gap-1">
-              <h3 className="px-1 pt-1 text-[10px] font-semibold uppercase tracking-wider text-content-muted">
-                {g.name}
-              </h3>
-              <ul className="flex flex-col gap-1">{g.items.map(renderRow)}</ul>
-            </section>
-          ))}
-        </>
+          {tree.roots.length > 0 && (
+            <ul className="flex flex-col gap-1">
+              {tree.roots.map(renderFolder)}
+            </ul>
+          )}
+        </div>
       )}
 
       {groupSuggestions.length > 0 && (

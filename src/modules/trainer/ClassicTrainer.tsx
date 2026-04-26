@@ -9,11 +9,11 @@ import { Check, RotateCcw, SkipForward, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import type { Action, Range } from '@/types/poker';
 import { ACTION_META, ORDERED_ACTIONS } from '@/utils/actionMeta';
-import { combosOf } from '@/utils/handUtils';
 import {
   sampleTrainerHand,
   type TrainerHand,
 } from '@/utils/trainerSampler';
+import { PokerTable } from './PokerTable';
 
 type ClassicTrainerProps = {
   range: Range;
@@ -144,7 +144,11 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
       <ScoreBar score={score} accuracy={accuracy} />
 
       <div className="flex flex-col items-center gap-6 rounded-xl border border-border bg-surface/60 p-6 shadow-surface">
-        <HandBadge hand={current.hand} />
+        <PokerTable
+            heroPosition={range.position}
+            hand={current.hand}
+            {...(range.villainPosition !== undefined && { villainPosition: range.villainPosition })}
+          />
 
         <ActionGrid
           presentActions={ORDERED_ACTIONS}
@@ -218,20 +222,6 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function HandBadge({ hand }: { hand: string }) {
-  const combos = combosOf(hand);
-  return (
-    <div className="flex flex-col items-center gap-1">
-      <p className="text-[10px] uppercase tracking-wider text-content-muted">
-        Your hand
-      </p>
-      <p className="font-mono text-5xl font-semibold tracking-tight text-content sm:text-6xl">
-        {hand}
-      </p>
-      <p className="text-xs text-content-muted">{combos} combos</p>
-    </div>
-  );
-}
 
 type ActionGridProps = {
   presentActions: Action[];

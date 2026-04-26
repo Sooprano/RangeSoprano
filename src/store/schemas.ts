@@ -3,20 +3,37 @@ import { ACTIONS, POSITIONS, SITUATIONS } from '@/types/poker';
 import type { Range } from '@/types/poker';
 
 export const CURRENT_RANGE_STORE_VERSION = 1;
-export const CURRENT_UI_STORE_VERSION = 1;
+export const CURRENT_UI_STORE_VERSION = 2;
 
 export const MAX_RANGES = 500;
 export const MAX_CELLS_PER_RANGE = 169;
 export const MAX_ACTIONS_PER_CELL = 5;
 export const MAX_NAME_LEN = 80;
-export const MAX_GROUP_LEN = 40;
+export const MAX_GROUP_LEN = 80;
+
+export const GROUP_FOLDER_COLORS = [
+  '#8b5cf6', '#a855f7', '#ec4899', '#ef4444',
+  '#f97316', '#eab308', '#22c55e', '#14b8a6',
+  '#06b6d4', '#3b82f6', '#6366f1', '#78716c',
+] as const;
+export type GroupFolderColor = (typeof GROUP_FOLDER_COLORS)[number];
+
+export const zGroupMeta = z.object({
+  color: z.string().optional(),
+  collapsed: z.boolean().optional(),
+});
+export type GroupMeta = z.infer<typeof zGroupMeta>;
 
 export function sanitizeText(s: string): string {
   // eslint-disable-next-line no-control-regex
   return s.replace(/[\x00-\x1F\x7F]/g, '').trim();
 }
 
-const zPosition = z.enum(POSITIONS);
+// Migrate legacy UTG+1 / UTG+2 positions (removed; both collapse to UTG).
+const zPosition = z.preprocess(
+  (v) => (v === 'UTG+1' || v === 'UTG+2' ? 'UTG' : v),
+  z.enum(POSITIONS),
+);
 const zSituation = z.enum(SITUATIONS);
 const zAction = z.enum(ACTIONS);
 
@@ -101,6 +118,7 @@ export const zPersistedUiState = z
     gridTooltipEnabled: z.boolean(),
     viewerRangeId: z.string().nullable().default(null),
     trainerRangeId: z.string().nullable().default(null),
+    groupMeta: z.record(z.string(), zGroupMeta).default({}),
   })
   .strict();
 

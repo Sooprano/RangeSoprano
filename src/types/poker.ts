@@ -1,7 +1,7 @@
 export const RANKS = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'] as const;
 export type Rank = (typeof RANKS)[number];
 
-export const POSITIONS = ['UTG', 'UTG+1', 'UTG+2', 'HJ', 'CO', 'BTN', 'SB', 'BB'] as const;
+export const POSITIONS = ['UTG', 'HJ', 'CO', 'BTN', 'SB', 'BB'] as const;
 export type Position = (typeof POSITIONS)[number];
 
 export const ACTIONS = ['RAISE', 'CALL', 'FOLD', '3BET', 'ALL_IN'] as const;
