@@ -27,9 +27,39 @@
 
 ## Estado actual
 
-Fase 9 ✅ (Home + onboarding). Fase 7 en curso: 7A/7B/7C ✅, 7D ⏳ pausado (falta crear repo en GitHub y configurar remote; luego `vite.config.ts` con `base` condicional, `.github/workflows/deploy.yml`, `basename` en router, README).
+Fase 9 ✅ (Home + onboarding) · Fase 10 ✅ (villain + tableFormat HU/6max). Fase 7D ⏳ pausado (deploy a GitHub Pages — ver pendientes).
 
-Visual polish reciente: trainer con mesa 6-max estilo "stadium" (rectángulo con extremos semicirculares), slots redistribuidos con simetría bilateral, cartas pegadas al héroe.
+Visual polish reciente: trainer con mesa 6-max estilo "stadium" (rectángulo con extremos semicirculares), slots redistribuidos con simetría bilateral, cartas pegadas al héroe. HU mode muestra solo BTN y BB (slots 0 y 3), los demás desaparecen.
+
+## Pendientes para próxima sesión
+
+### P1 — Edit-in-place de metadatos de rango (deferred de fase 10)
+Hoy NO existe UI para editar `position`, `situation`, `villainPosition` ni `tableFormat` en rangos **ya creados**. Solo el formulario de creación los expone.
+
+**Qué hay que construir:**
+- Sección de "propiedades del rango" en el panel lateral del Editor (o un modal inline en RangeManager al hacer hover/click en el nombre).
+- Campos: Position, Situation, Villain (con la misma lógica de deshabilitado que NewRangeForm), Mesa (HU / 6max).
+- Llamar `updateRange(id, patch)` — ya existe en el store y acepta `Partial<Omit<Range,'id'|'createdAt'>>`.
+- Considerar: al cambiar `tableFormat` a HU con una posición no válida (ej. CO), auto-corregir a BTN.
+
+**Archivos a tocar:**
+- `src/modules/editor/RangeManager.tsx` — donde está la lista de rangos; probablemente exponer un panel de detalle al seleccionar.
+- `src/modules/editor/EditorPage.tsx` — si el panel va en el sidebar.
+- Posiblemente un nuevo componente `RangeMetaForm.tsx` reutilizando lógica de `NewRangeForm`.
+
+### P2 — Fase 7D: Deploy a GitHub Pages (pausado)
+Requisitos conocidos:
+1. Crear repo en GitHub y configurar remote (`git remote add origin <url>`).
+2. `vite.config.ts`: añadir `base: process.env.NODE_ENV === 'production' ? '/range-soprano/' : '/'`.
+3. `src/router.tsx`: añadir `basename` al `createBrowserRouter` o usar `HashRouter` para evitar 404 en refresh.
+4. `.github/workflows/deploy.yml`: workflow de GitHub Actions que hace `npm ci && npm run build` y sube `dist/` a gh-pages.
+5. README mínimo.
+
+### P3 — Filtro Villain en Home page
+La Home explica los módulos pero no menciona que Viewer y Trainer tienen filtros de Villain. Podría añadirse como tip en la sección de atajos/portabilidad.
+
+### P4 (opcional) — Mostrar villainPosition y tableFormat en el badge de rango
+En RangeManager cada rango muestra una línea de subtítulo (position · situation). Podría añadirse "· HU" o "· vs BTN" para que el usuario vea de un vistazo los metadatos del rango sin abrirlo.
 
 ## Decisiones de diseño clave (referencia futura)
 

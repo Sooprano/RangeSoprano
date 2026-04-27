@@ -17,6 +17,7 @@ React 19 + TypeScript estricto (noUncheckedIndexedAccess, exactOptionalPropertyT
 7. 🔄 Pulido final (7A toasts ✅ · 7B a11y modals/menus ✅ · 7C error boundary + 404 + meta ✅ · 7D deploy ⏳)
 8. ✅ Editor avanzado (8A Ctrl+RightClick hand+ · 8B notas · 8C Save/Discard/Clear · 8D DnD carpetas/rangos · 8E acciones custom por rango)
 9. ✅ Home + onboarding (módulos/atajos/portabilidad · import perfil JSON · donación BTC)
+10. ✅ Villain + tableFormat HU/6max (NewRangeForm · PokerTable HU mode · filtro Viewer operativo)
 
 ## Convenciones
 
