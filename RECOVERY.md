@@ -23,6 +23,7 @@
 - Fase 7C (error boundary + 404 + meta): `caa190b`
 - Fase 7D (deploy): pendiente
 - Fase 9 (Home + onboarding + import perfil JSON + donación BTC): `70e7e43`
+- Fase 10 (villain + tableFormat HU/6max en NewRangeForm + PokerTable HU): pendiente (commit a registrar al cierre)
 
 ## Estado actual
 
@@ -66,6 +67,15 @@ Visual polish reciente: trainer con mesa 6-max estilo "stadium" (rectángulo con
 - **Forma**: stadium (`rounded-full` sobre felt 2.66:1) con `paddingBottom: '42%'` en container y `inset-y-[8%]` en felt → bordes rectos largos arriba/abajo + semicírculos en los extremos.
 - **Slots con simetría bilateral**: hero abajo-centro (slot 0), uno directamente enfrente arriba-centro (slot 3); slots 2&4 a la misma altura (esquinas superiores), slots 1&5 a la misma altura (esquinas inferiores). Con hero=BB: BTN/HJ misma altura, SB/UTG misma altura, CO directamente enfrente.
 - **Hero overflow**: el stack hero (cartas + combos + badge ≈110px) excede el container; se compensa con `mb-12` en el wrapper para que la action grid no se solape con el badge.
+- **HU mode** (fase 10): cuando `range.tableFormat === 'HU'`, `getTableLayout` devuelve solo slots 0 (hero) y 3 (villano enfrente); el resto desaparece. Mismo felt, mismo container, sin cambios visuales para el hero. Hero seat se snapea a BTN/BB (si llegara CO/HJ por dato corrupto, cae a BTN). Villano se calcula con `huVillainOf()` (BTN↔BB) ignorando el `villainPosition` persistido.
+
+### Villain + tableFormat (fase 10)
+- **Tipo `Range.tableFormat: '6max' | 'HU'`** (no boolean — enum para escalar a 9-max sin migración). Schema Zod: `z.enum(TABLE_FORMATS).default('6max')` para que rangos viejos hidraten a `'6max'` automáticamente. Sin bump de `CURRENT_RANGE_STORE_VERSION`.
+- **`HU_POSITIONS` y `huVillainOf()`** en `src/types/poker.ts`: HU solo permite BTN/BB. `huVillainOf('BTN') === 'BB'` y viceversa. Reusado por PokerTable y NewRangeForm.
+- **NewRangeForm**: 4 campos (Name, Mesa, Position+Situation grid, Villain). En HU: `positionOptions` se restringe a `HU_POSITIONS`, Villain dropdown deshabilitado y muestra el seat implícito (`BTN faces BB` etc.). En no-HU+RFI: Villain deshabilitado con texto "Not applicable to RFI" (consistente con `villainDisabled` del filtro Viewer). Submit solo manda `villainPosition` cuando hay valor (spread condicional para `exactOptionalPropertyTypes`).
+- **`createRange`**: `tableFormat: input.tableFormat ?? '6max'` para que callers existentes (sample range, import) sigan funcionando sin tocar nada.
+- **NO se editó RangeManager para edit-in-place** de `position`/`situation`/`villainPosition`/`tableFormat`: alcance limitado al formulario de creación. Editar campos de un rango existente requiere UI nueva (deferred).
+- **Filtro Villain del Viewer**: ahora SÍ funciona porque rangos creados desde el form pueden tener `villainPosition` real. Rangos pre-fase-10 siguen con `villainPosition: undefined` y por tanto invisibles bajo cualquier filtro de villain (comportamiento esperado).
 
 ## Convenciones de implementación
 

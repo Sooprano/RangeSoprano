@@ -54,6 +54,16 @@ export const SITUATIONS = [
 ] as const;
 export type Situation = (typeof SITUATIONS)[number];
 
+export const TABLE_FORMATS = ['6max', 'HU'] as const;
+export type TableFormat = (typeof TABLE_FORMATS)[number];
+
+export const HU_POSITIONS = ['BTN', 'BB'] as const satisfies readonly Position[];
+
+/** Returns the implicit villain seat in heads-up given the hero's seat. */
+export function huVillainOf(hero: Position): Position {
+  return hero === 'BTN' ? 'BB' : 'BTN';
+}
+
 export type Range = {
   id: string;
   name: string;
@@ -71,4 +81,6 @@ export type Range = {
   order?: number;
   /** User-defined actions (custom labels and colors) available in this range. */
   actions: ActionDef[];
+  /** Table format used by the trainer to render the seat layout. Defaults to '6max'. */
+  tableFormat: TableFormat;
 };

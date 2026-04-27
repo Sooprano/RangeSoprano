@@ -8,6 +8,7 @@ import type {
   Range,
   RangeCellData,
   Situation,
+  TableFormat,
 } from '@/types/poker';
 import { NEW_RANGE_ACTION_DEFS } from '@/utils/actionMeta';
 import {
@@ -37,6 +38,7 @@ export type CreateRangeInput = {
   group?: string;
   cells?: Record<HandNotation, RangeCellData>;
   actions?: ActionDef[];
+  tableFormat?: TableFormat;
 };
 
 export const MAX_HISTORY = 50;
@@ -225,6 +227,7 @@ export const useRangeStore = create<RangeStoreState>()(
           createdAt: now,
           updatedAt: now,
           actions: seedActions,
+          tableFormat: input.tableFormat ?? '6max',
         };
         set((s) => ({ ranges: [...s.ranges, range] }));
         return id;

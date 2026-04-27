@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { POSITIONS, SITUATIONS } from '@/types/poker';
+import { POSITIONS, SITUATIONS, TABLE_FORMATS } from '@/types/poker';
 import type { Range } from '@/types/poker';
 import { DEFAULT_ACTION_DEFS } from '@/utils/actionMeta';
 
@@ -100,6 +100,7 @@ export const zRange = z
       .array(zActionDef)
       .max(MAX_ACTIONS_PER_RANGE)
       .default(() => DEFAULT_ACTION_DEFS.map((d) => ({ ...d }))),
+    tableFormat: z.enum(TABLE_FORMATS).default('6max'),
   })
   .strict()
   .superRefine((r, ctx) => {

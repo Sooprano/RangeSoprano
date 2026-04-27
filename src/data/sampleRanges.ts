@@ -67,4 +67,5 @@ export const SAMPLE_BTN_RFI: Range = {
   createdAt: '2026-04-20T00:00:00.000Z',
   updatedAt: '2026-04-20T00:00:00.000Z',
   actions: DEFAULT_ACTION_DEFS.map((d) => ({ ...d })),
+  tableFormat: '6max',
 };

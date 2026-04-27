@@ -165,6 +165,7 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
         <PokerTable
             heroPosition={range.position}
             hand={current.hand}
+            tableFormat={range.tableFormat}
             {...(range.villainPosition !== undefined && { villainPosition: range.villainPosition })}
           />
 

@@ -1,7 +1,7 @@
 import { cn } from '@/lib/cn';
 import { combosOf } from '@/utils/handUtils';
-import { POSITIONS } from '@/types/poker';
-import type { Position } from '@/types/poker';
+import { POSITIONS, huVillainOf } from '@/types/poker';
+import type { Position, TableFormat } from '@/types/poker';
 
 // ── Card rendering ──────────────────────────────────────────────────────────
 
@@ -61,7 +61,21 @@ const VISUAL_SLOTS: Slot[] = [
   { x:  9, y: 78 }, // 5 — lower-left corner   ← mirrors slot 1
 ];
 
-function getTableLayout(heroPosition: Position): { position: Position; slot: Slot }[] {
+function getTableLayout(
+  heroPosition: Position,
+  tableFormat: TableFormat,
+): { position: Position; slot: Slot }[] {
+  if (tableFormat === 'HU') {
+    // Heads-up: only hero (slot 0, bottom-center) and villain (slot 3, top-center).
+    const heroSlot = VISUAL_SLOTS[0]!;
+    const villainSlot = VISUAL_SLOTS[3]!;
+    const heroSeat = heroPosition === 'BB' ? 'BB' : 'BTN';
+    const villainSeat = huVillainOf(heroSeat);
+    return [
+      { position: heroSeat, slot: heroSlot },
+      { position: villainSeat, slot: villainSlot },
+    ];
+  }
   const heroIdx = POSITIONS.indexOf(heroPosition as (typeof POSITIONS)[number]);
   const base = heroIdx < 0 ? 0 : heroIdx;
   return VISUAL_SLOTS.map((slot, i) => {
@@ -76,12 +90,25 @@ type PokerTableProps = {
   heroPosition: Position;
   villainPosition?: Position;
   hand: string;
+  tableFormat?: TableFormat;
 };
 
-export function PokerTable({ heroPosition, villainPosition, hand }: PokerTableProps) {
+export function PokerTable({
+  heroPosition,
+  villainPosition,
+  hand,
+  tableFormat = '6max',
+}: PokerTableProps) {
   const [card1, card2] = parseHandCards(hand);
   const combos = combosOf(hand);
-  const layout = getTableLayout(heroPosition);
+  // In HU the villain seat is implicit (BTN↔BB); honor that even if the prop is missing or stale.
+  const effectiveHero =
+    tableFormat === 'HU' && heroPosition !== 'BTN' && heroPosition !== 'BB'
+      ? 'BTN'
+      : heroPosition;
+  const effectiveVillain =
+    tableFormat === 'HU' ? huVillainOf(effectiveHero) : villainPosition;
+  const layout = getTableLayout(effectiveHero, tableFormat);
 
   return (
     // Container 2.38:1 (W × 0.42W). All children absolute.
@@ -101,8 +128,8 @@ export function PokerTable({ heroPosition, villainPosition, hand }: PokerTablePr
 
       {/* ── Seat tokens ── */}
       {layout.map(({ position, slot }) => {
-        const isHero = position === heroPosition;
-        const isVillain = !isHero && position === villainPosition;
+        const isHero = position === effectiveHero;
+        const isVillain = !isHero && position === effectiveVillain;
         return (
           <div
             key={position}

@@ -1,6 +1,15 @@
-import { useId, useState, type FormEvent } from 'react';
+import { useId, useMemo, useState, type FormEvent } from 'react';
 import { cn } from '@/lib/cn';
-import { POSITIONS, SITUATIONS, type Position, type Situation } from '@/types/poker';
+import {
+  HU_POSITIONS,
+  POSITIONS,
+  SITUATIONS,
+  TABLE_FORMATS,
+  huVillainOf,
+  type Position,
+  type Situation,
+  type TableFormat,
+} from '@/types/poker';
 import { sanitizeText, MAX_NAME_LEN } from '@/store/schemas';
 
 const SITUATION_LABELS: Record<Situation, string> = {
@@ -12,10 +21,17 @@ const SITUATION_LABELS: Record<Situation, string> = {
   DEFEND_BB: 'Defend BB',
 };
 
+const TABLE_FORMAT_LABELS: Record<TableFormat, string> = {
+  '6max': '3-max / 6-max',
+  HU: 'Heads-Up',
+};
+
 export type NewRangePayload = {
   name: string;
   position: Position;
   situation: Situation;
+  villainPosition?: Position;
+  tableFormat: TableFormat;
 };
 
 type NewRangeFormProps = {
@@ -24,15 +40,41 @@ type NewRangeFormProps = {
   className?: string;
 };
 
+const villainDisabledFor = (s: Situation) => s === 'RFI';
+
 export function NewRangeForm({ onCreate, onCancel, className }: NewRangeFormProps) {
   const nameId = useId();
   const positionId = useId();
   const situationId = useId();
+  const villainId = useId();
+  const tableFormatId = useId();
 
   const [name, setName] = useState('');
+  const [tableFormat, setTableFormat] = useState<TableFormat>('6max');
   const [position, setPosition] = useState<Position>('BTN');
   const [situation, setSituation] = useState<Situation>('RFI');
+  const [villainPosition, setVillainPosition] = useState<Position | ''>('');
   const [error, setError] = useState<string | null>(null);
+
+  const isHU = tableFormat === 'HU';
+  const positionOptions = useMemo<readonly Position[]>(
+    () => (isHU ? HU_POSITIONS : POSITIONS),
+    [isHU],
+  );
+
+  const villainDisabled = isHU || villainDisabledFor(situation);
+  const effectiveVillain: Position | undefined = isHU
+    ? huVillainOf(position)
+    : villainPosition === ''
+      ? undefined
+      : villainPosition;
+
+  const handleTableFormatChange = (next: TableFormat) => {
+    setTableFormat(next);
+    if (next === 'HU' && !HU_POSITIONS.includes(position as (typeof HU_POSITIONS)[number])) {
+      setPosition('BTN');
+    }
+  };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -42,7 +84,13 @@ export function NewRangeForm({ onCreate, onCancel, className }: NewRangeFormProp
       return;
     }
     setError(null);
-    onCreate({ name: cleanName, position, situation });
+    onCreate({
+      name: cleanName,
+      position,
+      situation,
+      tableFormat,
+      ...(effectiveVillain !== undefined && { villainPosition: effectiveVillain }),
+    });
   };
 
   return (
@@ -69,6 +117,27 @@ export function NewRangeForm({ onCreate, onCancel, className }: NewRangeFormProp
         />
       </div>
 
+      <div className="flex flex-col gap-1">
+        <label
+          htmlFor={tableFormatId}
+          className="text-xs font-medium text-content-muted"
+        >
+          Mesa
+        </label>
+        <select
+          id={tableFormatId}
+          value={tableFormat}
+          onChange={(e) => handleTableFormatChange(e.target.value as TableFormat)}
+          className={selectClass}
+        >
+          {TABLE_FORMATS.map((t) => (
+            <option key={t} value={t}>
+              {TABLE_FORMAT_LABELS[t]}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <div className="grid grid-cols-2 gap-2">
         <div className="flex flex-col gap-1">
           <label htmlFor={positionId} className="text-xs font-medium text-content-muted">
@@ -78,9 +147,9 @@ export function NewRangeForm({ onCreate, onCancel, className }: NewRangeFormProp
             id={positionId}
             value={position}
             onChange={(e) => setPosition(e.target.value as Position)}
-            className="rounded-md border border-border bg-bg px-2 py-1.5 text-sm text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
+            className={selectClass}
           >
-            {POSITIONS.map((p) => (
+            {positionOptions.map((p) => (
               <option key={p} value={p}>
                 {p}
               </option>
@@ -95,7 +164,7 @@ export function NewRangeForm({ onCreate, onCancel, className }: NewRangeFormProp
             id={situationId}
             value={situation}
             onChange={(e) => setSituation(e.target.value as Situation)}
-            className="rounded-md border border-border bg-bg px-2 py-1.5 text-sm text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
+            className={selectClass}
           >
             {SITUATIONS.map((s) => (
               <option key={s} value={s}>
@@ -104,6 +173,37 @@ export function NewRangeForm({ onCreate, onCancel, className }: NewRangeFormProp
             ))}
           </select>
         </div>
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label htmlFor={villainId} className="text-xs font-medium text-content-muted">
+          Villain
+        </label>
+        <select
+          id={villainId}
+          value={isHU ? huVillainOf(position) : villainPosition}
+          onChange={(e) => setVillainPosition(e.target.value as Position | '')}
+          disabled={villainDisabled}
+          className={cn(selectClass, villainDisabled && 'cursor-not-allowed opacity-50')}
+        >
+          <option value="">{isHU ? huVillainOf(position) : '— None —'}</option>
+          {!isHU &&
+            POSITIONS.filter((p) => p !== position).map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+        </select>
+        {isHU && (
+          <span className="text-[10px] text-content-disabled">
+            Auto-set in Heads-Up ({huVillainOf(position)} faces {position}).
+          </span>
+        )}
+        {!isHU && situation === 'RFI' && (
+          <span className="text-[10px] text-content-disabled">
+            Not applicable to RFI.
+          </span>
+        )}
       </div>
 
       {error && (
@@ -130,3 +230,6 @@ export function NewRangeForm({ onCreate, onCancel, className }: NewRangeFormProp
     </form>
   );
 }
+
+const selectClass =
+  'rounded-md border border-border bg-bg px-2 py-1.5 text-sm text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light';
