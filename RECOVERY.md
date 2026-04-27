@@ -27,13 +27,17 @@
 
 ## Estado actual
 
-Fase 9 ✅ (Home + onboarding) · Fase 10 ✅ (villain + tableFormat HU/6max). Fase 7D ⏳ pausado (deploy a GitHub Pages — ver pendientes).
+Fase 9 ✅ · Fase 10 ✅ · Fase 11 ✅ (palette reuse · folder rename · meta edit-in-place · home docs). Fase 7D ⏳ pausado (deploy a GitHub Pages — ver pendientes).
 
 Visual polish reciente: trainer con mesa 6-max estilo "stadium" (rectángulo con extremos semicirculares), slots redistribuidos con simetría bilateral, cartas pegadas al héroe. HU mode muestra solo BTN y BB (slots 0 y 3), los demás desaparecen.
 
+## Últimos commits estables por fase (cont.)
+
+- Fase 11 (palette reuse · folder rename · meta edit-in-place): `e3f7c36`
+
 ## Pendientes para próxima sesión
 
-### P1 — Edit-in-place de metadatos de rango (deferred de fase 10)
+### P1 ~~Edit-in-place de metadatos~~ ✅ completado en fase 11
 Hoy NO existe UI para editar `position`, `situation`, `villainPosition` ni `tableFormat` en rangos **ya creados**. Solo el formulario de creación los expone.
 
 **Qué hay que construir:**
