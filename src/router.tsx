@@ -43,37 +43,42 @@ function NotFoundPage() {
   );
 }
 
-export const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <AppLayout />,
-    children: [
-      {
-        index: true,
-        element: (
-          <Suspense fallback={<PageFallback />}>
-            <HomePage />
-          </Suspense>
-        ),
-      },
-      { path: 'viewer', element: <ViewerPage /> },
-      {
-        path: 'trainer',
-        element: (
-          <Suspense fallback={<PageFallback />}>
-            <TrainerPage />
-          </Suspense>
-        ),
-      },
-      {
-        path: 'editor',
-        element: (
-          <Suspense fallback={<PageFallback />}>
-            <EditorPage />
-          </Suspense>
-        ),
-      },
-      { path: '*', element: <NotFoundPage /> },
-    ],
-  },
-]);
+const basename = import.meta.env.BASE_URL.replace(/\/$/, '') || '/';
+
+export const router = createBrowserRouter(
+  [
+    {
+      path: '/',
+      element: <AppLayout />,
+      children: [
+        {
+          index: true,
+          element: (
+            <Suspense fallback={<PageFallback />}>
+              <HomePage />
+            </Suspense>
+          ),
+        },
+        { path: 'viewer', element: <ViewerPage /> },
+        {
+          path: 'trainer',
+          element: (
+            <Suspense fallback={<PageFallback />}>
+              <TrainerPage />
+            </Suspense>
+          ),
+        },
+        {
+          path: 'editor',
+          element: (
+            <Suspense fallback={<PageFallback />}>
+              <EditorPage />
+            </Suspense>
+          ),
+        },
+        { path: '*', element: <NotFoundPage /> },
+      ],
+    },
+  ],
+  { basename },
+);

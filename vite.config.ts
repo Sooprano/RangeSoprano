@@ -5,11 +5,12 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  base: mode === 'production' ? '/RangeSoprano/' : '/',
   plugins: [react()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
     },
   },
-});
+}));
