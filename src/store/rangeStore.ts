@@ -79,6 +79,8 @@ type RangeStoreState = PersistedRangeState & {
   hasUnsavedChanges: (id: string) => boolean;
   /** Set per-scope order for ranges (group key = group string or null for ungrouped). */
   reorderRanges: (groupKey: string | null, orderedIds: string[]) => void;
+  /** Rename a group path and cascade to all sub-folders and ranges. */
+  renameGroup: (oldPath: string, newPath: string) => void;
   /** Append a new action to a range. Returns its id. */
   addAction: (rangeId: string, partial?: Partial<Omit<ActionDef, 'id' | 'order'>>) => string | null;
   /** Patch an existing action (label / color). Order is set by reorderActions. */
@@ -87,6 +89,8 @@ type RangeStoreState = PersistedRangeState & {
   deleteAction: (rangeId: string, actionId: ActionId) => void;
   /** Reorder actions to match the given id order; orphans go to the tail. */
   reorderActions: (rangeId: string, orderedIds: ActionId[]) => void;
+  /** Replace the full action palette of a range and clear all cell data. */
+  replaceActions: (rangeId: string, newActions: ActionDef[]) => void;
   resetStore: () => void;
 };
 
@@ -386,6 +390,20 @@ export const useRangeStore = create<RangeStoreState>()(
         }));
       },
 
+      renameGroup: (oldPath, newPath) => {
+        const trimmed = newPath.trim();
+        if (!trimmed || trimmed === oldPath) return;
+        set((s) => ({
+          ranges: s.ranges.map((r) => {
+            if (r.group === undefined) return r;
+            if (r.group === oldPath) return { ...r, group: trimmed };
+            if (r.group.startsWith(oldPath + '/'))
+              return { ...r, group: trimmed + r.group.slice(oldPath.length) };
+            return r;
+          }),
+        }));
+      },
+
       reorderRanges: (groupKey, orderedIds) => {
         set((s) => {
           const orderMap = new Map(orderedIds.map((id, idx) => [id, idx]));
@@ -507,6 +525,16 @@ export const useRangeStore = create<RangeStoreState>()(
         }));
 
         return { accepted: accepted.length, rejected };
+      },
+
+      replaceActions: (rangeId, newActions) => {
+        if (newActions.length === 0) return;
+        set((s) => ({
+          ranges: s.ranges.map((r) => {
+            if (r.id !== rangeId) return r;
+            return touch({ ...r, actions: newActions.map((a) => ({ ...a })), cells: {} });
+          }),
+        }));
       },
 
       resetStore: () => set({ ...INITIAL, past: [], future: [], snapshots: {} }),

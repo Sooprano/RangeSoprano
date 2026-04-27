@@ -22,6 +22,8 @@ type UiStoreState = PersistedUiState & {
   setGroupCollapsed: (path: string, collapsed: boolean) => void;
   /** Reorder folders at a given parent path (use null for roots). */
   reorderFolders: (parentPath: string | null, orderedPaths: string[]) => void;
+  /** Rename group meta keys when a folder is renamed (cascades sub-paths). */
+  renameGroupMeta: (oldPath: string, newPath: string) => void;
 };
 
 const INITIAL: PersistedUiState = {
@@ -82,6 +84,23 @@ export const useUiStore = create<UiStoreState>()(
           const prevOrder = existing?.order;
           if (prevOrder !== undefined) next.order = prevOrder;
           return { groupMeta: { ...s.groupMeta, [path]: next } };
+        }),
+
+      renameGroupMeta: (oldPath, newPath) =>
+        set((s) => {
+          const next: Record<string, GroupMeta> = {};
+          for (const key of Object.keys(s.groupMeta)) {
+            const value = s.groupMeta[key];
+            if (!value) continue;
+            if (key === oldPath) {
+              next[newPath] = value;
+            } else if (key.startsWith(oldPath + '/')) {
+              next[newPath + key.slice(oldPath.length)] = value;
+            } else {
+              next[key] = value;
+            }
+          }
+          return { groupMeta: next };
         }),
 
       reorderFolders: (_parentPath, orderedPaths) =>

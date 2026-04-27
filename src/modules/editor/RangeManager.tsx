@@ -44,10 +44,13 @@ export function RangeManager({
   const pushHistory = useRangeStore((s) => s.pushHistory);
   const reorderRanges = useRangeStore((s) => s.reorderRanges);
 
+  const renameGroup = useRangeStore((s) => s.renameGroup);
+
   const groupMeta = useUiStore((s) => s.groupMeta);
   const toggleGroupCollapsed = useUiStore((s) => s.toggleGroupCollapsed);
   const setGroupColor = useUiStore((s) => s.setGroupColor);
   const reorderFolders = useUiStore((s) => s.reorderFolders);
+  const renameGroupMeta = useUiStore((s) => s.renameGroupMeta);
 
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
@@ -55,8 +58,11 @@ export function RangeManager({
   const [groupingId, setGroupingId] = useState<string | null>(null);
   const [groupDraft, setGroupDraft] = useState('');
   const [colorPickerPath, setColorPickerPath] = useState<string | null>(null);
+  const [renamingFolderPath, setRenamingFolderPath] = useState<string | null>(null);
+  const [folderRenameDraft, setFolderRenameDraft] = useState('');
   const renameInputRef = useRef<HTMLInputElement | null>(null);
   const groupInputRef = useRef<HTMLInputElement | null>(null);
+  const folderRenameInputRef = useRef<HTMLInputElement | null>(null);
   const menuTriggerRef = useRef<HTMLButtonElement | null>(null);
   const menuPanelRef = useRef<HTMLDivElement | null>(null);
 
@@ -96,6 +102,13 @@ export function RangeManager({
       groupInputRef.current.select();
     }
   }, [groupingId]);
+
+  useEffect(() => {
+    if (renamingFolderPath && folderRenameInputRef.current) {
+      folderRenameInputRef.current.focus();
+      folderRenameInputRef.current.select();
+    }
+  }, [renamingFolderPath]);
 
   useEffect(() => {
     if (!openMenuId) return;
@@ -219,6 +232,29 @@ export function RangeManager({
   const cancelGroup = () => {
     setGroupingId(null);
     setGroupDraft('');
+  };
+
+  const startFolderRename = (path: string) => {
+    setRenamingFolderPath(path);
+    setFolderRenameDraft(path);
+    setOpenMenuId(null);
+  };
+
+  const commitFolderRename = (path: string) => {
+    const next = sanitizeText(folderRenameDraft).trim().slice(0, MAX_GROUP_LEN);
+    if (next.length > 0 && next !== path) {
+      pushHistory();
+      renameGroup(path, next);
+      renameGroupMeta(path, next);
+      pushToast({ kind: 'success', message: `Folder renamed to "${next.split('/').at(-1) ?? next}"` });
+    }
+    setRenamingFolderPath(null);
+    setFolderRenameDraft('');
+  };
+
+  const cancelFolderRename = () => {
+    setRenamingFolderPath(null);
+    setFolderRenameDraft('');
   };
 
   const renderRangeRow = (s: RangeSummary) => {
@@ -387,10 +423,35 @@ export function RangeManager({
     const meta = groupMeta[node.path];
     const isCollapsed = meta?.collapsed ?? false;
     const childFolderIds = node.children.map((c) => c.path);
+    const folderMenuId = `folder:${node.path}`;
+    const isFolderMenuOpen = openMenuId === folderMenuId;
+    const isRenamingFolder = renamingFolderPath === node.path;
 
     return (
       <li key={node.path} className="group flex flex-col">
         <SortableItem id={node.path} ariaLabel={`Drag folder ${node.label}`}>
+        {isRenamingFolder ? (
+          <div
+            className="flex items-center gap-1 py-0.5"
+            style={{ paddingLeft: node.depth * 16 + 4 }}
+          >
+            <input
+              ref={folderRenameInputRef}
+              type="text"
+              value={folderRenameDraft}
+              maxLength={MAX_GROUP_LEN}
+              onChange={(e) => setFolderRenameDraft(e.target.value)}
+              onBlur={() => commitFolderRename(node.path)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') { e.preventDefault(); commitFolderRename(node.path); }
+                if (e.key === 'Escape') { e.preventDefault(); cancelFolderRename(); }
+              }}
+              placeholder="Full path, e.g. Parent/FolderName"
+              aria-label={`Rename folder ${node.label}`}
+              className="flex-1 rounded-md border border-accent/50 bg-bg px-1.5 py-0.5 text-xs text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
+            />
+          </div>
+        ) : (
         <FolderRow
           node={node}
           meta={meta}
@@ -401,7 +462,53 @@ export function RangeManager({
           colorPickerOpen={colorPickerPath === node.path}
           onColorChange={(color) => setGroupColor(node.path, color)}
           onColorPickerClose={() => setColorPickerPath(null)}
+          trailing={
+            <div data-menu-scope={folderMenuId} className="relative mr-1 shrink-0">
+              <button
+                type="button"
+                aria-label={`Actions for folder ${node.label}`}
+                aria-haspopup="menu"
+                aria-expanded={isFolderMenuOpen}
+                onClick={(e) => {
+                  if (isFolderMenuOpen) {
+                    closeMenuAndRestoreFocus(false);
+                  } else {
+                    menuTriggerRef.current = e.currentTarget;
+                    setOpenMenuId(folderMenuId);
+                  }
+                }}
+                className={cn(
+                  'rounded-md p-0.5 text-content-muted hover:bg-surface hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light',
+                  isFolderMenuOpen
+                    ? 'inline-flex bg-surface text-content'
+                    : 'hidden group-hover:inline-flex focus-visible:inline-flex',
+                )}
+              >
+                <MoreHorizontal className="h-3.5 w-3.5" strokeWidth={2.25} />
+              </button>
+              {isFolderMenuOpen && (
+                <div
+                  ref={menuPanelRef}
+                  role="menu"
+                  aria-label={`Actions for folder ${node.label}`}
+                  onKeyDown={onMenuKeyDown}
+                  className="absolute right-0 top-full z-20 mt-1 flex min-w-[160px] flex-col rounded-lg border border-border bg-surface p-1 shadow-surface"
+                >
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => startFolderRename(node.path)}
+                    className="inline-flex items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs text-content hover:bg-surface-hover focus-visible:bg-surface-hover focus-visible:outline-none"
+                  >
+                    <Pencil className="h-3.5 w-3.5" strokeWidth={2} />
+                    Rename folder…
+                  </button>
+                </div>
+              )}
+            </div>
+          }
         />
+        )}
         </SortableItem>
         {!isCollapsed && (
           <div

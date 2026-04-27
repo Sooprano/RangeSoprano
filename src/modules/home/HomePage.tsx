@@ -7,6 +7,8 @@ import {
   Copy,
   Download,
   Eye,
+  FolderInput,
+  FolderOpen,
   Pencil,
   Save,
   Target,
@@ -115,6 +117,66 @@ export default function HomePage() {
               <span className="text-content-muted">{s.desc}</span>
             </li>
           ))}
+        </ul>
+      </section>
+
+      <section aria-labelledby="organize-heading" className="flex flex-col gap-3">
+        <h2
+          id="organize-heading"
+          className="text-[11px] font-semibold uppercase tracking-[0.18em] text-content-muted"
+        >
+          Organizar rangos
+        </h2>
+        <ul className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 text-sm">
+          <li className="flex items-start gap-3">
+            <span aria-hidden className="mt-0.5 shrink-0 text-content-muted">
+              <FolderOpen className="h-4 w-4" strokeWidth={2} />
+            </span>
+            <div className="text-content-muted">
+              <span className="font-medium text-content">Sub-carpetas</span>
+              {' — '}escribí{' '}
+              <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">
+                Parent/Child
+              </code>{' '}
+              como nombre de grupo al crear un rango o al usar{' '}
+              <span className="font-medium text-content">Move to group…</span>.
+            </div>
+          </li>
+          <li className="flex items-start gap-3">
+            <span aria-hidden className="mt-0.5 shrink-0 text-content-muted">
+              <FolderInput className="h-4 w-4" strokeWidth={2} />
+            </span>
+            <div className="text-content-muted">
+              <span className="font-medium text-content">Mover un rango</span>
+              {' — '}clic en{' '}
+              <kbd className="rounded border border-border bg-bg px-1.5 py-0.5 font-mono text-[10px] text-content">
+                ···
+              </kbd>{' '}
+              junto al rango → <span className="font-medium text-content">Move to group…</span> → escribí el
+              nombre del destino (usa autocompletado).
+            </div>
+          </li>
+          <li className="flex items-start gap-3">
+            <span aria-hidden className="mt-0.5 shrink-0 text-content-muted">
+              <Pencil className="h-4 w-4" strokeWidth={2} />
+            </span>
+            <div className="text-content-muted">
+              <span className="font-medium text-content">Renombrar o mover carpeta</span>
+              {' — '}clic en{' '}
+              <kbd className="rounded border border-border bg-bg px-1.5 py-0.5 font-mono text-[10px] text-content">
+                ···
+              </kbd>{' '}
+              en el header de carpeta →{' '}
+              <span className="font-medium text-content">Rename folder…</span>.{' '}
+              Tip: renombrá{' '}
+              <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">Opening</code>
+              {' → '}
+              <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">
+                Preflop/Opening
+              </code>{' '}
+              para moverla dentro de Preflop.
+            </div>
+          </li>
         </ul>
       </section>
 

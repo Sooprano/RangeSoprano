@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ChevronDown, Plus, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useRangeStore } from '@/store/rangeStore';
 import { MAX_ACTION_LABEL_LEN, MAX_ACTIONS_PER_RANGE } from '@/store/schemas';
@@ -24,6 +24,8 @@ export function ActionPalette({
   const updateAction = useRangeStore((s) => s.updateAction);
   const deleteAction = useRangeStore((s) => s.deleteAction);
   const reorderActions = useRangeStore((s) => s.reorderActions);
+  const replaceActions = useRangeStore((s) => s.replaceActions);
+  const allRanges = useRangeStore((s) => s.ranges);
 
   const sorted = useMemo(
     () => [...range.actions].sort((a, b) => a.order - b.order),
@@ -32,7 +34,34 @@ export function ActionPalette({
   const ids = useMemo(() => sorted.map((d) => d.id), [sorted]);
   const atLimit = sorted.length >= MAX_ACTIONS_PER_RANGE;
 
+  const otherRanges = useMemo(
+    () => allRanges.filter((r) => r.id !== range.id),
+    [allRanges, range.id],
+  );
+
   const [pickerOpenFor, setPickerOpenFor] = useState<ActionId | null>(null);
+  const [loadMenuOpen, setLoadMenuOpen] = useState(false);
+  const loadMenuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!loadMenuOpen) return;
+    const handleDown = (e: MouseEvent) => {
+      if (!loadMenuRef.current?.contains(e.target as Node)) setLoadMenuOpen(false);
+    };
+    window.addEventListener('mousedown', handleDown);
+    return () => window.removeEventListener('mousedown', handleDown);
+  }, [loadMenuOpen]);
+
+  const handleLoadFrom = (sourceRange: Range) => {
+    setLoadMenuOpen(false);
+    const hasCells = Object.keys(range.cells).length > 0;
+    if (hasCells) {
+      if (!window.confirm(`Load palette from "${sourceRange.name}"? This will clear all painted cells in the current range.`)) return;
+    }
+    const newActions = [...sourceRange.actions].sort((a, b) => a.order - b.order).map((a) => ({ ...a }));
+    replaceActions(range.id, newActions);
+    onActiveActionChange(newActions[0]!.id);
+  };
 
   const handleAdd = () => {
     if (atLimit) return;
@@ -98,27 +127,81 @@ export function ActionPalette({
         </ul>
       </SortableList>
 
-      <button
-        type="button"
-        onClick={handleAdd}
-        disabled={atLimit}
-        className={cn(
-          'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium',
-          'transition-colors duration-150 ease-out-soft',
-          'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light',
-          atLimit
-            ? 'cursor-not-allowed text-content-disabled'
-            : 'text-accent hover:bg-surface-hover',
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          onClick={handleAdd}
+          disabled={atLimit}
+          className={cn(
+            'inline-flex flex-1 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium',
+            'transition-colors duration-150 ease-out-soft',
+            'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light',
+            atLimit
+              ? 'cursor-not-allowed text-content-disabled'
+              : 'text-accent hover:bg-surface-hover',
+          )}
+        >
+          <Plus className="h-4 w-4" strokeWidth={2.25} />
+          Agregar color
+          {atLimit && (
+            <span className="text-[10px] text-content-muted">
+              (max {MAX_ACTIONS_PER_RANGE})
+            </span>
+          )}
+        </button>
+
+        {otherRanges.length > 0 && (
+          <div ref={loadMenuRef} className="relative">
+            <button
+              type="button"
+              onClick={() => setLoadMenuOpen((o) => !o)}
+              aria-expanded={loadMenuOpen}
+              aria-haspopup="menu"
+              title="Load palette from another range"
+              className={cn(
+                'inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-content-muted',
+                'transition-colors duration-150',
+                'hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light',
+                loadMenuOpen && 'bg-surface-hover text-content',
+              )}
+            >
+              Load
+              <ChevronDown className="h-3 w-3" strokeWidth={2.25} />
+            </button>
+            {loadMenuOpen && (
+              <div
+                role="menu"
+                aria-label="Load palette from range"
+                className="absolute bottom-full right-0 z-20 mb-1 flex max-h-48 min-w-[180px] flex-col overflow-y-auto rounded-lg border border-border bg-surface p-1 shadow-surface"
+              >
+                {otherRanges.map((r) => (
+                  <button
+                    key={r.id}
+                    type="button"
+                    role="menuitem"
+                    onClick={() => handleLoadFrom(r)}
+                    className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs text-content hover:bg-surface-hover focus-visible:bg-surface-hover focus-visible:outline-none"
+                  >
+                    <span className="flex shrink-0 gap-0.5">
+                      {[...r.actions]
+                        .sort((a, b) => a.order - b.order)
+                        .slice(0, 4)
+                        .map((a) => (
+                          <span
+                            key={a.id}
+                            className="inline-block h-3 w-3 rounded-sm ring-1 ring-black/20"
+                            style={{ backgroundColor: a.color }}
+                          />
+                        ))}
+                    </span>
+                    <span className="truncate">{r.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         )}
-      >
-        <Plus className="h-4 w-4" strokeWidth={2.25} />
-        Agregar color
-        {atLimit && (
-          <span className="text-[10px] text-content-muted">
-            (max {MAX_ACTIONS_PER_RANGE})
-          </span>
-        )}
-      </button>
+      </div>
     </aside>
   );
 }

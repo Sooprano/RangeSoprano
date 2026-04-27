@@ -13,6 +13,7 @@ import { pushToast } from '@/store/toastStore';
 import { useActiveRange } from '@/store/selectors';
 import type { ActionId, HandNotation } from '@/types/poker';
 import { ActionPalette } from './ActionPalette';
+import { RangeMetaForm } from './RangeMetaForm';
 import { WeightSlider } from './WeightSlider';
 import { HistoryToolbar } from './HistoryToolbar';
 import { ImportModal } from './ImportModal';
@@ -268,6 +269,7 @@ export default function EditorPage() {
 
         {activeRange && (
           <aside className="flex flex-col gap-4">
+            <RangeMetaForm range={activeRange} />
             <ActionPalette
               range={activeRange}
               activeAction={activeAction}

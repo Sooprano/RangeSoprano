@@ -12,6 +12,7 @@ type Props = {
   colorPickerOpen?: boolean;
   onColorChange?: (color: string | undefined) => void;
   onColorPickerClose?: () => void;
+  trailing?: React.ReactNode;
 };
 
 export function FolderRow({
@@ -23,6 +24,7 @@ export function FolderRow({
   colorPickerOpen = false,
   onColorChange,
   onColorPickerClose,
+  trailing,
 }: Props) {
   const isCollapsed = !forceExpand && (meta?.collapsed ?? false);
   const color = meta?.color;
@@ -79,6 +81,7 @@ export function FolderRow({
           style={{ backgroundColor: color }}
         />
       ) : null}
+      {trailing}
     </div>
   );
 }

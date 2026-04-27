@@ -6,11 +6,13 @@ import {
   SITUATIONS,
   TABLE_FORMATS,
   huVillainOf,
+  type ActionDef,
   type Position,
   type Situation,
   type TableFormat,
 } from '@/types/poker';
 import { sanitizeText, MAX_NAME_LEN } from '@/store/schemas';
+import { useRangeStore } from '@/store/rangeStore';
 
 const SITUATION_LABELS: Record<Situation, string> = {
   RFI: 'RFI',
@@ -32,6 +34,7 @@ export type NewRangePayload = {
   situation: Situation;
   villainPosition?: Position;
   tableFormat: TableFormat;
+  actions?: ActionDef[];
 };
 
 type NewRangeFormProps = {
@@ -48,13 +51,24 @@ export function NewRangeForm({ onCreate, onCancel, className }: NewRangeFormProp
   const situationId = useId();
   const villainId = useId();
   const tableFormatId = useId();
+  const paletteId = useId();
+
+  const allRanges = useRangeStore((s) => s.ranges);
 
   const [name, setName] = useState('');
   const [tableFormat, setTableFormat] = useState<TableFormat>('6max');
   const [position, setPosition] = useState<Position>('BTN');
   const [situation, setSituation] = useState<Situation>('RFI');
   const [villainPosition, setVillainPosition] = useState<Position | ''>('');
+  const [paletteSourceId, setPaletteSourceId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const sourcePalette = useMemo(() => {
+    if (!paletteSourceId) return null;
+    const src = allRanges.find((r) => r.id === paletteSourceId);
+    if (!src) return null;
+    return [...src.actions].sort((a, b) => a.order - b.order);
+  }, [paletteSourceId, allRanges]);
 
   const isHU = tableFormat === 'HU';
   const positionOptions = useMemo<readonly Position[]>(
@@ -90,6 +104,7 @@ export function NewRangeForm({ onCreate, onCancel, className }: NewRangeFormProp
       situation,
       tableFormat,
       ...(effectiveVillain !== undefined && { villainPosition: effectiveVillain }),
+      ...(sourcePalette !== null && { actions: sourcePalette.map((a) => ({ ...a })) }),
     });
   };
 
@@ -116,6 +131,44 @@ export function NewRangeForm({ onCreate, onCancel, className }: NewRangeFormProp
           className="rounded-md border border-border bg-bg px-2.5 py-1.5 text-sm text-content placeholder:text-content-disabled focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
         />
       </div>
+
+      {allRanges.length > 0 && (
+        <div className="flex flex-col gap-1">
+          <label htmlFor={paletteId} className="text-xs font-medium text-content-muted">
+            Starting palette
+          </label>
+          <select
+            id={paletteId}
+            value={paletteSourceId ?? ''}
+            onChange={(e) => setPaletteSourceId(e.target.value || null)}
+            className={selectClass}
+          >
+            <option value="">Default (Call + Raise)</option>
+            {allRanges.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.name}
+              </option>
+            ))}
+          </select>
+          {sourcePalette !== null && (
+            <div className="flex items-center gap-1.5 pt-0.5">
+              {sourcePalette.map((a) => (
+                <span
+                  key={a.id}
+                  title={a.label}
+                  className="flex items-center gap-1 text-[11px] text-content-muted"
+                >
+                  <span
+                    className="inline-block h-3 w-3 rounded-sm ring-1 ring-black/20"
+                    style={{ backgroundColor: a.color }}
+                  />
+                  {a.label}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="flex flex-col gap-1">
         <label
