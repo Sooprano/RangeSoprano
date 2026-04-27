@@ -14,10 +14,12 @@ React 19 + TypeScript estricto (noUncheckedIndexedAccess, exactOptionalPropertyT
 4. ✅ Editor (4A base · 4B pesos mixtos + undo/redo · 4C import/export)
 5. ✅ Visualizador mejorado (5A scope · 5B filtros · 5C compare · 5D export PNG + atajos)
 6. ✅ Entrenador (6A shell · 6B clásico · 6C dibujo · 6D filtros)
-7. 🔄 Pulido final (7A toasts ✅ · 7B a11y modals/menus ✅ · 7C error boundary + 404 + meta ✅ · 7D deploy ⏳)
+7. ✅ Pulido final (7A toasts · 7B a11y modals/menus · 7C error boundary + 404 + meta · 7D deploy GitHub Pages)
 8. ✅ Editor avanzado (8A Ctrl+RightClick hand+ · 8B notas · 8C Save/Discard/Clear · 8D DnD carpetas/rangos · 8E acciones custom por rango)
 9. ✅ Home + onboarding (módulos/atajos/portabilidad · import perfil JSON · donación BTC)
 10. ✅ Villain + tableFormat HU/6max (NewRangeForm · PokerTable HU mode · filtro Viewer operativo)
+11. ✅ Palette reuse · folder rename · meta edit-in-place · home docs
+12. ✅ vs Limp · refactor SITUATION_LABELS · badges HU/villain en RangeManager · home tips
 
 ## Convenciones
 

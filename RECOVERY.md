@@ -21,21 +21,36 @@
 - Fase 7A (toast system): `1359878`
 - Fase 7B (a11y modals/menus): `2f1d368`
 - Fase 7C (error boundary + 404 + meta): `caa190b`
-- Fase 7D (deploy): pendiente
+- Fase 7D (deploy GitHub Pages): `477cd1e`
 - Fase 9 (Home + onboarding + import perfil JSON + donación BTC): `70e7e43`
 - Fase 10 (villain + tableFormat HU/6max en NewRangeForm + PokerTable HU): `0d9bd8f`
 
 ## Estado actual
 
-Fase 9 ✅ · Fase 10 ✅ · Fase 11 ✅ (palette reuse · folder rename · meta edit-in-place · home docs). Fase 7D ⏳ pausado (deploy a GitHub Pages — ver pendientes).
+Fase 7D ✅ · Fase 9 ✅ · Fase 10 ✅ · Fase 11 ✅ · Fase 12 ✅ (vs Limp · refactor SITUATION_LABELS · badges HU/villain en RangeManager · home tips).
+
+Live en https://sooprano.github.io/RangeSoprano/ (después de que el primer workflow termine y se habilite Pages — ver "Pasos manuales pendientes" abajo).
 
 Visual polish reciente: trainer con mesa 6-max estilo "stadium" (rectángulo con extremos semicirculares), slots redistribuidos con simetría bilateral, cartas pegadas al héroe. HU mode muestra solo BTN y BB (slots 0 y 3), los demás desaparecen.
 
 ## Últimos commits estables por fase (cont.)
 
 - Fase 11 (palette reuse · folder rename · meta edit-in-place): `e3f7c36`
+- Fase 12 (vs Limp · refactor labels · badges HU/villain · home tips): `e5fd2b5`
+- Fase 7D (deploy GitHub Pages): `477cd1e`
+
+## Pasos manuales pendientes (deploy)
+
+1. **Habilitar GitHub Pages** en el repo:
+   - https://github.com/Sooprano/RangeSoprano/settings/pages
+   - "Build and deployment" → Source: **GitHub Actions**.
+2. **Verificar el primer workflow**:
+   - https://github.com/Sooprano/RangeSoprano/actions — el run "Deploy to GitHub Pages" del commit `477cd1e` debe quedar en verde.
+3. **Probar la live URL**: https://sooprano.github.io/RangeSoprano/ — esperar 1-2 min después del deploy. Probar refresh en `/editor` y `/trainer` (la copia `index.html → 404.html` del workflow garantiza que el SPA refresh funcione).
 
 ## Pendientes para próxima sesión
+
+(ver "Pasos manuales pendientes" arriba para los toques finales del deploy)
 
 ### P1 ~~Edit-in-place de metadatos~~ ✅ completado en fase 11
 Hoy NO existe UI para editar `position`, `situation`, `villainPosition` ni `tableFormat` en rangos **ya creados**. Solo el formulario de creación los expone.
@@ -51,19 +66,12 @@ Hoy NO existe UI para editar `position`, `situation`, `villainPosition` ni `tabl
 - `src/modules/editor/EditorPage.tsx` — si el panel va en el sidebar.
 - Posiblemente un nuevo componente `RangeMetaForm.tsx` reutilizando lógica de `NewRangeForm`.
 
-### P2 — Fase 7D: Deploy a GitHub Pages (pausado)
-Requisitos conocidos:
-1. Crear repo en GitHub y configurar remote (`git remote add origin <url>`).
-2. `vite.config.ts`: añadir `base: process.env.NODE_ENV === 'production' ? '/range-soprano/' : '/'`.
-3. `src/router.tsx`: añadir `basename` al `createBrowserRouter` o usar `HashRouter` para evitar 404 en refresh.
-4. `.github/workflows/deploy.yml`: workflow de GitHub Actions que hace `npm ci && npm run build` y sube `dist/` a gh-pages.
-5. README mínimo.
+### P2 ~~Fase 7D: Deploy a GitHub Pages~~ ✅ completado en commit `477cd1e`
+Repo: https://github.com/Sooprano/RangeSoprano · Pages URL: https://sooprano.github.io/RangeSoprano/
 
-### P3 — Filtro Villain en Home page
-La Home explica los módulos pero no menciona que Viewer y Trainer tienen filtros de Villain. Podría añadirse como tip en la sección de atajos/portabilidad.
+### P3 ~~Filtro Villain en Home page~~ ✅ completado en fase 12 (Viewer y Trainer cards mencionan filtros y modo HU)
 
-### P4 (opcional) — Mostrar villainPosition y tableFormat en el badge de rango
-En RangeManager cada rango muestra una línea de subtítulo (position · situation). Podría añadirse "· HU" o "· vs BTN" para que el usuario vea de un vistazo los metadatos del rango sin abrirlo.
+### P4 ~~Badges villainPosition/tableFormat en RangeManager~~ ✅ completado en fase 12 (subtítulo ahora muestra `· vs <pos>` y `· HU`)
 
 ## Decisiones de diseño clave (referencia futura)
 
@@ -102,6 +110,20 @@ En RangeManager cada rango muestra una línea de subtítulo (position · situati
 - **Slots con simetría bilateral**: hero abajo-centro (slot 0), uno directamente enfrente arriba-centro (slot 3); slots 2&4 a la misma altura (esquinas superiores), slots 1&5 a la misma altura (esquinas inferiores). Con hero=BB: BTN/HJ misma altura, SB/UTG misma altura, CO directamente enfrente.
 - **Hero overflow**: el stack hero (cartas + combos + badge ≈110px) excede el container; se compensa con `mb-12` en el wrapper para que la action grid no se solape con el badge.
 - **HU mode** (fase 10): cuando `range.tableFormat === 'HU'`, `getTableLayout` devuelve solo slots 0 (hero) y 3 (villano enfrente); el resto desaparece. Mismo felt, mismo container, sin cambios visuales para el hero. Hero seat se snapea a BTN/BB (si llegara CO/HJ por dato corrupto, cae a BTN). Villano se calcula con `huVillainOf()` (BTN↔BB) ignorando el `villainPosition` persistido.
+
+### Deploy GitHub Pages (fase 7D)
+- **Repo**: https://github.com/Sooprano/RangeSoprano (case sensitive en la subruta de Pages — la URL final es `/RangeSoprano/`, NO `/rangesoprano/`).
+- **`vite.config.ts`**: `base: mode === 'production' ? '/RangeSoprano/' : '/'` con la firma functional `defineConfig(({ mode }) => ({...}))`. Mode se pasa automático según el comando (`vite build` → production).
+- **`src/router.tsx`**: `basename = import.meta.env.BASE_URL.replace(/\/$/, '') || '/'`. Vite reemplaza `BASE_URL` en build a `/RangeSoprano/`; el strip del trailing slash es porque `createBrowserRouter` con `basename: '/'` funciona pero `'/RangeSoprano/'` (con barra final) genera URLs duplicadas.
+- **Workflow**: dos jobs (build + deploy) usando `actions/upload-pages-artifact` y `actions/deploy-pages` v4 (la integración oficial de GH Pages, no `peaceiris/actions-gh-pages`). Trigger en push a `main` y `workflow_dispatch`.
+- **SPA fallback**: el job copia `dist/index.html` a `dist/404.html` antes de upload. GH Pages sirve `404.html` para rutas desconocidas, lo que evita el 404 real en refresh sobre `/editor`, `/trainer`.
+- **Local branch**: renombrada `master` → `main` para alinear con el workflow trigger.
+
+### Refactor labels + UX badges (fase 12)
+- **Single source of truth** de `SITUATION_LABELS` y `TABLE_FORMAT_LABELS` en `src/data/positions.ts`. Eliminados 8 duplicados locales (Editor/Viewer/Trainer y sus list/panel components). `editorFormConstants.ts` re-exporta para que el editor module no importe directo de `data/`.
+- **`vs_LIMP`** añadido al enum `SITUATIONS` (entre `RFI` y `vs_RFI`). `villainDisabledFor` sigue siendo solo `s === 'RFI'` — en vs Limp el villano es el limper, así que el dropdown de villain debe estar habilitado.
+- **`RangeSummary.tableFormat`** expuesto en el selector para que `RangeManager` pueda renderizar el badge `· HU`.
+- **Subtítulo de rango**: `{position} · {situation}{villain ? ' · vs ' + villain : ''}{HU ? ' · HU' : ''}`. En HU se omite el `vs <villain>` porque es implícito (BTN faces BB y viceversa).
 
 ### Villain + tableFormat (fase 10)
 - **Tipo `Range.tableFormat: '6max' | 'HU'`** (no boolean — enum para escalar a 9-max sin migración). Schema Zod: `z.enum(TABLE_FORMATS).default('6max')` para que rangos viejos hidraten a `'6max'` automáticamente. Sin bump de `CURRENT_RANGE_STORE_VERSION`.
