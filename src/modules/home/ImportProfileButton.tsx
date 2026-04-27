@@ -1,0 +1,70 @@
+import { useRef } from 'react';
+import { Upload } from 'lucide-react';
+import { useRangeStore } from '@/store/rangeStore';
+import { pushToast } from '@/store/toastStore';
+import { MAX_IMPORT_BYTES } from '@/store/persist';
+
+export function ImportProfileButton() {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const importRanges = useRangeStore((s) => s.importRanges);
+
+  const onPick = () => inputRef.current?.click();
+
+  const onChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    if (file.size > MAX_IMPORT_BYTES) {
+      pushToast({
+        kind: 'error',
+        message: `Archivo > ${Math.floor(MAX_IMPORT_BYTES / 1024)} KB`,
+      });
+      return;
+    }
+
+    let text: string;
+    try {
+      text = await file.text();
+    } catch {
+      pushToast({ kind: 'error', message: 'No se pudo leer el archivo' });
+      return;
+    }
+
+    const result = importRanges(text, { replace: false });
+    if (result.accepted === 0) {
+      const reason = result.rejected[0]?.reason ?? 'sin rangos válidos';
+      pushToast({ kind: 'error', message: `Import fallido: ${reason}` });
+      return;
+    }
+
+    const tail =
+      result.rejected.length > 0 ? `, ${result.rejected.length} rechazados` : '';
+    pushToast({
+      kind: 'success',
+      message: `Importados ${result.accepted} rango${result.accepted === 1 ? '' : 's'}${tail}`,
+    });
+  };
+
+  return (
+    <>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="application/json,.json"
+        onChange={onChange}
+        className="hidden"
+        aria-hidden
+        tabIndex={-1}
+      />
+      <button
+        type="button"
+        onClick={onPick}
+        className="inline-flex items-center gap-2 rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-accent-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
+      >
+        <Upload className="h-3.5 w-3.5" strokeWidth={2.25} />
+        Importar perfil completo
+      </button>
+    </>
+  );
+}

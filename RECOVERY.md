@@ -22,10 +22,11 @@
 - Fase 7B (a11y modals/menus): `2f1d368`
 - Fase 7C (error boundary + 404 + meta): `caa190b`
 - Fase 7D (deploy): pendiente
+- Fase 9 (Home + onboarding + import perfil JSON + donación BTC): pendiente (commit a registrar al cierre)
 
 ## Estado actual
 
-Fase 7 en curso: 7A/7B/7C ✅, 7D ⏳ pausado (falta crear repo en GitHub y configurar remote; luego `vite.config.ts` con `base` condicional, `.github/workflows/deploy.yml`, `basename` en router, README).
+Fase 9 ✅ (Home + onboarding). Fase 7 en curso: 7A/7B/7C ✅, 7D ⏳ pausado (falta crear repo en GitHub y configurar remote; luego `vite.config.ts` con `base` condicional, `.github/workflows/deploy.yml`, `basename` en router, README).
 
 Visual polish reciente: trainer con mesa 6-max estilo "stadium" (rectángulo con extremos semicirculares), slots redistribuidos con simetría bilateral, cartas pegadas al héroe.
 
@@ -45,6 +46,15 @@ Visual polish reciente: trainer con mesa 6-max estilo "stadium" (rectángulo con
 - **Sampling clásico**: P(hand) ∝ combos del hand (no ∝ peso de celda) — reproduce frecuencia natural de reparto. Acción esperada por draw muestreada de los pesos de la celda con FOLD residual. Hands fuera del rango: implícito FOLD.
 - **Drawing trainer**: comparación binaria in/out por combos (Jaccard). Cualquier acción en la celda truth la cuenta como "in".
 - **Score session NO persistido**. Switching range → reset; switching hand → score continúa.
+
+### Home / onboarding (fase 9)
+- **Ruta `/`**: monta `src/modules/home/HomePage.tsx` (lazy + Suspense). Reemplaza el viejo `Navigate to="/viewer"`. Sidebar añade item "Home" con `end` para no quedar siempre activo.
+- **HomePage**: 4 secciones — módulos (3 cards Viewer/Trainer/Editor con icono Lucide grande, descripción y comando), atajos de teclado (kbd + descripción), guardar/portabilidad (3 Steps con sub-listas ordenadas) y donación BTC.
+- **`ImportProfileButton`** (`src/modules/home/ImportProfileButton.tsx`): file picker oculto + botón visible. Lee con `file.text()`, valida `file.size ≤ MAX_IMPORT_BYTES` (100 KB) ANTES de leer, llama `useRangeStore.getState().importRanges(text, { replace: false })`. Modo "añadir" único — sin opción de reemplazar para evitar pérdida accidental. Reset `input.value = ''` al final para permitir reimportar el mismo archivo. Toasts de éxito/error.
+- **`importRanges()` reusado tal cual** desde `src/store/rangeStore.ts:440` — ya hacía Zod + cap + recovery parcial. NO se modificó.
+- **Donación BTC**: `bc1qyz4fd8msnedgjj9sv68qlu4theh7mdh57rea8w`. Bloque `<code>` con `select-all` + botón Copy que reusa `copyToClipboard()` de `src/utils/exportRange.ts`. Estado local `copied` con timeout 1.8 s para feedback visual (Check icon).
+- **Sin imágenes externas ni QR** — solo iconos Lucide para mantener cero dependencias nuevas y cero requests de red.
+- **`exactOptionalPropertyTypes`**: `NavLink end={end ?? false}` — pasar `undefined` al prop `end` rompe el typecheck.
 
 ### A11y / UX (fase 7)
 - **Toasts NO persistidos**, cap 4 (slice por la cola). Errores en `aria-live="assertive"` separada del polite. Hover/focus cancela auto-dismiss (sin reanudación).

@@ -16,6 +16,7 @@ React 19 + TypeScript estricto (noUncheckedIndexedAccess, exactOptionalPropertyT
 6. ✅ Entrenador (6A shell · 6B clásico · 6C dibujo · 6D filtros)
 7. 🔄 Pulido final (7A toasts ✅ · 7B a11y modals/menus ✅ · 7C error boundary + 404 + meta ✅ · 7D deploy ⏳)
 8. ✅ Editor avanzado (8A Ctrl+RightClick hand+ · 8B notas · 8C Save/Discard/Clear · 8D DnD carpetas/rangos · 8E acciones custom por rango)
+9. ✅ Home + onboarding (módulos/atajos/portabilidad · import perfil JSON · donación BTC)
 
 ## Convenciones
 
@@ -35,7 +36,7 @@ Acciones: cada `Range` define su propia paleta (`range.actions: ActionDef[]` con
 - `src/components/RangeGrid/` — grid reutilizable, modo lectura y `editable` opt-in (props: `editable`, `onCellPaint`, `onCellErase`). Delega eventos por `data-hand` sin tocar la memoización de RangeCell.
 - `src/store/rangeStore.ts` — CRUD + persist con Zod al hidratar, cap 100KB, IDs con `crypto.randomUUID()`.
 - `src/store/selectors.ts` — `useActiveRange`, `useRangeSummaries` (useShallow), `useRangesByGroup` (useMemo).
-- `src/modules/{viewer,editor,trainer}/` — una carpeta por módulo, página raíz + componentes locales.
+- `src/modules/{home,viewer,editor,trainer}/` — una carpeta por módulo, página raíz + componentes locales. `/` monta `home/HomePage.tsx` con onboarding + `ImportProfileButton` (consume `importRanges` del store).
 - `src/utils/handUtils.ts` — `ALL_HANDS`, `categoryOf`, `combosOf`.
 - `src/utils/rangeStats.ts` — `computeRangeStats` (%total, combos, presentActions).
 

@@ -1,14 +1,16 @@
 import { NavLink } from 'react-router-dom';
-import { Eye, Target, Pencil, Spade } from 'lucide-react';
+import { Eye, Home, Target, Pencil, Spade } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
 type NavItem = {
   to: string;
   label: string;
   icon: typeof Eye;
+  end?: boolean;
 };
 
 const NAV_ITEMS: readonly NavItem[] = [
+  { to: '/', label: 'Home', icon: Home, end: true },
   { to: '/viewer', label: 'Viewer', icon: Eye },
   { to: '/trainer', label: 'Trainer', icon: Target },
   { to: '/editor', label: 'Editor', icon: Pencil },
@@ -38,10 +40,11 @@ export function Sidebar() {
       </div>
 
       <nav className="flex flex-col gap-1 px-3">
-        {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
+        {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}
             to={to}
+            end={end ?? false}
             className={({ isActive }) =>
               cn(
                 'group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-200 ease-out-soft',

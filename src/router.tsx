@@ -1,9 +1,10 @@
 /* eslint-disable react-refresh/only-export-components */
 import { lazy, Suspense } from 'react';
-import { createBrowserRouter, Link, Navigate } from 'react-router-dom';
+import { createBrowserRouter, Link } from 'react-router-dom';
 import { AppLayout } from '@/components/Layout/AppLayout';
 import ViewerPage from '@/modules/viewer/ViewerPage';
 
+const HomePage = lazy(() => import('@/modules/home/HomePage'));
 const TrainerPage = lazy(() => import('@/modules/trainer/TrainerPage'));
 const EditorPage = lazy(() => import('@/modules/editor/EditorPage'));
 
@@ -47,7 +48,14 @@ export const router = createBrowserRouter([
     path: '/',
     element: <AppLayout />,
     children: [
-      { index: true, element: <Navigate to="/viewer" replace /> },
+      {
+        index: true,
+        element: (
+          <Suspense fallback={<PageFallback />}>
+            <HomePage />
+          </Suspense>
+        ),
+      },
       { path: 'viewer', element: <ViewerPage /> },
       {
         path: 'trainer',
