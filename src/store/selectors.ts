@@ -9,6 +9,7 @@ export type RangeSummary = {
   position: Range['position'];
   situation: Range['situation'];
   villainPosition?: Range['villainPosition'];
+  tableFormat: Range['tableFormat'];
   group?: string;
   order?: number;
 };
@@ -50,6 +51,7 @@ export function useRangeSummaries(): RangeSummary[] {
           name: r.name,
           position: r.position,
           situation: r.situation,
+          tableFormat: r.tableFormat,
         };
         if (r.villainPosition !== undefined) base.villainPosition = r.villainPosition;
         if (r.group !== undefined) base.group = r.group;

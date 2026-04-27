@@ -1,6 +1,7 @@
 import { X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { POSITIONS, SITUATIONS, type Position, type Situation } from '@/types/poker';
+import { SITUATION_LABELS } from '@/data/positions';
 
 export type ViewerFilters = {
   position: Position | null;
@@ -12,16 +13,6 @@ export const EMPTY_FILTERS: ViewerFilters = {
   position: null,
   situation: null,
   villainPosition: null,
-};
-
-const SITUATION_LABEL: Record<Situation, string> = {
-  RFI: 'RFI',
-  vs_LIMP: 'vs Limp',
-  vs_RFI: 'vs RFI',
-  vs_3BET: 'vs 3-Bet',
-  vs_4BET: 'vs 4-Bet',
-  SQUEEZE: 'Squeeze',
-  DEFEND_BB: 'Defend BB',
 };
 
 type SituationSelectorProps = {
@@ -119,7 +110,7 @@ export function SituationSelector({
           <option value="">Any</option>
           {SITUATIONS.map((s) => (
             <option key={s} value={s}>
-              {SITUATION_LABEL[s]}
+              {SITUATION_LABELS[s]}
             </option>
           ))}
         </select>

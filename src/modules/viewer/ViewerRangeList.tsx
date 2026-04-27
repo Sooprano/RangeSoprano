@@ -6,6 +6,7 @@ import { useUiStore } from '@/store/uiStore';
 import type { GroupMeta } from '@/store/schemas';
 import { buildGroupTree, flattenVisibleTree, type GroupTreeNode } from '@/utils/groupUtils';
 import { FolderRow } from '@/components/FolderRow';
+import { SITUATION_LABELS } from '@/data/positions';
 
 export function displayOrderFor(
   summaries: RangeSummary[],
@@ -15,16 +16,6 @@ export function displayOrderFor(
   const byId = new Map(summaries.map((s) => [s.id, s]));
   return flattenVisibleTree(tree, byId, groupMeta);
 }
-
-const SITUATION_LABEL: Record<string, string> = {
-  RFI: 'RFI',
-  vs_LIMP: 'vs Limp',
-  vs_RFI: 'vs RFI',
-  vs_3BET: 'vs 3-Bet',
-  vs_4BET: 'vs 4-Bet',
-  SQUEEZE: 'Squeeze',
-  DEFEND_BB: 'Defend BB',
-};
 
 type ViewerRangeListProps = {
   summaries: RangeSummary[];
@@ -76,7 +67,7 @@ export function ViewerRangeList({
         >
           <span className="w-full truncate font-medium">{s.name}</span>
           <span className="text-[10px] uppercase tracking-wider text-content-muted">
-            {s.position} · {SITUATION_LABEL[s.situation] ?? s.situation}
+            {s.position} · {SITUATION_LABELS[s.situation] ?? s.situation}
           </span>
         </button>
       </li>

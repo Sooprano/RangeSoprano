@@ -22,17 +22,9 @@ import { EditActionsToolbar } from './EditActionsToolbar';
 import { NotesButton } from './NotesButton';
 import { RangeManager } from './RangeManager';
 import { EmptyEditorState } from './EmptyEditorState';
+import { SITUATION_LABELS } from '@/data/positions';
 
 const DIGIT_KEYS = '123456789';
-
-const SITUATION_LABEL: Record<string, string> = {
-  RFI: 'RFI',
-  vs_RFI: 'vs RFI',
-  vs_3BET: 'vs 3-Bet',
-  vs_4BET: 'vs 4-Bet',
-  SQUEEZE: 'Squeeze',
-  DEFEND_BB: 'Defend BB',
-};
 
 export default function EditorPage() {
   const activeRange = useActiveRange();
@@ -205,7 +197,7 @@ export default function EditorPage() {
       <PageHeader
         eyebrow={
           activeRange
-            ? `${activeRange.position} · ${SITUATION_LABEL[activeRange.situation] ?? activeRange.situation}`
+            ? `${activeRange.position} · ${SITUATION_LABELS[activeRange.situation] ?? activeRange.situation}`
             : 'Module'
         }
         title={activeRange ? activeRange.name : 'Editor'}

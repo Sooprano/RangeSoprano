@@ -6,16 +6,7 @@ import { ActionLegend } from '@/components/ActionLegend';
 import { computeRangeStats } from '@/utils/rangeStats';
 import { buildActionDefMap } from '@/utils/actionMeta';
 import type { Range } from '@/types/poker';
-
-const SITUATION_LABEL: Record<string, string> = {
-  RFI: 'RFI',
-  vs_LIMP: 'vs Limp',
-  vs_RFI: 'vs RFI',
-  vs_3BET: 'vs 3-Bet',
-  vs_4BET: 'vs 4-Bet',
-  SQUEEZE: 'Squeeze',
-  DEFEND_BB: 'Defend BB',
-};
+import { SITUATION_LABELS } from '@/data/positions';
 
 type RangePanelProps = {
   range: Range;
@@ -42,7 +33,7 @@ export function RangePanel({ range, badge, className }: RangePanelProps) {
           </h3>
           <p className="text-[10px] uppercase tracking-wider text-content-muted">
             {range.position} ·{' '}
-            {SITUATION_LABEL[range.situation] ?? range.situation}
+            {SITUATION_LABELS[range.situation] ?? range.situation}
             {range.villainPosition ? ` · vs ${range.villainPosition}` : ''}
           </p>
         </div>

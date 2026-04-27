@@ -10,6 +10,7 @@ import { useRangeStore } from '@/store/rangeStore';
 import { pushToast } from '@/store/toastStore';
 import { useUiStore } from '@/store/uiStore';
 import { useRangeSummaries, useViewerRange } from '@/store/selectors';
+import { SITUATION_LABELS } from '@/data/positions';
 import { exportNodeToPng, slugify } from '@/utils/exportRange';
 import { EmptyState } from './EmptyState';
 import { ViewerRangeList, displayOrderFor } from './ViewerRangeList';
@@ -22,16 +23,6 @@ import {
 } from './SituationSelector';
 import { CompareToolbar } from './CompareToolbar';
 import { RangePanel } from './RangePanel';
-
-const SITUATION_LABEL: Record<string, string> = {
-  RFI: 'RFI',
-  vs_LIMP: 'vs Limp',
-  vs_RFI: 'vs RFI',
-  vs_3BET: 'vs 3-Bet',
-  vs_4BET: 'vs 4-Bet',
-  SQUEEZE: 'Squeeze',
-  DEFEND_BB: 'Defend BB',
-};
 
 export default function ViewerPage() {
   const ranges = useRangeStore((s) => s.ranges);
@@ -164,7 +155,7 @@ export default function ViewerPage() {
       <PageHeader
         eyebrow={
           range
-            ? `${range.position} · ${SITUATION_LABEL[range.situation] ?? range.situation}`
+            ? `${range.position} · ${SITUATION_LABELS[range.situation] ?? range.situation}`
             : 'Module'
         }
         title={range ? range.name : 'Viewer'}

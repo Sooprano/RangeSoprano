@@ -36,7 +36,7 @@ const MODULES: readonly ModuleCard[] = [
     label: 'Viewer',
     icon: Eye,
     description:
-      'Lee tus rangos guardados, filtra por acción, compara dos rangos en paralelo y exporta a PNG.',
+      'Lee tus rangos guardados, filtrá por posición, situación, villano y acción, compará dos rangos en paralelo y exportá a PNG.',
   },
   {
     to: '/trainer',
@@ -44,7 +44,7 @@ const MODULES: readonly ModuleCard[] = [
     label: 'Trainer',
     icon: Target,
     description:
-      'Entrena manos en mesa 6-max. Modo clásico (responder acción) o dibujo (pintar el rango de memoria).',
+      'Entrená manos en mesa 6-max o Heads-Up. Modo clásico (responder acción) o dibujo (pintar el rango de memoria). Filtros por posición, situación y villano.',
   },
   {
     to: '/editor',

@@ -11,16 +11,7 @@ import { buildGroupTree, type GroupTreeNode } from '@/utils/groupUtils';
 import { FolderRow } from '@/components/FolderRow';
 import { SortableItem, SortableList } from '@/components/dnd/SortableList';
 import { NewRangeForm, type NewRangePayload } from './NewRangeForm';
-
-const SITUATION_LABEL: Record<string, string> = {
-  RFI: 'RFI',
-  vs_LIMP: 'vs Limp',
-  vs_RFI: 'vs RFI',
-  vs_3BET: 'vs 3-Bet',
-  vs_4BET: 'vs 4-Bet',
-  SQUEEZE: 'Squeeze',
-  DEFEND_BB: 'Defend BB',
-};
+import { SITUATION_LABELS } from '@/data/positions';
 
 const GROUP_SUGGESTIONS_ID = 'range-group-suggestions';
 
@@ -263,6 +254,15 @@ export function RangeManager({
     const isMenuOpen = openMenuId === s.id;
     const isRenaming = renamingId === s.id;
     const isGrouping = groupingId === s.id;
+    const isHU = s.tableFormat === 'HU';
+    const subtitle = [
+      s.position,
+      SITUATION_LABELS[s.situation] ?? s.situation,
+      !isHU && s.villainPosition ? `vs ${s.villainPosition}` : null,
+      isHU ? 'HU' : null,
+    ]
+      .filter(Boolean)
+      .join(' · ');
     return (
       <li key={s.id} className="group">
         <SortableItem id={s.id} ariaLabel={`Drag ${s.name}`}>
@@ -296,7 +296,7 @@ export function RangeManager({
                 className="w-full rounded-md border border-accent/50 bg-bg px-1.5 py-0.5 text-sm text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
               />
               <span className="text-[10px] uppercase tracking-wider text-content-muted">
-                {s.position} · {SITUATION_LABEL[s.situation] ?? s.situation}
+                {subtitle}
               </span>
             </div>
           ) : isGrouping ? (
@@ -338,7 +338,7 @@ export function RangeManager({
                 {s.name}
               </span>
               <span className="text-[10px] uppercase tracking-wider text-content-muted">
-                {s.position} · {SITUATION_LABEL[s.situation] ?? s.situation}
+                {subtitle}
               </span>
             </button>
           )}

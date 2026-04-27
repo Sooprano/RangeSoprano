@@ -1,16 +1,7 @@
 import { GitCompare, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import type { RangeSummary } from '@/store/selectors';
-
-const SITUATION_LABEL: Record<string, string> = {
-  RFI: 'RFI',
-  vs_LIMP: 'vs Limp',
-  vs_RFI: 'vs RFI',
-  vs_3BET: 'vs 3-Bet',
-  vs_4BET: 'vs 4-Bet',
-  SQUEEZE: 'Squeeze',
-  DEFEND_BB: 'Defend BB',
-};
+import { SITUATION_LABELS } from '@/data/positions';
 
 type CompareToolbarProps = {
   enabled: boolean;
@@ -76,7 +67,7 @@ export function CompareToolbar({
               {summaries.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.name} · {s.position}{' '}
-                  {SITUATION_LABEL[s.situation] ?? s.situation}
+                  {SITUATION_LABELS[s.situation] ?? s.situation}
                 </option>
               ))}
             </select>
