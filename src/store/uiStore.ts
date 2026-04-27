@@ -89,17 +89,21 @@ export const useUiStore = create<UiStoreState>()(
       renameGroupMeta: (oldPath, newPath) =>
         set((s) => {
           const next: Record<string, GroupMeta> = {};
+          let changed = false;
           for (const key of Object.keys(s.groupMeta)) {
             const value = s.groupMeta[key];
             if (!value) continue;
             if (key === oldPath) {
               next[newPath] = value;
+              changed = true;
             } else if (key.startsWith(oldPath + '/')) {
               next[newPath + key.slice(oldPath.length)] = value;
+              changed = true;
             } else {
               next[key] = value;
             }
           }
+          if (!changed) return {};
           return { groupMeta: next };
         }),
 

@@ -396,9 +396,9 @@ export const useRangeStore = create<RangeStoreState>()(
         set((s) => ({
           ranges: s.ranges.map((r) => {
             if (r.group === undefined) return r;
-            if (r.group === oldPath) return { ...r, group: trimmed };
+            if (r.group === oldPath) return touch({ ...r, group: trimmed });
             if (r.group.startsWith(oldPath + '/'))
-              return { ...r, group: trimmed + r.group.slice(oldPath.length) };
+              return touch({ ...r, group: trimmed + r.group.slice(oldPath.length) });
             return r;
           }),
         }));

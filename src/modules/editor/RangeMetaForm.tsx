@@ -1,4 +1,4 @@
-import { useId, useMemo } from 'react';
+import { useId } from 'react';
 import { cn } from '@/lib/cn';
 import {
   HU_POSITIONS,
@@ -12,22 +12,14 @@ import {
   type TableFormat,
 } from '@/types/poker';
 import { useRangeStore } from '@/store/rangeStore';
+import {
+  SITUATION_LABELS,
+  TABLE_FORMAT_LABELS,
+  villainDisabledFor,
+  FORM_SELECT_CLASS,
+} from './editorFormConstants';
 
-const SITUATION_LABELS: Record<Situation, string> = {
-  RFI: 'RFI',
-  vs_RFI: 'vs RFI',
-  vs_3BET: 'vs 3-Bet',
-  vs_4BET: 'vs 4-Bet',
-  SQUEEZE: 'Squeeze',
-  DEFEND_BB: 'Defend BB',
-};
-
-const TABLE_FORMAT_LABELS: Record<TableFormat, string> = {
-  '6max': '3-max / 6-max',
-  HU: 'Heads-Up',
-};
-
-const villainDisabledFor = (s: Situation) => s === 'RFI';
+type RangePatch = Partial<Omit<Range, 'id' | 'createdAt'>>;
 
 type Props = {
   range: Range;
@@ -44,10 +36,7 @@ export function RangeMetaForm({ range, className }: Props) {
   const tableFormatId = useId();
 
   const isHU = range.tableFormat === 'HU';
-  const positionOptions = useMemo<readonly Position[]>(
-    () => (isHU ? HU_POSITIONS : POSITIONS),
-    [isHU],
-  );
+  const positionOptions: readonly Position[] = isHU ? HU_POSITIONS : POSITIONS;
   const villainDisabled = isHU || villainDisabledFor(range.situation);
 
   const handleTableFormatChange = (next: TableFormat) => {
@@ -66,8 +55,6 @@ export function RangeMetaForm({ range, className }: Props) {
   const handlePositionChange = (next: Position) => {
     updateRange(range.id, { position: next });
   };
-
-  type RangePatch = Partial<Omit<Range, 'id' | 'createdAt'>>;
 
   const handleSituationChange = (next: Situation) => {
     if (villainDisabledFor(next)) {
@@ -186,5 +173,4 @@ export function RangeMetaForm({ range, className }: Props) {
   );
 }
 
-const selectClass =
-  'rounded-md border border-border bg-bg px-2 py-1.5 text-sm text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light';
+const selectClass = FORM_SELECT_CLASS;

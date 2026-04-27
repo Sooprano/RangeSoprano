@@ -13,20 +13,12 @@ import {
 } from '@/types/poker';
 import { sanitizeText, MAX_NAME_LEN } from '@/store/schemas';
 import { useRangeStore } from '@/store/rangeStore';
-
-const SITUATION_LABELS: Record<Situation, string> = {
-  RFI: 'RFI',
-  vs_RFI: 'vs RFI',
-  vs_3BET: 'vs 3-Bet',
-  vs_4BET: 'vs 4-Bet',
-  SQUEEZE: 'Squeeze',
-  DEFEND_BB: 'Defend BB',
-};
-
-const TABLE_FORMAT_LABELS: Record<TableFormat, string> = {
-  '6max': '3-max / 6-max',
-  HU: 'Heads-Up',
-};
+import {
+  SITUATION_LABELS,
+  TABLE_FORMAT_LABELS,
+  villainDisabledFor,
+  FORM_SELECT_CLASS,
+} from './editorFormConstants';
 
 export type NewRangePayload = {
   name: string;
@@ -42,8 +34,6 @@ type NewRangeFormProps = {
   onCancel: () => void;
   className?: string;
 };
-
-const villainDisabledFor = (s: Situation) => s === 'RFI';
 
 export function NewRangeForm({ onCreate, onCancel, className }: NewRangeFormProps) {
   const nameId = useId();
@@ -284,5 +274,4 @@ export function NewRangeForm({ onCreate, onCancel, className }: NewRangeFormProp
   );
 }
 
-const selectClass =
-  'rounded-md border border-border bg-bg px-2 py-1.5 text-sm text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light';
+const selectClass = FORM_SELECT_CLASS;
