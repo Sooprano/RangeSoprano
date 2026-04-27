@@ -46,6 +46,7 @@ export type RangeCellData = {
 
 export const SITUATIONS = [
   'RFI',
+  'vs_LIMP',
   'vs_RFI',
   'vs_3BET',
   'vs_4BET',

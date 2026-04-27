@@ -18,6 +18,7 @@ export function displayOrderFor(
 
 const SITUATION_LABEL: Record<string, string> = {
   RFI: 'RFI',
+  vs_LIMP: 'vs Limp',
   vs_RFI: 'vs RFI',
   vs_3BET: 'vs 3-Bet',
   vs_4BET: 'vs 4-Bet',

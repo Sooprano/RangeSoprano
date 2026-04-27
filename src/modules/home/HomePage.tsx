@@ -133,13 +133,34 @@ export default function HomePage() {
               <FolderOpen className="h-4 w-4" strokeWidth={2} />
             </span>
             <div className="text-content-muted">
+              <span className="font-medium text-content">Crear una carpeta</span>
+              {' — '}una carpeta nace al asignarle un grupo a un rango. Clic en{' '}
+              <kbd className="rounded border border-border bg-bg px-1.5 py-0.5 font-mono text-[10px] text-content">
+                ···
+              </kbd>{' '}
+              junto al rango → <span className="font-medium text-content">Move to group…</span> → escribí el
+              nombre de la carpeta (ej.{' '}
+              <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">Opening</code>) y Enter.
+              Ojo: el campo <span className="font-medium text-content">Name</span> al crear un rango es el nombre del rango, no
+              de la carpeta.
+            </div>
+          </li>
+          <li className="flex items-start gap-3">
+            <span aria-hidden className="mt-0.5 shrink-0 text-content-muted">
+              <FolderOpen className="h-4 w-4" strokeWidth={2} />
+            </span>
+            <div className="text-content-muted">
               <span className="font-medium text-content">Sub-carpetas</span>
-              {' — '}escribí{' '}
+              {' — '}usá{' '}
+              <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">/</code>{' '}
+              en el mismo campo de grupo. Ej.{' '}
               <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">
-                Parent/Child
+                Preflop/Opening
               </code>{' '}
-              como nombre de grupo al crear un rango o al usar{' '}
-              <span className="font-medium text-content">Move to group…</span>.
+              crea o reutiliza la carpeta{' '}
+              <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">Preflop</code> y dentro la
+              sub-carpeta{' '}
+              <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">Opening</code>.
             </div>
           </li>
           <li className="flex items-start gap-3">
@@ -148,12 +169,12 @@ export default function HomePage() {
             </span>
             <div className="text-content-muted">
               <span className="font-medium text-content">Mover un rango</span>
-              {' — '}clic en{' '}
+              {' — '}mismo flujo: clic en{' '}
               <kbd className="rounded border border-border bg-bg px-1.5 py-0.5 font-mono text-[10px] text-content">
                 ···
               </kbd>{' '}
-              junto al rango → <span className="font-medium text-content">Move to group…</span> → escribí el
-              nombre del destino (usa autocompletado).
+              → <span className="font-medium text-content">Move to group…</span> → escribí otro nombre (con autocompletado) o
+              dejá vacío para sacarlo de toda carpeta.
             </div>
           </li>
           <li className="flex items-start gap-3">
