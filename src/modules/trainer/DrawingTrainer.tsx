@@ -3,7 +3,7 @@ import { Eye, EyeOff, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { RangeGrid } from '@/components/RangeGrid';
 import type {
-  Action,
+  ActionId,
   HandNotation,
   Range,
   RangeCellData,
@@ -15,7 +15,7 @@ type DrawingTrainerProps = {
   range: Range;
 };
 
-const PAINT_ACTION: Action = 'CALL';
+const PAINT_ACTION: ActionId = 'CALL';
 const PAINT_WEIGHT = 100;
 
 export function DrawingTrainer({ range }: DrawingTrainerProps) {

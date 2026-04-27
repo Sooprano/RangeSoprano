@@ -5,6 +5,7 @@ import type {
   Range,
   RangeCellData,
 } from '@/types/poker';
+import { DEFAULT_ACTION_DEFS } from '@/utils/actionMeta';
 
 type Entry = [hands: HandNotation[], actions: Array<[Action, number]>];
 
@@ -65,4 +66,5 @@ export const SAMPLE_BTN_RFI: Range = {
   cells: buildCells(ENTRIES),
   createdAt: '2026-04-20T00:00:00.000Z',
   updatedAt: '2026-04-20T00:00:00.000Z',
+  actions: DEFAULT_ACTION_DEFS.map((d) => ({ ...d })),
 };

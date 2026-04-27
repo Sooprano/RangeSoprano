@@ -1,6 +1,7 @@
 import { z } from 'zod';
-import { ACTIONS, POSITIONS, SITUATIONS } from '@/types/poker';
+import { POSITIONS, SITUATIONS } from '@/types/poker';
 import type { Range } from '@/types/poker';
+import { DEFAULT_ACTION_DEFS } from '@/utils/actionMeta';
 
 export const CURRENT_RANGE_STORE_VERSION = 1;
 export const CURRENT_UI_STORE_VERSION = 2;
@@ -11,6 +12,8 @@ export const MAX_ACTIONS_PER_CELL = 5;
 export const MAX_NAME_LEN = 80;
 export const MAX_GROUP_LEN = 80;
 export const MAX_NOTES_LEN = 5000;
+export const MAX_ACTION_LABEL_LEN = 40;
+export const MAX_ACTIONS_PER_RANGE = 20;
 
 export const GROUP_FOLDER_COLORS = [
   '#8b5cf6', '#a855f7', '#ec4899', '#ef4444',
@@ -37,7 +40,18 @@ const zPosition = z.preprocess(
   z.enum(POSITIONS),
 );
 const zSituation = z.enum(SITUATIONS);
-const zAction = z.enum(ACTIONS);
+const zAction = z.string().min(1).max(64);
+
+const HEX_COLOR_RE = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
+
+export const zActionDef = z
+  .object({
+    id: z.string().min(1).max(64),
+    label: z.string().min(1).max(MAX_ACTION_LABEL_LEN).transform(sanitizeText),
+    color: z.string().regex(HEX_COLOR_RE, 'invalid hex color'),
+    order: z.number().finite(),
+  })
+  .strict();
 
 const HAND_REGEX = /^(?:([2-9TJQKA])\1|[2-9TJQKA]{2}[so])$/;
 
@@ -82,6 +96,10 @@ export const zRange = z
       .optional(),
     notes: z.string().max(MAX_NOTES_LEN).optional(),
     order: z.number().finite().optional(),
+    actions: z
+      .array(zActionDef)
+      .max(MAX_ACTIONS_PER_RANGE)
+      .default(() => DEFAULT_ACTION_DEFS.map((d) => ({ ...d }))),
   })
   .strict()
   .superRefine((r, ctx) => {

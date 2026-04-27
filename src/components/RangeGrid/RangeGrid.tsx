@@ -11,10 +11,13 @@ import { cn } from '@/lib/cn';
 import { RangeCell } from '@/components/RangeCell';
 import { ALL_HANDS, categoryOf, handToGridCoords } from '@/utils/handUtils';
 import type { HandNotation, RangeCellData } from '@/types/poker';
+import type { ActionDefMap } from '@/utils/actionMeta';
 import { useRangePainter } from './useRangePainter';
 
 type RangeGridProps = {
   cells?: Record<HandNotation, RangeCellData>;
+  /** Per-range action defs lookup; required to render the right colors/labels. */
+  actionsMap?: ActionDefMap;
   className?: string;
   /** When true the grid responds to mouse paint/erase and exposes paint shortcuts. */
   editable?: boolean;
@@ -34,6 +37,7 @@ function clamp(n: number, min: number, max: number): number {
 
 function RangeGridBase({
   cells,
+  actionsMap,
   className,
   editable = false,
   onCellPaint,
@@ -170,6 +174,7 @@ function RangeGridBase({
           colIndex: col + 1,
           tabIndex: (isFocused ? 0 : -1) as 0 | -1,
           cellRef: refSetters[i]!,
+          ...(actionsMap && { actionsMap }),
         };
         return cell ? (
           <RangeCell key={hand} {...commonProps} actions={cell.actions} />

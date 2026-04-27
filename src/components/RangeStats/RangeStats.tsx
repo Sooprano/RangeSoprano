@@ -1,20 +1,38 @@
 import { useMemo } from 'react';
 import { cn } from '@/lib/cn';
-import type { HandNotation, RangeCellData } from '@/types/poker';
-import { ACTION_META, ORDERED_ACTIONS } from '@/utils/actionMeta';
+import type { ActionDef, HandNotation, RangeCellData } from '@/types/poker';
 import { computeRangeStats } from '@/utils/rangeStats';
 
 type RangeStatsProps = {
   cells: Record<HandNotation, RangeCellData>;
+  /** Per-range action defs (controls order, labels, colors of the breakdown rows). */
+  actionDefs: ActionDef[];
   className?: string;
 };
 
-export function RangeStats({ cells, className }: RangeStatsProps) {
+export function RangeStats({ cells, actionDefs, className }: RangeStatsProps) {
   const stats = useMemo(() => computeRangeStats(cells), [cells]);
 
-  const visibleBreakdown = ORDERED_ACTIONS.filter(
-    (a) => stats.byAction[a].combos > 0,
-  );
+  const visibleBreakdown = useMemo(() => {
+    const orderedDefs = [...actionDefs].sort((a, b) => a.order - b.order);
+    const known = new Set(orderedDefs.map((d) => d.id));
+    const rows: Array<{ def: ActionDef; combos: number; pct: number }> = [];
+    for (const def of orderedDefs) {
+      const slot = stats.byAction[def.id];
+      if (slot && slot.combos > 0) rows.push({ def, combos: slot.combos, pct: slot.pct });
+    }
+    // Orphan ids (used in cells but not in actionDefs) are still visualized.
+    for (const id of stats.presentActions) {
+      if (known.has(id)) continue;
+      const slot = stats.byAction[id]!;
+      rows.push({
+        def: { id, label: id, color: '#9ca3af', order: Number.POSITIVE_INFINITY },
+        combos: slot.combos,
+        pct: slot.pct,
+      });
+    }
+    return rows;
+  }, [actionDefs, stats]);
 
   return (
     <section
@@ -49,31 +67,24 @@ export function RangeStats({ cells, className }: RangeStatsProps) {
 
       {visibleBreakdown.length > 0 && (
         <ul className="mt-4 flex flex-col gap-1.5 border-t border-border pt-3">
-          {visibleBreakdown.map((action) => {
-            const row = stats.byAction[action];
-            return (
-              <li
-                key={action}
-                className="flex items-center justify-between gap-3 text-xs"
-              >
-                <span className="flex items-center gap-2">
-                  <span
-                    aria-hidden
-                    className={cn(
-                      'inline-block h-2.5 w-2.5 rounded-sm',
-                      ACTION_META[action].swatchClass,
-                    )}
-                  />
-                  <span className="text-content">
-                    {ACTION_META[action].label}
-                  </span>
-                </span>
-                <span className="tabular-nums text-content-muted">
-                  {row.pct.toFixed(1)}% · {Math.round(row.combos)} combos
-                </span>
-              </li>
-            );
-          })}
+          {visibleBreakdown.map(({ def, combos, pct }) => (
+            <li
+              key={def.id}
+              className="flex items-center justify-between gap-3 text-xs"
+            >
+              <span className="flex items-center gap-2">
+                <span
+                  aria-hidden
+                  className="inline-block h-2.5 w-2.5 rounded-sm"
+                  style={{ backgroundColor: def.color }}
+                />
+                <span className="text-content">{def.label}</span>
+              </span>
+              <span className="tabular-nums text-content-muted">
+                {pct.toFixed(1)}% · {Math.round(combos)} combos
+              </span>
+            </li>
+          ))}
         </ul>
       )}
     </section>

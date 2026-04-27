@@ -2,11 +2,12 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { parseHandRange, type WeightedHand } from '@/utils/handRangeParser';
-import { ACTION_META } from '@/utils/actionMeta';
-import type { Action } from '@/types/poker';
+import { actionDefOf } from '@/utils/actionMeta';
+import type { ActionId, Range } from '@/types/poker';
 
 type ImportModalProps = {
-  action: Action;
+  range: Range;
+  actionId: ActionId;
   onImport: (hands: WeightedHand[], replace: boolean) => void;
   onClose: () => void;
 };
@@ -16,7 +17,7 @@ const MAX_ERROR_LIST = 8;
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-export function ImportModal({ action, onImport, onClose }: ImportModalProps) {
+export function ImportModal({ range, actionId, onImport, onClose }: ImportModalProps) {
   const [text, setText] = useState('');
   const [replace, setReplace] = useState(false);
   const dialogRef = useRef<HTMLDivElement | null>(null);
@@ -64,7 +65,9 @@ export function ImportModal({ action, onImport, onClose }: ImportModalProps) {
   }, [onClose]);
 
   const result = useMemo(() => parseHandRange(text), [text]);
-  const meta = ACTION_META[action];
+  const def = actionDefOf(range.actions, actionId);
+  const label = def?.label ?? actionId;
+  const color = def?.color ?? '#9ca3af';
 
   const handleImportClick = () => {
     if (result.hands.length === 0) return;
@@ -96,9 +99,10 @@ export function ImportModal({ action, onImport, onClose }: ImportModalProps) {
               <span className="inline-flex items-center gap-1 font-medium text-content">
                 <span
                   aria-hidden
-                  className={cn('h-2.5 w-2.5 rounded-sm', meta.swatchClass)}
+                  className="h-2.5 w-2.5 rounded-sm"
+                  style={{ backgroundColor: color }}
                 />
-                {meta.label}
+                {label}
               </span>{' '}
               using each token's weight (defaults to 100%).
             </p>

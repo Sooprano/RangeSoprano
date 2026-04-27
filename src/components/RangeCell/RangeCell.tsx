@@ -1,7 +1,12 @@
 import { memo, useId, useMemo, type Ref } from 'react';
 import { cn } from '@/lib/cn';
 import type { HandAction, HandCategory, HandNotation } from '@/types/poker';
-import { ACTION_META } from '@/utils/actionMeta';
+import {
+  actionColor,
+  actionLabel,
+  sortByActionOrder,
+  type ActionDefMap,
+} from '@/utils/actionMeta';
 
 type TooltipSide = 'top' | 'bottom';
 
@@ -9,6 +14,8 @@ type RangeCellProps = {
   hand: HandNotation;
   category: HandCategory;
   actions?: HandAction[];
+  /** Per-range action defs lookup (color + label + order). Falls back to the action id when missing. */
+  actionsMap?: ActionDefMap;
   tooltipSide?: TooltipSide;
   className?: string;
   /** 1-based row index for ARIA. */
@@ -39,10 +46,10 @@ const CATEGORY_LABEL: Record<HandCategory, string> = {
   offsuit: 'offsuit',
 };
 
-function buildBackground(actions: HandAction[]): string | undefined {
-  const sorted = [...actions].sort(
-    (a, b) => ACTION_META[a.action].order - ACTION_META[b.action].order,
-  );
+const EMPTY_MAP: ActionDefMap = new Map();
+
+function buildBackground(actions: HandAction[], defs: ActionDefMap): string | undefined {
+  const sorted = sortByActionOrder(defs, actions);
   const stops: string[] = [];
   let cursor = 0;
   for (const a of sorted) {
@@ -50,7 +57,7 @@ function buildBackground(actions: HandAction[]): string | undefined {
     if (w <= 0) continue;
     const start = cursor;
     const end = cursor + w;
-    stops.push(`${ACTION_META[a.action].cssColor} ${start}% ${end}%`);
+    stops.push(`${actionColor(defs, a.action)} ${start}% ${end}%`);
     cursor = end;
     if (cursor >= 100) break;
   }
@@ -65,11 +72,12 @@ function buildAriaLabel(
   hand: HandNotation,
   category: HandCategory,
   sorted: HandAction[],
+  defs: ActionDefMap,
 ): string {
   const base = `${hand}, ${CATEGORY_LABEL[category]}`;
   if (sorted.length === 0) return `${base}, no action`;
   const parts = sorted.map(
-    (a) => `${ACTION_META[a.action].label} ${Math.round(a.weight)}%`,
+    (a) => `${actionLabel(defs, a.action)} ${Math.round(a.weight)}%`,
   );
   return `${base}, ${parts.join(', ')}`;
 }
@@ -78,6 +86,7 @@ function RangeCellBase({
   hand,
   category,
   actions,
+  actionsMap,
   tooltipSide = 'top',
   className,
   rowIndex,
@@ -87,22 +96,21 @@ function RangeCellBase({
 }: RangeCellProps) {
   const tooltipId = useId();
   const hasActions = !!actions && actions.length > 0;
+  const defs = actionsMap ?? EMPTY_MAP;
 
   const background = useMemo(
-    () => (hasActions ? buildBackground(actions!) : undefined),
-    [hasActions, actions],
+    () => (hasActions ? buildBackground(actions!, defs) : undefined),
+    [hasActions, actions, defs],
   );
 
   const sortedForTooltip = useMemo(() => {
     if (!hasActions) return [];
-    return [...actions!].sort(
-      (a, b) => ACTION_META[a.action].order - ACTION_META[b.action].order,
-    );
-  }, [hasActions, actions]);
+    return sortByActionOrder(defs, actions!);
+  }, [hasActions, actions, defs]);
 
   const ariaLabel = useMemo(
-    () => buildAriaLabel(hand, category, sortedForTooltip),
-    [hand, category, sortedForTooltip],
+    () => buildAriaLabel(hand, category, sortedForTooltip, defs),
+    [hand, category, sortedForTooltip, defs],
   );
 
   return (
@@ -180,13 +188,11 @@ function RangeCellBase({
                 <span className="flex items-center gap-1.5">
                   <span
                     aria-hidden
-                    className={cn(
-                      'inline-block h-2.5 w-2.5 rounded-sm',
-                      ACTION_META[a.action].swatchClass,
-                    )}
+                    className="inline-block h-2.5 w-2.5 rounded-sm"
+                    style={{ backgroundColor: actionColor(defs, a.action) }}
                   />
                   <span className="text-content">
-                    {ACTION_META[a.action].label}
+                    {actionLabel(defs, a.action)}
                   </span>
                 </span>
                 <span className="tabular-nums text-content-muted">

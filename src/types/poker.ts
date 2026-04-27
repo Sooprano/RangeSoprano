@@ -4,8 +4,29 @@ export type Rank = (typeof RANKS)[number];
 export const POSITIONS = ['UTG', 'HJ', 'CO', 'BTN', 'SB', 'BB'] as const;
 export type Position = (typeof POSITIONS)[number];
 
-export const ACTIONS = ['RAISE', 'CALL', 'FOLD', '3BET', 'ALL_IN'] as const;
-export type Action = (typeof ACTIONS)[number];
+/**
+ * Legacy fixed action ids, used as the seed for new ranges and as fallback
+ * IDs when an old range has no `actions` field on hydration. Custom actions
+ * created by the user are arbitrary strings, so prefer `ActionId` over this
+ * union in new code.
+ */
+export const LEGACY_ACTIONS = ['RAISE', 'CALL', 'FOLD', '3BET', 'ALL_IN'] as const;
+export type LegacyAction = (typeof LEGACY_ACTIONS)[number];
+
+/** Identifier of a per-range action — opaque string set by the user (or seed). */
+export type ActionId = string;
+/** Backwards-compatible alias. New code should use ActionId. */
+export type Action = ActionId;
+
+/** Per-range definition of an action: how it is named, colored, and ordered. */
+export type ActionDef = {
+  id: ActionId;
+  label: string;
+  /** Any CSS color string (typically a hex like "#06b6d4"). */
+  color: string;
+  /** Sort/render order. */
+  order: number;
+};
 
 export type HandCategory = 'pair' | 'suited' | 'offsuit';
 
@@ -13,7 +34,7 @@ export type HandCategory = 'pair' | 'suited' | 'offsuit';
 export type HandNotation = string;
 
 export type HandAction = {
-  action: Action;
+  action: ActionId;
   /** Frequency in percent, 0..100. */
   weight: number;
 };
@@ -48,4 +69,6 @@ export type Range = {
   notes?: string;
   /** Manual sort order within the range's parent scope (group or ungrouped). */
   order?: number;
+  /** User-defined actions (custom labels and colors) available in this range. */
+  actions: ActionDef[];
 };

@@ -1,16 +1,24 @@
+import { useMemo } from 'react';
 import { cn } from '@/lib/cn';
-import type { Action } from '@/types/poker';
-import { ACTION_META, ORDERED_ACTIONS } from '@/utils/actionMeta';
+import type { ActionDef, ActionId } from '@/types/poker';
 
 type ActionLegendProps = {
-  actions?: Action[];
+  /** Per-range action defs to render in order. */
+  actionDefs: ActionDef[];
+  /** When provided, only legend entries whose id is present are shown. */
+  presentActions?: ActionId[];
   className?: string;
 };
 
-export function ActionLegend({ actions, className }: ActionLegendProps) {
-  const list = (actions && actions.length > 0 ? actions : ORDERED_ACTIONS)
-    .slice()
-    .sort((a, b) => ACTION_META[a].order - ACTION_META[b].order);
+export function ActionLegend({ actionDefs, presentActions, className }: ActionLegendProps) {
+  const list = useMemo(() => {
+    const sorted = [...actionDefs].sort((a, b) => a.order - b.order);
+    if (!presentActions || presentActions.length === 0) return sorted;
+    const present = new Set(presentActions);
+    return sorted.filter((d) => present.has(d.id));
+  }, [actionDefs, presentActions]);
+
+  if (list.length === 0) return null;
 
   return (
     <section
@@ -24,18 +32,14 @@ export function ActionLegend({ actions, className }: ActionLegendProps) {
         Legend
       </h3>
       <ul className="flex flex-wrap gap-x-4 gap-y-2 lg:flex-col lg:gap-2">
-        {list.map((action) => (
-          <li key={action} className="flex items-center gap-2">
+        {list.map((def) => (
+          <li key={def.id} className="flex items-center gap-2">
             <span
               aria-hidden
-              className={cn(
-                'inline-block h-3 w-3 rounded-sm ring-1 ring-black/20',
-                ACTION_META[action].swatchClass,
-              )}
+              className="inline-block h-3 w-3 rounded-sm ring-1 ring-black/20"
+              style={{ backgroundColor: def.color }}
             />
-            <span className="text-xs text-content">
-              {ACTION_META[action].label}
-            </span>
+            <span className="text-xs text-content">{def.label}</span>
           </li>
         ))}
       </ul>

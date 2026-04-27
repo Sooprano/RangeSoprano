@@ -5,6 +5,7 @@ import { RangeGrid } from '@/components/RangeGrid';
 import { RangeStats } from '@/components/RangeStats';
 import { ActionLegend } from '@/components/ActionLegend';
 import { computeRangeStats } from '@/utils/rangeStats';
+import { buildActionDefMap } from '@/utils/actionMeta';
 import { useRangeStore } from '@/store/rangeStore';
 import { pushToast } from '@/store/toastStore';
 import { useUiStore } from '@/store/uiStore';
@@ -132,6 +133,10 @@ export default function ViewerPage() {
     return () => window.removeEventListener('keydown', handler);
   }, [compareEnabled, orderedForNav, viewerRangeId, setViewerRangeId]);
 
+  const actionsMap = useMemo(
+    () => (range ? buildActionDefMap(range.actions) : new Map()),
+    [range],
+  );
   const presentActions = useMemo(
     () => (range ? computeRangeStats(range.cells).presentActions : []),
     [range],
@@ -233,7 +238,7 @@ export default function ViewerPage() {
                 </p>
               )}
               <div ref={captureRef} className="rounded-xl bg-bg p-2">
-                <RangeGrid cells={range.cells} />
+                <RangeGrid cells={range.cells} actionsMap={actionsMap} />
               </div>
               {filteredSummaries.length > 1 && (
                 <p className="text-xs text-content-muted">
@@ -248,8 +253,8 @@ export default function ViewerPage() {
 
         {!compareEnabled && range && (
           <aside className="flex flex-col gap-4">
-            <RangeStats cells={range.cells} />
-            <ActionLegend actions={presentActions} />
+            <RangeStats cells={range.cells} actionDefs={range.actions} />
+            <ActionLegend actionDefs={range.actions} presentActions={presentActions} />
           </aside>
         )}
       </div>

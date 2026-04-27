@@ -7,21 +7,34 @@ import {
 } from 'react';
 import { Check, RotateCcw, SkipForward, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import type { Action, Range } from '@/types/poker';
-import { ACTION_META, ORDERED_ACTIONS } from '@/utils/actionMeta';
+import type { ActionDef, ActionId, Range } from '@/types/poker';
+import { actionColor, actionDefOf, actionLabel } from '@/utils/actionMeta';
 import {
   sampleTrainerHand,
   type TrainerHand,
 } from '@/utils/trainerSampler';
 import { PokerTable } from './PokerTable';
 
+const FOLD_ID: ActionId = 'FOLD';
+
+function foldDefOrFallback(actions: ActionDef[]): ActionDef {
+  return (
+    actions.find((a) => a.id === FOLD_ID) ?? {
+      id: FOLD_ID,
+      label: 'Fold',
+      color: '#3f3a5c',
+      order: Number.POSITIVE_INFINITY,
+    }
+  );
+}
+
 type ClassicTrainerProps = {
   range: Range;
 };
 
 type Feedback = {
-  picked: Action;
-  expected: Action;
+  picked: ActionId;
+  expected: ActionId;
   wasCorrect: boolean;
   hand: TrainerHand;
 };
@@ -61,8 +74,13 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
     setCurrent(sampleTrainerHand(range));
   }, [range]);
 
+  const orderedActions = useMemo(
+    () => [...range.actions].sort((a, b) => a.order - b.order),
+    [range.actions],
+  );
+
   const answer = useCallback(
-    (picked: Action) => {
+    (picked: ActionId) => {
       if (!current || feedback) return;
       const wasCorrect = picked === current.expectedAction;
       setFeedback({
@@ -106,10 +124,10 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
       ) {
         return;
       }
-      const idx = '12345'.indexOf(e.key);
-      if (idx >= 0 && idx < ORDERED_ACTIONS.length) {
+      const idx = '123456789'.indexOf(e.key);
+      if (idx >= 0 && idx < orderedActions.length) {
         e.preventDefault();
-        if (!feedback) answer(ORDERED_ACTIONS[idx]!);
+        if (!feedback) answer(orderedActions[idx]!.id);
         return;
       }
       if (e.key === 'Enter' || e.key === ' ' || e.key === 'n' || e.key === 'N') {
@@ -124,7 +142,7 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [feedback, answer, drawNext, skip]);
+  }, [feedback, answer, drawNext, skip, orderedActions]);
 
   const accuracy = useMemo(
     () => (score.total === 0 ? 0 : (score.correct / score.total) * 100),
@@ -151,14 +169,14 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
           />
 
         <ActionGrid
-          presentActions={ORDERED_ACTIONS}
+          actions={orderedActions}
           feedback={feedback}
           onAnswer={answer}
         />
 
         <div className="min-h-[5rem] w-full">
           {feedback ? (
-            <FeedbackPanel feedback={feedback} />
+            <FeedbackPanel feedback={feedback} actions={range.actions} />
           ) : (
             <p className="text-center text-xs text-content-muted">
               Pick an action · keys 1-5 · S to skip
@@ -224,24 +242,23 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 
 type ActionGridProps = {
-  presentActions: Action[];
+  actions: ActionDef[];
   feedback: Feedback | null;
-  onAnswer: (action: Action) => void;
+  onAnswer: (action: ActionId) => void;
 };
 
-function ActionGrid({ presentActions, feedback, onAnswer }: ActionGridProps) {
+function ActionGrid({ actions, feedback, onAnswer }: ActionGridProps) {
   return (
     <div className="grid w-full max-w-md grid-cols-2 gap-2 sm:grid-cols-5">
-      {presentActions.map((action, i) => {
-        const meta = ACTION_META[action];
-        const isExpected = feedback?.expected === action;
-        const isPicked = feedback?.picked === action;
+      {actions.map((def, i) => {
+        const isExpected = feedback?.expected === def.id;
+        const isPicked = feedback?.picked === def.id;
         return (
           <button
-            key={action}
+            key={def.id}
             type="button"
             disabled={feedback !== null}
-            onClick={() => onAnswer(action)}
+            onClick={() => onAnswer(def.id)}
             className={cn(
               'flex flex-col items-center gap-1 rounded-lg border px-3 py-3 text-sm font-medium',
               'transition-colors duration-150 ease-out-soft',
@@ -255,8 +272,12 @@ function ActionGrid({ presentActions, feedback, onAnswer }: ActionGridProps) {
                 : 'border-border bg-surface/40 text-content hover:bg-surface-hover',
             )}
           >
-            <span aria-hidden className={cn('h-3 w-3 rounded-sm', meta.swatchClass)} />
-            <span>{meta.label}</span>
+            <span
+              aria-hidden
+              className="h-3 w-3 rounded-sm"
+              style={{ backgroundColor: def.color }}
+            />
+            <span>{def.label}</span>
             <span className="text-[10px] uppercase tracking-wider text-content-muted">
               {i + 1}
             </span>
@@ -267,8 +288,14 @@ function ActionGrid({ presentActions, feedback, onAnswer }: ActionGridProps) {
   );
 }
 
-function FeedbackPanel({ feedback }: { feedback: Feedback }) {
-  const expectedMeta = ACTION_META[feedback.expected];
+function FeedbackPanel({
+  feedback,
+  actions,
+}: {
+  feedback: Feedback;
+  actions: ActionDef[];
+}) {
+  const fold = foldDefOrFallback(actions);
   const cell = feedback.hand.cell;
   const sumWeights = cell?.actions.reduce((s, a) => s + a.weight, 0) ?? 0;
   const residualFold = cell ? Math.max(0, 100 - sumWeights) : 100;
@@ -276,10 +303,10 @@ function FeedbackPanel({ feedback }: { feedback: Feedback }) {
     ? [
         ...cell.actions.map((a) => ({ action: a.action, weight: a.weight })),
         ...(residualFold > 0
-          ? [{ action: 'FOLD' as Action, weight: residualFold }]
+          ? [{ action: fold.id, weight: residualFold }]
           : []),
       ]
-    : [{ action: 'FOLD' as Action, weight: 100 }];
+    : [{ action: fold.id, weight: 100 }];
   const isMixed = breakdown.length > 1;
 
   return (
@@ -304,24 +331,32 @@ function FeedbackPanel({ feedback }: { feedback: Feedback }) {
         <span className="text-content-muted">
           Expected{' '}
           <span className="inline-flex items-center gap-1 font-medium text-content">
-            <span aria-hidden className={cn('h-2.5 w-2.5 rounded-sm', expectedMeta.swatchClass)} />
-            {expectedMeta.label}
+            <span
+              aria-hidden
+              className="h-2.5 w-2.5 rounded-sm"
+              style={{
+                backgroundColor:
+                  actionDefOf(actions, feedback.expected)?.color ?? fold.color,
+              }}
+            />
+            {actionLabel(actions, feedback.expected)}
           </span>
         </span>
       </div>
       {isMixed && (
         <div className="flex flex-wrap items-center gap-2 text-xs text-content-muted">
           <span>Cell strategy:</span>
-          {breakdown.map((b) => {
-            const meta = ACTION_META[b.action];
-            return (
-              <span key={b.action} className="inline-flex items-center gap-1">
-                <span aria-hidden className={cn('h-2 w-2 rounded-sm', meta.swatchClass)} />
-                <span className="text-content">{meta.label}</span>
-                <span className="tabular-nums">{b.weight.toFixed(0)}%</span>
-              </span>
-            );
-          })}
+          {breakdown.map((b) => (
+            <span key={b.action} className="inline-flex items-center gap-1">
+              <span
+                aria-hidden
+                className="h-2 w-2 rounded-sm"
+                style={{ backgroundColor: actionColor(actions, b.action) }}
+              />
+              <span className="text-content">{actionLabel(actions, b.action)}</span>
+              <span className="tabular-nums">{b.weight.toFixed(0)}%</span>
+            </span>
+          ))}
         </div>
       )}
     </div>

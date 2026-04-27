@@ -4,6 +4,7 @@ import { RangeGrid } from '@/components/RangeGrid';
 import { RangeStats } from '@/components/RangeStats';
 import { ActionLegend } from '@/components/ActionLegend';
 import { computeRangeStats } from '@/utils/rangeStats';
+import { buildActionDefMap } from '@/utils/actionMeta';
 import type { Range } from '@/types/poker';
 
 const SITUATION_LABEL: Record<string, string> = {
@@ -26,6 +27,7 @@ export function RangePanel({ range, badge, className }: RangePanelProps) {
     () => computeRangeStats(range.cells).presentActions,
     [range.cells],
   );
+  const actionsMap = useMemo(() => buildActionDefMap(range.actions), [range.actions]);
 
   return (
     <section
@@ -50,11 +52,11 @@ export function RangePanel({ range, badge, className }: RangePanelProps) {
         )}
       </header>
 
-      <RangeGrid cells={range.cells} />
+      <RangeGrid cells={range.cells} actionsMap={actionsMap} />
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <RangeStats cells={range.cells} />
-        <ActionLegend actions={presentActions} />
+        <RangeStats cells={range.cells} actionDefs={range.actions} />
+        <ActionLegend actionDefs={range.actions} presentActions={presentActions} />
       </div>
     </section>
   );

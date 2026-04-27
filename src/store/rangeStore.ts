@@ -1,12 +1,15 @@
 import { create } from 'zustand';
 import { persist, type PersistStorage } from 'zustand/middleware';
 import type {
+  ActionDef,
+  ActionId,
   HandNotation,
   Position,
   Range,
   RangeCellData,
   Situation,
 } from '@/types/poker';
+import { NEW_RANGE_ACTION_DEFS } from '@/utils/actionMeta';
 import {
   CURRENT_RANGE_STORE_VERSION,
   MAX_RANGES,
@@ -33,6 +36,7 @@ export type CreateRangeInput = {
   villainPosition?: Position;
   group?: string;
   cells?: Record<HandNotation, RangeCellData>;
+  actions?: ActionDef[];
 };
 
 export const MAX_HISTORY = 50;
@@ -73,6 +77,14 @@ type RangeStoreState = PersistedRangeState & {
   hasUnsavedChanges: (id: string) => boolean;
   /** Set per-scope order for ranges (group key = group string or null for ungrouped). */
   reorderRanges: (groupKey: string | null, orderedIds: string[]) => void;
+  /** Append a new action to a range. Returns its id. */
+  addAction: (rangeId: string, partial?: Partial<Omit<ActionDef, 'id' | 'order'>>) => string | null;
+  /** Patch an existing action (label / color). Order is set by reorderActions. */
+  updateAction: (rangeId: string, actionId: ActionId, patch: Partial<Omit<ActionDef, 'id'>>) => void;
+  /** Remove an action and strip any cell entries that reference it. */
+  deleteAction: (rangeId: string, actionId: ActionId) => void;
+  /** Reorder actions to match the given id order; orphans go to the tail. */
+  reorderActions: (rangeId: string, orderedIds: ActionId[]) => void;
   resetStore: () => void;
 };
 
@@ -197,6 +209,9 @@ export const useRangeStore = create<RangeStoreState>()(
       createRange: (input) => {
         const id = newId();
         const now = nowIso();
+        const seedActions = input.actions
+          ? input.actions.map((a) => ({ ...a }))
+          : NEW_RANGE_ACTION_DEFS.map((a) => ({ ...a }));
         const range: Range = {
           id,
           name: input.name,
@@ -209,6 +224,7 @@ export const useRangeStore = create<RangeStoreState>()(
           cells: input.cells ? deepCloneCells(input.cells) : {},
           createdAt: now,
           updatedAt: now,
+          actions: seedActions,
         };
         set((s) => ({ ranges: [...s.ranges, range] }));
         return id;
@@ -246,6 +262,7 @@ export const useRangeStore = create<RangeStoreState>()(
           id: newRangeId,
           name: `${src.name}${nameSuffix}`.slice(0, 80),
           cells: deepCloneCells(src.cells),
+          actions: src.actions.map((a) => ({ ...a })),
           createdAt: now,
           updatedAt: now,
         };
@@ -286,6 +303,84 @@ export const useRangeStore = create<RangeStoreState>()(
             ranges: s.ranges.map((r) => (r.id === id ? deepCloneRange(snap) : r)),
           };
         });
+      },
+
+      addAction: (rangeId, partial) => {
+        const s = get();
+        const r = s.ranges.find((x) => x.id === rangeId);
+        if (!r) return null;
+        const newActionId = newId();
+        const order = r.actions.reduce((m, a) => Math.max(m, a.order), -1) + 1;
+        const def: ActionDef = {
+          id: newActionId,
+          label: partial?.label ?? `Color ${r.actions.length + 1}`,
+          color: partial?.color ?? '#3b82f6',
+          order,
+        };
+        set((sx) => ({
+          ranges: sx.ranges.map((rr) =>
+            rr.id === rangeId ? touch({ ...rr, actions: [...rr.actions, def] }) : rr,
+          ),
+        }));
+        return newActionId;
+      },
+
+      updateAction: (rangeId, actionId, patch) => {
+        set((s) => ({
+          ranges: s.ranges.map((r) => {
+            if (r.id !== rangeId) return r;
+            let changed = false;
+            const nextActions = r.actions.map((a) => {
+              if (a.id !== actionId) return a;
+              const merged: ActionDef = { ...a };
+              if (patch.label !== undefined) merged.label = patch.label;
+              if (patch.color !== undefined) merged.color = patch.color;
+              if (patch.order !== undefined) merged.order = patch.order;
+              changed = true;
+              return merged;
+            });
+            return changed ? touch({ ...r, actions: nextActions }) : r;
+          }),
+        }));
+      },
+
+      deleteAction: (rangeId, actionId) => {
+        set((s) => ({
+          ranges: s.ranges.map((r) => {
+            if (r.id !== rangeId) return r;
+            const nextActions = r.actions.filter((a) => a.id !== actionId);
+            if (nextActions.length === r.actions.length) return r;
+            // Cascade: drop any cell.actions[] entry referencing the deleted id.
+            const nextCells: Record<HandNotation, RangeCellData> = {};
+            for (const k in r.cells) {
+              const c = r.cells[k];
+              if (!c) continue;
+              const filtered = c.actions.filter((a) => a.action !== actionId);
+              if (filtered.length > 0) {
+                nextCells[k] = { hand: c.hand, actions: filtered };
+              }
+            }
+            return touch({ ...r, actions: nextActions, cells: nextCells });
+          }),
+        }));
+      },
+
+      reorderActions: (rangeId, orderedIds) => {
+        set((s) => ({
+          ranges: s.ranges.map((r) => {
+            if (r.id !== rangeId) return r;
+            const orderMap = new Map(orderedIds.map((id, idx) => [id, idx]));
+            const fallback = orderedIds.length;
+            let changed = false;
+            const nextActions = r.actions.map((a) => {
+              const next = orderMap.get(a.id) ?? fallback;
+              if (a.order === next) return a;
+              changed = true;
+              return { ...a, order: next };
+            });
+            return changed ? touch({ ...r, actions: nextActions }) : r;
+          }),
+        }));
       },
 
       reorderRanges: (groupKey, orderedIds) => {

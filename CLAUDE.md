@@ -15,6 +15,7 @@ React 19 + TypeScript estricto (noUncheckedIndexedAccess, exactOptionalPropertyT
 5. ✅ Visualizador mejorado (5A scope · 5B filtros · 5C compare · 5D export PNG + atajos)
 6. ✅ Entrenador (6A shell · 6B clásico · 6C dibujo · 6D filtros)
 7. 🔄 Pulido final (7A toasts ✅ · 7B a11y modals/menus ✅ · 7C error boundary + 404 + meta ✅ · 7D deploy ⏳)
+8. ✅ Editor avanzado (8A Ctrl+RightClick hand+ · 8B notas · 8C Save/Discard/Clear · 8D DnD carpetas/rangos · 8E acciones custom por rango)
 
 ## Convenciones
 
@@ -27,7 +28,7 @@ React 19 + TypeScript estricto (noUncheckedIndexedAccess, exactOptionalPropertyT
 
 Grid 13×13 row-major. Orden: A K Q J T 9 8 7 6 5 4 3 2. Diagonal = pares. Arriba = suited. Abajo = offsuit. Cells con múltiples acciones ponderadas (weight 0-100, suma ≤100).
 
-Acciones: RAISE · 3BET · ALL_IN · CALL · FOLD (orden `ORDERED_ACTIONS` en `src/utils/actionMeta.ts`).
+Acciones: cada `Range` define su propia paleta (`range.actions: ActionDef[]` con `id` opaco, `label`, `color` hex, `order`). Los IDs legacy `RAISE · 3BET · ALL_IN · CALL · FOLD` siguen siendo válidos y se siembran como defaults al hidratar rangos viejos (ver `DEFAULT_ACTION_DEFS` en `src/utils/actionMeta.ts`). Rangos nuevos arrancan con `NEW_RANGE_ACTION_DEFS` (Call + Raise).
 
 ## Arquitectura clave
 

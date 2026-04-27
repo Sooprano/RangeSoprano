@@ -1,4 +1,4 @@
-import type { Action, HandNotation, RangeCellData } from '@/types/poker';
+import type { ActionId, HandNotation, RangeCellData } from '@/types/poker';
 import { combosOf, TOTAL_COMBOS } from '@/utils/handUtils';
 
 export type ActionBreakdown = {
@@ -13,23 +13,21 @@ export type RangeStats = {
   activeCombos: number;
   /** activeCombos / TOTAL_COMBOS * 100. */
   totalPct: number;
-  byAction: Record<Action, ActionBreakdown>;
-  /** Actions that actually appear in the range with weight > 0. */
-  presentActions: Action[];
+  byAction: Record<ActionId, ActionBreakdown>;
+  /** Action ids that actually appear in the range with weight > 0. */
+  presentActions: ActionId[];
 };
 
-const EMPTY_BREAKDOWN = (): Record<Action, ActionBreakdown> => ({
-  RAISE: { combos: 0, pct: 0 },
-  CALL: { combos: 0, pct: 0 },
-  FOLD: { combos: 0, pct: 0 },
-  '3BET': { combos: 0, pct: 0 },
-  ALL_IN: { combos: 0, pct: 0 },
-});
+/**
+ * The "fold" action id is treated specially: it is excluded from the
+ * "active combos" total. Any action whose id is exactly "FOLD" counts as fold.
+ */
+const FOLD_ID: ActionId = 'FOLD';
 
 export function computeRangeStats(
   cells: Record<HandNotation, RangeCellData>,
 ): RangeStats {
-  const byAction = EMPTY_BREAKDOWN();
+  const byAction: Record<ActionId, ActionBreakdown> = {};
   let activeCombos = 0;
 
   for (const hand in cells) {
@@ -38,18 +36,20 @@ export function computeRangeStats(
     const handCombos = combosOf(hand);
     for (const a of cell.actions) {
       const weighted = (a.weight / 100) * handCombos;
-      byAction[a.action].combos += weighted;
-      if (a.action !== 'FOLD') activeCombos += weighted;
+      const slot = byAction[a.action] ?? { combos: 0, pct: 0 };
+      slot.combos += weighted;
+      byAction[a.action] = slot;
+      if (a.action !== FOLD_ID) activeCombos += weighted;
     }
   }
 
   for (const key in byAction) {
-    const a = key as Action;
-    byAction[a].pct = (byAction[a].combos / TOTAL_COMBOS) * 100;
+    const slot = byAction[key]!;
+    slot.pct = (slot.combos / TOTAL_COMBOS) * 100;
   }
 
-  const presentActions = (Object.keys(byAction) as Action[]).filter(
-    (a) => byAction[a].combos > 0,
+  const presentActions = Object.keys(byAction).filter(
+    (a) => (byAction[a]?.combos ?? 0) > 0,
   );
 
   return {

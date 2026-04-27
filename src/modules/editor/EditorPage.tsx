@@ -5,14 +5,14 @@ import { RangeGrid } from '@/components/RangeGrid';
 import { RangeStats } from '@/components/RangeStats';
 import { ActionLegend } from '@/components/ActionLegend';
 import { computeRangeStats } from '@/utils/rangeStats';
-import { ORDERED_ACTIONS } from '@/utils/actionMeta';
+import { buildActionDefMap } from '@/utils/actionMeta';
 import { upsertActionInCell } from '@/utils/cellUtils';
 import { expandPlus, type WeightedHand } from '@/utils/handRangeParser';
 import { useRangeStore } from '@/store/rangeStore';
 import { pushToast } from '@/store/toastStore';
 import { useActiveRange } from '@/store/selectors';
-import type { Action, HandNotation } from '@/types/poker';
-import { ActionToolbar } from './ActionToolbar';
+import type { ActionId, HandNotation } from '@/types/poker';
+import { ActionPalette } from './ActionPalette';
 import { WeightSlider } from './WeightSlider';
 import { HistoryToolbar } from './HistoryToolbar';
 import { ImportModal } from './ImportModal';
@@ -22,7 +22,7 @@ import { NotesButton } from './NotesButton';
 import { RangeManager } from './RangeManager';
 import { EmptyEditorState } from './EmptyEditorState';
 
-const DIGIT_KEYS = '12345';
+const DIGIT_KEYS = '123456789';
 
 const SITUATION_LABEL: Record<string, string> = {
   RFI: 'RFI',
@@ -46,15 +46,35 @@ export default function EditorPage() {
   const undo = useRangeStore((s) => s.undo);
   const redo = useRangeStore((s) => s.redo);
 
-  const [activeAction, setActiveAction] = useState<Action>('RAISE');
+  const [activeAction, setActiveAction] = useState<ActionId | null>(null);
   const [weight, setWeight] = useState(100);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const gridRef = useRef<HTMLDivElement | null>(null);
 
+  const orderedActions = useMemo(
+    () => (activeRange ? [...activeRange.actions].sort((a, b) => a.order - b.order) : []),
+    [activeRange],
+  );
+  const actionsMap = useMemo(
+    () => (activeRange ? buildActionDefMap(activeRange.actions) : new Map()),
+    [activeRange],
+  );
+
+  // Keep activeAction in sync with the active range's available actions.
+  useEffect(() => {
+    if (orderedActions.length === 0) {
+      setActiveAction(null);
+      return;
+    }
+    if (!activeAction || !orderedActions.some((a) => a.id === activeAction)) {
+      setActiveAction(orderedActions[0]!.id);
+    }
+  }, [orderedActions, activeAction]);
+
   const handleCellPaint = useCallback(
     (hand: HandNotation) => {
-      if (!activeRangeId) return;
+      if (!activeRangeId || !activeAction) return;
       const existing = activeRange?.cells[hand];
       const result = upsertActionInCell(existing, hand, activeAction, weight);
       if (result.kind === 'clear') clearCell(activeRangeId, hand);
@@ -73,7 +93,7 @@ export default function EditorPage() {
 
   const handleCellPaintPlus = useCallback(
     (hand: HandNotation) => {
-      if (!activeRangeId) return;
+      if (!activeRangeId || !activeAction) return;
       const hands = expandPlus(hand);
       let cells = activeRange?.cells ?? {};
       for (const h of hands) {
@@ -106,7 +126,7 @@ export default function EditorPage() {
 
   const handleImport = useCallback(
     (hands: WeightedHand[], replace: boolean) => {
-      if (!activeRangeId) return;
+      if (!activeRangeId || !activeAction) return;
       pushHistory();
       if (replace) {
         clearAllCells(activeRangeId);
@@ -171,13 +191,13 @@ export default function EditorPage() {
 
       if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
       const idx = DIGIT_KEYS.indexOf(e.key);
-      if (idx < 0 || idx >= ORDERED_ACTIONS.length) return;
+      if (idx < 0 || idx >= orderedActions.length) return;
       e.preventDefault();
-      setActiveAction(ORDERED_ACTIONS[idx]!);
+      setActiveAction(orderedActions[idx]!.id);
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [undo, redo]);
+  }, [undo, redo, orderedActions]);
 
   return (
     <>
@@ -219,11 +239,11 @@ export default function EditorPage() {
                 <HistoryToolbar />
               </div>
             </div>
-            <ActionToolbar active={activeAction} onChange={setActiveAction} />
             <WeightSlider value={weight} onChange={setWeight} />
             <div ref={gridRef} className="rounded-xl bg-bg p-2">
               <RangeGrid
                 cells={activeRange.cells}
+                actionsMap={actionsMap}
                 editable
                 onCellPaint={handleCellPaint}
                 onCellErase={handleCellErase}
@@ -234,7 +254,7 @@ export default function EditorPage() {
             <p className="text-xs text-content-muted">
               Click paints · drag to paint multiple · right-click to erase ·
               Ctrl+right-click fills hand+ (e.g. A5o → A5o..AKo, 44 → 44..AA) ·
-              arrow keys + Space/Enter · press 1-5 to switch action · weight
+              arrow keys + Space/Enter · press 1-9 to switch action · weight
               &lt; 100 stacks with existing actions · Ctrl+Z undo · Ctrl+Shift+Z
               redo.
             </p>
@@ -248,15 +268,21 @@ export default function EditorPage() {
 
         {activeRange && (
           <aside className="flex flex-col gap-4">
-            <RangeStats cells={activeRange.cells} />
-            <ActionLegend actions={presentActions} />
+            <ActionPalette
+              range={activeRange}
+              activeAction={activeAction}
+              onActiveActionChange={setActiveAction}
+            />
+            <RangeStats cells={activeRange.cells} actionDefs={activeRange.actions} />
+            <ActionLegend actionDefs={activeRange.actions} presentActions={presentActions} />
           </aside>
         )}
       </div>
 
-      {isImportOpen && activeRange && (
+      {isImportOpen && activeRange && activeAction && (
         <ImportModal
-          action={activeAction}
+          range={activeRange}
+          actionId={activeAction}
           onImport={handleImport}
           onClose={() => setIsImportOpen(false)}
         />
