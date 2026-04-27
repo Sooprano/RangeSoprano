@@ -23,7 +23,7 @@
 - Fase 7C (error boundary + 404 + meta): `caa190b`
 - Fase 7D (deploy): pendiente
 - Fase 9 (Home + onboarding + import perfil JSON + donación BTC): `70e7e43`
-- Fase 10 (villain + tableFormat HU/6max en NewRangeForm + PokerTable HU): pendiente (commit a registrar al cierre)
+- Fase 10 (villain + tableFormat HU/6max en NewRangeForm + PokerTable HU): `0d9bd8f`
 
 ## Estado actual
 
