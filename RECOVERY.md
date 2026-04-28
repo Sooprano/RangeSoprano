@@ -27,7 +27,7 @@
 
 ## Estado actual
 
-Fase 7D ✅ · Fase 9 ✅ · Fase 10 ✅ · Fase 11 ✅ · Fase 12 ✅ (vs Limp · refactor SITUATION_LABELS · badges HU/villain en RangeManager · home tips).
+Fase 7D ✅ · Fase 9 ✅ · Fase 10 ✅ · Fase 11 ✅ · Fase 12 ✅ · Fase 13 ✅ (Speed mode con leaderboard local · Drawing session scoring + Ctrl+RightClick hand+ · paleta action-aware en Drawing).
 
 Live en https://sooprano.github.io/RangeSoprano/ (después de que el primer workflow termine y se habilite Pages — ver "Pasos manuales pendientes" abajo).
 
@@ -38,6 +38,9 @@ Visual polish reciente: trainer con mesa 6-max estilo "stadium" (rectángulo con
 - Fase 11 (palette reuse · folder rename · meta edit-in-place): `e3f7c36`
 - Fase 12 (vs Limp · refactor labels · badges HU/villain · home tips): `e5fd2b5`
 - Fase 7D (deploy GitHub Pages): `477cd1e`
+- Drawing trainer fix (paleta + diff action-aware): `76dd027`
+- Fase 13 (Speed mode + Drawing session scoring): `490c291`
+- Fase 13 (durations + Ctrl+RightClick hand+ en Drawing): `f61b41a`
 
 ## Pasos manuales pendientes (deploy)
 
@@ -118,6 +121,15 @@ Repo: https://github.com/Sooprano/RangeSoprano · Pages URL: https://sooprano.gi
 - **Workflow**: dos jobs (build + deploy) usando `actions/upload-pages-artifact` y `actions/deploy-pages` v4 (la integración oficial de GH Pages, no `peaceiris/actions-gh-pages`). Trigger en push a `main` y `workflow_dispatch`.
 - **SPA fallback**: el job copia `dist/index.html` a `dist/404.html` antes de upload. GH Pages sirve `404.html` para rutas desconocidas, lo que evita el 404 real en refresh sobre `/editor`, `/trainer`.
 - **Local branch**: renombrada `master` → `main` para alinear con el workflow trigger.
+
+### Trainer Speed mode + Drawing fixes (fase 13)
+- **Drawing trainer paleta action-aware** (commit `76dd027`): antes el modo Drawing pintaba todo con `PAINT_ACTION = 'CALL'` hardcodeado y el diff era binario in/out. Ahora `DrawingTrainer` lee `range.actions` ordenadas y muestra una paleta radio-style; `selectedAction` arranca en la primera acción y se resetea al cambiar de rango. `actionsMap` se pasa al `RangeGrid` para que las celdas pintadas lleven el color real. `computeRangeDiff` reescrito: match = la acción pintada existe (weight > 0) en la celda truth; pintar Call en una celda que es 100% ROL ahora cuenta como FP, no match.
+- **Speed mode** (commit `490c291`): nuevo tab en TrainerPage con icono `Zap`. Una sola pestaña que internamente alterna entre estilo Classic (PokerTable + ActionGrid + auto-advance con flash de 220ms) y estilo Drawing (paleta + RangeGrid editable, computa diff al expirar). Tres fases internas (`config` / `running` / `finished`) gestionadas en el componente padre. Sub-runs montados con `key={runId}` para reset limpio entre intentos.
+- **Speed durations** (commit `f61b41a`): Classic = 30s / 60s / 5min / 10min (decision-time-oriented); Drawing = 30s / 45s / 60s / 90s. `formatDurationLabel()` muestra múltiplos de 60 como "Xmin" en pickers, run header, finished screen y leaderboard. Schema valida `durationSec.max(600)`.
+- **Timer pattern**: `setInterval(100ms)` mide via `performance.now()` desde mount; `doneRef` evita doble-finish; `scoreRef`/`guessRef`/`onFinishRef` mantienen los efectos sin depender de props mutables (de otro modo cambiar score reiniciaría el timer). Progress bar cambia a rojo bajo 5s restantes.
+- **Leaderboard persistido** (`range-soprano/leaderboard`, version 1): nuevo store `leaderboardStore.ts` con persist + Zod merge (mismo patrón que rangeStore/uiStore). Estructura `byRangeId: Record<rangeId, { classic: ClassicEntry[]; drawing: DrawingEntry[] }>`, cap 5 por estilo. `addEntry` retorna `madeTop` para resaltar la fila recién añadida. Discriminated union en Zod (`zSpeedEntry`) para entries Classic vs Drawing con campos distintos. Sort: Classic por accuracy → correct → hpm; Drawing por accuracy → matchCombos. `useRangeLeaderboard(rangeId)` es selector con fallback a `EMPTY_BOARD`.
+- **Drawing session scoring** (in-memory, NO persistido — consistente con score de Classic): nuevo botón `Save round` que aparece solo cuando hay diff revealed; graba `{ accuracyPct, matchCombos, truthCombos }` en `sessionRounds[]` y limpia el canvas. `SessionBar` arriba muestra rounds / avg / best con estrella verde si la última fue best (`lastIsBest = sessionRounds.length > 1 && last === best`). Reset session manual o automático al cambiar de rango. NO se persiste porque el alcance era "scoring por sesión", no historial cross-sesión.
+- **Ctrl+RightClick hand+ en Drawing** (commit `f61b41a`): reuso completo de `expandPlus()` de `src/utils/handRangeParser.ts` (existente desde fase 8) y del prop `onCellPaintPlus` ya soportado por `RangeGrid` y `useRangePainter`. En ambos modos Drawing (regular y Speed) el handler pinta todas las hands expandidas con `selectedAction.id` weight 100. Sin modificar nada del painter ni del grid.
 
 ### Refactor labels + UX badges (fase 12)
 - **Single source of truth** de `SITUATION_LABELS` y `TABLE_FORMAT_LABELS` en `src/data/positions.ts`. Eliminados 8 duplicados locales (Editor/Viewer/Trainer y sus list/panel components). `editorFormConstants.ts` re-exporta para que el editor module no importe directo de `data/`.

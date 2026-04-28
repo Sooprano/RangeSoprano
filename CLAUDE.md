@@ -20,6 +20,7 @@ React 19 + TypeScript estricto (noUncheckedIndexedAccess, exactOptionalPropertyT
 10. ✅ Villain + tableFormat HU/6max (NewRangeForm · PokerTable HU mode · filtro Viewer operativo)
 11. ✅ Palette reuse · folder rename · meta edit-in-place · home docs
 12. ✅ vs Limp · refactor SITUATION_LABELS · badges HU/villain en RangeManager · home tips
+13. ✅ Trainer Speed mode (Classic 30s/60s/5min/10min · Drawing 30s/45s/60s/90s) + leaderboard local · Drawing session scoring + Ctrl+RightClick hand+ + paleta action-aware fix
 
 ## Convenciones
 
