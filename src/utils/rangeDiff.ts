@@ -1,4 +1,4 @@
-import type { HandNotation, RangeCellData } from '@/types/poker';
+import type { ActionId, HandNotation, RangeCellData } from '@/types/poker';
 import { ALL_HANDS, combosOf } from './handUtils';
 
 export type DiffCellState = 'match' | 'fp' | 'fn' | 'none';
@@ -15,17 +15,32 @@ export type RangeDiff = {
   accuracyPct: number;
 };
 
-function isPainted(cells: Record<HandNotation, RangeCellData>, hand: HandNotation): boolean {
+function getPaintedAction(
+  cells: Record<HandNotation, RangeCellData>,
+  hand: HandNotation,
+): ActionId | null {
   const cell = cells[hand];
-  if (!cell || cell.actions.length === 0) return false;
-  // Any non-zero action weight counts as painted.
-  return cell.actions.some((a) => a.weight > 0);
+  if (!cell) return null;
+  return cell.actions.find((a) => a.weight > 0)?.action ?? null;
+}
+
+function isPainted(cells: Record<HandNotation, RangeCellData>, hand: HandNotation): boolean {
+  return getPaintedAction(cells, hand) !== null;
+}
+
+function truthHasAction(
+  cells: Record<HandNotation, RangeCellData>,
+  hand: HandNotation,
+  action: ActionId,
+): boolean {
+  return cells[hand]?.actions.some((a) => a.action === action && a.weight > 0) ?? false;
 }
 
 /**
- * Computes a binary in/out diff between the user's guess and the truth range.
- * Mixed-frequency truth cells count as "in" if any action is present, since
- * the drawing trainer is a binary play/fold exercise.
+ * Computes an action-aware diff between the user's guess and the truth range.
+ * Match: painted action exists in the truth cell (weight > 0).
+ * False positive: painted an action the truth cell doesn't have, or hand not in range.
+ * False negative: truth has the hand but the user didn't paint any action on it.
  */
 export function computeRangeDiff(
   guess: Record<HandNotation, RangeCellData>,
@@ -39,15 +54,19 @@ export function computeRangeDiff(
   let guessCombos = 0;
 
   for (const hand of ALL_HANDS) {
-    const inGuess = isPainted(guess, hand);
+    const guessAction = getPaintedAction(guess, hand);
     const inTruth = isPainted(truth, hand);
+    const correctAction =
+      guessAction !== null && truthHasAction(truth, hand, guessAction);
     const c = combosOf(hand);
-    if (inGuess) guessCombos += c;
+
+    if (guessAction !== null) guessCombos += c;
     if (inTruth) truthCombos += c;
-    if (inGuess && inTruth) {
+
+    if (guessAction !== null && correctAction) {
       cells[hand] = 'match';
       matchCombos += c;
-    } else if (inGuess) {
+    } else if (guessAction !== null) {
       cells[hand] = 'fp';
       fpCombos += c;
     } else if (inTruth) {

@@ -1,13 +1,14 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Eye, EyeOff, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { RangeGrid } from '@/components/RangeGrid';
 import type {
-  ActionId,
+  ActionDef,
   HandNotation,
   Range,
   RangeCellData,
 } from '@/types/poker';
+import { buildActionDefMap } from '@/utils/actionMeta';
 import { computeRangeDiff } from '@/utils/rangeDiff';
 import { DiffGrid } from './DiffGrid';
 
@@ -15,23 +16,47 @@ type DrawingTrainerProps = {
   range: Range;
 };
 
-const PAINT_ACTION: ActionId = 'CALL';
-const PAINT_WEIGHT = 100;
+function firstAction(actions: ActionDef[]): ActionDef {
+  return [...actions].sort((a, b) => a.order - b.order)[0]!;
+}
 
 export function DrawingTrainer({ range }: DrawingTrainerProps) {
   const [guess, setGuess] = useState<Record<HandNotation, RangeCellData>>({});
   const [revealed, setRevealed] = useState(false);
+  const [selectedAction, setSelectedAction] = useState<ActionDef>(
+    () => firstAction(range.actions),
+  );
+  const rangeIdRef = useRef(range.id);
 
-  const onPaint = useCallback((hand: HandNotation) => {
-    setGuess((g) => {
-      const next = { ...g };
-      next[hand] = {
-        hand,
-        actions: [{ action: PAINT_ACTION, weight: PAINT_WEIGHT }],
-      };
-      return next;
-    });
-  }, []);
+  useEffect(() => {
+    if (rangeIdRef.current !== range.id) {
+      rangeIdRef.current = range.id;
+      setSelectedAction(firstAction(range.actions));
+      setGuess({});
+      setRevealed(false);
+    }
+  }, [range]);
+
+  const orderedActions = useMemo(
+    () => [...range.actions].sort((a, b) => a.order - b.order),
+    [range.actions],
+  );
+
+  const actionsMap = useMemo(() => buildActionDefMap(range.actions), [range.actions]);
+
+  const onPaint = useCallback(
+    (hand: HandNotation) => {
+      setGuess((g) => {
+        const next = { ...g };
+        next[hand] = {
+          hand,
+          actions: [{ action: selectedAction.id, weight: 100 }],
+        };
+        return next;
+      });
+    },
+    [selectedAction],
+  );
 
   const onErase = useCallback((hand: HandNotation) => {
     setGuess((g) => {
@@ -94,6 +119,12 @@ export function DrawingTrainer({ range }: DrawingTrainerProps) {
         </div>
       </div>
 
+      <ActionPalette
+        actions={orderedActions}
+        selected={selectedAction}
+        onSelect={setSelectedAction}
+      />
+
       {revealed && diff ? (
         <div className="flex flex-col gap-4">
           <DiffStats diff={diff} />
@@ -103,11 +134,55 @@ export function DrawingTrainer({ range }: DrawingTrainerProps) {
       ) : (
         <RangeGrid
           cells={guess}
+          actionsMap={actionsMap}
           editable
           onCellPaint={onPaint}
           onCellErase={onErase}
         />
       )}
+    </div>
+  );
+}
+
+function ActionPalette({
+  actions,
+  selected,
+  onSelect,
+}: {
+  actions: ActionDef[];
+  selected: ActionDef;
+  onSelect: (def: ActionDef) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Paint action">
+      {actions.map((def) => {
+        const isSelected = def.id === selected.id;
+        return (
+          <button
+            key={def.id}
+            type="button"
+            role="radio"
+            aria-checked={isSelected}
+            onClick={() => onSelect(def)}
+            className={cn(
+              'inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium',
+              'transition-colors duration-100',
+              'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light',
+              isSelected
+                ? 'border-transparent text-content shadow-[inset_0_0_0_2px_rgb(255_255_255/0.15)]'
+                : 'border-border bg-surface/40 text-content-muted hover:bg-surface-hover hover:text-content',
+            )}
+            style={isSelected ? { backgroundColor: def.color + '33', borderColor: def.color } : undefined}
+          >
+            <span
+              aria-hidden
+              className="h-3 w-3 flex-none rounded-sm"
+              style={{ backgroundColor: def.color }}
+            />
+            {def.label}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -170,9 +245,9 @@ function Stat({
 function DiffLegend() {
   return (
     <ul className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-content-muted">
-      <Legend dot="bg-emerald-500/70" label="Match" />
-      <Legend dot="bg-rose-500/70" label="False positive (you painted, range did not)" />
-      <Legend dot="bg-amber-500/70" label="False negative (range had, you missed)" />
+      <Legend dot="bg-emerald-500/70" label="Match (correct action)" />
+      <Legend dot="bg-rose-500/70" label="False positive (wrong action or not in range)" />
+      <Legend dot="bg-amber-500/70" label="False negative (range had it, you missed)" />
     </ul>
   );
 }
