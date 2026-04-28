@@ -24,6 +24,7 @@ import type {
   RangeCellData,
 } from '@/types/poker';
 import { buildActionDefMap } from '@/utils/actionMeta';
+import { expandPlus } from '@/utils/handRangeParser';
 import { sampleTrainerHand, type TrainerHand } from '@/utils/trainerSampler';
 import { computeRangeDiff } from '@/utils/rangeDiff';
 import { PokerTable } from './PokerTable';
@@ -41,11 +42,17 @@ import type {
 type Phase = 'config' | 'running' | 'finished';
 type SpeedStyle = 'classic' | 'drawing';
 
-const CLASSIC_DURATIONS = [5, 10, 15, 30] as const;
-const DRAWING_DURATIONS = [30, 45, 60] as const;
-const DEFAULT_CLASSIC = 15;
-const DEFAULT_DRAWING = 45;
+const CLASSIC_DURATIONS = [30, 60, 300, 600] as const;
+const DRAWING_DURATIONS = [30, 45, 60, 90] as const;
+const DEFAULT_CLASSIC = 60;
+const DEFAULT_DRAWING = 60;
 const FEEDBACK_FLASH_MS = 220;
+
+function formatDurationLabel(secs: number): string {
+  if (secs < 60) return `${secs}s`;
+  if (secs % 60 === 0) return `${secs / 60}min`;
+  return `${secs}s`;
+}
 
 type ClassicResult = Pick<
   SpeedClassicEntry,
@@ -228,7 +235,7 @@ function ConfigScreen({
                       : 'border-border bg-surface/40 text-content-muted hover:bg-surface-hover hover:text-content',
                   )}
                 >
-                  {d}s
+                  {formatDurationLabel(d)}
                 </button>
               ))}
             </div>
@@ -241,7 +248,7 @@ function ConfigScreen({
           className="mt-5 inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-accent-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
         >
           <Play className="h-4 w-4" strokeWidth={2.5} />
-          Start {duration}s {style}
+          Start {formatDurationLabel(duration)} {style}
         </button>
       </div>
 
@@ -438,7 +445,7 @@ function SpeedClassicRun({
         </div>
 
         <p className="text-center text-xs text-content-muted">
-          Pick fast · keys 1-{orderedActions.length} · {duration}s total
+          Pick fast · keys 1-{orderedActions.length} · {formatDurationLabel(duration)} total
         </p>
       </div>
     </div>
@@ -517,6 +524,21 @@ function SpeedDrawingRun({
     });
   }, []);
 
+  const onPaintPlus = useCallback(
+    (h: HandNotation) => {
+      if (doneRef.current) return;
+      const hands = expandPlus(h);
+      setGuess((g) => {
+        const next = { ...g };
+        for (const hh of hands) {
+          next[hh] = { hand: hh, actions: [{ action: selectedAction.id, weight: 100 }] };
+        }
+        return next;
+      });
+    },
+    [selectedAction],
+  );
+
   return (
     <div className="flex flex-col gap-4">
       <RunHeader
@@ -558,7 +580,12 @@ function SpeedDrawingRun({
         editable
         onCellPaint={onPaint}
         onCellErase={onErase}
+        onCellPaintPlus={onPaintPlus}
       />
+
+      <p className="text-center text-xs text-content-muted">
+        Click or drag to paint · right-click to erase · Ctrl+right-click for hand+
+      </p>
     </div>
   );
 }
@@ -591,7 +618,7 @@ function RunHeader({
             {formatTime(remaining)}
           </span>
           <span className="text-[10px] uppercase tracking-wider text-content-muted">
-            of {duration}s
+            of {formatDurationLabel(duration)}
           </span>
         </div>
         <div className="flex items-center gap-3">
@@ -657,7 +684,7 @@ function FinishedScreen({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-sm font-semibold text-content">
             <Zap className="h-4 w-4 text-accent" strokeWidth={2.5} />
-            {entry.style === 'classic' ? 'Classic' : 'Drawing'} · {entry.durationSec}s · finished
+            {entry.style === 'classic' ? 'Classic' : 'Drawing'} · {formatDurationLabel(entry.durationSec)} · finished
           </div>
           {madeTop && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-2.5 py-1 text-xs font-semibold text-amber-300">
@@ -790,7 +817,7 @@ function BoardSection({
                   <span className="w-4 text-content-muted">{i + 1}</span>
                   <span className="font-semibold">{e.accuracyPct.toFixed(0)}%</span>
                   <span className="text-content-muted">·</span>
-                  <span className="text-content-muted">{e.durationSec}s</span>
+                  <span className="text-content-muted">{formatDurationLabel(e.durationSec)}</span>
                   <span className="text-content-muted">·</span>
                   <span>
                     {e.style === 'classic'

@@ -9,6 +9,7 @@ import type {
   RangeCellData,
 } from '@/types/poker';
 import { buildActionDefMap } from '@/utils/actionMeta';
+import { expandPlus } from '@/utils/handRangeParser';
 import { computeRangeDiff } from '@/utils/rangeDiff';
 import { DiffGrid } from './DiffGrid';
 
@@ -75,6 +76,23 @@ export function DrawingTrainer({ range }: DrawingTrainerProps) {
     });
   }, []);
 
+  const onPaintPlus = useCallback(
+    (hand: HandNotation) => {
+      const hands = expandPlus(hand);
+      setGuess((g) => {
+        const next = { ...g };
+        for (const h of hands) {
+          next[h] = {
+            hand: h,
+            actions: [{ action: selectedAction.id, weight: 100 }],
+          };
+        }
+        return next;
+      });
+    },
+    [selectedAction],
+  );
+
   const reset = useCallback(() => {
     setGuess({});
     setRevealed(false);
@@ -129,7 +147,7 @@ export function DrawingTrainer({ range }: DrawingTrainerProps) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs text-content-muted">
           Paint the hands you think belong to <span className="text-content">{range.name}</span>{' '}
-          · click or drag to add · right-click to remove · then reveal to compare.
+          · click or drag to add · right-click to remove · Ctrl+right-click for hand+ (e.g. 88+) · then reveal to compare.
         </p>
         <div className="flex items-center gap-2">
           <button
@@ -195,6 +213,7 @@ export function DrawingTrainer({ range }: DrawingTrainerProps) {
           editable
           onCellPaint={onPaint}
           onCellErase={onErase}
+          onCellPaintPlus={onPaintPlus}
         />
       )}
     </div>
