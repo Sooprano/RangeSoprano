@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Eye, EyeOff, RotateCcw } from 'lucide-react';
+import { Eye, EyeOff, RotateCcw, Save, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { RangeGrid } from '@/components/RangeGrid';
 import type {
@@ -16,6 +16,12 @@ type DrawingTrainerProps = {
   range: Range;
 };
 
+type SessionRound = {
+  accuracyPct: number;
+  matchCombos: number;
+  truthCombos: number;
+};
+
 function firstAction(actions: ActionDef[]): ActionDef {
   return [...actions].sort((a, b) => a.order - b.order)[0]!;
 }
@@ -26,6 +32,7 @@ export function DrawingTrainer({ range }: DrawingTrainerProps) {
   const [selectedAction, setSelectedAction] = useState<ActionDef>(
     () => firstAction(range.actions),
   );
+  const [sessionRounds, setSessionRounds] = useState<SessionRound[]>([]);
   const rangeIdRef = useRef(range.id);
 
   useEffect(() => {
@@ -34,6 +41,7 @@ export function DrawingTrainer({ range }: DrawingTrainerProps) {
       setSelectedAction(firstAction(range.actions));
       setGuess({});
       setRevealed(false);
+      setSessionRounds([]);
     }
   }, [range]);
 
@@ -77,8 +85,47 @@ export function DrawingTrainer({ range }: DrawingTrainerProps) {
     [revealed, guess, range.cells],
   );
 
+  const saveRound = useCallback(() => {
+    if (!diff) return;
+    setSessionRounds((rs) => [
+      ...rs,
+      {
+        accuracyPct: diff.accuracyPct,
+        matchCombos: diff.matchCombos,
+        truthCombos: diff.truthCombos,
+      },
+    ]);
+    setGuess({});
+    setRevealed(false);
+  }, [diff]);
+
+  const resetSession = useCallback(() => {
+    setSessionRounds([]);
+  }, []);
+
+  const sessionStats = useMemo(() => {
+    if (sessionRounds.length === 0) return null;
+    const sum = sessionRounds.reduce((s, r) => s + r.accuracyPct, 0);
+    const best = sessionRounds.reduce(
+      (m, r) => (r.accuracyPct > m ? r.accuracyPct : m),
+      0,
+    );
+    return {
+      rounds: sessionRounds.length,
+      avg: sum / sessionRounds.length,
+      best,
+      lastIsBest:
+        sessionRounds[sessionRounds.length - 1]!.accuracyPct === best &&
+        sessionRounds.length > 1,
+    };
+  }, [sessionRounds]);
+
   return (
     <div className="flex flex-col gap-4">
+      {sessionStats && (
+        <SessionBar stats={sessionStats} onReset={resetSession} />
+      )}
+
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs text-content-muted">
           Paint the hands you think belong to <span className="text-content">{range.name}</span>{' '}
@@ -108,6 +155,16 @@ export function DrawingTrainer({ range }: DrawingTrainerProps) {
               </>
             )}
           </button>
+          {revealed && diff && (
+            <button
+              type="button"
+              onClick={saveRound}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-sm font-medium text-emerald-300 shadow-[inset_0_0_0_1px_rgb(16_185_129/0.4)] hover:bg-emerald-500/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-400"
+            >
+              <Save className="h-3.5 w-3.5" strokeWidth={2.25} />
+              Save round
+            </button>
+          )}
           <button
             type="button"
             onClick={reset}
@@ -140,6 +197,47 @@ export function DrawingTrainer({ range }: DrawingTrainerProps) {
           onCellErase={onErase}
         />
       )}
+    </div>
+  );
+}
+
+function SessionBar({
+  stats,
+  onReset,
+}: {
+  stats: { rounds: number; avg: number; best: number; lastIsBest: boolean };
+  onReset: () => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-surface/40 px-3 py-2 text-xs">
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="text-[10px] font-semibold uppercase tracking-wider text-content-muted">
+          Session
+        </span>
+        <span className="text-content">
+          <span className="tabular-nums font-semibold">{stats.rounds}</span>{' '}
+          <span className="text-content-muted">round{stats.rounds === 1 ? '' : 's'}</span>
+        </span>
+        <span className="text-content-muted">·</span>
+        <span className="text-content">
+          <span className="text-content-muted">Avg </span>
+          <span className="tabular-nums font-semibold">{stats.avg.toFixed(0)}%</span>
+        </span>
+        <span className="text-content-muted">·</span>
+        <span className={cn('text-content', stats.lastIsBest && 'text-emerald-300')}>
+          <span className="text-content-muted">Best </span>
+          <span className="tabular-nums font-semibold">{stats.best.toFixed(0)}%</span>
+          {stats.lastIsBest && <span className="ml-1">★</span>}
+        </span>
+      </div>
+      <button
+        type="button"
+        onClick={onReset}
+        className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-content-muted hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
+      >
+        <Trash2 className="h-3 w-3" strokeWidth={2.25} />
+        Reset session
+      </button>
     </div>
   );
 }

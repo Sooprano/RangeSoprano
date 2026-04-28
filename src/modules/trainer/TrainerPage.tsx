@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Brush, Dices } from 'lucide-react';
+import { Brush, Dices, Zap } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { useRangeStore } from '@/store/rangeStore';
@@ -16,9 +16,10 @@ import {
 import { TrainerEmptyState } from './TrainerEmptyState';
 import { ClassicTrainer } from './ClassicTrainer';
 import { DrawingTrainer } from './DrawingTrainer';
+import { SpeedTrainer } from './SpeedTrainer';
 import { SITUATION_LABELS } from '@/data/positions';
 
-type TrainerMode = 'classic' | 'drawing';
+type TrainerMode = 'classic' | 'drawing' | 'speed';
 
 export default function TrainerPage() {
   const ranges = useRangeStore((s) => s.ranges);
@@ -56,7 +57,7 @@ export default function TrainerPage() {
       <>
         <PageHeader
           title="Trainer"
-          description="Practice decisions against your saved ranges. Classic and drawing modes."
+          description="Practice decisions against your saved ranges. Classic, drawing and speed modes."
         />
         <TrainerEmptyState />
       </>
@@ -95,8 +96,10 @@ export default function TrainerPage() {
           {range ? (
             mode === 'classic' ? (
               <ClassicTrainer key={range.id} range={range} />
-            ) : (
+            ) : mode === 'drawing' ? (
               <DrawingTrainer key={range.id} range={range} />
+            ) : (
+              <SpeedTrainer key={range.id} range={range} />
             )
           ) : (
             <div className="flex min-h-[40vh] items-center justify-center rounded-xl border border-dashed border-border p-6 text-center text-sm text-content-muted">
@@ -132,6 +135,12 @@ function ModeToggle({ value, onChange }: ModeToggleProps) {
         onClick={() => onChange('drawing')}
         icon={<Brush className="h-3.5 w-3.5" strokeWidth={2.25} />}
         label="Drawing"
+      />
+      <ModeButton
+        active={value === 'speed'}
+        onClick={() => onChange('speed')}
+        icon={<Zap className="h-3.5 w-3.5" strokeWidth={2.25} />}
+        label="Speed"
       />
     </div>
   );

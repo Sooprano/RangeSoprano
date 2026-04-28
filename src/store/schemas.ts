@@ -5,6 +5,8 @@ import { DEFAULT_ACTION_DEFS } from '@/utils/actionMeta';
 
 export const CURRENT_RANGE_STORE_VERSION = 1;
 export const CURRENT_UI_STORE_VERSION = 2;
+export const CURRENT_LEADERBOARD_STORE_VERSION = 1;
+export const LEADERBOARD_TOP_N = 5;
 
 export const MAX_RANGES = 500;
 export const MAX_CELLS_PER_RANGE = 169;
@@ -151,3 +153,51 @@ export type PersistedRangeState = {
 };
 
 export type PersistedUiState = z.infer<typeof zPersistedUiState>;
+
+const zSpeedClassicEntry = z
+  .object({
+    style: z.literal('classic'),
+    durationSec: z.number().int().positive().max(600),
+    correct: z.number().int().nonnegative(),
+    total: z.number().int().nonnegative(),
+    hpm: z.number().nonnegative(),
+    accuracyPct: z.number().min(0).max(100),
+    dateIso: z.string().datetime({ offset: true }),
+  })
+  .strict();
+
+const zSpeedDrawingEntry = z
+  .object({
+    style: z.literal('drawing'),
+    durationSec: z.number().int().positive().max(600),
+    matchCombos: z.number().nonnegative(),
+    truthCombos: z.number().nonnegative(),
+    guessCombos: z.number().nonnegative(),
+    accuracyPct: z.number().min(0).max(100),
+    dateIso: z.string().datetime({ offset: true }),
+  })
+  .strict();
+
+export const zSpeedEntry = z.discriminatedUnion('style', [
+  zSpeedClassicEntry,
+  zSpeedDrawingEntry,
+]);
+
+export const zRangeLeaderboard = z
+  .object({
+    classic: z.array(zSpeedClassicEntry).max(LEADERBOARD_TOP_N).default([]),
+    drawing: z.array(zSpeedDrawingEntry).max(LEADERBOARD_TOP_N).default([]),
+  })
+  .strict();
+
+export const zPersistedLeaderboardState = z
+  .object({
+    byRangeId: z.record(z.string(), zRangeLeaderboard).default({}),
+  })
+  .strict();
+
+export type SpeedClassicEntry = z.infer<typeof zSpeedClassicEntry>;
+export type SpeedDrawingEntry = z.infer<typeof zSpeedDrawingEntry>;
+export type SpeedEntry = z.infer<typeof zSpeedEntry>;
+export type RangeLeaderboard = z.infer<typeof zRangeLeaderboard>;
+export type PersistedLeaderboardState = z.infer<typeof zPersistedLeaderboardState>;

@@ -5,6 +5,7 @@ type AnyPersistStorage = PersistStorage<unknown>;
 export const MAX_IMPORT_BYTES = 100 * 1024;
 export const RANGE_STORE_KEY = 'range-soprano/ranges';
 export const UI_STORE_KEY = 'range-soprano/ui';
+export const LEADERBOARD_STORE_KEY = 'range-soprano/leaderboard';
 
 /**
  * Tolerant storage wrapper: falls back to an in-memory map if localStorage
