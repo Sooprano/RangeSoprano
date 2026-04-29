@@ -8,7 +8,7 @@
 
 `git reset --hard <hash>` al último commit estable de la fase deseada.
 
-## Últimos commits estables por fase
+## Commits estables por fase
 
 - Fase 1 (setup): `02f65ff`
 - Fase 2 (RangeGrid): `6a3cf0e`
@@ -22,61 +22,31 @@
 - Fase 7B (a11y modals/menus): `2f1d368`
 - Fase 7C (error boundary + 404 + meta): `caa190b`
 - Fase 7D (deploy GitHub Pages): `477cd1e`
-- Fase 9 (Home + onboarding + import perfil JSON + donación BTC): `70e7e43`
-- Fase 10 (villain + tableFormat HU/6max en NewRangeForm + PokerTable HU): `0d9bd8f`
-
-## Estado actual
-
-Fase 7D ✅ · Fase 9 ✅ · Fase 10 ✅ · Fase 11 ✅ · Fase 12 ✅ · Fase 13 ✅ (Speed mode con leaderboard local · Drawing session scoring + Ctrl+RightClick hand+ · paleta action-aware en Drawing).
-
-Live en https://sooprano.github.io/RangeSoprano/ (después de que el primer workflow termine y se habilite Pages — ver "Pasos manuales pendientes" abajo).
-
-Visual polish reciente: trainer con mesa 6-max estilo "stadium" (rectángulo con extremos semicirculares), slots redistribuidos con simetría bilateral, cartas pegadas al héroe. HU mode muestra solo BTN y BB (slots 0 y 3), los demás desaparecen.
-
-## Últimos commits estables por fase (cont.)
-
+- Fase 9 (Home + onboarding + import perfil + BTC): `70e7e43`
+- Fase 10 (villain + tableFormat HU/6max): `0d9bd8f`
 - Fase 11 (palette reuse · folder rename · meta edit-in-place): `e3f7c36`
 - Fase 12 (vs Limp · refactor labels · badges HU/villain · home tips): `e5fd2b5`
-- Fase 7D (deploy GitHub Pages): `477cd1e`
 - Drawing trainer fix (paleta + diff action-aware): `76dd027`
 - Fase 13 (Speed mode + Drawing session scoring): `490c291`
 - Fase 13 (durations + Ctrl+RightClick hand+ en Drawing): `f61b41a`
+- Fase 13 docs: `9e654de`
+- Import cap 3.8 MB + classic auto-advance + home updates: `6e86b72`
 
-## Pasos manuales pendientes (deploy)
+## Estado actual
 
-1. **Habilitar GitHub Pages** en el repo:
-   - https://github.com/Sooprano/RangeSoprano/settings/pages
-   - "Build and deployment" → Source: **GitHub Actions**.
-2. **Verificar el primer workflow**:
-   - https://github.com/Sooprano/RangeSoprano/actions — el run "Deploy to GitHub Pages" del commit `477cd1e` debe quedar en verde.
-3. **Probar la live URL**: https://sooprano.github.io/RangeSoprano/ — esperar 1-2 min después del deploy. Probar refresh en `/editor` y `/trainer` (la copia `index.html → 404.html` del workflow garantiza que el SPA refresh funcione).
+Todas las fases planificadas (1–13) completadas ✅.
 
-## Pendientes para próxima sesión
+Live en https://sooprano.github.io/RangeSoprano/
 
-(ver "Pasos manuales pendientes" arriba para los toques finales del deploy)
+**Pasos manuales pendientes (si no se hizo aún):**
+- https://github.com/Sooprano/RangeSoprano/settings/pages → Source: **GitHub Actions**
+- Verificar que el workflow "Deploy to GitHub Pages" quede verde en Actions.
 
-### P1 ~~Edit-in-place de metadatos~~ ✅ completado en fase 11
-Hoy NO existe UI para editar `position`, `situation`, `villainPosition` ni `tableFormat` en rangos **ya creados**. Solo el formulario de creación los expone.
+## Feature deferred
 
-**Qué hay que construir:**
-- Sección de "propiedades del rango" en el panel lateral del Editor (o un modal inline en RangeManager al hacer hover/click en el nombre).
-- Campos: Position, Situation, Villain (con la misma lógica de deshabilitado que NewRangeForm), Mesa (HU / 6max).
-- Llamar `updateRange(id, patch)` — ya existe en el store y acepta `Partial<Omit<Range,'id'|'createdAt'>>`.
-- Considerar: al cambiar `tableFormat` a HU con una posición no válida (ej. CO), auto-corregir a BTN.
+**Edit-in-place de metadatos de rango existente** — hoy solo se puede editar nombre y grupo en el panel lateral. `position`, `situation`, `villainPosition` y `tableFormat` solo se fijan al crear. Para cambiarlos hay que borrar y recrear. El store ya acepta `updateRange(id, patch)` con esos campos; falta la UI (un panel de propiedades en `RangeManager` o un modal en `EditorPage`, reutilizando lógica de `NewRangeForm`).
 
-**Archivos a tocar:**
-- `src/modules/editor/RangeManager.tsx` — donde está la lista de rangos; probablemente exponer un panel de detalle al seleccionar.
-- `src/modules/editor/EditorPage.tsx` — si el panel va en el sidebar.
-- Posiblemente un nuevo componente `RangeMetaForm.tsx` reutilizando lógica de `NewRangeForm`.
-
-### P2 ~~Fase 7D: Deploy a GitHub Pages~~ ✅ completado en commit `477cd1e`
-Repo: https://github.com/Sooprano/RangeSoprano · Pages URL: https://sooprano.github.io/RangeSoprano/
-
-### P3 ~~Filtro Villain en Home page~~ ✅ completado en fase 12 (Viewer y Trainer cards mencionan filtros y modo HU)
-
-### P4 ~~Badges villainPosition/tableFormat en RangeManager~~ ✅ completado en fase 12 (subtítulo ahora muestra `· vs <pos>` y `· HU`)
-
-## Decisiones de diseño clave (referencia futura)
+## Decisiones de diseño clave
 
 ### Editor (fase 4)
 - **History**: `{ ranges, activeRangeId }[]` en store, NO persistido, cap 50, snapshot por sesión de drag (no por celda). `pushHistory()` lo llama el UI antes de cada mutación imperativa (create/duplicate/delete/rename/group).
@@ -95,12 +65,8 @@ Repo: https://github.com/Sooprano/RangeSoprano · Pages URL: https://sooprano.gi
 
 ### Home / onboarding (fase 9)
 - **Ruta `/`**: monta `src/modules/home/HomePage.tsx` (lazy + Suspense). Reemplaza el viejo `Navigate to="/viewer"`. Sidebar añade item "Home" con `end` para no quedar siempre activo.
-- **HomePage**: 4 secciones — módulos (3 cards Viewer/Trainer/Editor con icono Lucide grande, descripción y comando), atajos de teclado (kbd + descripción), guardar/portabilidad (3 Steps con sub-listas ordenadas) y donación BTC.
-- **`ImportProfileButton`** (`src/modules/home/ImportProfileButton.tsx`): file picker oculto + botón visible. Lee con `file.text()`, valida `file.size ≤ MAX_IMPORT_BYTES` (100 KB) ANTES de leer, llama `useRangeStore.getState().importRanges(text, { replace: false })`. Modo "añadir" único — sin opción de reemplazar para evitar pérdida accidental. Reset `input.value = ''` al final para permitir reimportar el mismo archivo. Toasts de éxito/error.
-- **`importRanges()` reusado tal cual** desde `src/store/rangeStore.ts:440` — ya hacía Zod + cap + recovery parcial. NO se modificó.
-- **Donación BTC**: `bc1qyz4fd8msnedgjj9sv68qlu4theh7mdh57rea8w`. Bloque `<code>` con `select-all` + botón Copy que reusa `copyToClipboard()` de `src/utils/exportRange.ts`. Estado local `copied` con timeout 1.8 s para feedback visual (Check icon).
-- **Sin imágenes externas ni QR** — solo iconos Lucide para mantener cero dependencias nuevas y cero requests de red.
-- **`exactOptionalPropertyTypes`**: `NavLink end={end ?? false}` — pasar `undefined` al prop `end` rompe el typecheck.
+- **`ImportProfileButton`**: file picker oculto + botón visible. Lee con `file.text()`, valida `file.size ≤ MAX_IMPORT_BYTES` ANTES de leer, llama `importRanges(text, { replace: false })`. Reset `input.value = ''` al final para permitir reimportar el mismo archivo.
+- **Donación BTC**: `bc1qyz4fd8msnedgjj9sv68qlu4theh7mdh57rea8w`. Reusa `copyToClipboard()` de `src/utils/exportRange.ts`.
 
 ### A11y / UX (fase 7)
 - **Toasts NO persistidos**, cap 4 (slice por la cola). Errores en `aria-live="assertive"` separada del polite. Hover/focus cancela auto-dismiss (sin reanudación).
@@ -110,46 +76,40 @@ Repo: https://github.com/Sooprano/RangeSoprano · Pages URL: https://sooprano.gi
 
 ### PokerTable (trainer visual)
 - **Forma**: stadium (`rounded-full` sobre felt 2.66:1) con `paddingBottom: '42%'` en container y `inset-y-[8%]` en felt → bordes rectos largos arriba/abajo + semicírculos en los extremos.
-- **Slots con simetría bilateral**: hero abajo-centro (slot 0), uno directamente enfrente arriba-centro (slot 3); slots 2&4 a la misma altura (esquinas superiores), slots 1&5 a la misma altura (esquinas inferiores). Con hero=BB: BTN/HJ misma altura, SB/UTG misma altura, CO directamente enfrente.
+- **Slots con simetría bilateral**: hero abajo-centro (slot 0), uno directamente enfrente arriba-centro (slot 3); slots 2&4 a la misma altura (esquinas superiores), slots 1&5 a la misma altura (esquinas inferiores).
 - **Hero overflow**: el stack hero (cartas + combos + badge ≈110px) excede el container; se compensa con `mb-12` en el wrapper para que la action grid no se solape con el badge.
-- **HU mode** (fase 10): cuando `range.tableFormat === 'HU'`, `getTableLayout` devuelve solo slots 0 (hero) y 3 (villano enfrente); el resto desaparece. Mismo felt, mismo container, sin cambios visuales para el hero. Hero seat se snapea a BTN/BB (si llegara CO/HJ por dato corrupto, cae a BTN). Villano se calcula con `huVillainOf()` (BTN↔BB) ignorando el `villainPosition` persistido.
+- **HU mode**: cuando `range.tableFormat === 'HU'`, `getTableLayout` devuelve solo slots 0 (hero) y 3 (villano enfrente). Villano se calcula con `huVillainOf()` (BTN↔BB) ignorando el `villainPosition` persistido.
 
 ### Deploy GitHub Pages (fase 7D)
-- **Repo**: https://github.com/Sooprano/RangeSoprano (case sensitive en la subruta de Pages — la URL final es `/RangeSoprano/`, NO `/rangesoprano/`).
-- **`vite.config.ts`**: `base: mode === 'production' ? '/RangeSoprano/' : '/'` con la firma functional `defineConfig(({ mode }) => ({...}))`. Mode se pasa automático según el comando (`vite build` → production).
-- **`src/router.tsx`**: `basename = import.meta.env.BASE_URL.replace(/\/$/, '') || '/'`. Vite reemplaza `BASE_URL` en build a `/RangeSoprano/`; el strip del trailing slash es porque `createBrowserRouter` con `basename: '/'` funciona pero `'/RangeSoprano/'` (con barra final) genera URLs duplicadas.
-- **Workflow**: dos jobs (build + deploy) usando `actions/upload-pages-artifact` y `actions/deploy-pages` v4 (la integración oficial de GH Pages, no `peaceiris/actions-gh-pages`). Trigger en push a `main` y `workflow_dispatch`.
-- **SPA fallback**: el job copia `dist/index.html` a `dist/404.html` antes de upload. GH Pages sirve `404.html` para rutas desconocidas, lo que evita el 404 real en refresh sobre `/editor`, `/trainer`.
-- **Local branch**: renombrada `master` → `main` para alinear con el workflow trigger.
+- **`vite.config.ts`**: `base: mode === 'production' ? '/RangeSoprano/' : '/'`.
+- **`src/router.tsx`**: `basename = import.meta.env.BASE_URL.replace(/\/$/, '') || '/'`.
+- **Workflow**: build + deploy jobs con `actions/upload-pages-artifact` y `actions/deploy-pages` v4. Trigger en push a `main` y `workflow_dispatch`.
+- **SPA fallback**: copia `dist/index.html` a `dist/404.html` antes del upload para que el refresh en `/editor`, `/trainer` no devuelva 404.
 
 ### Trainer Speed mode + Drawing fixes (fase 13)
-- **Drawing trainer paleta action-aware** (commit `76dd027`): antes el modo Drawing pintaba todo con `PAINT_ACTION = 'CALL'` hardcodeado y el diff era binario in/out. Ahora `DrawingTrainer` lee `range.actions` ordenadas y muestra una paleta radio-style; `selectedAction` arranca en la primera acción y se resetea al cambiar de rango. `actionsMap` se pasa al `RangeGrid` para que las celdas pintadas lleven el color real. `computeRangeDiff` reescrito: match = la acción pintada existe (weight > 0) en la celda truth; pintar Call en una celda que es 100% ROL ahora cuenta como FP, no match.
-- **Speed mode** (commit `490c291`): nuevo tab en TrainerPage con icono `Zap`. Una sola pestaña que internamente alterna entre estilo Classic (PokerTable + ActionGrid + auto-advance con flash de 220ms) y estilo Drawing (paleta + RangeGrid editable, computa diff al expirar). Tres fases internas (`config` / `running` / `finished`) gestionadas en el componente padre. Sub-runs montados con `key={runId}` para reset limpio entre intentos.
-- **Speed durations** (commit `f61b41a`): Classic = 30s / 60s / 5min / 10min (decision-time-oriented); Drawing = 30s / 45s / 60s / 90s. `formatDurationLabel()` muestra múltiplos de 60 como "Xmin" en pickers, run header, finished screen y leaderboard. Schema valida `durationSec.max(600)`.
-- **Timer pattern**: `setInterval(100ms)` mide via `performance.now()` desde mount; `doneRef` evita doble-finish; `scoreRef`/`guessRef`/`onFinishRef` mantienen los efectos sin depender de props mutables (de otro modo cambiar score reiniciaría el timer). Progress bar cambia a rojo bajo 5s restantes.
-- **Leaderboard persistido** (`range-soprano/leaderboard`, version 1): nuevo store `leaderboardStore.ts` con persist + Zod merge (mismo patrón que rangeStore/uiStore). Estructura `byRangeId: Record<rangeId, { classic: ClassicEntry[]; drawing: DrawingEntry[] }>`, cap 5 por estilo. `addEntry` retorna `madeTop` para resaltar la fila recién añadida. Discriminated union en Zod (`zSpeedEntry`) para entries Classic vs Drawing con campos distintos. Sort: Classic por accuracy → correct → hpm; Drawing por accuracy → matchCombos. `useRangeLeaderboard(rangeId)` es selector con fallback a `EMPTY_BOARD`.
-- **Drawing session scoring** (in-memory, NO persistido — consistente con score de Classic): nuevo botón `Save round` que aparece solo cuando hay diff revealed; graba `{ accuracyPct, matchCombos, truthCombos }` en `sessionRounds[]` y limpia el canvas. `SessionBar` arriba muestra rounds / avg / best con estrella verde si la última fue best (`lastIsBest = sessionRounds.length > 1 && last === best`). Reset session manual o automático al cambiar de rango. NO se persiste porque el alcance era "scoring por sesión", no historial cross-sesión.
-- **Ctrl+RightClick hand+ en Drawing** (commit `f61b41a`): reuso completo de `expandPlus()` de `src/utils/handRangeParser.ts` (existente desde fase 8) y del prop `onCellPaintPlus` ya soportado por `RangeGrid` y `useRangePainter`. En ambos modos Drawing (regular y Speed) el handler pinta todas las hands expandidas con `selectedAction.id` weight 100. Sin modificar nada del painter ni del grid.
-
-### Refactor labels + UX badges (fase 12)
-- **Single source of truth** de `SITUATION_LABELS` y `TABLE_FORMAT_LABELS` en `src/data/positions.ts`. Eliminados 8 duplicados locales (Editor/Viewer/Trainer y sus list/panel components). `editorFormConstants.ts` re-exporta para que el editor module no importe directo de `data/`.
-- **`vs_LIMP`** añadido al enum `SITUATIONS` (entre `RFI` y `vs_RFI`). `villainDisabledFor` sigue siendo solo `s === 'RFI'` — en vs Limp el villano es el limper, así que el dropdown de villain debe estar habilitado.
-- **`RangeSummary.tableFormat`** expuesto en el selector para que `RangeManager` pueda renderizar el badge `· HU`.
-- **Subtítulo de rango**: `{position} · {situation}{villain ? ' · vs ' + villain : ''}{HU ? ' · HU' : ''}`. En HU se omite el `vs <villain>` porque es implícito (BTN faces BB y viceversa).
+- **Drawing trainer paleta action-aware**: `DrawingTrainer` lee `range.actions` ordenadas y muestra paleta radio-style. `computeRangeDiff` reescrito: match = la acción pintada existe (weight > 0) en la celda truth.
+- **Speed mode**: tab con icono `Zap`. Tres fases internas (`config` / `running` / `finished`). Classic: PokerTable + ActionGrid + auto-advance 220ms flash. Drawing: paleta + RangeGrid editable, diff al expirar. Sub-runs con `key={runId}` para reset limpio.
+- **Duraciones**: Classic = 30s / 60s / 5min / 10min; Drawing = 30s / 45s / 60s / 90s.
+- **Timer pattern**: `setInterval(100ms)` con `performance.now()`; `doneRef` evita doble-finish; `scoreRef`/`guessRef`/`onFinishRef` mantienen efectos sin depender de props mutables.
+- **Leaderboard** (`range-soprano/leaderboard`, version 1): `byRangeId: Record<rangeId, { classic: ClassicEntry[]; drawing: DrawingEntry[] }>`, cap 5 por estilo. Sort: Classic por accuracy → correct → hpm; Drawing por accuracy → matchCombos.
+- **Drawing session scoring** (in-memory, NO persistido): `sessionRounds[]` con `Save round`. `SessionBar` muestra rounds / avg / best.
+- **Classic auto-advance** (post fase 13): tras seleccionar acción, `drawNext()` se llama automáticamente a 1.5 s. `CountdownBar` animada muestra el countdown. Enter/Space/N siguen funcionando para avance manual.
 
 ### Villain + tableFormat (fase 10)
-- **Tipo `Range.tableFormat: '6max' | 'HU'`** (no boolean — enum para escalar a 9-max sin migración). Schema Zod: `z.enum(TABLE_FORMATS).default('6max')` para que rangos viejos hidraten a `'6max'` automáticamente. Sin bump de `CURRENT_RANGE_STORE_VERSION`.
-- **`HU_POSITIONS` y `huVillainOf()`** en `src/types/poker.ts`: HU solo permite BTN/BB. `huVillainOf('BTN') === 'BB'` y viceversa. Reusado por PokerTable y NewRangeForm.
-- **NewRangeForm**: 4 campos (Name, Mesa, Position+Situation grid, Villain). En HU: `positionOptions` se restringe a `HU_POSITIONS`, Villain dropdown deshabilitado y muestra el seat implícito (`BTN faces BB` etc.). En no-HU+RFI: Villain deshabilitado con texto "Not applicable to RFI" (consistente con `villainDisabled` del filtro Viewer). Submit solo manda `villainPosition` cuando hay valor (spread condicional para `exactOptionalPropertyTypes`).
-- **`createRange`**: `tableFormat: input.tableFormat ?? '6max'` para que callers existentes (sample range, import) sigan funcionando sin tocar nada.
-- **NO se editó RangeManager para edit-in-place** de `position`/`situation`/`villainPosition`/`tableFormat`: alcance limitado al formulario de creación. Editar campos de un rango existente requiere UI nueva (deferred).
-- **Filtro Villain del Viewer**: ahora SÍ funciona porque rangos creados desde el form pueden tener `villainPosition` real. Rangos pre-fase-10 siguen con `villainPosition: undefined` y por tanto invisibles bajo cualquier filtro de villain (comportamiento esperado).
+- **`Range.tableFormat: '6max' | 'HU'`**: schema Zod con `.default('6max')` para rangos viejos. Sin bump de versión.
+- **`HU_POSITIONS` y `huVillainOf()`** en `src/types/poker.ts`.
+- **NewRangeForm**: en HU, posiciones restringidas a `HU_POSITIONS`, villain deshabilitado y muestra seat implícito.
+
+### Refactor labels + UX badges (fase 12)
+- **Single source of truth** en `src/data/positions.ts` para `SITUATION_LABELS` y `TABLE_FORMAT_LABELS`. Eliminados 8 duplicados locales.
+- **`vs_LIMP`** añadido al enum `SITUATIONS` (entre `RFI` y `vs_RFI`). Villain habilitado en vs Limp.
+- **Subtítulo de rango**: `{position} · {situation}{villain ? ' · vs ' + villain : ''}{HU ? ' · HU' : ''}`.
 
 ## Convenciones de implementación
 
 - TypeScript estricto (`noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`), sin `any`.
 - IDs vía `crypto.randomUUID()`.
-- Persistencia en localStorage keys `range-soprano/ranges` y `range-soprano/ui`, hidratación validada con Zod, cap 100KB.
+- Persistencia en localStorage keys `range-soprano/ranges` y `range-soprano/ui`, hidratación validada con Zod, cap import 3.8 MB.
 - Parser de import tolerante a errores de formato.
 - `React.memo` en RangeCell NO se toca — todo cambio pasa por props estables.
 - Conventional Commits: `feat(phase-Xa):`, `fix(phase-Xa):`, `docs:`, `chore:`.
