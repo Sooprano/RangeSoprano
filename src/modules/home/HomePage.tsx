@@ -44,7 +44,7 @@ const MODULES: readonly ModuleCard[] = [
     label: 'Trainer',
     icon: Target,
     description:
-      'Entrená manos en mesa 6-max o Heads-Up. Modo clásico (responder acción) o dibujo (pintar el rango de memoria). Filtros por posición, situación y villano.',
+      'Entrená manos en mesa 6-max o Heads-Up. Modo clásico (responder acción, auto-avance 1.5 s), Speed (contrarreloj con leaderboard local) o Dibujo (pintá el rango de memoria). Filtros por posición, situación y villano.',
   },
   {
     to: '/editor',
@@ -59,10 +59,12 @@ const MODULES: readonly ModuleCard[] = [
 type Shortcut = { keys: string; desc: string };
 
 const SHORTCUTS: readonly Shortcut[] = [
-  { keys: '1 – 9', desc: 'Selecciona acción rápida en el Editor' },
-  { keys: 'Ctrl + Z / Ctrl + Y', desc: 'Undo / Redo' },
-  { keys: 'Ctrl + RightClick', desc: 'Hand+ expansion (ej. 88+ pinta 88, 99, TT…)' },
-  { keys: 'RightClick', desc: 'Borra la celda activa' },
+  { keys: '1 – 9', desc: 'Trainer · selecciona acción / Editor · pincel rápido' },
+  { keys: 'Enter / Space / N', desc: 'Trainer clásico · siguiente mano (también auto en 1.5 s)' },
+  { keys: 'S', desc: 'Trainer clásico · saltear mano' },
+  { keys: 'Ctrl + Z / Ctrl + Y', desc: 'Editor · Undo / Redo' },
+  { keys: 'Ctrl + RightClick', desc: 'Editor / Trainer · Hand+ expansion (ej. 88+ pinta 88, 99, TT…)' },
+  { keys: 'RightClick', desc: 'Editor · borra la celda activa' },
 ];
 
 export default function HomePage() {
@@ -211,7 +213,8 @@ export default function HomePage() {
         <div className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-5">
           <p className="text-sm text-content-muted">
             Tus rangos se guardan automáticamente en{' '}
-            <span className="font-mono text-content">localStorage</span> (cap 100 KB).
+            <span className="font-mono text-content">localStorage</span> (cap 3.8 MB, suficiente
+            para ~100 rangos completos).
             Si querés moverlos a otro dispositivo, exportá un archivo JSON y volvé a
             importarlo desde acá.
           </p>
@@ -261,8 +264,8 @@ export default function HomePage() {
                     </li>
                     <li>Elegí el archivo .json que exportaste antes.</li>
                     <li>
-                      Los rangos se suman a los actuales (no se pisa nada). Cap 100 KB
-                      por archivo.
+                      Los rangos se suman a los actuales (no se pisa nada). Cap 3.8 MB
+                      por archivo (~100 rangos).
                     </li>
                   </ol>
                 </>

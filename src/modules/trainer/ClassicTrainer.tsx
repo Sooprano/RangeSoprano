@@ -5,6 +5,8 @@ import {
   useRef,
   useState,
 } from 'react';
+
+const AUTO_ADVANCE_MS = 1500;
 import { Check, RotateCcw, SkipForward, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import type { ActionDef, ActionId, Range } from '@/types/poker';
@@ -73,6 +75,13 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
     setFeedback(null);
     setCurrent(sampleTrainerHand(range));
   }, [range]);
+
+  // Auto-advance to next hand after 1.5s when feedback is shown
+  useEffect(() => {
+    if (!feedback) return;
+    const id = setTimeout(drawNext, AUTO_ADVANCE_MS);
+    return () => clearTimeout(id);
+  }, [feedback, drawNext]);
 
   const orderedActions = useMemo(
     () => [...range.actions].sort((a, b) => a.order - b.order),
@@ -175,9 +184,12 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
           onAnswer={answer}
         />
 
-        <div className="min-h-[5rem] w-full">
+        <div className="min-h-[5rem] w-full flex flex-col gap-2">
           {feedback ? (
-            <FeedbackPanel feedback={feedback} actions={range.actions} />
+            <>
+              <FeedbackPanel feedback={feedback} actions={range.actions} />
+              <CountdownBar key={score.total} durationMs={AUTO_ADVANCE_MS} />
+            </>
           ) : (
             <p className="text-center text-xs text-content-muted">
               Pick an action · keys 1-5 · S to skip
@@ -195,7 +207,7 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
               <>
                 Next hand
                 <span className="text-[10px] uppercase tracking-wider text-white/70">
-                  Enter
+                  ↵ / auto
                 </span>
               </>
             ) : (
@@ -285,6 +297,25 @@ function ActionGrid({ actions, feedback, onAnswer }: ActionGridProps) {
           </button>
         );
       })}
+    </div>
+  );
+}
+
+function CountdownBar({ durationMs }: { durationMs: number }) {
+  const [go, setGo] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setGo(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+  return (
+    <div className="w-full h-0.5 rounded-full overflow-hidden bg-border/40">
+      <div
+        className="h-full bg-accent/50"
+        style={{
+          width: go ? '0%' : '100%',
+          transition: go ? `width ${durationMs}ms linear` : 'none',
+        }}
+      />
     </div>
   );
 }
