@@ -6,12 +6,16 @@ import {
   useState,
 } from 'react';
 import {
+  ChevronDown,
+  ChevronUp,
   Crown,
+  Flag,
   Play,
   RotateCcw,
   Settings2,
   Square,
   Trophy,
+  X,
   Zap,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
@@ -23,10 +27,11 @@ import type {
   Range,
   RangeCellData,
 } from '@/types/poker';
-import { buildActionDefMap } from '@/utils/actionMeta';
+import { actionColor, actionLabel, buildActionDefMap } from '@/utils/actionMeta';
 import { expandPlus } from '@/utils/handRangeParser';
 import { sampleTrainerHand, type TrainerHand } from '@/utils/trainerSampler';
-import { computeRangeDiff } from '@/utils/rangeDiff';
+import { computeRangeDiff, type RangeDiff } from '@/utils/rangeDiff';
+import { DiffGrid } from './DiffGrid';
 import { PokerTable } from './PokerTable';
 import {
   useLeaderboardStore,
@@ -54,14 +59,17 @@ function formatDurationLabel(secs: number): string {
   return `${secs}s`;
 }
 
+export type ClassicMistake = { trainerHand: TrainerHand; picked: ActionId };
+
 type ClassicResult = Pick<
   SpeedClassicEntry,
   'correct' | 'total' | 'hpm' | 'accuracyPct'
->;
+> & { mistakes: ClassicMistake[] };
+
 type DrawingResult = Pick<
   SpeedDrawingEntry,
   'matchCombos' | 'truthCombos' | 'guessCombos' | 'accuracyPct'
->;
+> & { diff: RangeDiff };
 
 type SpeedTrainerProps = { range: Range };
 
@@ -72,6 +80,8 @@ export function SpeedTrainer({ range }: SpeedTrainerProps) {
   const [runId, setRunId] = useState(0);
   const [lastEntry, setLastEntry] = useState<SpeedEntry | null>(null);
   const [madeTop, setMadeTop] = useState(false);
+  const [sessionMistakes, setSessionMistakes] = useState<ClassicMistake[] | null>(null);
+  const [sessionDiff, setSessionDiff] = useState<RangeDiff | null>(null);
 
   const addEntry = useLeaderboardStore((s) => s.addEntry);
   const clearForRange = useLeaderboardStore((s) => s.clearForRange);
@@ -84,6 +94,8 @@ export function SpeedTrainer({ range }: SpeedTrainerProps) {
       setPhase('config');
       setLastEntry(null);
       setMadeTop(false);
+      setSessionMistakes(null);
+      setSessionDiff(null);
     }
   }, [range]);
 
@@ -99,15 +111,18 @@ export function SpeedTrainer({ range }: SpeedTrainerProps) {
 
   const finishClassic = useCallback(
     (r: ClassicResult) => {
+      const { mistakes, ...entryFields } = r;
       const entry: SpeedClassicEntry = {
         style: 'classic',
         durationSec: duration,
         dateIso: new Date().toISOString(),
-        ...r,
+        ...entryFields,
       };
       const top = addEntry(range.id, entry);
       setLastEntry(entry);
       setMadeTop(top);
+      setSessionMistakes(mistakes);
+      setSessionDiff(null);
       setPhase('finished');
     },
     [addEntry, duration, range.id],
@@ -115,15 +130,18 @@ export function SpeedTrainer({ range }: SpeedTrainerProps) {
 
   const finishDrawing = useCallback(
     (r: DrawingResult) => {
+      const { diff, ...entryFields } = r;
       const entry: SpeedDrawingEntry = {
         style: 'drawing',
         durationSec: duration,
         dateIso: new Date().toISOString(),
-        ...r,
+        ...entryFields,
       };
       const top = addEntry(range.id, entry);
       setLastEntry(entry);
       setMadeTop(top);
+      setSessionMistakes(null);
+      setSessionDiff(diff);
       setPhase('finished');
     },
     [addEntry, duration, range.id],
@@ -160,7 +178,6 @@ export function SpeedTrainer({ range }: SpeedTrainerProps) {
         range={range}
         duration={duration}
         onFinish={finishDrawing}
-        onCancel={cancel}
       />
     );
   }
@@ -170,6 +187,9 @@ export function SpeedTrainer({ range }: SpeedTrainerProps) {
       entry={lastEntry}
       madeTop={madeTop}
       board={board}
+      rangeActions={range.actions}
+      sessionMistakes={sessionMistakes}
+      sessionDiff={sessionDiff}
       onPlayAgain={start}
       onChangeConfig={() => setPhase('config')}
     />
@@ -333,6 +353,7 @@ function SpeedClassicRun({
   const onFinishRef = useRef(onFinish);
   onFinishRef.current = onFinish;
   const doneRef = useRef(false);
+  const mistakesRef = useRef<ClassicMistake[]>([]);
 
   useEffect(() => {
     const start = performance.now();
@@ -349,6 +370,7 @@ function SpeedClassicRun({
           total: s.total,
           accuracyPct: s.total > 0 ? (s.correct / s.total) * 100 : 0,
           hpm: s.total > 0 ? (s.total / duration) * 60 : 0,
+          mistakes: mistakesRef.current,
         });
       }
     }, 100);
@@ -364,6 +386,9 @@ function SpeedClassicRun({
     (picked: ActionId) => {
       if (feedback || doneRef.current) return;
       const correct = picked === hand.expectedAction;
+      if (!correct) {
+        mistakesRef.current = [...mistakesRef.current, { trainerHand: hand, picked }];
+      }
       setFeedback({ picked, correct });
       setScore((s) => ({
         correct: s.correct + (correct ? 1 : 0),
@@ -399,7 +424,8 @@ function SpeedClassicRun({
       <RunHeader
         remaining={remaining}
         duration={duration}
-        onCancel={onCancel}
+        onEnd={onCancel}
+        endLabel="End"
         rightStats={[
           { label: 'Correct', value: `${score.correct} / ${score.total}` },
           { label: 'Accuracy', value: `${accuracy.toFixed(0)}%` },
@@ -458,12 +484,10 @@ function SpeedDrawingRun({
   range,
   duration,
   onFinish,
-  onCancel,
 }: {
   range: Range;
   duration: number;
   onFinish: (r: DrawingResult) => void;
-  onCancel: () => void;
 }) {
   const orderedActions = useMemo(
     () => [...range.actions].sort((a, b) => a.order - b.order),
@@ -480,27 +504,45 @@ function SpeedDrawingRun({
   const onFinishRef = useRef(onFinish);
   onFinishRef.current = onFinish;
   const doneRef = useRef(false);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     const start = performance.now();
-    const id = setInterval(() => {
+    intervalRef.current = setInterval(() => {
       const elapsed = (performance.now() - start) / 1000;
       const r = Math.max(0, duration - elapsed);
       setRemaining(r);
       if (r <= 0 && !doneRef.current) {
         doneRef.current = true;
-        clearInterval(id);
+        if (intervalRef.current) clearInterval(intervalRef.current);
         const diff = computeRangeDiff(guessRef.current, range.cells);
         onFinishRef.current({
           matchCombos: diff.matchCombos,
           truthCombos: diff.truthCombos,
           guessCombos: diff.guessCombos,
           accuracyPct: diff.accuracyPct,
+          diff,
         });
       }
     }, 100);
-    return () => clearInterval(id);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
   }, [duration, range.cells]);
+
+  const handleFinishEarly = useCallback(() => {
+    if (doneRef.current) return;
+    doneRef.current = true;
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    const diff = computeRangeDiff(guessRef.current, range.cells);
+    onFinishRef.current({
+      matchCombos: diff.matchCombos,
+      truthCombos: diff.truthCombos,
+      guessCombos: diff.guessCombos,
+      accuracyPct: diff.accuracyPct,
+      diff,
+    });
+  }, [range.cells]);
 
   const onPaint = useCallback(
     (h: HandNotation) => {
@@ -544,7 +586,8 @@ function SpeedDrawingRun({
       <RunHeader
         remaining={remaining}
         duration={duration}
-        onCancel={onCancel}
+        onEnd={handleFinishEarly}
+        endLabel="Finish"
         rightStats={[{ label: 'Painted', value: `${Object.keys(guess).length} hands` }]}
       />
 
@@ -595,16 +638,19 @@ function SpeedDrawingRun({
 function RunHeader({
   remaining,
   duration,
-  onCancel,
+  onEnd,
+  endLabel = 'End',
   rightStats,
 }: {
   remaining: number;
   duration: number;
-  onCancel: () => void;
+  onEnd: () => void;
+  endLabel?: string;
   rightStats: ReadonlyArray<{ label: string; value: string }>;
 }) {
   const pct = Math.max(0, Math.min(1, remaining / duration));
   const danger = remaining <= 5;
+  const isFinish = endLabel === 'Finish';
   return (
     <div className="rounded-xl border border-border bg-surface/60 p-3 shadow-surface">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -630,12 +676,20 @@ function RunHeader({
           ))}
           <button
             type="button"
-            onClick={onCancel}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-content-muted hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
-            aria-label="End run"
+            onClick={onEnd}
+            className={cn(
+              'inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium',
+              'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light',
+              isFinish
+                ? 'border-accent/60 bg-accent/10 text-accent-light hover:bg-accent/20'
+                : 'border-border text-content-muted hover:bg-surface-hover hover:text-content',
+            )}
+            aria-label={isFinish ? 'Finish run and save' : 'End run'}
           >
-            <Square className="h-3 w-3" strokeWidth={2.5} />
-            End
+            {isFinish
+              ? <Flag className="h-3 w-3" strokeWidth={2.5} />
+              : <Square className="h-3 w-3" strokeWidth={2.5} />}
+            {endLabel}
           </button>
         </div>
       </div>
@@ -662,12 +716,18 @@ function FinishedScreen({
   entry,
   madeTop,
   board,
+  rangeActions,
+  sessionMistakes,
+  sessionDiff,
   onPlayAgain,
   onChangeConfig,
 }: {
   entry: SpeedEntry | null;
   madeTop: boolean;
   board: RangeLeaderboard;
+  rangeActions: ActionDef[];
+  sessionMistakes: ClassicMistake[] | null;
+  sessionDiff: RangeDiff | null;
   onPlayAgain: () => void;
   onChangeConfig: () => void;
 }) {
@@ -731,6 +791,14 @@ function FinishedScreen({
         </div>
       </div>
 
+      {entry.style === 'classic' && sessionMistakes !== null && sessionMistakes.length > 0 && (
+        <ErrorsPanel mistakes={sessionMistakes} rangeActions={rangeActions} />
+      )}
+
+      {entry.style === 'drawing' && sessionDiff !== null && (
+        <DiffReviewPanel diff={sessionDiff} />
+      )}
+
       <Leaderboard board={board} highlightDateIso={entry.dateIso} onClear={null} />
     </div>
   );
@@ -741,6 +809,130 @@ function Stat({ label, value }: { label: string; value: string }) {
     <div className="rounded-lg border border-border bg-surface/40 px-3 py-2">
       <p className="text-[10px] uppercase tracking-wider text-content-muted">{label}</p>
       <p className="text-lg font-semibold tabular-nums text-content">{value}</p>
+    </div>
+  );
+}
+
+/* -------------------------- SESSION ERRORS ----------------------------- */
+
+function ErrorsPanel({
+  mistakes,
+  rangeActions,
+}: {
+  mistakes: ClassicMistake[];
+  rangeActions: ActionDef[];
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-border bg-surface/40">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium text-content hover:bg-surface-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-accent-light"
+      >
+        <span className="flex items-center gap-2">
+          <X className="h-4 w-4 text-rose-400" strokeWidth={2.5} />
+          Session errors
+          <span className="rounded-full bg-rose-500/15 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-rose-300">
+            {mistakes.length}
+          </span>
+        </span>
+        {open
+          ? <ChevronUp className="h-4 w-4 text-content-muted" strokeWidth={2} />
+          : <ChevronDown className="h-4 w-4 text-content-muted" strokeWidth={2} />}
+      </button>
+
+      {open && (
+        <div className="border-t border-border px-4 py-3">
+          <div className="flex flex-col gap-2">
+            {mistakes.map(({ trainerHand, picked }, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-3 rounded-lg border border-border bg-surface/60 px-3 py-2 text-sm"
+              >
+                <span className="w-8 shrink-0 font-mono font-semibold text-content">
+                  {trainerHand.hand}
+                </span>
+                <span className="flex items-center gap-1.5 text-rose-400">
+                  <span
+                    aria-hidden
+                    className="h-2.5 w-2.5 shrink-0 rounded-sm"
+                    style={{ backgroundColor: actionColor(rangeActions, picked) }}
+                  />
+                  {actionLabel(rangeActions, picked)}
+                </span>
+                <span className="text-content-muted">→</span>
+                <span className="flex items-center gap-1.5 text-emerald-400">
+                  <span
+                    aria-hidden
+                    className="h-2.5 w-2.5 shrink-0 rounded-sm"
+                    style={{ backgroundColor: actionColor(rangeActions, trainerHand.expectedAction) }}
+                  />
+                  {actionLabel(rangeActions, trainerHand.expectedAction)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* -------------------------- DIFF REVIEW -------------------------------- */
+
+function DiffReviewPanel({ diff }: { diff: RangeDiff }) {
+  const [open, setOpen] = useState(true);
+
+  return (
+    <div className="overflow-hidden rounded-xl border border-border bg-surface/40">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium text-content hover:bg-surface-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-accent-light"
+      >
+        <span className="flex items-center gap-3">
+          <span className="font-medium">Session review</span>
+          <span className="flex items-center gap-2 text-[11px] text-content-muted">
+            <span className="flex items-center gap-1">
+              <span className="inline-block h-2 w-2 rounded-sm bg-emerald-500/60" />
+              {Math.round(diff.matchCombos)} match
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="inline-block h-2 w-2 rounded-sm bg-rose-500/60" />
+              {Math.round(diff.fpCombos)} fp
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="inline-block h-2 w-2 rounded-sm bg-amber-500/60" />
+              {Math.round(diff.fnCombos)} fn
+            </span>
+          </span>
+        </span>
+        {open
+          ? <ChevronUp className="h-4 w-4 text-content-muted" strokeWidth={2} />
+          : <ChevronDown className="h-4 w-4 text-content-muted" strokeWidth={2} />}
+      </button>
+
+      {open && (
+        <div className="border-t border-border px-4 py-4">
+          <DiffGrid diff={diff.cells} />
+          <div className="mt-3 flex flex-wrap gap-4 text-xs text-content-muted">
+            <span className="flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-sm bg-emerald-500/45" />
+              Match
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-sm bg-rose-500/45" />
+              False positive (painted wrong)
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-sm bg-amber-500/45" />
+              False negative (missed hand)
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
