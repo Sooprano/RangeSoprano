@@ -88,6 +88,14 @@ export default function ViewerPage() {
     [compareRangeId, ranges, viewerRangeId],
   );
 
+  const handleOverviewTileClick = useCallback(
+    (id: string) => {
+      setViewerRangeId(id);
+      setViewMode('single');
+    },
+    [setViewerRangeId],
+  );
+
   const handleExportPng = useCallback(async () => {
     const node = captureRef.current;
     if (!node || !range) return;
@@ -266,12 +274,7 @@ export default function ViewerPage() {
           </div>
 
           {viewMode === 'overview' ? (
-            <OverviewPanel
-              onTileClick={(id) => {
-                setViewerRangeId(id);
-                setViewMode('single');
-              }}
-            />
+            <OverviewPanel onTileClick={handleOverviewTileClick} />
           ) : compareEnabled ? (
             <div ref={captureRef} className="grid gap-6 rounded-xl bg-bg p-2 xl:grid-cols-2">
               {range ? (

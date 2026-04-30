@@ -45,7 +45,7 @@ export function OverviewPanel({ onTileClick }: OverviewPanelProps) {
             <OverviewTile
               key={r.id}
               range={r}
-              {...(onTileClick && { onClick: () => onTileClick(r.id) })}
+              {...(onTileClick && { onSelect: onTileClick })}
             />
           ))}
         </div>

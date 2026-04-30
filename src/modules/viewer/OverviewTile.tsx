@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 import { RangeGrid } from '@/components/RangeGrid';
 import { buildActionDefMap } from '@/utils/actionMeta';
 import { computeRangeStats } from '@/utils/rangeStats';
@@ -7,10 +7,11 @@ import { SITUATION_LABELS } from '@/data/positions';
 
 type OverviewTileProps = {
   range: Range;
-  onClick?: () => void;
+  /** Stable callback — receives the range id so the parent can keep one reference for all tiles. */
+  onSelect?: (rangeId: string) => void;
 };
 
-export function OverviewTile({ range, onClick }: OverviewTileProps) {
+function OverviewTileBase({ range, onSelect }: OverviewTileProps) {
   const actionsMap = useMemo(() => buildActionDefMap(range.actions), [range.actions]);
   const stats = useMemo(() => computeRangeStats(range.cells), [range.cells]);
 
@@ -20,18 +21,22 @@ export function OverviewTile({ range, onClick }: OverviewTileProps) {
     range.tableFormat === 'HU' ? ' · HU' : ''
   }`;
 
-  const Wrapper = onClick ? 'button' : 'div';
+  const handleClick = useCallback(() => {
+    onSelect?.(range.id);
+  }, [onSelect, range.id]);
+
+  const Wrapper = onSelect ? 'button' : 'div';
 
   return (
     <Wrapper
-      {...(onClick && {
-        onClick,
+      {...(onSelect && {
+        onClick: handleClick,
         type: 'button' as const,
         'aria-label': `Open ${range.name}`,
       })}
       className={
         'flex flex-col gap-2 rounded-xl border border-border bg-surface/60 p-3 text-left transition-colors ' +
-        (onClick
+        (onSelect
           ? 'hover:border-accent/40 hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light'
           : '')
       }
@@ -45,7 +50,7 @@ export function OverviewTile({ range, onClick }: OverviewTileProps) {
         </p>
       </header>
 
-      <RangeGrid cells={range.cells} actionsMap={actionsMap} />
+      <RangeGrid cells={range.cells} actionsMap={actionsMap} variant="compact" />
 
       <footer className="flex items-center justify-between text-[11px] text-content-muted tabular-nums">
         <span>{stats.totalPct.toFixed(1)}%</span>
@@ -54,3 +59,5 @@ export function OverviewTile({ range, onClick }: OverviewTileProps) {
     </Wrapper>
   );
 }
+
+export const OverviewTile = memo(OverviewTileBase);

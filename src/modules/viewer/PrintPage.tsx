@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Printer, X } from 'lucide-react';
+import { Printer, Spade, X } from 'lucide-react';
 import { RangeGrid } from '@/components/RangeGrid';
 import { useRangeStore } from '@/store/rangeStore';
 import { buildActionDefMap } from '@/utils/actionMeta';
@@ -78,6 +78,20 @@ export default function PrintPage() {
     return () => window.clearTimeout(t);
   }, [state, ranges.length]);
 
+  // Override document.title so the optional browser-injected print header
+  // shows "Range Soprano · {title}" instead of "localhost:5173/print".
+  // (The browser URL/timestamp footer can only be removed by the user from
+  // their print dialog: uncheck "Encabezados y pies de página".)
+  useEffect(() => {
+    const previous = document.title;
+    document.title = state?.title
+      ? `Range Soprano · ${state.title}`
+      : 'Range Soprano';
+    return () => {
+      document.title = previous;
+    };
+  }, [state?.title]);
+
   if (!state) {
     return (
       <div
@@ -140,7 +154,10 @@ export default function PrintPage() {
         </div>
       </div>
 
-      <div className="print-root mx-auto flex max-w-[210mm] flex-col gap-6 p-6 print:gap-0 print:p-0">
+      <div
+        className="print-root mx-auto flex max-w-[210mm] flex-col gap-6 p-6 print:gap-0 print:p-0"
+        data-per-page={state.perPage}
+      >
         {pages.map((pageRanges, pageIdx) => (
           <PrintPageView
             key={pageIdx}
@@ -188,9 +205,24 @@ function PrintPageView({
 
   return (
     <section
-      className="print-page flex min-h-[260mm] flex-col gap-4 rounded-md border border-border bg-surface p-6 shadow-surface print:min-h-0 print:border-none print:shadow-none print:rounded-none print:bg-transparent print:p-0"
+      className="print-page flex min-h-[260mm] flex-col gap-3 rounded-md border border-border bg-surface p-6 shadow-surface print:min-h-0 print:border-none print:shadow-none print:rounded-none print:bg-transparent print:p-0"
       aria-label={`Print page ${pageNumber}`}
     >
+      <div className="print-brand flex flex-col items-center gap-0.5 pb-1">
+        <div className="flex items-center gap-1.5">
+          <Spade
+            className="h-3 w-3 text-accent"
+            strokeWidth={2.5}
+            aria-hidden
+          />
+          <span className="text-[11px] font-semibold tracking-tight text-content print:text-black">
+            Range Soprano
+          </span>
+        </div>
+        <span className="text-[8px] font-semibold uppercase tracking-[0.18em] text-content-muted print:text-black/60">
+          Poker Ranges
+        </span>
+      </div>
       <header className="flex items-baseline justify-between gap-3 border-b border-border pb-2 print:border-b-2 print:border-black/30">
         <div className="flex min-w-0 flex-col">
           <h1 className="truncate text-base font-bold text-content print:text-black">
@@ -210,7 +242,7 @@ function PrintPageView({
       </header>
 
       <div
-        className="grid flex-1 gap-3 print:gap-2"
+        className="grid flex-1 content-start gap-3 print:flex-none print:gap-1.5"
         style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
       >
         {ranges.map((r) => (
@@ -249,18 +281,18 @@ function PrintRangeTile({
   }`;
 
   return (
-    <div className="print-no-break flex flex-col gap-1.5">
+    <div className="print-no-break flex flex-col gap-0.5">
       {showLabels && (stack || sizing1 || sizing2) && (
-        <div className="flex items-baseline justify-between gap-2 text-[11px] font-semibold tabular-nums text-content print:text-black">
+        <div className="flex items-baseline justify-between gap-2 text-[10px] font-semibold tabular-nums text-content print:text-black">
           <span className="min-w-0">{stack || ' '}</span>
           <span className="min-w-0 text-center">{sizing1 || ' '}</span>
           <span className="min-w-0 text-right">{sizing2 || ' '}</span>
         </div>
       )}
       <RangeGrid cells={range.cells} actionsMap={actionsMap} />
-      <div className="flex items-baseline justify-between gap-2 text-[9px] uppercase tracking-wider text-content-muted print:text-black/70">
-        <span className="truncate">{range.name}</span>
-        <span className="shrink-0">{subtitle}</span>
+      <div className="flex flex-col text-[6.5px] leading-tight tracking-tight text-content-muted print:text-black/60">
+        <span className="truncate font-medium">{range.name}</span>
+        <span className="truncate">{subtitle}</span>
       </div>
     </div>
   );

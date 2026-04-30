@@ -26,6 +26,8 @@ type RangeCellProps = {
   tabIndex: 0 | -1;
   /** Ref setter injected by parent so it can focus the cell imperatively. */
   cellRef?: Ref<HTMLDivElement>;
+  /** Compact mode skips the tooltip DOM (used by Overview tiles to reduce node count). */
+  compact?: boolean;
 };
 
 const CATEGORY_BG: Record<HandCategory, string> = {
@@ -93,6 +95,7 @@ function RangeCellBase({
   colIndex,
   tabIndex,
   cellRef,
+  compact = false,
 }: RangeCellProps) {
   const tooltipId = useId();
   const hasActions = !!actions && actions.length > 0;
@@ -120,7 +123,7 @@ function RangeCellBase({
       aria-rowindex={rowIndex}
       aria-colindex={colIndex}
       aria-label={ariaLabel}
-      aria-describedby={hasActions ? tooltipId : undefined}
+      aria-describedby={hasActions && !compact ? tooltipId : undefined}
       tabIndex={tabIndex}
       data-hand={hand}
       data-category={category}
@@ -154,7 +157,7 @@ function RangeCellBase({
         {hand}
       </span>
 
-      {hasActions && (
+      {hasActions && !compact && (
         <div
           id={tooltipId}
           role="tooltip"

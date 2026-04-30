@@ -103,6 +103,19 @@
   }
 }
 
+/* Overview tile (compact variant): empty cells black with no hand letter. */
+[data-rg-variant='compact'] [data-hand]:not([style]) {
+  background-color: #000 !important;
+}
+[data-rg-variant='compact'] [data-hand]:not([style]) > span {
+  visibility: hidden;
+}
+[data-rg-variant='compact'] [data-hand] {
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em !important;
+}
+
 /* Print page styling — applies in screen preview and in print. */
 .print-root {
   -webkit-print-color-adjust: exact;
@@ -130,6 +143,77 @@
   transform: none !important;
 }
 
+/* Black text on cells (applies in both preview and PDF — what you see prints). */
+.print-root [data-hand],
+.print-root [data-hand] * {
+  color: #000 !important;
+  text-shadow: none !important;
+}
+.print-root [data-hand] {
+  filter: none !important;
+}
+.print-root [data-hand] span {
+  filter: none !important;
+}
+
+/* Constrain RangeGrid dimensions per perPage so the print engine paginates
+   each .print-page section onto a single A4 sheet. Setting both width and
+   height (overriding aspect-square) gives the engine deterministic dimensions
+   so it doesn't have to recompute layout per print page. */
+.print-root[data-per-page='12'] [role='grid'] {
+  width: 48mm !important;
+  height: 48mm !important;
+  max-width: 48mm !important;
+}
+.print-root[data-per-page='9'] [role='grid'] {
+  width: 56mm !important;
+  height: 56mm !important;
+  max-width: 56mm !important;
+}
+.print-root[data-per-page='6'] [role='grid'] {
+  width: 58mm !important;
+  height: 58mm !important;
+  max-width: 58mm !important;
+}
+.print-root[data-per-page='4'] [role='grid'] {
+  width: 88mm !important;
+  height: 88mm !important;
+  max-width: 88mm !important;
+}
+.print-root[data-per-page='2'] [role='grid'] {
+  width: 110mm !important;
+  height: 110mm !important;
+  max-width: 110mm !important;
+}
+
+/* Constrain the tile chrome (top stack labels, bottom name/subtitle) to the
+   same width as the grid so labels don't overflow past the grid edges. */
+.print-root[data-per-page='12'] .print-no-break {
+  width: 48mm !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+.print-root[data-per-page='9'] .print-no-break {
+  width: 56mm !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+.print-root[data-per-page='6'] .print-no-break {
+  width: 58mm !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+.print-root[data-per-page='4'] .print-no-break {
+  width: 88mm !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+.print-root[data-per-page='2'] .print-no-break {
+  width: 110mm !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
 @media print {
   @page {
     size: A4 portrait;
@@ -141,24 +225,19 @@
     background: #ffffff !important;
     color: #000000 !important;
   }
-  /* Hide everything not flagged as printable. */
-  body * {
-    visibility: hidden;
-  }
+  /* Force colors to print as authored even with "background graphics" off. */
   .print-root,
   .print-root * {
-    visibility: visible;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     color-adjust: exact !important;
   }
-  .print-root {
-    position: absolute;
-    inset: 0;
-  }
+  /* Each .print-page section starts a new physical sheet. */
   .print-page {
     page-break-after: always;
     break-after: page;
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
   .print-page:last-child {
     page-break-after: auto;
@@ -172,5 +251,13 @@
   /* Slightly tighter cells when actually printed. */
   .print-root [data-hand] {
     font-size: 5.5px !important;
+  }
+
+  /* Black text in printed cells (was white when actions painted). */
+  .print-root [data-hand],
+  .print-root [data-hand] * {
+    color: #000 !important;
+    text-shadow: none !important;
+    filter: none !important;
   }
 }

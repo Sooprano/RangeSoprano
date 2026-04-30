@@ -27,6 +27,8 @@ type RangeGridProps = {
   onCellPaintPlus?: (hand: HandNotation) => void;
   /** Fired once at the start of a discrete paint/erase session for history checkpoints. */
   onSessionStart?: () => void;
+  /** Compact variant for Overview tiles: black empty cells, no hand text on empties, no tooltip. */
+  variant?: 'default' | 'compact';
 };
 
 const SIZE = 13;
@@ -44,7 +46,9 @@ function RangeGridBase({
   onCellErase,
   onCellPaintPlus,
   onSessionStart,
+  variant = 'default',
 }: RangeGridProps) {
+  const compact = variant === 'compact';
   const [focusedIndex, setFocusedIndex] = useState(0);
   const cellRefs = useRef<(HTMLDivElement | null)[]>([]);
   const shouldFocusRef = useRef(false);
@@ -149,6 +153,7 @@ function RangeGridBase({
       aria-rowcount={SIZE}
       aria-colcount={SIZE}
       data-editable={editable || undefined}
+      data-rg-variant={variant}
       onKeyDown={handleKeyDown}
       onFocus={handleFocus}
       onMouseDown={editable ? painter.onMouseDown : undefined}
@@ -174,6 +179,7 @@ function RangeGridBase({
           colIndex: col + 1,
           tabIndex: (isFocused ? 0 : -1) as 0 | -1,
           cellRef: refSetters[i]!,
+          compact,
           ...(actionsMap && { actionsMap }),
         };
         return cell ? (

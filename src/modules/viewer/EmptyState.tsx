@@ -1,24 +1,28 @@
 import { Link } from 'react-router-dom';
 import { Sparkles, ArrowRight } from 'lucide-react';
 import { useRangeStore } from '@/store/rangeStore';
-import { SAMPLE_BTN_RFI } from '@/data/sampleRanges';
+import { SAMPLE_RANGES } from '@/data/sampleRanges';
 
 export function EmptyState() {
   const createRange = useRangeStore((s) => s.createRange);
   const setActiveRange = useRangeStore((s) => s.setActiveRange);
 
   const loadDemo = () => {
-    const id = createRange({
-      name: SAMPLE_BTN_RFI.name,
-      position: SAMPLE_BTN_RFI.position,
-      situation: SAMPLE_BTN_RFI.situation,
-      cells: SAMPLE_BTN_RFI.cells,
-      ...(SAMPLE_BTN_RFI.villainPosition !== undefined && {
-        villainPosition: SAMPLE_BTN_RFI.villainPosition,
-      }),
-      ...(SAMPLE_BTN_RFI.group !== undefined && { group: SAMPLE_BTN_RFI.group }),
-    });
-    setActiveRange(id);
+    let firstId: string | null = null;
+    for (const r of SAMPLE_RANGES) {
+      const id = createRange({
+        name: r.name,
+        position: r.position,
+        situation: r.situation,
+        cells: r.cells,
+        actions: r.actions,
+        tableFormat: r.tableFormat,
+        ...(r.villainPosition !== undefined && { villainPosition: r.villainPosition }),
+        ...(r.group !== undefined && { group: r.group }),
+      });
+      if (!firstId) firstId = id;
+    }
+    if (firstId) setActiveRange(firstId);
   };
 
   return (
@@ -32,8 +36,8 @@ export function EmptyState() {
         </span>
         <h2 className="text-lg font-semibold tracking-tight">No active range yet</h2>
         <p className="mt-2 text-sm text-content-muted">
-          Load the demo BTN RFI range to see the grid in action, or build your own
-          in the Editor.
+          Load the demo set ({SAMPLE_RANGES.length} ranges in 1 folder + 2 subfolders) to
+          explore Single, Compare, Overview and Print PDF, or build your own in the Editor.
         </p>
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
           <button
@@ -41,7 +45,7 @@ export function EmptyState() {
             onClick={loadDemo}
             className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-accent-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
           >
-            Load demo range
+            Load demo ranges
           </button>
           <Link
             to="/editor"

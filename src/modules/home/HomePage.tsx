@@ -4,11 +4,13 @@ import {
   ArrowRight,
   Bitcoin,
   Check,
+  ChevronDown,
   Copy,
   Download,
   Eye,
   FolderInput,
   FolderOpen,
+  HelpCircle,
   Pencil,
   Save,
   Target,
@@ -36,7 +38,7 @@ const MODULES: readonly ModuleCard[] = [
     label: 'Viewer',
     icon: Eye,
     description:
-      'Lee tus rangos guardados, filtrá por posición, situación, villano y acción, compará dos rangos en paralelo y exportá a PNG.',
+      'Tres vistas: Single, Compare (dos rangos en paralelo) y Overview (mosaico de carpetas). Filtrá por posición, situación, villano y acción. Exportá a PNG o imprimí varias hojas a PDF con leyenda y etiquetas de stack/sizing.',
   },
   {
     to: '/trainer',
@@ -44,7 +46,7 @@ const MODULES: readonly ModuleCard[] = [
     label: 'Trainer',
     icon: Target,
     description:
-      'Entrená manos en mesa 6-max o Heads-Up. Modo clásico (responder acción, auto-avance 1.5 s), Speed (contrarreloj con leaderboard local) o Dibujo (pintá el rango de memoria). Filtros por posición, situación y villano.',
+      'Entrená manos en mesa 6-max o Heads-Up. Modo Clásico (auto-avance 1.5 s), Speed (contrarreloj con leaderboard local 30 s–10 min) o Drawing (pintá el rango de memoria y comparalo con la verdad). Filtros por posición, situación y villano.',
   },
   {
     to: '/editor',
@@ -52,7 +54,64 @@ const MODULES: readonly ModuleCard[] = [
     label: 'Editor',
     icon: Pencil,
     description:
-      'Crea y edita rangos: paleta de acciones por rango, pesos mixtos, notas, undo/redo.',
+      'Creá y editá rangos con paleta de acciones por rango, pesos mixtos, notas, undo/redo, carpetas y sub-carpetas. Importá/exportá rangos individuales o el perfil completo.',
+  },
+];
+
+type Faq = { q: string; a: React.ReactNode };
+
+const FAQS: readonly Faq[] = [
+  {
+    q: '¿Qué es Range Soprano?',
+    a: 'Una herramienta web gratis para estudiar rangos preflop. Tres módulos: Viewer, Trainer, Editor. Pensada para repasar, memorizar y comparar tus propios rangos (o copiados de un libro/solver) en mesa 6-max o Heads-Up.',
+  },
+  {
+    q: '¿Por qué no hay login ni cuenta?',
+    a: 'Tus datos viven sólo en tu navegador (localStorage). No subimos nada a ningún servidor → cero cuentas, cero contraseñas, cero tracking. Si querés mover los rangos a otro dispositivo usás export/import .json.',
+  },
+  {
+    q: '¿Qué es un archivo .json y para qué lo uso?',
+    a: (
+      <>
+        Es un archivo de texto con todos tus rangos serializados. Lo descargás
+        desde <span className="font-medium text-content">Editor → Export → Download all ranges JSON</span>{' '}
+        y lo guardás donde quieras (Drive, Dropbox, pendrive). En otra PC o en
+        el celular lo importás desde <span className="font-medium text-content">Home → Importar perfil completo</span>{' '}
+        y recuperás todo.
+      </>
+    ),
+  },
+  {
+    q: '¿Mis rangos se borran si limpio el navegador?',
+    a: 'Sí. localStorage muere si limpiás caché/datos del sitio o usás navegación privada. Hacé backup periódico exportando el .json — es la única copia que tenés.',
+  },
+  {
+    q: '¿Cuántos rangos puedo guardar?',
+    a: 'Hasta ~3.8 MB en localStorage (≈100 rangos llenos). Si te queda corto exportá unos a .json y borralos del store.',
+  },
+  {
+    q: '¿Sirve para 6-max y Heads-Up?',
+    a: 'Sí. Cada rango se crea con un formato (6max o HU). El Trainer pinta la mesa acorde y el Viewer filtra por formato.',
+  },
+  {
+    q: '¿Cómo imprimo varios rangos a PDF?',
+    a: (
+      <>
+        En el <span className="font-medium text-content">Viewer</span>, pestaña{' '}
+        <span className="font-medium text-content">Overview</span>, botón{' '}
+        <span className="font-medium text-content">Print PDF</span>. Configurá rangos por
+        página, etiquetas (stack/sizing), leyenda y badge de formato. Después usá
+        <span className="font-medium text-content"> Print / Save as PDF</span> del navegador.
+      </>
+    ),
+  },
+  {
+    q: '¿Funciona offline?',
+    a: 'Sí, una vez cargada la página. Todo es JS estático servido desde GitHub Pages — no hay backend.',
+  },
+  {
+    q: '¿Puedo contribuir al proyecto?',
+    a: 'Si te resulta útil podés dejar una propina en BTC desde la sección de abajo — cualquier monto suma y ayuda a mantener el proyecto vivo. Reportes de bugs y sugerencias también son bienvenidos.',
   },
 ];
 
@@ -85,8 +144,8 @@ export default function HomePage() {
     <div className="flex flex-col gap-10">
       <PageHeader
         eyebrow="Range Soprano"
-        title="Estudio de rangos preflop"
-        description="Tres módulos — Viewer, Trainer, Editor. Todo corre en tu navegador y vos sos dueño de los datos."
+        title="Herramienta de estudio de rangos preflop"
+        description="Visualizá, entrená y editá tus rangos en mesa 6-max o Heads-Up con paletas de acciones personalizables, comparación, exportación a PNG/PDF y entrenador con leaderboard local. Todo corre en tu navegador y vos sos dueño de los datos."
       />
 
       <section aria-labelledby="modules-heading" className="flex flex-col gap-4">
@@ -284,6 +343,38 @@ export default function HomePage() {
             </Link>
           </div>
         </div>
+      </section>
+
+      <section aria-labelledby="faq-heading" className="flex flex-col gap-3">
+        <h2
+          id="faq-heading"
+          className="text-[11px] font-semibold uppercase tracking-[0.18em] text-content-muted"
+        >
+          Preguntas frecuentes
+        </h2>
+        <ul className="flex flex-col gap-2">
+          {FAQS.map((f) => (
+            <li key={f.q}>
+              <details className="group rounded-lg border border-border bg-surface open:bg-surface-hover">
+                <summary className="flex cursor-pointer list-none items-start gap-3 rounded-lg px-4 py-3 text-sm font-medium text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light">
+                  <span aria-hidden className="mt-0.5 shrink-0 text-accent-light">
+                    <HelpCircle className="h-4 w-4" strokeWidth={2.25} />
+                  </span>
+                  <span className="flex-1">{f.q}</span>
+                  <span
+                    aria-hidden
+                    className="mt-0.5 shrink-0 text-content-muted transition-transform group-open:rotate-180"
+                  >
+                    <ChevronDown className="h-4 w-4" strokeWidth={2.25} />
+                  </span>
+                </summary>
+                <div className="px-4 pb-4 pl-11 text-sm text-content-muted">
+                  {f.a}
+                </div>
+              </details>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section aria-labelledby="donate-heading" className="flex flex-col gap-3">
