@@ -10,6 +10,7 @@
 
 ## Commits estables por fase
 
+- Fase 14 (home FAQ + overview perf/style + print PDF + demo set): `893eeed`
 - Custom domain rangesoprano.com (base / + CNAME): `ae10d1f`
 
 - Fase 1 (setup): `02f65ff`
@@ -36,7 +37,7 @@
 
 ## Estado actual
 
-Todas las fases planificadas (1–13) completadas ✅.
+Todas las fases planificadas (1–14) completadas ✅.
 
 Live en https://rangesoprano.com/ (custom domain Cloudflare → GitHub Pages).
 
@@ -102,6 +103,18 @@ Live en https://rangesoprano.com/ (custom domain Cloudflare → GitHub Pages).
 - **`Range.tableFormat: '6max' | 'HU'`**: schema Zod con `.default('6max')` para rangos viejos. Sin bump de versión.
 - **`HU_POSITIONS` y `huVillainOf()`** en `src/types/poker.ts`.
 - **NewRangeForm**: en HU, posiciones restringidas a `HU_POSITIONS`, villain deshabilitado y muestra seat implícito.
+
+### Home FAQ + Overview perf + Print PDF + demo (fase 14)
+- **Demo set** (`src/data/sampleRanges.ts`): exporta `SAMPLE_RANGES` con 1 carpeta (`Demo`) + 2 sub-carpetas (`Demo/Opens`, `Demo/Defense`) + 4 rangos (BTN/CO/UTG RFI + BB vs BTN). `EmptyState.loadDemo` itera sobre todos. `SAMPLE_BTN_RFI` se mantiene exportado para compat con tests/imports antiguos.
+- **HomePage FAQ**: usa `<details>` HTML nativo (accesible sin JS extra) con `<summary>` + `ChevronDown` rotando 180° en `group-open:`. Lista de 9 preguntas (qué es, login, .json, offline, contribuir, etc.).
+- **Overview compact variant**: `RangeGrid` acepta `variant?: 'default' | 'compact'`, propaga `compact` a `RangeCell`. En compact, `RangeCell` omite el bloque `<div role="tooltip">` (ahorra ~169 nodos por tile × N tiles). El wrapper grid lleva `data-rg-variant` y CSS targetea `[data-rg-variant='compact'] [data-hand]:not([style])` (celdas vacías = sin atributo style inline) para forzar `bg-black + visibility:hidden` en el span del label. Tipografía a 9px bold para coincidir con PDFs de referencia.
+- **OverviewTile.memo**: API cambió de `onClick: () => void` a `onSelect: (rangeId: string) => void`. El parent (ViewerPage) usa `useCallback` para mantener identidad estable, lo cual permite que `React.memo` evite re-renders al filtrar carpetas.
+- **Print PDF — causa raíz fix**: el `position: absolute; inset: 0` en `.print-root` + `height: 273mm; overflow: hidden` en `.print-page` rompían la paginación del motor de impresión (cada section quedaba clipeada y los tiles overflowing iban a una página separada). Solución: dimensiones explícitas (width + height en mm) sobre `[role='grid']` por `data-per-page` (12→48mm, 9→56mm, 6→58mm, 4→88mm, 2→110mm). Esto sobreescribe el `aspect-square` que dependía del ancho de columna y daba al engine números deterministas.
+- **Print PDF — chrome del tile constreñido**: `.print-no-break` recibe `width: <gridSize>mm; mx-auto` por perPage para que los labels (stack/sizing arriba, name/subtitle abajo) no desborden los costados del grid. Footer del tile apilado vertical (text-[6.5px], leading-tight) en lugar de flex-justify-between para mejor truncate.
+- **Print PDF — texto negro en celdas**: `.print-root [data-hand], .print-root [data-hand] * { color: #000 !important }` aplicado fuera de `@media print` (preview = print). El `text-white/95` Tailwind se vencía por specificity 0,2,0 + !important. `text-shadow: none` y `filter: none` quitan el drop-shadow del span interno.
+- **Print PDF — logo en cada hoja**: bloque centrado arriba de cada `.print-page` con `<Spade />` icon (`text-accent`, NO override print → mantiene morado en PDF) + "Range Soprano" wordmark + "POKER RANGES" microcopy. `document.title` se setea a `"Range Soprano · {state.title}"` en el useEffect de PrintPage para que el header opcional del navegador no muestre "localhost".
+- **Print PDF — browser headers/footers**: la fecha/URL que el navegador inyecta solo se quitan desde el diálogo de impresión (uncheck "Encabezados y pies de página"). No suprimibles desde CSS.
+- **RangeManager scroll deferred**: intenté `sticky top-4 + max-h + overflow-y-auto` pero rompía menús por clipping (overflow context atrapa absolute children) y aparecía scroll horizontal. Revertido al diseño original (no scroll, no sticky). Para implementar bien hace falta Portal de menús (no priorizado).
 
 ### Refactor labels + UX badges (fase 12)
 - **Single source of truth** en `src/data/positions.ts` para `SITUATION_LABELS` y `TABLE_FORMAT_LABELS`. Eliminados 8 duplicados locales.
