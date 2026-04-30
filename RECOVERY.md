@@ -36,7 +36,7 @@
 
 Todas las fases planificadas (1–13) completadas ✅.
 
-Live en https://sooprano.github.io/RangeSoprano/
+Live en https://rangesoprano.com/
 
 **Pasos manuales pendientes (si no se hizo aún):**
 - https://github.com/Sooprano/RangeSoprano/settings/pages → Source: **GitHub Actions**
