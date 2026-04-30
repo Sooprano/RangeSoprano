@@ -24,6 +24,8 @@ type UiStoreState = PersistedUiState & {
   reorderFolders: (parentPath: string | null, orderedPaths: string[]) => void;
   /** Rename group meta keys when a folder is renamed (cascades sub-paths). */
   renameGroupMeta: (oldPath: string, newPath: string) => void;
+  setSidebarCollapsed: (v: boolean) => void;
+  toggleSidebarCollapsed: () => void;
 };
 
 const INITIAL: PersistedUiState = {
@@ -33,6 +35,7 @@ const INITIAL: PersistedUiState = {
   viewerRangeId: null,
   trainerRangeId: null,
   groupMeta: {},
+  sidebarCollapsed: false,
 };
 
 export const useUiStore = create<UiStoreState>()(
@@ -119,6 +122,10 @@ export const useUiStore = create<UiStoreState>()(
           });
           return { groupMeta: next };
         }),
+
+      setSidebarCollapsed: (v) => set({ sidebarCollapsed: v }),
+      toggleSidebarCollapsed: () =>
+        set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
     }),
     {
       name: UI_STORE_KEY,
@@ -131,6 +138,7 @@ export const useUiStore = create<UiStoreState>()(
         viewerRangeId: s.viewerRangeId,
         trainerRangeId: s.trainerRangeId,
         groupMeta: s.groupMeta,
+        sidebarCollapsed: s.sidebarCollapsed,
       }),
       migrate: (persisted, fromVersion) => {
         if (fromVersion < 1) return { ...INITIAL };

@@ -144,6 +144,7 @@ export const zPersistedUiState = z
     viewerRangeId: z.string().nullable().default(null),
     trainerRangeId: z.string().nullable().default(null),
     groupMeta: z.record(z.string(), zGroupMeta).default({}),
+    sidebarCollapsed: z.boolean().default(false),
   })
   .strict();
 

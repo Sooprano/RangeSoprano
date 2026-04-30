@@ -76,7 +76,7 @@ export default function TrainerPage() {
         description="Practice decisions against your saved ranges. Classic and drawing modes."
       />
 
-      <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
+      <div className="grid gap-6 md:grid-cols-[220px_minmax(0,1fr)]">
         <ViewerRangeList
           summaries={filteredSummaries}
           selectedId={trainerRangeId}

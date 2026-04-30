@@ -204,7 +204,7 @@ export default function EditorPage() {
         description="Build, import and export preflop ranges with mixed frequencies."
       />
 
-      <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)_300px]">
+      <div className="grid gap-6 md:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[220px_minmax(0,1fr)_280px]">
         <RangeManager
           isFormOpen={isFormOpen}
           onFormOpenChange={setIsFormOpen}
@@ -260,7 +260,7 @@ export default function EditorPage() {
         )}
 
         {activeRange && (
-          <aside className="flex flex-col gap-4">
+          <aside className="flex flex-col gap-4 md:col-span-2 md:grid md:grid-cols-2 md:gap-4 xl:col-span-1 xl:flex xl:flex-col">
             <RangeMetaForm range={activeRange} />
             <ActionPalette
               range={activeRange}

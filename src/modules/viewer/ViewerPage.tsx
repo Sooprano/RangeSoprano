@@ -165,8 +165,8 @@ export default function ViewerPage() {
       <div
         className={
           compareEnabled
-            ? 'grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)]'
-            : 'grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)_300px]'
+            ? 'grid gap-6 md:grid-cols-[220px_minmax(0,1fr)]'
+            : 'grid gap-6 md:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[220px_minmax(0,1fr)_280px]'
         }
       >
         <ViewerRangeList
@@ -244,7 +244,7 @@ export default function ViewerPage() {
         </div>
 
         {!compareEnabled && range && (
-          <aside className="flex flex-col gap-4">
+          <aside className="flex flex-col gap-4 md:col-span-2 md:grid md:grid-cols-2 md:gap-4 xl:col-span-1 xl:flex xl:flex-col">
             <RangeStats cells={range.cells} actionDefs={range.actions} />
             <ActionLegend actionDefs={range.actions} presentActions={presentActions} />
           </aside>
