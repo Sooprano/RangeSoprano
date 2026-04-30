@@ -10,6 +10,8 @@
 
 ## Commits estables por fase
 
+- Custom domain rangesoprano.com (base / + CNAME): `ae10d1f`
+
 - Fase 1 (setup): `02f65ff`
 - Fase 2 (RangeGrid): `6a3cf0e`
 - Fase 3 (stores + persist): `e0278c6`
@@ -36,11 +38,9 @@
 
 Todas las fases planificadas (1–13) completadas ✅.
 
-Live en https://rangesoprano.com/
+Live en https://rangesoprano.com/ (custom domain Cloudflare → GitHub Pages).
 
-**Pasos manuales pendientes (si no se hizo aún):**
-- https://github.com/Sooprano/RangeSoprano/settings/pages → Source: **GitHub Actions**
-- Verificar que el workflow "Deploy to GitHub Pages" quede verde en Actions.
+**Settings → Pages debe quedar siempre en Source: GitHub Actions** (no "Deploy from a branch"). Si GitHub UI lo resetea al re-tocar el custom domain, hay que volver a ponerlo en "GitHub Actions" o servirá el `index.html` raíz del repo (modo dev) → MIME error en `/src/main.tsx`.
 
 ## Feature deferred
 
@@ -81,8 +81,11 @@ Live en https://rangesoprano.com/
 - **HU mode**: cuando `range.tableFormat === 'HU'`, `getTableLayout` devuelve solo slots 0 (hero) y 3 (villano enfrente). Villano se calcula con `huVillainOf()` (BTN↔BB) ignorando el `villainPosition` persistido.
 
 ### Deploy GitHub Pages (fase 7D)
-- **`vite.config.ts`**: `base: mode === 'production' ? '/RangeSoprano/' : '/'`.
-- **`src/router.tsx`**: `basename = import.meta.env.BASE_URL.replace(/\/$/, '') || '/'`.
+- **`vite.config.ts`**: `base: '/'` (apex domain rangesoprano.com). Antes era `/RangeSoprano/` cuando se servía bajo `sooprano.github.io/RangeSoprano/`.
+- **`src/router.tsx`**: `basename = import.meta.env.BASE_URL.replace(/\/$/, '') || '/'` — deriva de `base`, no se toca al cambiar el dominio.
+- **`public/CNAME`**: contiene `rangesoprano.com`. Vite lo copia a `dist/CNAME` y GitHub Pages lo respeta como custom domain en cada deploy. NO crear un CNAME en la raíz del repo (lo hace GitHub UI automáticamente al setear el dominio; es redundante porque el workflow sube `dist/`, no la raíz).
+- **DNS Cloudflare**: 4 A records apex `rangesoprano.com → 185.199.108-111.153` + CNAME `www → sooprano.github.io`. Todos en **"Solo DNS"** (nube gris). NO activar proxy de Cloudflare — rompe la emisión del cert Let's Encrypt de GitHub Pages.
+- **Source en Settings → Pages**: debe ser **"GitHub Actions"** (no "Deploy from a branch"). Si lo resetea, hay que volver a setearlo manualmente.
 - **Workflow**: build + deploy jobs con `actions/upload-pages-artifact` y `actions/deploy-pages` v4. Trigger en push a `main` y `workflow_dispatch`.
 - **SPA fallback**: copia `dist/index.html` a `dist/404.html` antes del upload para que el refresh en `/editor`, `/trainer` no devuelva 404.
 
