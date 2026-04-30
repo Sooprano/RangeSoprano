@@ -26,6 +26,8 @@ type UiStoreState = PersistedUiState & {
   renameGroupMeta: (oldPath: string, newPath: string) => void;
   setSidebarCollapsed: (v: boolean) => void;
   toggleSidebarCollapsed: () => void;
+  setOverviewSelectedGroups: (groups: string[]) => void;
+  toggleOverviewGroup: (group: string) => void;
 };
 
 const INITIAL: PersistedUiState = {
@@ -36,6 +38,7 @@ const INITIAL: PersistedUiState = {
   trainerRangeId: null,
   groupMeta: {},
   sidebarCollapsed: false,
+  overviewSelectedGroups: [],
 };
 
 export const useUiStore = create<UiStoreState>()(
@@ -126,6 +129,15 @@ export const useUiStore = create<UiStoreState>()(
       setSidebarCollapsed: (v) => set({ sidebarCollapsed: v }),
       toggleSidebarCollapsed: () =>
         set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
+
+      setOverviewSelectedGroups: (groups) =>
+        set({ overviewSelectedGroups: groups }),
+      toggleOverviewGroup: (group) =>
+        set((s) => ({
+          overviewSelectedGroups: s.overviewSelectedGroups.includes(group)
+            ? s.overviewSelectedGroups.filter((g) => g !== group)
+            : [...s.overviewSelectedGroups, group],
+        })),
     }),
     {
       name: UI_STORE_KEY,
@@ -139,6 +151,7 @@ export const useUiStore = create<UiStoreState>()(
         trainerRangeId: s.trainerRangeId,
         groupMeta: s.groupMeta,
         sidebarCollapsed: s.sidebarCollapsed,
+        overviewSelectedGroups: s.overviewSelectedGroups,
       }),
       migrate: (persisted, fromVersion) => {
         if (fromVersion < 1) return { ...INITIAL };

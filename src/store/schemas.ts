@@ -16,6 +16,7 @@ export const MAX_GROUP_LEN = 80;
 export const MAX_NOTES_LEN = 5000;
 export const MAX_ACTION_LABEL_LEN = 40;
 export const MAX_ACTIONS_PER_RANGE = 20;
+export const MAX_PRINT_LABEL_LEN = 20;
 
 export const GROUP_FOLDER_COLORS = [
   '#8b5cf6', '#a855f7', '#ec4899', '#ef4444',
@@ -103,6 +104,14 @@ export const zRange = z
       .max(MAX_ACTIONS_PER_RANGE)
       .default(() => DEFAULT_ACTION_DEFS.map((d) => ({ ...d }))),
     tableFormat: z.enum(TABLE_FORMATS).default('6max'),
+    printLabels: z
+      .object({
+        stack: z.string().max(MAX_PRINT_LABEL_LEN).optional(),
+        sizing1: z.string().max(MAX_PRINT_LABEL_LEN).optional(),
+        sizing2: z.string().max(MAX_PRINT_LABEL_LEN).optional(),
+      })
+      .strict()
+      .optional(),
   })
   .strict()
   .superRefine((r, ctx) => {
@@ -145,6 +154,7 @@ export const zPersistedUiState = z
     trainerRangeId: z.string().nullable().default(null),
     groupMeta: z.record(z.string(), zGroupMeta).default({}),
     sidebarCollapsed: z.boolean().default(false),
+    overviewSelectedGroups: z.array(z.string()).default([]),
   })
   .strict();
 

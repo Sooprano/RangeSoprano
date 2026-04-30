@@ -7,6 +7,7 @@ import ViewerPage from '@/modules/viewer/ViewerPage';
 const HomePage = lazy(() => import('@/modules/home/HomePage'));
 const TrainerPage = lazy(() => import('@/modules/trainer/TrainerPage'));
 const EditorPage = lazy(() => import('@/modules/editor/EditorPage'));
+const PrintPage = lazy(() => import('@/modules/viewer/PrintPage'));
 
 function PageFallback() {
   return (
@@ -78,6 +79,14 @@ export const router = createBrowserRouter(
         },
         { path: '*', element: <NotFoundPage /> },
       ],
+    },
+    {
+      path: '/print',
+      element: (
+        <Suspense fallback={<PageFallback />}>
+          <PrintPage />
+        </Suspense>
+      ),
     },
   ],
   { basename },

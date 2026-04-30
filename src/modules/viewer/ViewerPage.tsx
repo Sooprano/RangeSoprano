@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Download } from 'lucide-react';
+import { Download, Eye, GitCompare, LayoutGrid, Printer } from 'lucide-react';
+import { cn } from '@/lib/cn';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { RangeGrid } from '@/components/RangeGrid';
 import { RangeStats } from '@/components/RangeStats';
@@ -23,18 +24,26 @@ import {
 } from './SituationSelector';
 import { CompareToolbar } from './CompareToolbar';
 import { RangePanel } from './RangePanel';
+import { OverviewPanel } from './OverviewPanel';
+import { PrintConfigModal } from './PrintConfigModal';
+
+type ViewMode = 'single' | 'compare' | 'overview';
 
 export default function ViewerPage() {
   const ranges = useRangeStore((s) => s.ranges);
   const summaries = useRangeSummaries();
   const viewerRangeId = useUiStore((s) => s.viewerRangeId);
   const setViewerRangeId = useUiStore((s) => s.setViewerRangeId);
+  const overviewSelectedGroups = useUiStore((s) => s.overviewSelectedGroups);
   const range = useViewerRange();
 
+  const [viewMode, setViewMode] = useState<ViewMode>('single');
   const [filters, setFilters] = useState<ViewerFilters>(EMPTY_FILTERS);
-  const [compareEnabled, setCompareEnabled] = useState(false);
   const [compareRangeId, setCompareRangeId] = useState<string | null>(null);
+  const [isPrintConfigOpen, setIsPrintConfigOpen] = useState(false);
   const captureRef = useRef<HTMLDivElement | null>(null);
+
+  const compareEnabled = viewMode === 'compare';
 
   const filteredSummaries = useMemo(
     () =>
@@ -68,10 +77,10 @@ export default function ViewerPage() {
     [ranges, compareRangeId],
   );
 
-  const handleToggleCompare = useCallback(
-    (next: boolean) => {
-      setCompareEnabled(next);
-      if (next && !compareRangeId) {
+  const handleSetViewMode = useCallback(
+    (next: ViewMode) => {
+      setViewMode(next);
+      if (next === 'compare' && !compareRangeId) {
         const candidate = ranges.find((r) => r.id !== viewerRangeId);
         if (candidate) setCompareRangeId(candidate.id);
       }
@@ -100,7 +109,7 @@ export default function ViewerPage() {
   );
 
   useEffect(() => {
-    if (compareEnabled) return;
+    if (viewMode !== 'single') return;
     if (orderedForNav.length < 2) return;
     const handler = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
@@ -123,7 +132,7 @@ export default function ViewerPage() {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [compareEnabled, orderedForNav, viewerRangeId, setViewerRangeId]);
+  }, [viewMode, orderedForNav, viewerRangeId, setViewerRangeId]);
 
   const actionsMap = useMemo(
     () => (range ? buildActionDefMap(range.actions) : new Map()),
@@ -150,66 +159,120 @@ export default function ViewerPage() {
   const canExport =
     !!range && (!compareEnabled || compareRange !== null);
 
+  // Decide which range IDs feed the print modal.
+  const printRangeIds: string[] =
+    viewMode === 'overview'
+      ? ranges
+          .filter((r) => overviewSelectedGroups.includes(r.group ?? ''))
+          .map((r) => r.id)
+      : range
+        ? [range.id]
+        : [];
+  const canPrint = printRangeIds.length > 0;
+
   return (
     <>
       <PageHeader
         eyebrow={
-          range
+          range && viewMode !== 'overview'
             ? `${range.position} · ${SITUATION_LABELS[range.situation] ?? range.situation}`
             : 'Module'
         }
-        title={range ? range.name : 'Viewer'}
+        title={
+          viewMode === 'overview'
+            ? 'Overview'
+            : range
+              ? range.name
+              : 'Viewer'
+        }
         description="Explore preflop ranges by format, position, and situation."
       />
 
       <div
-        className={
-          compareEnabled
-            ? 'grid gap-6 md:grid-cols-[220px_minmax(0,1fr)]'
-            : 'grid gap-6 md:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[220px_minmax(0,1fr)_280px]'
-        }
+        className={cn(
+          'grid gap-6',
+          viewMode === 'overview'
+            ? ''
+            : compareEnabled
+              ? 'md:grid-cols-[220px_minmax(0,1fr)]'
+              : 'md:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[220px_minmax(0,1fr)_280px]',
+        )}
       >
-        <ViewerRangeList
-          summaries={filteredSummaries}
-          selectedId={viewerRangeId}
-          onSelect={setViewerRangeId}
-          emptyMessage={
-            hasAnyFilter(filters)
-              ? 'No ranges match the current filters.'
-              : 'No ranges yet. Create one in the Editor.'
-          }
-        />
+        {viewMode !== 'overview' && (
+          <ViewerRangeList
+            summaries={filteredSummaries}
+            selectedId={viewerRangeId}
+            onSelect={setViewerRangeId}
+            emptyMessage={
+              hasAnyFilter(filters)
+                ? 'No ranges match the current filters.'
+                : 'No ranges yet. Create one in the Editor.'
+            }
+          />
+        )}
 
         <div className="flex min-w-0 flex-col gap-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
-            <SituationSelector filters={filters} onChange={setFilters} />
+            {viewMode !== 'overview' && (
+              <SituationSelector filters={filters} onChange={setFilters} />
+            )}
+            {viewMode === 'overview' && <span />}
             <div className="flex flex-wrap items-center gap-2">
-              <CompareToolbar
-                enabled={compareEnabled}
-                onToggle={handleToggleCompare}
-                summaries={summaries}
-                compareId={compareRangeId}
-                onChangeCompareId={setCompareRangeId}
-              />
+              <ViewModeToggle value={viewMode} onChange={handleSetViewMode} />
+              {viewMode === 'compare' && (
+                <CompareToolbar
+                  enabled
+                  onToggle={(next) => {
+                    if (!next) setViewMode('single');
+                  }}
+                  summaries={summaries}
+                  compareId={compareRangeId}
+                  onChangeCompareId={setCompareRangeId}
+                />
+              )}
+              {viewMode !== 'overview' && (
+                <button
+                  type="button"
+                  onClick={handleExportPng}
+                  disabled={!canExport}
+                  title="Export PNG"
+                  className={
+                    'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light ' +
+                    (canExport
+                      ? 'text-content-muted hover:bg-surface-hover hover:text-content'
+                      : 'cursor-not-allowed text-content-disabled')
+                  }
+                >
+                  <Download className="h-3.5 w-3.5" strokeWidth={2.25} />
+                  Export PNG
+                </button>
+              )}
               <button
                 type="button"
-                onClick={handleExportPng}
-                disabled={!canExport}
-                title="Export PNG"
+                onClick={() => setIsPrintConfigOpen(true)}
+                disabled={!canPrint}
+                title="Print to PDF"
                 className={
                   'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light ' +
-                  (canExport
+                  (canPrint
                     ? 'text-content-muted hover:bg-surface-hover hover:text-content'
                     : 'cursor-not-allowed text-content-disabled')
                 }
               >
-                <Download className="h-3.5 w-3.5" strokeWidth={2.25} />
-                Export PNG
+                <Printer className="h-3.5 w-3.5" strokeWidth={2.25} />
+                Print PDF
               </button>
             </div>
           </div>
 
-          {compareEnabled ? (
+          {viewMode === 'overview' ? (
+            <OverviewPanel
+              onTileClick={(id) => {
+                setViewerRangeId(id);
+                setViewMode('single');
+              }}
+            />
+          ) : compareEnabled ? (
             <div ref={captureRef} className="grid gap-6 rounded-xl bg-bg p-2 xl:grid-cols-2">
               {range ? (
                 <RangePanel range={range} badge="A" />
@@ -243,14 +306,87 @@ export default function ViewerPage() {
           )}
         </div>
 
-        {!compareEnabled && range && (
+        {viewMode === 'single' && range && (
           <aside className="flex flex-col gap-4 md:col-span-2 md:grid md:grid-cols-2 md:gap-4 xl:col-span-1 xl:flex xl:flex-col">
             <RangeStats cells={range.cells} actionDefs={range.actions} />
             <ActionLegend actionDefs={range.actions} presentActions={presentActions} />
           </aside>
         )}
       </div>
+
+      {isPrintConfigOpen && canPrint && (
+        <PrintConfigModal
+          rangeIds={printRangeIds}
+          onClose={() => setIsPrintConfigOpen(false)}
+        />
+      )}
     </>
+  );
+}
+
+type ViewModeToggleProps = {
+  value: ViewMode;
+  onChange: (m: ViewMode) => void;
+};
+
+function ViewModeToggle({ value, onChange }: ViewModeToggleProps) {
+  return (
+    <div
+      role="tablist"
+      aria-label="View mode"
+      className="inline-flex items-center gap-1 rounded-xl border border-border bg-surface/60 p-1"
+    >
+      <ModeButton
+        active={value === 'single'}
+        onClick={() => onChange('single')}
+        icon={<Eye className="h-3.5 w-3.5" strokeWidth={2.25} />}
+        label="Single"
+      />
+      <ModeButton
+        active={value === 'compare'}
+        onClick={() => onChange('compare')}
+        icon={<GitCompare className="h-3.5 w-3.5" strokeWidth={2.25} />}
+        label="Compare"
+      />
+      <ModeButton
+        active={value === 'overview'}
+        onClick={() => onChange('overview')}
+        icon={<LayoutGrid className="h-3.5 w-3.5" strokeWidth={2.25} />}
+        label="Overview"
+      />
+    </div>
+  );
+}
+
+function ModeButton({
+  active,
+  onClick,
+  icon,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={active}
+      onClick={onClick}
+      className={cn(
+        'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium',
+        'transition-colors duration-150 ease-out-soft',
+        'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light',
+        active
+          ? 'bg-surface text-content shadow-[inset_0_0_0_1px_rgb(var(--color-accent)/0.6)]'
+          : 'text-content-muted hover:bg-surface-hover hover:text-content',
+      )}
+    >
+      {icon}
+      {label}
+    </button>
   );
 }
 

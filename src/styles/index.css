@@ -102,3 +102,75 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Print page styling — applies in screen preview and in print. */
+.print-root {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+  color-adjust: exact;
+}
+
+/* Override RangeCell text inside print preview so 13×13 grids fit small tiles.
+   Specificity uses [data-hand] (attribute) + class to beat Tailwind's text-[11px]. */
+.print-root [data-hand] {
+  font-size: 6px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.04em !important;
+  line-height: 1 !important;
+  overflow: hidden !important;
+}
+
+.print-root [role='grid'] {
+  border: 1px solid rgb(0 0 0 / 0.25) !important;
+  box-shadow: none !important;
+}
+
+/* Disable hover/focus scale and tooltips in print context — purely visual. */
+.print-root [data-hand] {
+  transform: none !important;
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+  html,
+  body,
+  #root {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  /* Hide everything not flagged as printable. */
+  body * {
+    visibility: hidden;
+  }
+  .print-root,
+  .print-root * {
+    visibility: visible;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  .print-root {
+    position: absolute;
+    inset: 0;
+  }
+  .print-page {
+    page-break-after: always;
+    break-after: page;
+  }
+  .print-page:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
+  .print-no-break {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Slightly tighter cells when actually printed. */
+  .print-root [data-hand] {
+    font-size: 5.5px !important;
+  }
+}

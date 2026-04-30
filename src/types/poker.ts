@@ -65,6 +65,16 @@ export function huVillainOf(hero: Position): Position {
   return hero === 'BTN' ? 'BB' : 'BTN';
 }
 
+/** Optional labels rendered above the grid when printing. */
+export type PrintLabels = {
+  /** Top-left label, typically stack size in BB (e.g. "25", "20.5"). */
+  stack?: string;
+  /** Top-middle label, typically a raise sizing (e.g. "5.78"). */
+  sizing1?: string;
+  /** Top-right label, secondary sizing (e.g. "3"). */
+  sizing2?: string;
+};
+
 export type Range = {
   id: string;
   name: string;
@@ -84,4 +94,6 @@ export type Range = {
   actions: ActionDef[];
   /** Table format used by the trainer to render the seat layout. Defaults to '6max'. */
   tableFormat: TableFormat;
+  /** Optional labels for PDF print layout (stack, sizings). */
+  printLabels?: PrintLabels;
 };
