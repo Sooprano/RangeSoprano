@@ -214,7 +214,76 @@ function tokenize(input: string): { entries: TokenEntry[]; errors: ParseError[] 
   return { entries, errors };
 }
 
+type Suit = 'c' | 'd' | 'h' | 's';
+
+const GTOW_COMBO_RE = /^([2-9TJQKA])([cdhs])([2-9TJQKA])([cdhs]):\s*([0-9]+(?:\.[0-9]+)?)$/;
+
+function comboToHand(r1: Rank, s1: Suit, r2: Rank, s2: Suit): HandNotation | null {
+  if (r1 === r2) {
+    if (s1 === s2) return null;
+    return `${r1}${r1}`;
+  }
+  const [hi, lo, hiSuit, loSuit] = isHigher(r1, r2) ? [r1, r2, s1, s2] : [r2, r1, s2, s1];
+  const suffix: 's' | 'o' = hiSuit === loSuit ? 's' : 'o';
+  return `${hi}${lo}${suffix}`;
+}
+
+function totalCombosForHand(hand: HandNotation): number {
+  if (hand.length === 2) return 6;
+  return hand[2] === 's' ? 4 : 12;
+}
+
+function isGtoWizardFormat(input: string): boolean {
+  const firstToken = (input.split(',')[0] ?? '').trim();
+  return GTOW_COMBO_RE.test(firstToken);
+}
+
+function parseGtoWizard(input: string): ParseResult {
+  const errors: ParseError[] = [];
+  const sums = new Map<HandNotation, number>();
+  const tokens = input.split(',').map((t) => t.trim()).filter((t) => t.length > 0);
+
+  for (const token of tokens) {
+    const m = token.match(GTOW_COMBO_RE);
+    if (!m) {
+      errors.push({ token, reason: 'invalid GTOWizard combo notation' });
+      continue;
+    }
+    const r1Char = m[1]!;
+    const s1 = m[2]! as Suit;
+    const r2Char = m[3]!;
+    const s2 = m[4]! as Suit;
+    const weightStr = m[5]!;
+    if (!isRankChar(r1Char) || !isRankChar(r2Char)) {
+      errors.push({ token, reason: 'invalid rank' });
+      continue;
+    }
+    const hand = comboToHand(r1Char, s1, r2Char, s2);
+    if (!hand) {
+      errors.push({ token, reason: 'invalid combo (duplicate card)' });
+      continue;
+    }
+    const w = Number(weightStr);
+    if (!Number.isFinite(w) || w < 0) {
+      errors.push({ token, reason: 'invalid weight' });
+      continue;
+    }
+    const clamped = Math.min(w, 1);
+    sums.set(hand, (sums.get(hand) ?? 0) + clamped);
+  }
+
+  const hands: WeightedHand[] = [];
+  for (const [hand, totalWeight] of sums) {
+    const totalCombos = totalCombosForHand(hand);
+    const pct = (totalWeight / totalCombos) * 100;
+    const rounded = Math.round(pct * 10) / 10;
+    if (rounded > 0) hands.push({ hand, weight: rounded });
+  }
+  return { hands, errors };
+}
+
 export function parseHandRange(input: string): ParseResult {
+  if (isGtoWizardFormat(input)) return parseGtoWizard(input);
   const { entries, errors } = tokenize(input);
   const seen = new Map<HandNotation, number>();
 

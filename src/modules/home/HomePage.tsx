@@ -238,7 +238,7 @@ export default function HomePage() {
               </Link>
               {' '}pintando celdas con la paleta de acciones y ajustando pesos con el
               slider. También podés{' '}
-              <span className="font-medium text-content">pegar texto desde Flopzilla, GTObase</span>
+              <span className="font-medium text-content">pegar texto desde GTOWizard, Flopzilla, GTObase</span>
               {' '}u otras tools de poker: Range Soprano entiende el formato estándar
               (ej.{' '}
               <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">
@@ -250,7 +250,11 @@ export default function HomePage() {
               <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">A5s-A2s</code>
               {' '}y pesos{' '}
               <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">[50%]AKs[/50%]</code>
-              . O importá tu perfil completo en{' '}
+              ; y también el formato combo-por-combo de GTOWizard (
+              <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">
+                AcKs: 0.78, AdKc: 1, ...
+              </code>
+              ) con frecuencias mixtas exactas. O importá tu perfil completo en{' '}
               <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">.json</code>
               {' '}desde la sección{' '}
               <span className="font-medium text-content">Guardar y portabilidad</span>.
