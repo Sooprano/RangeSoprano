@@ -190,6 +190,114 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section aria-labelledby="what-heading" className="flex flex-col gap-3">
+        <h2
+          id="what-heading"
+          className="text-[11px] font-semibold uppercase tracking-[0.18em] text-content-muted"
+        >
+          ¿Qué es un rango preflop?
+        </h2>
+        <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-5 text-sm text-content-muted">
+          <p>
+            Un <span className="font-medium text-content">rango de poker preflop</span> es
+            el conjunto de manos con las que jugás (o querés jugar) desde una posición
+            específica antes del flop. En lugar de decidir mano a mano, definís un rango
+            y lo aplicás de forma consistente: por ejemplo, abrir desde el botón con un
+            rango más amplio que desde UTG, o defender la BB contra un raise con una mezcla
+            de calls y 3-bets.
+          </p>
+          <p>
+            Range Soprano es una{' '}
+            <span className="font-medium text-content">herramienta gratis para el estudio de rangos de poker</span>
+            {' '}que te permite visualizarlos sobre la grilla 13×13 estándar (pares en la
+            diagonal, suited arriba, offsuit abajo) con{' '}
+            <span className="font-medium text-content">frecuencias mixtas</span>: una misma
+            mano puede ir 70% raise + 30% call, sumando hasta 100% por celda. Ideal para
+            estudiar rangos de cash 6-max, MTTs y Heads-Up.
+          </p>
+        </div>
+      </section>
+
+      <section aria-labelledby="howto-heading" className="flex flex-col gap-3">
+        <h2
+          id="howto-heading"
+          className="text-[11px] font-semibold uppercase tracking-[0.18em] text-content-muted"
+        >
+          Cómo estudiar rangos de poker con Range Soprano
+        </h2>
+        <ol className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4 text-sm">
+          <li className="flex items-start gap-3">
+            <span aria-hidden className="mt-0.5 shrink-0 text-content-muted">
+              <Pencil className="h-4 w-4" strokeWidth={2} />
+            </span>
+            <div className="text-content-muted">
+              <span className="font-medium text-content">1. Crear o importar tus rangos</span>
+              {' — '}armá tu primer rango desde el{' '}
+              <Link to="/editor" className="font-medium text-accent-light hover:underline">
+                Editor
+              </Link>
+              {' '}pintando celdas con la paleta de acciones y ajustando pesos con el
+              slider. También podés{' '}
+              <span className="font-medium text-content">pegar texto desde Flopzilla, GTObase</span>
+              {' '}u otras tools de poker: Range Soprano entiende el formato estándar
+              (ej.{' '}
+              <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">
+                22+,A2s+,KTs+,QJs,A5o+,KQo
+              </code>
+              ) con expansiones{' '}
+              <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">+</code>
+              , rangos{' '}
+              <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">A5s-A2s</code>
+              {' '}y pesos{' '}
+              <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">[50%]AKs[/50%]</code>
+              . O importá tu perfil completo en{' '}
+              <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">.json</code>
+              {' '}desde la sección{' '}
+              <span className="font-medium text-content">Guardar y portabilidad</span>.
+            </div>
+          </li>
+          <li className="flex items-start gap-3">
+            <span aria-hidden className="mt-0.5 shrink-0 text-content-muted">
+              <Eye className="h-4 w-4" strokeWidth={2} />
+            </span>
+            <div className="text-content-muted">
+              <span className="font-medium text-content">2. Repasar en el Viewer</span>
+              {' — '}usá la vista{' '}
+              <span className="font-medium text-content">Single</span> para revisar un rango,{' '}
+              <span className="font-medium text-content">Compare</span> para comparar dos
+              en paralelo (ej. abrir vs defender) o{' '}
+              <span className="font-medium text-content">Overview</span> para ver el mosaico
+              completo de tus carpetas.
+            </div>
+          </li>
+          <li className="flex items-start gap-3">
+            <span aria-hidden className="mt-0.5 shrink-0 text-content-muted">
+              <Target className="h-4 w-4" strokeWidth={2} />
+            </span>
+            <div className="text-content-muted">
+              <span className="font-medium text-content">3. Memorizar con el Trainer</span>
+              {' — '}entrená la decisión preflop con el modo{' '}
+              <span className="font-medium text-content">Clásico</span> (precisión),{' '}
+              <span className="font-medium text-content">Speed</span> (velocidad
+              contrarreloj con leaderboard local) o{' '}
+              <span className="font-medium text-content">Drawing</span> (pintá el rango de
+              memoria y compará con la verdad). Las tres modalidades sobre mesa 6-max o HU.
+            </div>
+          </li>
+          <li className="flex items-start gap-3">
+            <span aria-hidden className="mt-0.5 shrink-0 text-content-muted">
+              <Download className="h-4 w-4" strokeWidth={2} />
+            </span>
+            <div className="text-content-muted">
+              <span className="font-medium text-content">4. Imprimir o exportar</span>
+              {' — '}generá un PDF imprimible con varios rangos por hoja para estudio
+              offline, o exportá una imagen PNG individual para compartir en foros y
+              Discord.
+            </div>
+          </li>
+        </ol>
+      </section>
+
       <section aria-labelledby="shortcuts-heading" className="flex flex-col gap-3">
         <h2
           id="shortcuts-heading"
