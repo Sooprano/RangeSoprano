@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import {
@@ -59,7 +59,7 @@ const MODULES: readonly ModuleCard[] = [
   },
 ];
 
-type Faq = { q: string; a: React.ReactNode };
+type Faq = { q: string; a: React.ReactNode; aPlain?: string };
 
 const FAQS: readonly Faq[] = [
   {
@@ -81,6 +81,8 @@ const FAQS: readonly Faq[] = [
         y recuperás todo.
       </>
     ),
+    aPlain:
+      'Es un archivo de texto con todos tus rangos serializados. Lo descargás desde Editor → Export → Download all ranges JSON y lo guardás donde quieras (Drive, Dropbox, pendrive). En otra PC o en el celular lo importás desde Home → Importar perfil completo y recuperás todo.',
   },
   {
     q: '¿Mis rangos se borran si limpio el navegador?',
@@ -105,6 +107,8 @@ const FAQS: readonly Faq[] = [
         <span className="font-medium text-content"> Print / Save as PDF</span> del navegador.
       </>
     ),
+    aPlain:
+      'En el Viewer, pestaña Overview, botón Print PDF. Configurá rangos por página, etiquetas (stack/sizing), leyenda y badge de formato. Después usá Print / Save as PDF del navegador.',
   },
   {
     q: '¿Funciona offline?',
@@ -130,6 +134,28 @@ const SHORTCUTS: readonly Shortcut[] = [
 export default function HomePage() {
   useDocumentTitle('Range Soprano · Estudio de rangos preflop de poker');
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.setAttribute('data-faq-jsonld', '');
+    script.textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: FAQS.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: f.aPlain ?? (typeof f.a === 'string' ? f.a : ''),
+        },
+      })),
+    });
+    document.head.appendChild(script);
+    return () => {
+      script.remove();
+    };
+  }, []);
 
   const onCopyBtc = async () => {
     const ok = await copyToClipboard(BTC_ADDRESS);
