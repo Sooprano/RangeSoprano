@@ -10,6 +10,8 @@
 
 ## Commits estables por fase
 
+- Fase 15 (SEO técnico completo): `e2a01ff`
+- Fase 15 (GTOWizard combo-por-combo import): `96e33dc`
 - Fase 14 (home FAQ + overview perf/style + print PDF + demo set): `893eeed`
 - Custom domain rangesoprano.com (base / + CNAME): `ae10d1f`
 
@@ -37,15 +39,19 @@
 
 ## Estado actual
 
-Todas las fases planificadas (1–14) completadas ✅.
+Todas las fases planificadas (1–15) completadas ✅.
 
 Live en https://rangesoprano.com/ (custom domain Cloudflare → GitHub Pages).
+
+Indexado en Google Search Console (home + 3 rutas internas) y Bing Webmaster Tools (importado desde GSC). Lighthouse: SEO 100, Performance 99, Best Practices 100, Accessibility 95.
 
 **Settings → Pages debe quedar siempre en Source: GitHub Actions** (no "Deploy from a branch"). Si GitHub UI lo resetea al re-tocar el custom domain, hay que volver a ponerlo en "GitHub Actions" o servirá el `index.html` raíz del repo (modo dev) → MIME error en `/src/main.tsx`.
 
 ## Feature deferred
 
 **Edit-in-place de metadatos de rango existente** — hoy solo se puede editar nombre y grupo en el panel lateral. `position`, `situation`, `villainPosition` y `tableFormat` solo se fijan al crear. Para cambiarlos hay que borrar y recrear. El store ya acepta `updateRange(id, patch)` con esos campos; falta la UI (un panel de propiedades en `RangeManager` o un modal en `EditorPage`, reutilizando lógica de `NewRangeForm`).
+
+**ImportModal multi-acción para rangos GTO completos** — el parser ya entiende GTOWizard (combo-por-combo `AcKs: 0.78`) pero `ImportModal.tsx` paint todo el resultado con UNA sola acción seleccionada. Para un rango real de solver (ej. BB vs BTN raise: mix de raise + call + fold por celda) hay que pegar el JSON 2-3 veces, una vez por cada acción exportada por separado de GTOWizard. Refactor pendiente del modal: 3 (o N) áreas de pegado con dropdown de acción por cada una, parseo paralelo, y un solo Apply que pinta todas las acciones en una pasada con `pushHistory()` antes. Alternativa más cara: parser multi-output que infiere la acción desde el archivo (no práctico — GTOWizard no la marca, exporta una estrategia por archivo). El usuario quiere esta feature priorizada cuando volvamos.
 
 ## Decisiones de diseño clave
 
@@ -115,6 +121,16 @@ Live en https://rangesoprano.com/ (custom domain Cloudflare → GitHub Pages).
 - **Print PDF — logo en cada hoja**: bloque centrado arriba de cada `.print-page` con `<Spade />` icon (`text-accent`, NO override print → mantiene morado en PDF) + "Range Soprano" wordmark + "POKER RANGES" microcopy. `document.title` se setea a `"Range Soprano · {state.title}"` en el useEffect de PrintPage para que el header opcional del navegador no muestre "localhost".
 - **Print PDF — browser headers/footers**: la fecha/URL que el navegador inyecta solo se quitan desde el diálogo de impresión (uncheck "Encabezados y pies de página"). No suprimibles desde CSS.
 - **RangeManager scroll deferred**: intenté `sticky top-4 + max-h + overflow-y-auto` pero rompía menús por clipping (overflow context atrapa absolute children) y aparecía scroll horizontal. Revertido al diseño original (no scroll, no sticky). Para implementar bien hace falta Portal de menús (no priorizado).
+
+### SEO + GTOWizard import (fase 15)
+
+- **Archivos SEO** (`public/robots.txt`, `public/sitemap.xml`, `public/og-image.svg` 1200×630). Vite copia `public/*` a `dist/` automáticamente. `index.html`: `lang="es"`, title/description en español, canonical, Open Graph, Twitter card, JSON-LD `WebApplication`.
+- **Per-route titles** vía `src/hooks/useDocumentTitle.ts` (hook minimal de ~30 líneas; setea `document.title`, `meta[name=description]` y opcional `noindex`. Restaura previo en cleanup). Aplicado en HomePage, ViewerPage, TrainerPage, EditorPage. NotFoundPage y PrintPage usan `noindex`.
+- **Pre-render de rutas SPA** en `.github/workflows/deploy.yml`: antes era solo `cp dist/index.html dist/404.html` (truco que arreglaba refresh para usuarios pero servía HTTP 404 a Googlebot). Agregado loop `for route in viewer trainer editor; do mkdir -p dist/$route; cp dist/index.html dist/$route/index.html; done` → GitHub Pages devuelve 200 en todas las rutas. Sin esto Google rechazaba indexar /viewer /trainer /editor con "Descubierta: actualmente sin indexar".
+- **FAQPage JSON-LD** en HomePage: `useEffect` que appenda/remueve `<script type="application/ld+json">` con las 9 FAQs. Para soportar respuestas con JSX el tipo `Faq` ahora tiene `aPlain?: string` opcional (solo se usa cuando `a` es ReactNode). Solo se monta en `/`, no en otras rutas.
+- **Contenido SEO en HomePage**: 2 secciones nuevas entre Módulos y Atajos: "¿Qué es un rango preflop?" (educativa, captura visitantes desde búsqueda) y "Cómo estudiar rangos de poker con Range Soprano" (workflow 4 pasos: Editor → Viewer → Trainer → Print). Keywords integradas naturalmente.
+- **GTOWizard parser** en `src/utils/handRangeParser.ts`: detección por regex `^[2-9TJQKA][cdhs][2-9TJQKA][cdhs]:\s*[0-9.]+$` en el primer token, dispatch a `parseGtoWizard()` antes del parser legacy. Conversión combo→hand: pares por mismos ranks, suited si mismos suits, offsuit si distintos. Cell weight = `sum(combo_weights) / total_combos × 100` (6/4/12 combos por par/suited/offsuit). Clamp combos a 1 (artefactos `1.0001` del solver), round a 1 decimal, filtra `rounded > 0` (descarta ruido `0.0001`). Cero cambios en `ImportModal` — sigue llamando `parseHandRange()` igual.
+- **README.md**: URL live actualizada a rangesoprano.com, descripción expandida con keywords (rangos preflop, estudio de rangos, alternativa a FreeBetRange), bloque final de keywords.
 
 ### Refactor labels + UX badges (fase 12)
 - **Single source of truth** en `src/data/positions.ts` para `SITUATION_LABELS` y `TABLE_FORMAT_LABELS`. Eliminados 8 duplicados locales.
