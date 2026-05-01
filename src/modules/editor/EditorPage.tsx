@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Upload } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { RangeGrid } from '@/components/RangeGrid';
 import { RangeStats } from '@/components/RangeStats';
 import { ActionLegend } from '@/components/ActionLegend';
@@ -27,6 +28,10 @@ import { SITUATION_LABELS } from '@/data/positions';
 const DIGIT_KEYS = '123456789';
 
 export default function EditorPage() {
+  useDocumentTitle('Editor de rangos · Range Soprano', {
+    description:
+      'Editor visual con pesos mixtos, paleta de acciones por rango, undo/redo, carpetas e import/export JSON.',
+  });
   const activeRange = useActiveRange();
   const activeRangeId = activeRange?.id ?? null;
   const allRanges = useRangeStore((s) => s.ranges);

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Brush, Dices, Zap } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { useRangeStore } from '@/store/rangeStore';
 import { useUiStore } from '@/store/uiStore';
@@ -22,6 +23,10 @@ import { SITUATION_LABELS } from '@/data/positions';
 type TrainerMode = 'classic' | 'drawing' | 'speed';
 
 export default function TrainerPage() {
+  useDocumentTitle('Entrenador de rangos · Range Soprano', {
+    description:
+      'Entrená manos preflop en mesa 6-max o HU. Modo Clásico, Speed contrarreloj o Drawing.',
+  });
   const ranges = useRangeStore((s) => s.ranges);
   const summaries = useRangeSummaries();
   const trainerRangeId = useUiStore((s) => s.trainerRangeId);

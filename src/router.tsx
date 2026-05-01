@@ -3,6 +3,7 @@ import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Link } from 'react-router-dom';
 import { AppLayout } from '@/components/Layout/AppLayout';
 import ViewerPage from '@/modules/viewer/ViewerPage';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 
 const HomePage = lazy(() => import('@/modules/home/HomePage'));
 const TrainerPage = lazy(() => import('@/modules/trainer/TrainerPage'));
@@ -22,6 +23,7 @@ function PageFallback() {
 }
 
 function NotFoundPage() {
+  useDocumentTitle('404 · Range Soprano', { noindex: true });
   return (
     <div
       role="alert"

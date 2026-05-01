@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import {
   ArrowRight,
   Bitcoin,
@@ -127,6 +128,7 @@ const SHORTCUTS: readonly Shortcut[] = [
 ];
 
 export default function HomePage() {
+  useDocumentTitle('Range Soprano · Estudio de rangos preflop de poker');
   const [copied, setCopied] = useState(false);
 
   const onCopyBtc = async () => {

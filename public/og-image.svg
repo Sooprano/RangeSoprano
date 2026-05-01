@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+  <rect width="1200" height="630" fill="#0f1115"/>
+  <g transform="translate(80, 245)">
+    <path fill="#863bff" d="M83.43 144.516c-2.135 2.717-6.5 1.207-6.5-2.246V109.103a7.27 7.27 0 0 0-7.273-7.273H32.892c-2.96 0-4.685-3.345-2.96-5.752l24.06-33.682c3.443-4.815 0-11.51-5.926-11.51H3.978c-2.96 0-4.685-3.346-2.96-5.752L32.197 1.524A2.96 2.96 0 0 1 34.575 0h92.953c2.96 0 4.685 3.345 2.96 5.752L106.43 39.434c-3.443 4.815 0 11.51 5.926 11.51h36.594c3.034 0 4.738 3.5 2.864 5.892L83.43 144.518z" transform="scale(0.7)"/>
+  </g>
+  <text x="220" y="305" font-family="Inter, system-ui, sans-serif" font-size="92" font-weight="700" fill="#ede6ff" letter-spacing="-2">Range Soprano</text>
+  <text x="220" y="370" font-family="Inter, system-ui, sans-serif" font-size="34" font-weight="500" fill="#a193b8" letter-spacing="0.5">Estudiá rangos preflop de poker</text>
+  <text x="220" y="430" font-family="Inter, system-ui, sans-serif" font-size="22" font-weight="400" fill="#7d6f95" letter-spacing="0.5">Visualizador · Editor · Entrenador · 6-max y HU</text>
+  <g transform="translate(890, 180)" opacity="0.85">
+    <rect x="0" y="0" width="240" height="240" rx="12" fill="#1a1d24" stroke="#2a2d35" stroke-width="2"/>
+    <g transform="translate(12, 12)">
+      <rect x="0" y="0" width="32" height="32" rx="3" fill="#863bff"/>
+      <rect x="36" y="0" width="32" height="32" rx="3" fill="#863bff"/>
+      <rect x="72" y="0" width="32" height="32" rx="3" fill="#863bff" opacity="0.7"/>
+      <rect x="108" y="0" width="32" height="32" rx="3" fill="#47bfff" opacity="0.6"/>
+      <rect x="144" y="0" width="32" height="32" rx="3" fill="#47bfff" opacity="0.4"/>
+      <rect x="180" y="0" width="32" height="32" rx="3" fill="#2a2d35"/>
+      <rect x="0" y="36" width="32" height="32" rx="3" fill="#863bff" opacity="0.8"/>
+      <rect x="36" y="36" width="32" height="32" rx="3" fill="#863bff"/>
+      <rect x="72" y="36" width="32" height="32" rx="3" fill="#863bff" opacity="0.6"/>
+      <rect x="108" y="36" width="32" height="32" rx="3" fill="#47bfff" opacity="0.5"/>
+      <rect x="144" y="36" width="32" height="32" rx="3" fill="#2a2d35"/>
+      <rect x="180" y="36" width="32" height="32" rx="3" fill="#2a2d35"/>
+      <rect x="0" y="72" width="32" height="32" rx="3" fill="#863bff" opacity="0.5"/>
+      <rect x="36" y="72" width="32" height="32" rx="3" fill="#863bff" opacity="0.6"/>
+      <rect x="72" y="72" width="32" height="32" rx="3" fill="#863bff"/>
+      <rect x="108" y="72" width="32" height="32" rx="3" fill="#47bfff" opacity="0.5"/>
+      <rect x="144" y="72" width="32" height="32" rx="3" fill="#2a2d35"/>
+      <rect x="180" y="72" width="32" height="32" rx="3" fill="#2a2d35"/>
+      <rect x="0" y="108" width="32" height="32" rx="3" fill="#47bfff" opacity="0.3"/>
+      <rect x="36" y="108" width="32" height="32" rx="3" fill="#47bfff" opacity="0.5"/>
+      <rect x="72" y="108" width="32" height="32" rx="3" fill="#47bfff" opacity="0.6"/>
+      <rect x="108" y="108" width="32" height="32" rx="3" fill="#863bff"/>
+      <rect x="144" y="108" width="32" height="32" rx="3" fill="#2a2d35"/>
+      <rect x="180" y="108" width="32" height="32" rx="3" fill="#2a2d35"/>
+      <rect x="0" y="144" width="32" height="32" rx="3" fill="#2a2d35"/>
+      <rect x="36" y="144" width="32" height="32" rx="3" fill="#47bfff" opacity="0.3"/>
+      <rect x="72" y="144" width="32" height="32" rx="3" fill="#47bfff" opacity="0.4"/>
+      <rect x="108" y="144" width="32" height="32" rx="3" fill="#47bfff" opacity="0.5"/>
+      <rect x="144" y="144" width="32" height="32" rx="3" fill="#2a2d35"/>
+      <rect x="180" y="144" width="32" height="32" rx="3" fill="#2a2d35"/>
+      <rect x="0" y="180" width="32" height="32" rx="3" fill="#2a2d35"/>
+      <rect x="36" y="180" width="32" height="32" rx="3" fill="#2a2d35"/>
+      <rect x="72" y="180" width="32" height="32" rx="3" fill="#47bfff" opacity="0.3"/>
+      <rect x="108" y="180" width="32" height="32" rx="3" fill="#47bfff" opacity="0.4"/>
+      <rect x="144" y="180" width="32" height="32" rx="3" fill="#2a2d35"/>
+      <rect x="180" y="180" width="32" height="32" rx="3" fill="#2a2d35"/>
+    </g>
+  </g>
+  <text x="80" y="585" font-family="Inter, system-ui, sans-serif" font-size="20" font-weight="500" fill="#5d5470" letter-spacing="2">RANGESOPRANO.COM</text>
+</svg>

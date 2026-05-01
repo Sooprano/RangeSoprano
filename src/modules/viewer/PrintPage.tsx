@@ -92,6 +92,15 @@ export default function PrintPage() {
     };
   }, [state?.title]);
 
+  useEffect(() => {
+    const robots = document.querySelector<HTMLMetaElement>('meta[name="robots"]');
+    const previous = robots?.getAttribute('content') ?? 'index, follow';
+    if (robots) robots.setAttribute('content', 'noindex, nofollow');
+    return () => {
+      if (robots) robots.setAttribute('content', previous);
+    };
+  }, []);
+
   if (!state) {
     return (
       <div

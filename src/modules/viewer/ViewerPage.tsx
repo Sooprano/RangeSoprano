@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Download, Eye, GitCompare, LayoutGrid, Printer } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { RangeGrid } from '@/components/RangeGrid';
 import { RangeStats } from '@/components/RangeStats';
@@ -30,6 +31,10 @@ import { PrintConfigModal } from './PrintConfigModal';
 type ViewMode = 'single' | 'compare' | 'overview';
 
 export default function ViewerPage() {
+  useDocumentTitle('Visualizador de rangos · Range Soprano', {
+    description:
+      'Visualizá rangos preflop con filtros por posición, situación y villano. Compará dos rangos, exportá PNG o imprimí PDF.',
+  });
   const ranges = useRangeStore((s) => s.ranges);
   const summaries = useRangeSummaries();
   const viewerRangeId = useUiStore((s) => s.viewerRangeId);
