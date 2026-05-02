@@ -1,6 +1,6 @@
 import { toPng } from 'html-to-image';
 import type { Range } from '@/types/poker';
-import { CURRENT_RANGE_STORE_VERSION } from '@/store/schemas';
+import { CURRENT_RANGE_STORE_VERSION, type GroupMeta } from '@/store/schemas';
 import { serializeWeightedHands } from './handRangeSerializer';
 import type { WeightedHand } from './handRangeParser';
 
@@ -21,16 +21,50 @@ export function rangeToJson(range: Range): string {
   return JSON.stringify(range, null, 2);
 }
 
-export function allRangesToJson(ranges: Range[]): string {
-  return JSON.stringify(
-    {
-      version: CURRENT_RANGE_STORE_VERSION,
-      exportedAt: new Date().toISOString(),
-      ranges,
-    },
-    null,
-    2,
-  );
+export function allRangesToJson(
+  ranges: Range[],
+  groupMeta?: Record<string, GroupMeta>,
+): string {
+  const payload: {
+    version: number;
+    exportedAt: string;
+    ranges: Range[];
+    groupMeta?: Record<string, GroupMeta>;
+  } = {
+    version: CURRENT_RANGE_STORE_VERSION,
+    exportedAt: new Date().toISOString(),
+    ranges,
+  };
+
+  if (groupMeta) {
+    const usedPaths = new Set<string>();
+    for (const r of ranges) {
+      if (!r.group) continue;
+      const segments = r.group.split('/');
+      for (let i = 1; i <= segments.length; i++) {
+        usedPaths.add(segments.slice(0, i).join('/'));
+      }
+    }
+    const filtered: Record<string, GroupMeta> = {};
+    let count = 0;
+    for (const path of Object.keys(groupMeta)) {
+      if (!usedPaths.has(path)) continue;
+      const meta = groupMeta[path];
+      if (!meta) continue;
+      if (
+        meta.color === undefined &&
+        meta.collapsed === undefined &&
+        meta.order === undefined
+      ) {
+        continue;
+      }
+      filtered[path] = meta;
+      count++;
+    }
+    if (count > 0) payload.groupMeta = filtered;
+  }
+
+  return JSON.stringify(payload, null, 2);
 }
 
 export function slugify(name: string): string {

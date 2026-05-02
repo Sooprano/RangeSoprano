@@ -143,6 +143,20 @@ export const zPersistedRangeState = z
   })
   .strict();
 
+/**
+ * Shape of the JSON payload produced by `allRangesToJson` and consumed by the
+ * profile importer. Keeps `groupMeta` optional so files exported before folder
+ * metadata was bundled still validate.
+ */
+export const zExportPayload = z
+  .object({
+    version: z.number().optional(),
+    exportedAt: z.string().optional(),
+    ranges: z.array(zRange).max(MAX_RANGES),
+    groupMeta: z.record(z.string(), zGroupMeta).optional(),
+  })
+  .passthrough();
+
 export const zTheme = z.enum(['dark', 'light', 'system']);
 
 export const zPersistedUiState = z

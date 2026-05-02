@@ -9,6 +9,7 @@ import {
 import { Download } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { pushToast } from '@/store/toastStore';
+import { useUiStore } from '@/store/uiStore';
 import type { Range } from '@/types/poker';
 import {
   allRangesToJson,
@@ -38,6 +39,7 @@ export function ExportMenu({ activeRange, allRanges, gridRef }: ExportMenuProps)
   const rootRef = useRef<HTMLDivElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const menuRef = useRef<HTMLUListElement | null>(null);
+  const groupMeta = useUiStore((s) => s.groupMeta);
 
   const closeAndRestore = useCallback(() => {
     setOpen(false);
@@ -68,7 +70,7 @@ export function ExportMenu({ activeRange, allRanges, gridRef }: ExportMenuProps)
     if (allRanges.length === 0) return;
     closeAndRestore();
     downloadBlob(
-      allRangesToJson(allRanges),
+      allRangesToJson(allRanges, groupMeta),
       `range-soprano-${todayIsoDate()}.json`,
       'application/json',
     );
@@ -76,7 +78,7 @@ export function ExportMenu({ activeRange, allRanges, gridRef }: ExportMenuProps)
       kind: 'success',
       message: `Downloaded ${allRanges.length} range${allRanges.length === 1 ? '' : 's'} as JSON`,
     });
-  }, [allRanges, closeAndRestore]);
+  }, [allRanges, groupMeta, closeAndRestore]);
 
   const handleExportPng = useCallback(async () => {
     const node = gridRef.current;

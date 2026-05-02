@@ -24,6 +24,12 @@ type UiStoreState = PersistedUiState & {
   reorderFolders: (parentPath: string | null, orderedPaths: string[]) => void;
   /** Rename group meta keys when a folder is renamed (cascades sub-paths). */
   renameGroupMeta: (oldPath: string, newPath: string) => void;
+  /**
+   * Merge an external groupMeta map into the current one. Incoming entries
+   * win per path; locally-managed paths not present in `incoming` are kept
+   * untouched. Returns the count of entries actually applied.
+   */
+  mergeGroupMeta: (incoming: Record<string, GroupMeta>) => number;
   setSidebarCollapsed: (v: boolean) => void;
   toggleSidebarCollapsed: () => void;
   setOverviewSelectedGroups: (groups: string[]) => void;
@@ -112,6 +118,37 @@ export const useUiStore = create<UiStoreState>()(
           if (!changed) return {};
           return { groupMeta: next };
         }),
+
+      mergeGroupMeta: (incoming) => {
+        let applied = 0;
+        set((s) => {
+          const next = { ...s.groupMeta };
+          for (const path of Object.keys(incoming)) {
+            const value = incoming[path];
+            if (!value) continue;
+            const merged: GroupMeta = {};
+            const prev = next[path];
+            if (value.color !== undefined) merged.color = value.color;
+            else if (prev?.color !== undefined) merged.color = prev.color;
+            if (value.collapsed !== undefined) merged.collapsed = value.collapsed;
+            else if (prev?.collapsed !== undefined) merged.collapsed = prev.collapsed;
+            if (value.order !== undefined) merged.order = value.order;
+            else if (prev?.order !== undefined) merged.order = prev.order;
+            if (
+              merged.color === undefined &&
+              merged.collapsed === undefined &&
+              merged.order === undefined
+            ) {
+              continue;
+            }
+            next[path] = merged;
+            applied++;
+          }
+          if (applied === 0) return {};
+          return { groupMeta: next };
+        });
+        return applied;
+      },
 
       reorderFolders: (_parentPath, orderedPaths) =>
         set((s) => {

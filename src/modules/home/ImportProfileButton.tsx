@@ -1,12 +1,15 @@
 import { useRef } from 'react';
 import { Upload } from 'lucide-react';
 import { useRangeStore } from '@/store/rangeStore';
+import { useUiStore } from '@/store/uiStore';
 import { pushToast } from '@/store/toastStore';
 import { MAX_IMPORT_BYTES } from '@/store/persist';
+import { zExportPayload } from '@/store/schemas';
 
 export function ImportProfileButton() {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const importRanges = useRangeStore((s) => s.importRanges);
+  const mergeGroupMeta = useUiStore((s) => s.mergeGroupMeta);
 
   const onPick = () => inputRef.current?.click();
 
@@ -38,11 +41,25 @@ export function ImportProfileButton() {
       return;
     }
 
+    let metaApplied = 0;
+    try {
+      const parsed = zExportPayload.safeParse(JSON.parse(text));
+      if (parsed.success && parsed.data.groupMeta) {
+        metaApplied = mergeGroupMeta(parsed.data.groupMeta);
+      }
+    } catch {
+      // JSON already validated by importRanges; meta is best-effort.
+    }
+
     const tail =
       result.rejected.length > 0 ? `, ${result.rejected.length} rechazados` : '';
+    const metaTail =
+      metaApplied > 0
+        ? ` · ${metaApplied} carpeta${metaApplied === 1 ? '' : 's'} con color`
+        : '';
     pushToast({
       kind: 'success',
-      message: `Importados ${result.accepted} rango${result.accepted === 1 ? '' : 's'}${tail}`,
+      message: `Importados ${result.accepted} rango${result.accepted === 1 ? '' : 's'}${tail}${metaTail}`,
     });
   };
 
