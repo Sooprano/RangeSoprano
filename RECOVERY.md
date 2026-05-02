@@ -13,6 +13,7 @@
 - Fase 15 (SEO técnico completo): `e2a01ff`
 - Fase 15 (GTOWizard combo-por-combo import): `96e33dc`
 - Fase 15 (ImportModal multi-acción): `b85d017`
+- Fix import/export preserva colores de carpeta: `ff58498`
 - Fase 14 (home FAQ + overview perf/style + print PDF + demo set): `893eeed`
 - Custom domain rangesoprano.com (base / + CNAME): `ae10d1f`
 
