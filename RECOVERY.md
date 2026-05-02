@@ -51,8 +51,6 @@ Indexado en Google Search Console (home + 3 rutas internas) y Bing Webmaster Too
 
 **Edit-in-place de metadatos de rango existente** — hoy solo se puede editar nombre y grupo en el panel lateral. `position`, `situation`, `villainPosition` y `tableFormat` solo se fijan al crear. Para cambiarlos hay que borrar y recrear. El store ya acepta `updateRange(id, patch)` con esos campos; falta la UI (un panel de propiedades en `RangeManager` o un modal en `EditorPage`, reutilizando lógica de `NewRangeForm`).
 
-**ImportModal multi-acción para rangos GTO completos** — el parser ya entiende GTOWizard (combo-por-combo `AcKs: 0.78`) pero `ImportModal.tsx` paint todo el resultado con UNA sola acción seleccionada. Para un rango real de solver (ej. BB vs BTN raise: mix de raise + call + fold por celda) hay que pegar el JSON 2-3 veces, una vez por cada acción exportada por separado de GTOWizard. Refactor pendiente del modal: 3 (o N) áreas de pegado con dropdown de acción por cada una, parseo paralelo, y un solo Apply que pinta todas las acciones en una pasada con `pushHistory()` antes. Alternativa más cara: parser multi-output que infiere la acción desde el archivo (no práctico — GTOWizard no la marca, exporta una estrategia por archivo). El usuario quiere esta feature priorizada cuando volvamos.
-
 ## Decisiones de diseño clave
 
 ### Editor (fase 4)

@@ -22,7 +22,7 @@ React 19 + TypeScript estricto (noUncheckedIndexedAccess, exactOptionalPropertyT
 12. ✅ vs Limp · refactor SITUATION_LABELS · badges HU/villain en RangeManager · home tips
 13. ✅ Trainer Speed mode (Classic 30s/60s/5min/10min · Drawing 30s/45s/60s/90s) + leaderboard local · Drawing session scoring + Ctrl+RightClick hand+ + paleta action-aware fix
 14. ✅ Home FAQ + Overview performance/style (variant compact, React.memo) · Print PDF (logo accent, dimensiones por perPage, texto negro, chrome constreñido) · demo set 4 rangos en folder + sub-folders
-15. ✅ SEO técnico (robots, sitemap, og-image, per-route titles via `useDocumentTitle` hook, FAQPage JSON-LD, pre-render rutas SPA en deploy.yml para HTTP 200, contenido educativo en home) · Import GTOWizard formato combo-por-combo (`AcKs: 0.78,...`) con agregación a hand-level, dispatch interno en `parseHandRange` sin tocar `ImportModal`
+15. ✅ SEO técnico (robots, sitemap, og-image, per-route titles via `useDocumentTitle` hook, FAQPage JSON-LD, pre-render rutas SPA en deploy.yml para HTTP 200, contenido educativo en home) · Import GTOWizard formato combo-por-combo (`AcKs: 0.78,...`) con agregación a hand-level, dispatch interno en `parseHandRange` sin tocar `ImportModal` · ImportModal multi-acción: N panes dinámicos (uno por `range.actions`) con dropdown + textarea + parsing independiente, un solo Apply con `pushHistory()` único y toast de combos clampeados cuando la suma >100% por celda
 
 ## Convenciones
 

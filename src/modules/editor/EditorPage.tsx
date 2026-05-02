@@ -8,7 +8,7 @@ import { ActionLegend } from '@/components/ActionLegend';
 import { computeRangeStats } from '@/utils/rangeStats';
 import { buildActionDefMap } from '@/utils/actionMeta';
 import { upsertActionInCell } from '@/utils/cellUtils';
-import { expandPlus, type WeightedHand } from '@/utils/handRangeParser';
+import { expandPlus } from '@/utils/handRangeParser';
 import { useRangeStore } from '@/store/rangeStore';
 import { pushToast } from '@/store/toastStore';
 import { useActiveRange } from '@/store/selectors';
@@ -17,7 +17,7 @@ import { ActionPalette } from './ActionPalette';
 import { RangeMetaForm } from './RangeMetaForm';
 import { WeightSlider } from './WeightSlider';
 import { HistoryToolbar } from './HistoryToolbar';
-import { ImportModal } from './ImportModal';
+import { ImportModal, type ImportPlan } from './ImportModal';
 import { ExportMenu } from './ExportMenu';
 import { EditActionsToolbar } from './EditActionsToolbar';
 import { NotesButton } from './NotesButton';
@@ -123,38 +123,63 @@ export default function EditorPage() {
   }, []);
 
   const handleImport = useCallback(
-    (hands: WeightedHand[], replace: boolean) => {
-      if (!activeRangeId || !activeAction) return;
+    (plans: ImportPlan[], replace: boolean) => {
+      if (!activeRangeId) return;
+      if (plans.length === 0) {
+        setIsImportOpen(false);
+        return;
+      }
       pushHistory();
-      if (replace) {
-        clearAllCells(activeRangeId);
-        for (const { hand, weight: w } of hands) {
-          upsertCell(activeRangeId, {
-            hand,
-            actions: [{ action: activeAction, weight: w }],
-          });
-        }
-      } else {
-        const baseCells = activeRange?.cells ?? {};
-        for (const { hand, weight: w } of hands) {
-          const existing = baseCells[hand];
-          const result = upsertActionInCell(existing, hand, activeAction, w);
-          if (result.kind === 'clear') clearCell(activeRangeId, hand);
-          else upsertCell(activeRangeId, result.cell);
+      if (replace) clearAllCells(activeRangeId);
+
+      let cells = replace ? {} : { ...(activeRange?.cells ?? {}) };
+      let totalHands = 0;
+      let clampedCount = 0;
+
+      for (const plan of plans) {
+        for (const { hand, weight: w } of plan.hands) {
+          totalHands++;
+          const existing = cells[hand];
+          const result = upsertActionInCell(existing, hand, plan.actionId, w);
+          if (result.kind === 'clear') {
+            clearCell(activeRangeId, hand);
+            if (hand in cells) {
+              const { [hand]: _omit, ...rest } = cells;
+              void _omit;
+              cells = rest;
+            }
+          } else {
+            const deposited =
+              result.cell.actions.find((a) => a.action === plan.actionId)
+                ?.weight ?? 0;
+            if (w < 100 && deposited < w) {
+              clampedCount++;
+            } else if (w >= 100) {
+              const overwrote = (existing?.actions ?? []).some(
+                (a) => a.action !== plan.actionId && a.weight > 0,
+              );
+              if (overwrote) clampedCount++;
+            }
+            upsertCell(activeRangeId, result.cell);
+            cells = { ...cells, [hand]: result.cell };
+          }
         }
       }
+
       setIsImportOpen(false);
-      pushToast({
-        kind: 'success',
-        message: `Imported ${hands.length} hand${hands.length === 1 ? '' : 's'}${
-          replace ? ' (replaced existing)' : ''
-        }`,
-      });
+
+      const summary = `Imported ${totalHands} hand${totalHands === 1 ? '' : 's'}${
+        replace ? ' (replaced existing)' : ''
+      }`;
+      const clampNote =
+        clampedCount > 0
+          ? ` · ${clampedCount} combo${clampedCount === 1 ? '' : 's'} clamped to fit ≤100% per cell`
+          : '';
+      pushToast({ kind: 'success', message: `${summary}${clampNote}` });
     },
     [
       activeRangeId,
       activeRange,
-      activeAction,
       pushHistory,
       clearAllCells,
       clearCell,
@@ -278,10 +303,9 @@ export default function EditorPage() {
         )}
       </div>
 
-      {isImportOpen && activeRange && activeAction && (
+      {isImportOpen && activeRange && (
         <ImportModal
           range={activeRange}
-          actionId={activeAction}
           onImport={handleImport}
           onClose={() => setIsImportOpen(false)}
         />

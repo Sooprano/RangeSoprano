@@ -1,32 +1,49 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { X } from 'lucide-react';
+import { Plus, Trash2, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { parseHandRange, type WeightedHand } from '@/utils/handRangeParser';
 import { actionDefOf } from '@/utils/actionMeta';
 import type { ActionId, Range } from '@/types/poker';
 
+export type ImportPlan = { actionId: ActionId; hands: WeightedHand[] };
+
 type ImportModalProps = {
   range: Range;
-  actionId: ActionId;
-  onImport: (hands: WeightedHand[], replace: boolean) => void;
+  onImport: (plans: ImportPlan[], replace: boolean) => void;
   onClose: () => void;
 };
 
-const MAX_ERROR_LIST = 8;
+type Pane = { id: string; actionId: ActionId; text: string };
+
+const MAX_ERROR_LIST = 4;
 
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-export function ImportModal({ range, actionId, onImport, onClose }: ImportModalProps) {
-  const [text, setText] = useState('');
+function makePaneId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `pane-${Math.random().toString(36).slice(2)}`;
+}
+
+export function ImportModal({ range, onImport, onClose }: ImportModalProps) {
+  const orderedActions = useMemo(
+    () => [...range.actions].sort((a, b) => a.order - b.order),
+    [range.actions],
+  );
+
+  const [panes, setPanes] = useState<Pane[]>(() =>
+    orderedActions.map((a) => ({ id: makePaneId(), actionId: a.id, text: '' })),
+  );
   const [replace, setReplace] = useState(false);
   const dialogRef = useRef<HTMLDivElement | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const firstTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const previouslyFocused = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     previouslyFocused.current = document.activeElement as HTMLElement | null;
-    textareaRef.current?.focus();
+    firstTextareaRef.current?.focus();
     return () => {
       previouslyFocused.current?.focus?.();
     };
@@ -64,14 +81,58 @@ export function ImportModal({ range, actionId, onImport, onClose }: ImportModalP
     return () => window.removeEventListener('keydown', handler);
   }, [onClose]);
 
-  const result = useMemo(() => parseHandRange(text), [text]);
-  const def = actionDefOf(range.actions, actionId);
-  const label = def?.label ?? actionId;
-  const color = def?.color ?? '#9ca3af';
+  const parsedByPane = useMemo(
+    () => panes.map((p) => ({ pane: p, result: parseHandRange(p.text) })),
+    [panes],
+  );
+
+  const totalHands = parsedByPane.reduce(
+    (acc, { result }) => acc + result.hands.length,
+    0,
+  );
+
+  const usedActionIds = useMemo(
+    () => new Set(panes.map((p) => p.actionId)),
+    [panes],
+  );
+
+  const nextAvailableAction = useMemo(
+    () => orderedActions.find((a) => !usedActionIds.has(a.id)),
+    [orderedActions, usedActionIds],
+  );
+
+  const canAddPane = nextAvailableAction !== undefined;
+  const canRemove = panes.length > 1;
+
+  const addPane = () => {
+    if (!nextAvailableAction) return;
+    setPanes((prev) => [
+      ...prev,
+      { id: makePaneId(), actionId: nextAvailableAction.id, text: '' },
+    ]);
+  };
+
+  const removePane = (id: string) => {
+    setPanes((prev) => (prev.length <= 1 ? prev : prev.filter((p) => p.id !== id)));
+  };
+
+  const updatePaneAction = (id: string, actionId: ActionId) => {
+    setPanes((prev) => prev.map((p) => (p.id === id ? { ...p, actionId } : p)));
+  };
+
+  const updatePaneText = (id: string, text: string) => {
+    setPanes((prev) => prev.map((p) => (p.id === id ? { ...p, text } : p)));
+  };
 
   const handleImportClick = () => {
-    if (result.hands.length === 0) return;
-    onImport(result.hands, replace);
+    if (totalHands === 0) return;
+    const plans: ImportPlan[] = parsedByPane
+      .filter(({ result }) => result.hands.length > 0)
+      .map(({ pane, result }) => ({
+        actionId: pane.actionId,
+        hands: result.hands,
+      }));
+    onImport(plans, replace);
   };
 
   return (
@@ -87,7 +148,7 @@ export function ImportModal({ range, actionId, onImport, onClose }: ImportModalP
         aria-labelledby="import-title"
         aria-describedby="import-desc"
         onClick={(e) => e.stopPropagation()}
-        className="flex w-full max-w-xl flex-col gap-3 rounded-xl border border-border bg-surface p-5 shadow-surface"
+        className="flex max-h-[90vh] w-full max-w-2xl flex-col gap-3 rounded-xl border border-border bg-surface p-5 shadow-surface"
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex flex-col gap-1">
@@ -95,16 +156,8 @@ export function ImportModal({ range, actionId, onImport, onClose }: ImportModalP
               Import range
             </h2>
             <p id="import-desc" className="text-xs text-content-muted">
-              Parsed hands will be painted as{' '}
-              <span className="inline-flex items-center gap-1 font-medium text-content">
-                <span
-                  aria-hidden
-                  className="h-2.5 w-2.5 rounded-sm"
-                  style={{ backgroundColor: color }}
-                />
-                {label}
-              </span>{' '}
-              using each token's weight (defaults to 100%).
+              Paste one block per action. Each block is parsed independently and
+              all are applied in a single step (one undo).
             </p>
           </div>
           <button
@@ -117,48 +170,109 @@ export function ImportModal({ range, actionId, onImport, onClose }: ImportModalP
           </button>
         </div>
 
-        <textarea
-          ref={textareaRef}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          rows={10}
-          spellCheck={false}
-          aria-label="Hand range tokens"
-          aria-describedby="import-result"
-          placeholder="AA,AKs,KK,[98%]AQs[/98%],[45%]A7s[/45%],88+,T9s-65s"
-          className="w-full resize-y rounded-md border border-border bg-bg px-3 py-2 font-mono text-xs text-content placeholder:text-content-disabled focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
-        />
+        <div className="flex max-h-[55vh] flex-col gap-3 overflow-y-auto pr-1">
+          {parsedByPane.map(({ pane, result }, idx) => {
+            const def = actionDefOf(range.actions, pane.actionId);
+            const color = def?.color ?? '#9ca3af';
+            return (
+              <div
+                key={pane.id}
+                className="flex flex-col gap-2 rounded-md border border-border bg-bg/30 p-3"
+              >
+                <div className="flex items-center gap-2">
+                  <span
+                    aria-hidden
+                    className="h-3 w-3 shrink-0 rounded-sm"
+                    style={{ backgroundColor: color }}
+                  />
+                  <select
+                    value={pane.actionId}
+                    onChange={(e) => updatePaneAction(pane.id, e.target.value)}
+                    aria-label={`Action for paste block ${idx + 1}`}
+                    className="rounded-md border border-border bg-bg px-2 py-1 text-xs font-medium text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
+                  >
+                    {orderedActions.map((a) => (
+                      <option
+                        key={a.id}
+                        value={a.id}
+                        disabled={
+                          a.id !== pane.actionId && usedActionIds.has(a.id)
+                        }
+                      >
+                        {a.label}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="ml-auto text-[11px] text-content-muted">
+                    <span className="font-semibold text-content">
+                      {result.hands.length}
+                    </span>{' '}
+                    hand{result.hands.length === 1 ? '' : 's'}
+                    {result.errors.length > 0 && (
+                      <>
+                        {' · '}
+                        <span className="text-danger">
+                          {result.errors.length} unrecognized
+                        </span>
+                      </>
+                    )}
+                  </span>
+                  {canRemove && (
+                    <button
+                      type="button"
+                      onClick={() => removePane(pane.id)}
+                      aria-label={`Remove paste block ${idx + 1}`}
+                      className="rounded-md p-1 text-content-muted hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" strokeWidth={2.25} />
+                    </button>
+                  )}
+                </div>
 
-        <div
-          id="import-result"
-          className="flex flex-col gap-2 rounded-md border border-border bg-bg/40 px-3 py-2 text-xs"
-        >
-          <div className="flex items-center gap-3">
-            <span className="text-content">
-              <span className="font-semibold">{result.hands.length}</span> hand
-              {result.hands.length === 1 ? '' : 's'} detected
-            </span>
-            {result.errors.length > 0 && (
-              <span className="text-danger">
-                {result.errors.length} unrecognized
-              </span>
-            )}
-          </div>
-          {result.errors.length > 0 && (
-            <ul className="flex flex-col gap-0.5 text-[11px] text-content-muted">
-              {result.errors.slice(0, MAX_ERROR_LIST).map((err, i) => (
-                <li key={i}>
-                  <span className="font-mono text-danger">{err.token}</span>
-                  {' · '}
-                  {err.reason}
-                </li>
-              ))}
-              {result.errors.length > MAX_ERROR_LIST && (
-                <li>+{result.errors.length - MAX_ERROR_LIST} more…</li>
-              )}
-            </ul>
-          )}
+                <textarea
+                  ref={idx === 0 ? firstTextareaRef : undefined}
+                  value={pane.text}
+                  onChange={(e) => updatePaneText(pane.id, e.target.value)}
+                  rows={5}
+                  spellCheck={false}
+                  aria-label={`Paste tokens for ${def?.label ?? pane.actionId}`}
+                  placeholder="AA,AKs,KK,[98%]AQs[/98%],88+,T9s-65s   —or—   AcKs: 0.78,AdKc: 1,…"
+                  className="w-full resize-y rounded-md border border-border bg-bg px-3 py-2 font-mono text-xs text-content placeholder:text-content-disabled focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
+                />
+
+                {result.errors.length > 0 && (
+                  <ul className="flex flex-col gap-0.5 text-[11px] text-content-muted">
+                    {result.errors.slice(0, MAX_ERROR_LIST).map((err, i) => (
+                      <li key={i}>
+                        <span className="font-mono text-danger">{err.token}</span>
+                        {' · '}
+                        {err.reason}
+                      </li>
+                    ))}
+                    {result.errors.length > MAX_ERROR_LIST && (
+                      <li>+{result.errors.length - MAX_ERROR_LIST} more…</li>
+                    )}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
         </div>
+
+        <button
+          type="button"
+          onClick={addPane}
+          disabled={!canAddPane}
+          className={cn(
+            'inline-flex w-fit items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light',
+            canAddPane
+              ? 'text-accent-light hover:bg-surface-hover'
+              : 'cursor-not-allowed text-content-disabled',
+          )}
+        >
+          <Plus className="h-3.5 w-3.5" strokeWidth={2.25} />
+          Add action
+        </button>
 
         <label className="inline-flex items-center gap-2 text-xs text-content-muted">
           <input
@@ -181,15 +295,15 @@ export function ImportModal({ range, actionId, onImport, onClose }: ImportModalP
           <button
             type="button"
             onClick={handleImportClick}
-            disabled={result.hands.length === 0}
+            disabled={totalHands === 0}
             className={cn(
               'rounded-md px-3 py-1.5 text-sm font-medium shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light',
-              result.hands.length === 0
+              totalHands === 0
                 ? 'cursor-not-allowed bg-surface-hover text-content-disabled'
                 : 'bg-accent text-white hover:bg-accent-deep',
             )}
           >
-            Import {result.hands.length > 0 && `(${result.hands.length})`}
+            Import {totalHands > 0 && `(${totalHands})`}
           </button>
         </div>
       </div>
