@@ -170,7 +170,7 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
     <div className="flex flex-col gap-4">
       <ScoreBar score={score} accuracy={accuracy} />
 
-      <div className="flex flex-col items-center gap-6 rounded-xl border border-border bg-surface/60 p-6 shadow-surface">
+      <div className="flex flex-col items-center gap-4 rounded-xl border border-border bg-surface/60 p-4 shadow-surface sm:p-5">
         <PokerTable
             heroPosition={range.position}
             hand={current.hand}
@@ -184,7 +184,7 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
           onAnswer={answer}
         />
 
-        <div className="min-h-[5rem] w-full flex flex-col gap-2">
+        <div className="min-h-[3.5rem] w-full flex flex-col gap-2">
           {feedback ? (
             <>
               <FeedbackPanel feedback={feedback} actions={range.actions} />
@@ -262,7 +262,7 @@ type ActionGridProps = {
 
 function ActionGrid({ actions, feedback, onAnswer }: ActionGridProps) {
   return (
-    <div className="grid w-full max-w-md grid-cols-2 gap-2 sm:grid-cols-5">
+    <div className="grid w-full max-w-md grid-cols-2 gap-1.5 sm:grid-cols-3">
       {actions.map((def, i) => {
         const isExpected = feedback?.expected === def.id;
         const isPicked = feedback?.picked === def.id;
@@ -273,7 +273,7 @@ function ActionGrid({ actions, feedback, onAnswer }: ActionGridProps) {
             disabled={feedback !== null}
             onClick={() => onAnswer(def.id)}
             className={cn(
-              'flex flex-col items-center gap-1 rounded-lg border px-3 py-3 text-sm font-medium',
+              'flex flex-row items-center justify-between gap-2 rounded-lg border px-2.5 py-1.5 text-xs font-medium',
               'transition-colors duration-150 ease-out-soft',
               'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light',
               feedback
@@ -287,11 +287,11 @@ function ActionGrid({ actions, feedback, onAnswer }: ActionGridProps) {
           >
             <span
               aria-hidden
-              className="h-3 w-3 rounded-sm"
+              className="h-2.5 w-2.5 shrink-0 rounded-sm"
               style={{ backgroundColor: def.color }}
             />
-            <span>{def.label}</span>
-            <span className="text-[10px] uppercase tracking-wider text-content-muted">
+            <span className="flex-1 truncate text-left">{def.label}</span>
+            <span className="shrink-0 rounded bg-surface px-1 py-px text-[10px] tabular-nums tracking-wider text-content-muted">
               {i + 1}
             </span>
           </button>

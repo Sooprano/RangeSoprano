@@ -432,7 +432,7 @@ function SpeedClassicRun({
         ]}
       />
 
-      <div className="flex flex-col items-center gap-5 rounded-xl border border-border bg-surface/60 p-5 shadow-surface">
+      <div className="flex flex-col items-center gap-4 rounded-xl border border-border bg-surface/60 p-4 shadow-surface sm:p-5">
         <PokerTable
           heroPosition={range.position}
           hand={hand.hand}
@@ -440,7 +440,7 @@ function SpeedClassicRun({
           {...(range.villainPosition !== undefined && { villainPosition: range.villainPosition })}
         />
 
-        <div className="grid w-full max-w-md grid-cols-2 gap-2 sm:grid-cols-5">
+        <div className="grid w-full max-w-md grid-cols-2 gap-1.5 sm:grid-cols-3">
           {orderedActions.map((def, i) => {
             const isPicked = feedback?.picked === def.id;
             const flashCorrect = feedback && isPicked && feedback.correct;
@@ -452,7 +452,7 @@ function SpeedClassicRun({
                 disabled={feedback !== null}
                 onClick={() => answer(def.id)}
                 className={cn(
-                  'flex flex-col items-center gap-1 rounded-lg border px-3 py-3 text-sm font-medium',
+                  'flex flex-row items-center justify-between gap-2 rounded-lg border px-2.5 py-1.5 text-xs font-medium',
                   'transition-colors duration-100',
                   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light',
                   flashCorrect
@@ -462,9 +462,9 @@ function SpeedClassicRun({
                       : 'border-border bg-surface/40 text-content hover:bg-surface-hover',
                 )}
               >
-                <span aria-hidden className="h-3 w-3 rounded-sm" style={{ backgroundColor: def.color }} />
-                <span>{def.label}</span>
-                <span className="text-[10px] uppercase tracking-wider text-content-muted">{i + 1}</span>
+                <span aria-hidden className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: def.color }} />
+                <span className="flex-1 truncate text-left">{def.label}</span>
+                <span className="shrink-0 rounded bg-surface px-1 py-px text-[10px] tabular-nums tracking-wider text-content-muted">{i + 1}</span>
               </button>
             );
           })}

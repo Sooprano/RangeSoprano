@@ -100,11 +100,11 @@ export default function TrainerPage() {
           </div>
           {range ? (
             mode === 'classic' ? (
-              <ClassicTrainer key={range.id} range={range} />
+              <ClassicTrainer range={range} />
             ) : mode === 'drawing' ? (
-              <DrawingTrainer key={range.id} range={range} />
+              <DrawingTrainer range={range} />
             ) : (
-              <SpeedTrainer key={range.id} range={range} />
+              <SpeedTrainer range={range} />
             )
           ) : (
             <div className="flex min-h-[40vh] items-center justify-center rounded-xl border border-dashed border-border p-6 text-center text-sm text-content-muted">
