@@ -13,6 +13,16 @@ import {
 
 const AUTO_ADVANCE_MS = 1500;
 const STREAK_BONUS_THRESHOLD = 5;
+const FREESTYLE_TOLERANCE = 1;
+const DIRECT_KINDS: readonly QuestionKind[] = ['bluff-fe', 'call-eq'];
+
+function isDirectKind(kind: QuestionKind): boolean {
+  return kind === 'bluff-fe' || kind === 'call-eq';
+}
+
+function parsePct(display: string): number {
+  return parseFloat(display.replace('%', ''));
+}
 
 type Score = {
   correct: number;
@@ -43,13 +53,28 @@ export function OddsStudy() {
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [score, setScore] = useState<Score>(INITIAL_SCORE);
   const [autoAdvance, setAutoAdvance] = useState(false);
+  const [expertMode, setExpertMode] = useState(false);
 
   const enabledArr = useMemo(() => Array.from(enabled), [enabled]);
+  const hasDirectEnabled = useMemo(
+    () => DIRECT_KINDS.some((k) => enabled.has(k)),
+    [enabled],
+  );
+
+  // If user disables both direct kinds via KindFilter while expert is on,
+  // force expert off so the toggle's invariants (only direct kinds) hold.
+  useEffect(() => {
+    if (expertMode && !hasDirectEnabled) setExpertMode(false);
+  }, [expertMode, hasDirectEnabled]);
 
   const drawNext = useCallback(() => {
-    setQuestion(generateQuestion(enabledArr));
+    const pool =
+      expertMode && hasDirectEnabled
+        ? enabledArr.filter((k) => isDirectKind(k))
+        : enabledArr;
+    setQuestion(generateQuestion(pool.length > 0 ? pool : enabledArr));
     setFeedback(null);
-  }, [enabledArr]);
+  }, [enabledArr, expertMode, hasDirectEnabled]);
 
   // Auto-advance: tras feedback, dispara drawNext en AUTO_ADVANCE_MS si el
   // toggle está activo. Si el usuario toca Next/Enter/N antes, ese effect se
@@ -60,22 +85,42 @@ export function OddsStudy() {
     return () => clearTimeout(id);
   }, [autoAdvance, feedback, drawNext]);
 
+  // Si expert se activa con una pregunta de sizing en pantalla, redibujá.
+  useEffect(() => {
+    if (expertMode && !isDirectKind(question.kind)) drawNext();
+  }, [expertMode, question.kind, drawNext]);
+
+  const recordAnswer = useCallback((wasCorrect: boolean, picked: string) => {
+    setFeedback({ picked, wasCorrect });
+    setScore((s) => {
+      const streak = wasCorrect ? s.streak + 1 : 0;
+      return {
+        correct: s.correct + (wasCorrect ? 1 : 0),
+        total: s.total + 1,
+        streak,
+        bestStreak: Math.max(s.bestStreak, streak),
+      };
+    });
+  }, []);
+
   const answer = useCallback(
     (picked: string) => {
       if (feedback) return;
-      const wasCorrect = picked === question.correct;
-      setFeedback({ picked, wasCorrect });
-      setScore((s) => {
-        const streak = wasCorrect ? s.streak + 1 : 0;
-        return {
-          correct: s.correct + (wasCorrect ? 1 : 0),
-          total: s.total + 1,
-          streak,
-          bestStreak: Math.max(s.bestStreak, streak),
-        };
-      });
+      recordAnswer(picked === question.correct, picked);
     },
-    [feedback, question.correct],
+    [feedback, question.correct, recordAnswer],
+  );
+
+  const answerFreestyle = useCallback(
+    (raw: string) => {
+      if (feedback) return;
+      const value = Number(raw.trim());
+      if (!Number.isFinite(value)) return;
+      const correctNum = parsePct(question.correct);
+      const wasCorrect = Math.abs(value - correctNum) <= FREESTYLE_TOLERANCE;
+      recordAnswer(wasCorrect, `${raw.trim()}%`);
+    },
+    [feedback, question.correct, recordAnswer],
   );
 
   const reset = useCallback(() => {
@@ -151,39 +196,48 @@ export function OddsStudy() {
           <MiniPot size={question.visualSize} />
         )}
 
-        <div className="mx-auto grid w-full max-w-md grid-cols-2 gap-1.5 sm:grid-cols-4">
-          {question.options.map((opt, i) => {
-            const isCorrect = feedback && opt === question.correct;
-            const isPicked = feedback?.picked === opt;
-            return (
-              <button
-                key={`${question.prompt}-${opt}-${i}`}
-                type="button"
-                disabled={feedback !== null}
-                onClick={() => answer(opt)}
-                className={cn(
-                  'flex flex-row items-center justify-between gap-2 rounded-lg border px-2.5 py-1.5 text-xs font-medium',
-                  'transition-colors duration-150 ease-out-soft',
-                  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light',
-                  feedback
-                    ? isCorrect
-                      ? 'border-emerald-500/60 bg-emerald-500/10 text-content'
-                      : isPicked
-                        ? 'border-rose-500/60 bg-rose-500/10 text-content'
-                        : 'border-border bg-surface/40 text-content-muted opacity-60'
-                    : 'border-border bg-surface/40 text-content hover:bg-surface-hover',
-                )}
-              >
-                <span className="flex-1 truncate text-left tabular-nums">
-                  {opt}
-                </span>
-                <span className="shrink-0 rounded bg-surface px-1 py-px text-[10px] tabular-nums tracking-wider text-content-muted">
-                  {i + 1}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+        {expertMode && isDirectKind(question.kind) ? (
+          <FreestyleInput
+            question={question}
+            feedback={feedback}
+            onSubmit={answerFreestyle}
+            onAdvance={drawNext}
+          />
+        ) : (
+          <div className="mx-auto grid w-full max-w-md grid-cols-2 gap-1.5 sm:grid-cols-4">
+            {question.options.map((opt, i) => {
+              const isCorrect = feedback && opt === question.correct;
+              const isPicked = feedback?.picked === opt;
+              return (
+                <button
+                  key={`${question.prompt}-${opt}-${i}`}
+                  type="button"
+                  disabled={feedback !== null}
+                  onClick={() => answer(opt)}
+                  className={cn(
+                    'flex flex-row items-center justify-between gap-2 rounded-lg border px-2.5 py-1.5 text-xs font-medium',
+                    'transition-colors duration-150 ease-out-soft',
+                    'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light',
+                    feedback
+                      ? isCorrect
+                        ? 'border-emerald-500/60 bg-emerald-500/10 text-content'
+                        : isPicked
+                          ? 'border-rose-500/60 bg-rose-500/10 text-content'
+                          : 'border-border bg-surface/40 text-content-muted opacity-60'
+                      : 'border-border bg-surface/40 text-content hover:bg-surface-hover',
+                  )}
+                >
+                  <span className="flex-1 truncate text-left tabular-nums">
+                    {opt}
+                  </span>
+                  <span className="shrink-0 rounded bg-surface px-1 py-px text-[10px] tabular-nums tracking-wider text-content-muted">
+                    {i + 1}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         <div className="min-h-[3.5rem] w-full">
           {feedback ? (
@@ -191,10 +245,15 @@ export function OddsStudy() {
               wasCorrect={feedback.wasCorrect}
               correct={question.correct}
               explanation={question.explanation}
+              {...(expertMode && isDirectKind(question.kind)
+                ? { picked: feedback.picked }
+                : {})}
             />
           ) : (
             <p className="text-center text-xs text-content-muted">
-              Pick an answer · keys 1-4 · N to skip after answering
+              {expertMode && isDirectKind(question.kind)
+                ? `Tipea el % · Enter para enviar · tolerancia ±${FREESTYLE_TOLERANCE}%`
+                : 'Pick an answer · keys 1-4 · N to skip after answering'}
             </p>
           )}
         </div>
@@ -231,6 +290,9 @@ export function OddsStudy() {
       <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
         <KindFilter enabled={enabled} onToggle={toggleKind} />
         <AutoAdvanceToggle value={autoAdvance} onChange={setAutoAdvance} />
+        {hasDirectEnabled && (
+          <ExpertModeToggle value={expertMode} onChange={setExpertMode} />
+        )}
       </div>
     </div>
   );
@@ -395,10 +457,12 @@ function FeedbackPanel({
   wasCorrect,
   correct,
   explanation,
+  picked,
 }: {
   wasCorrect: boolean;
   correct: string;
   explanation: string;
+  picked?: string;
 }) {
   return (
     <div
@@ -409,7 +473,7 @@ function FeedbackPanel({
           : 'border-rose-500/40 bg-rose-500/5 text-content',
       )}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         {wasCorrect ? (
           <Check className="h-4 w-4 text-emerald-400" strokeWidth={2.5} />
         ) : (
@@ -420,6 +484,17 @@ function FeedbackPanel({
         </span>
         {!wasCorrect && (
           <>
+            {picked !== undefined && (
+              <>
+                <span className="text-content-muted">·</span>
+                <span className="text-content-muted">
+                  Tipeaste{' '}
+                  <span className="font-medium text-content tabular-nums">
+                    {picked}
+                  </span>
+                </span>
+              </>
+            )}
             <span className="text-content-muted">·</span>
             <span className="text-content-muted">
               Respuesta:{' '}
@@ -431,6 +506,141 @@ function FeedbackPanel({
         )}
       </div>
       <p className="font-mono text-xs text-content-muted">{explanation}</p>
+    </div>
+  );
+}
+
+function ExpertModeToggle({
+  value,
+  onChange,
+}: {
+  value: boolean;
+  onChange: (next: boolean) => void;
+}) {
+  return (
+    <label
+      className={cn(
+        'inline-flex cursor-pointer items-center gap-2 rounded-full border px-2.5 py-1 text-[11px] font-medium',
+        'transition-colors duration-150 ease-out-soft',
+        'focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-light',
+        value
+          ? 'border-amber-500/60 bg-amber-500/10 text-amber-200'
+          : 'border-border bg-surface/40 text-content-muted hover:bg-surface-hover hover:text-content',
+      )}
+      title="Reemplaza los chips por un input numérico. Solo aplica a Bluff FE / Call equity."
+    >
+      <input
+        type="checkbox"
+        checked={value}
+        onChange={(e) => onChange(e.target.checked)}
+        className="sr-only"
+      />
+      <span
+        aria-hidden
+        className={cn(
+          'inline-block h-3 w-3 rounded-sm border',
+          value
+            ? 'border-amber-400 bg-amber-400'
+            : 'border-border bg-surface',
+        )}
+      />
+      Modo experto
+    </label>
+  );
+}
+
+function FreestyleInput({
+  question,
+  feedback,
+  onSubmit,
+  onAdvance,
+}: {
+  question: OddsQuestion;
+  feedback: Feedback | null;
+  onSubmit: (raw: string) => void;
+  onAdvance: () => void;
+}) {
+  const [value, setValue] = useState('');
+
+  // Reset typed value when the question changes (key by prompt — unique per gen).
+  useEffect(() => {
+    setValue('');
+  }, [question.prompt]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (feedback) onAdvance();
+      else if (value.trim() !== '') onSubmit(value);
+      return;
+    }
+    if (feedback && (e.key === 'n' || e.key === 'N')) {
+      e.preventDefault();
+      onAdvance();
+    }
+  };
+
+  const trimmed = value.trim();
+  const canSubmit = !feedback && trimmed !== '' && Number.isFinite(Number(trimmed));
+
+  return (
+    <div className="mx-auto flex w-full max-w-md flex-col gap-2">
+      <div className="flex w-full items-stretch gap-2">
+        <div
+          className={cn(
+            'relative flex flex-1 items-center rounded-lg border bg-surface/40',
+            'transition-colors duration-150 ease-out-soft',
+            'focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-light',
+            feedback
+              ? feedback.wasCorrect
+                ? 'border-emerald-500/60 bg-emerald-500/10'
+                : 'border-rose-500/60 bg-rose-500/10'
+              : 'border-border',
+          )}
+        >
+          <input
+            type="number"
+            inputMode="decimal"
+            min={0}
+            max={100}
+            step={0.5}
+            autoFocus
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={feedback !== null}
+            placeholder="__"
+            aria-label="Respuesta en porcentaje"
+            className="w-full appearance-none bg-transparent px-3 py-2 text-center text-lg font-semibold tabular-nums text-content outline-none placeholder:text-content-muted disabled:cursor-not-allowed"
+          />
+          <span
+            aria-hidden
+            className="pr-3 text-lg font-semibold text-content-muted"
+          >
+            %
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            if (feedback) onAdvance();
+            else if (canSubmit) onSubmit(value);
+          }}
+          disabled={!feedback && !canSubmit}
+          className={cn(
+            'inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-colors',
+            'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light',
+            feedback || canSubmit
+              ? 'bg-accent text-white hover:bg-accent-deep'
+              : 'cursor-not-allowed bg-surface text-content-disabled',
+          )}
+        >
+          {feedback ? 'Next' : 'Submit'}
+          <span className="text-[10px] uppercase tracking-wider opacity-70">
+            ↵
+          </span>
+        </button>
+      </div>
     </div>
   );
 }
