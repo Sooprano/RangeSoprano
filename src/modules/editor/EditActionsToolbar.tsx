@@ -19,28 +19,28 @@ export function EditActionsToolbar({ range, className }: EditActionsToolbarProps
 
   const handleSave = () => {
     snapshotRange(range.id);
-    pushToast({ kind: 'success', message: 'Range saved.' });
+    pushToast({ kind: 'success', message: 'Rango guardado.' });
   };
 
   const handleDiscard = () => {
     if (!isDirty) return;
     if (
       !window.confirm(
-        'Discard all changes since the last save? This cannot be undone.',
+        '¿Descartar todos los cambios desde el último guardado? Esta acción no se puede deshacer.',
       )
     )
       return;
     pushHistory();
     revertRange(range.id);
-    pushToast({ kind: 'info', message: 'Changes discarded.' });
+    pushToast({ kind: 'info', message: 'Cambios descartados.' });
   };
 
   const handleClear = () => {
     if (Object.keys(range.cells).length === 0) return;
-    if (!window.confirm('Clear all cells in this range?')) return;
+    if (!window.confirm('¿Limpiar todas las celdas de este rango?')) return;
     pushHistory();
     clearAllCells(range.id);
-    pushToast({ kind: 'info', message: 'Grid cleared.' });
+    pushToast({ kind: 'info', message: 'Grilla limpiada.' });
   };
 
   const baseBtn =
@@ -55,8 +55,8 @@ export function EditActionsToolbar({ range, className }: EditActionsToolbarProps
       <button
         type="button"
         onClick={handleSave}
-        title="Save (snapshot)"
-        aria-label={isDirty ? 'Save range (unsaved changes)' : 'Save range'}
+        title="Guardar (snapshot)"
+        aria-label={isDirty ? 'Guardar rango (cambios sin guardar)' : 'Guardar rango'}
         className={cn(
           baseBtn,
           isDirty
@@ -65,7 +65,7 @@ export function EditActionsToolbar({ range, className }: EditActionsToolbarProps
         )}
       >
         <Save className="h-3.5 w-3.5" strokeWidth={2.25} />
-        <span>Save</span>
+        <span>Guardar</span>
         {isDirty && (
           <span aria-hidden className="ml-0.5 h-1.5 w-1.5 rounded-full bg-accent" />
         )}
@@ -74,7 +74,7 @@ export function EditActionsToolbar({ range, className }: EditActionsToolbarProps
         type="button"
         onClick={handleDiscard}
         disabled={!isDirty}
-        title="Discard unsaved changes"
+        title="Descartar cambios sin guardar"
         className={cn(
           baseBtn,
           isDirty
@@ -83,19 +83,19 @@ export function EditActionsToolbar({ range, className }: EditActionsToolbarProps
         )}
       >
         <RotateCcw className="h-3.5 w-3.5" strokeWidth={2.25} />
-        <span>Discard</span>
+        <span>Descartar</span>
       </button>
       <button
         type="button"
         onClick={handleClear}
-        title="Clear all cells in this range"
+        title="Limpiar todas las celdas de este rango"
         className={cn(
           baseBtn,
           'text-content-muted hover:bg-surface-hover hover:text-content',
         )}
       >
         <Eraser className="h-3.5 w-3.5" strokeWidth={2.25} />
-        <span>Clear</span>
+        <span>Limpiar</span>
       </button>
     </div>
   );

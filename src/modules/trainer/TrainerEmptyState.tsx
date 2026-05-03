@@ -12,18 +12,18 @@ export function TrainerEmptyState() {
           <Target className="h-6 w-6" strokeWidth={2} />
         </span>
         <h2 className="text-lg font-semibold tracking-tight">
-          No ranges to train against
+          Sin rangos para entrenar
         </h2>
         <p className="mt-2 text-sm text-content-muted">
-          Build at least one range in the Editor before running a training
-          session.
+          Creá al menos un rango en el Editor antes de iniciar una sesión de
+          entrenamiento.
         </p>
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
           <Link
             to="/editor"
             className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-accent-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
           >
-            Open Editor
+            Abrir Editor
             <ArrowRight className="h-4 w-4" strokeWidth={2} />
           </Link>
         </div>

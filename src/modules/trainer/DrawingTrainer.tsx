@@ -146,8 +146,8 @@ export function DrawingTrainer({ range }: DrawingTrainerProps) {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs text-content-muted">
-          Paint the hands you think belong to <span className="text-content">{range.name}</span>{' '}
-          · click or drag to add · right-click to remove · Ctrl+right-click for hand+ (e.g. 88+) · then reveal to compare.
+          Pintá las manos que creas que pertenecen a <span className="text-content">{range.name}</span>{' '}
+          · clic o arrastre para agregar · clic derecho para quitar · Ctrl+clic derecho para mano+ (ej. 88+) · luego revelar para comparar.
         </p>
         <div className="flex items-center gap-2">
           <button
@@ -164,12 +164,12 @@ export function DrawingTrainer({ range }: DrawingTrainerProps) {
             {revealed ? (
               <>
                 <EyeOff className="h-3.5 w-3.5" strokeWidth={2.25} />
-                Hide diff
+                Ocultar diff
               </>
             ) : (
               <>
                 <Eye className="h-3.5 w-3.5" strokeWidth={2.25} />
-                Reveal
+                Revelar
               </>
             )}
           </button>
@@ -180,7 +180,7 @@ export function DrawingTrainer({ range }: DrawingTrainerProps) {
               className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-500/15 px-3 py-1.5 text-sm font-medium text-emerald-300 shadow-[inset_0_0_0_1px_rgb(16_185_129/0.4)] hover:bg-emerald-500/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-400"
             >
               <Save className="h-3.5 w-3.5" strokeWidth={2.25} />
-              Save round
+              Guardar ronda
             </button>
           )}
           <button
@@ -189,7 +189,7 @@ export function DrawingTrainer({ range }: DrawingTrainerProps) {
             className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-content-muted hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
           >
             <RotateCcw className="h-3.5 w-3.5" strokeWidth={2.25} />
-            Reset
+            Reiniciar
           </button>
         </div>
       </div>
@@ -231,11 +231,11 @@ function SessionBar({
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-surface/40 px-3 py-2 text-xs">
       <div className="flex flex-wrap items-center gap-3">
         <span className="text-[10px] font-semibold uppercase tracking-wider text-content-muted">
-          Session
+          Sesión
         </span>
         <span className="text-content">
           <span className="tabular-nums font-semibold">{stats.rounds}</span>{' '}
-          <span className="text-content-muted">round{stats.rounds === 1 ? '' : 's'}</span>
+          <span className="text-content-muted">ronda{stats.rounds === 1 ? '' : 's'}</span>
         </span>
         <span className="text-content-muted">·</span>
         <span className="text-content">
@@ -255,7 +255,7 @@ function SessionBar({
         className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-content-muted hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
       >
         <Trash2 className="h-3 w-3" strokeWidth={2.25} />
-        Reset session
+        Reiniciar sesión
       </button>
     </div>
   );
@@ -311,19 +311,19 @@ function DiffStats({
 }) {
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-      <Stat label="Accuracy" value={`${diff.accuracyPct.toFixed(0)}%`} />
+      <Stat label="Precisión" value={`${diff.accuracyPct.toFixed(0)}%`} />
       <Stat
-        label="Match"
+        label="Acierto"
         value={`${Math.round(diff.matchCombos)} combos`}
         accent="emerald"
       />
       <Stat
-        label="False positive"
+        label="Falso positivo"
         value={`${Math.round(diff.fpCombos)} combos`}
         accent="rose"
       />
       <Stat
-        label="False negative"
+        label="Falso negativo"
         value={`${Math.round(diff.fnCombos)} combos`}
         accent="amber"
       />
@@ -362,9 +362,9 @@ function Stat({
 function DiffLegend() {
   return (
     <ul className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-content-muted">
-      <Legend dot="bg-emerald-500/70" label="Match (correct action)" />
-      <Legend dot="bg-rose-500/70" label="False positive (wrong action or not in range)" />
-      <Legend dot="bg-amber-500/70" label="False negative (range had it, you missed)" />
+      <Legend dot="bg-emerald-500/70" label="Acierto (acción correcta)" />
+      <Legend dot="bg-rose-500/70" label="Falso positivo (acción incorrecta o fuera del rango)" />
+      <Legend dot="bg-amber-500/70" label="Falso negativo (el rango la tenía, vos no)" />
     </ul>
   );
 }

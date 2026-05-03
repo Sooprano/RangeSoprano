@@ -222,25 +222,25 @@ function ConfigScreen({
       <div className="rounded-xl border border-border bg-surface/60 p-5 shadow-surface">
         <div className="flex items-center gap-2 text-sm font-semibold text-content">
           <Zap className="h-4 w-4 text-accent" strokeWidth={2.5} />
-          Speed mode
+          Modo velocidad
         </div>
         <p className="mt-1 text-xs text-content-muted">
-          Race the clock against your range. Top 5 runs per style are saved locally.
+          Corré contra el reloj con tu rango. Los 5 mejores resultados por modo se guardan localmente.
         </p>
 
         <div className="mt-4 flex flex-col gap-3">
-          <Field label="Style">
+          <Field label="Modo">
             <ToggleGroup
               options={[
-                { value: 'classic', label: 'Classic' },
-                { value: 'drawing', label: 'Drawing' },
+                { value: 'classic', label: 'Clásico' },
+                { value: 'drawing', label: 'Dibujo' },
               ]}
               value={style}
               onChange={onStyleChange}
             />
           </Field>
 
-          <Field label="Duration">
+          <Field label="Duración">
             <div className="flex flex-wrap gap-2">
               {durations.map((d) => (
                 <button
@@ -268,7 +268,7 @@ function ConfigScreen({
           className="mt-5 inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-accent-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
         >
           <Play className="h-4 w-4" strokeWidth={2.5} />
-          Start {formatDurationLabel(duration)} {style}
+          Iniciar {formatDurationLabel(duration)} {style === 'classic' ? 'clásico' : 'dibujo'}
         </button>
       </div>
 
@@ -427,8 +427,8 @@ function SpeedClassicRun({
         onEnd={onCancel}
         endLabel="End"
         rightStats={[
-          { label: 'Correct', value: `${score.correct} / ${score.total}` },
-          { label: 'Accuracy', value: `${accuracy.toFixed(0)}%` },
+          { label: 'Correctas', value: `${score.correct} / ${score.total}` },
+          { label: 'Precisión', value: `${accuracy.toFixed(0)}%` },
         ]}
       />
 
@@ -471,7 +471,7 @@ function SpeedClassicRun({
         </div>
 
         <p className="text-center text-xs text-content-muted">
-          Pick fast · keys 1-{orderedActions.length} · {formatDurationLabel(duration)} total
+          Elegí rápido · teclas 1-{orderedActions.length} · {formatDurationLabel(duration)} total
         </p>
       </div>
     </div>
@@ -588,7 +588,7 @@ function SpeedDrawingRun({
         duration={duration}
         onEnd={handleFinishEarly}
         endLabel="Finish"
-        rightStats={[{ label: 'Painted', value: `${Object.keys(guess).length} hands` }]}
+        rightStats={[{ label: 'Pintadas', value: `${Object.keys(guess).length} manos` }]}
       />
 
       <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Paint action">
@@ -627,7 +627,7 @@ function SpeedDrawingRun({
       />
 
       <p className="text-center text-xs text-content-muted">
-        Click or drag to paint · right-click to erase · Ctrl+right-click for hand+
+        Clic o arrastre para pintar · clic derecho para borrar · Ctrl+clic derecho para mano+
       </p>
     </div>
   );
@@ -744,29 +744,29 @@ function FinishedScreen({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-sm font-semibold text-content">
             <Zap className="h-4 w-4 text-accent" strokeWidth={2.5} />
-            {entry.style === 'classic' ? 'Classic' : 'Drawing'} · {formatDurationLabel(entry.durationSec)} · finished
+            {entry.style === 'classic' ? 'Clásico' : 'Dibujo'} · {formatDurationLabel(entry.durationSec)} · finalizado
           </div>
           {madeTop && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-2.5 py-1 text-xs font-semibold text-amber-300">
               <Trophy className="h-3.5 w-3.5" strokeWidth={2.5} />
-              New top 5!
+              ¡Top 5 nuevo!
             </span>
           )}
         </div>
 
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Stat label="Accuracy" value={`${entry.accuracyPct.toFixed(0)}%`} />
+          <Stat label="Precisión" value={`${entry.accuracyPct.toFixed(0)}%`} />
           {entry.style === 'classic' ? (
             <>
-              <Stat label="Correct" value={`${entry.correct} / ${entry.total}`} />
-              <Stat label="Hands/min" value={entry.hpm.toFixed(1)} />
-              <Stat label="Total hands" value={String(entry.total)} />
+              <Stat label="Correctas" value={`${entry.correct} / ${entry.total}`} />
+              <Stat label="Manos/min" value={entry.hpm.toFixed(1)} />
+              <Stat label="Manos totales" value={String(entry.total)} />
             </>
           ) : (
             <>
-              <Stat label="Match" value={`${Math.round(entry.matchCombos)} combos`} />
-              <Stat label="Painted" value={`${Math.round(entry.guessCombos)} combos`} />
-              <Stat label="Range size" value={`${Math.round(entry.truthCombos)} combos`} />
+              <Stat label="Acierto" value={`${Math.round(entry.matchCombos)} combos`} />
+              <Stat label="Pintadas" value={`${Math.round(entry.guessCombos)} combos`} />
+              <Stat label="Tamaño del rango" value={`${Math.round(entry.truthCombos)} combos`} />
             </>
           )}
         </div>
@@ -778,7 +778,7 @@ function FinishedScreen({
             className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-accent-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
           >
             <RotateCcw className="h-4 w-4" strokeWidth={2.5} />
-            Play again
+            Jugar de nuevo
           </button>
           <button
             type="button"
@@ -786,7 +786,7 @@ function FinishedScreen({
             className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-content-muted hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
           >
             <Settings2 className="h-4 w-4" strokeWidth={2.25} />
-            Change config
+            Cambiar config
           </button>
         </div>
       </div>
@@ -833,7 +833,7 @@ function ErrorsPanel({
       >
         <span className="flex items-center gap-2">
           <X className="h-4 w-4 text-rose-400" strokeWidth={2.5} />
-          Session errors
+          Errores de sesión
           <span className="rounded-full bg-rose-500/15 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-rose-300">
             {mistakes.length}
           </span>
@@ -893,7 +893,7 @@ function DiffReviewPanel({ diff }: { diff: RangeDiff }) {
         className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium text-content hover:bg-surface-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-accent-light"
       >
         <span className="flex items-center gap-3">
-          <span className="font-medium">Session review</span>
+          <span className="font-medium">Revisión de sesión</span>
           <span className="flex items-center gap-2 text-[11px] text-content-muted">
             <span className="flex items-center gap-1">
               <span className="inline-block h-2 w-2 rounded-sm bg-emerald-500/60" />
@@ -920,15 +920,15 @@ function DiffReviewPanel({ diff }: { diff: RangeDiff }) {
           <div className="mt-3 flex flex-wrap gap-4 text-xs text-content-muted">
             <span className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-sm bg-emerald-500/45" />
-              Match
+              Acierto
             </span>
             <span className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-sm bg-rose-500/45" />
-              False positive (painted wrong)
+              Falso positivo (pintó de más)
             </span>
             <span className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-sm bg-amber-500/45" />
-              False negative (missed hand)
+              Falso negativo (mano perdida)
             </span>
           </div>
         </div>
@@ -954,7 +954,7 @@ function Leaderboard({
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-sm font-semibold text-content">
           <Crown className="h-4 w-4 text-amber-400" strokeWidth={2.5} />
-          Leaderboard
+          Tabla de líderes
         </div>
         {onClear && hasAny && (
           <button
@@ -962,14 +962,14 @@ function Leaderboard({
             onClick={onClear}
             className="text-xs text-content-muted hover:text-content"
           >
-            Clear
+            Limpiar
           </button>
         )}
       </div>
 
       <div className="mt-3 grid gap-4 md:grid-cols-2">
-        <BoardSection title="Classic" entries={board.classic} highlightDateIso={highlightDateIso} />
-        <BoardSection title="Drawing" entries={board.drawing} highlightDateIso={highlightDateIso} />
+        <BoardSection title="Clásico" entries={board.classic} highlightDateIso={highlightDateIso} />
+        <BoardSection title="Dibujo" entries={board.drawing} highlightDateIso={highlightDateIso} />
       </div>
     </div>
   );
@@ -989,7 +989,7 @@ function BoardSection({
       <div className="text-[10px] uppercase tracking-wider text-content-muted">{title}</div>
       {entries.length === 0 ? (
         <p className="mt-2 rounded-lg border border-dashed border-border px-3 py-2 text-xs text-content-muted">
-          No runs yet — set the first record.
+          Sin partidas todavía — ¡establecé el primer récord!
         </p>
       ) : (
         <ol className="mt-2 flex flex-col gap-1">
@@ -1032,11 +1032,11 @@ function formatRelativeDate(iso: string): string {
   const now = new Date();
   const ms = now.getTime() - d.getTime();
   const min = Math.floor(ms / 60000);
-  if (min < 1) return 'just now';
-  if (min < 60) return `${min}m ago`;
+  if (min < 1) return 'ahora';
+  if (min < 60) return `hace ${min}m`;
   const h = Math.floor(min / 60);
-  if (h < 24) return `${h}h ago`;
+  if (h < 24) return `hace ${h}h`;
   const days = Math.floor(h / 24);
-  if (days < 30) return `${days}d ago`;
+  if (days < 30) return `hace ${days}d`;
   return d.toISOString().slice(0, 10);
 }

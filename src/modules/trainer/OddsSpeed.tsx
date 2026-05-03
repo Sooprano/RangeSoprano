@@ -189,10 +189,10 @@ function ConfigScreen({
       <div className="rounded-xl border border-border bg-surface/60 p-5 shadow-surface">
         <div className="flex items-center gap-2 text-sm font-semibold text-content">
           <Zap className="h-4 w-4 text-accent" strokeWidth={2.5} />
-          Pot Odds · Speed
+          Pot Odds · Velocidad
         </div>
         <p className="mt-1 text-xs text-content-muted">
-          Race the clock contra las dos tablas clásicas. Top 5 runs por duración.
+          Corré contra el reloj con las dos tablas de pot odds. Los 5 mejores por duración se guardan localmente.
         </p>
 
         <div className="mt-4 flex flex-col gap-4">
@@ -250,7 +250,7 @@ function ConfigScreen({
           className="mt-5 inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-accent-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
         >
           <Play className="h-4 w-4" strokeWidth={2.5} />
-          Start {formatDurationLabel(duration)}
+          Iniciar {formatDurationLabel(duration)}
         </button>
       </div>
 
@@ -553,19 +553,19 @@ function FinishedScreen({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2 text-sm font-semibold text-content">
             <Zap className="h-4 w-4 text-accent" strokeWidth={2.5} />
-            Pot Odds · {formatDurationLabel(entry.durationSec)} · finished
+            Pot Odds · {formatDurationLabel(entry.durationSec)} · finalizado
           </div>
           {madeTop && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-2.5 py-1 text-xs font-semibold text-amber-300">
               <Trophy className="h-3.5 w-3.5" strokeWidth={2.5} />
-              New top 5!
+              ¡Top 5 nuevo!
             </span>
           )}
         </div>
 
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Stat label="Accuracy" value={`${entry.accuracyPct.toFixed(0)}%`} />
-          <Stat label="Correct" value={`${entry.correct} / ${entry.total}`} />
+          <Stat label="Precisión" value={`${entry.accuracyPct.toFixed(0)}%`} />
+          <Stat label="Correctas" value={`${entry.correct} / ${entry.total}`} />
           <Stat label="Q/min" value={entry.qpm.toFixed(1)} />
           <Stat label="Total" value={String(entry.total)} />
         </div>
@@ -577,7 +577,7 @@ function FinishedScreen({
             className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-accent-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
           >
             <RotateCcw className="h-4 w-4" strokeWidth={2.5} />
-            Play again
+            Jugar de nuevo
           </button>
           <button
             type="button"
@@ -585,7 +585,7 @@ function FinishedScreen({
             className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm font-medium text-content-muted hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
           >
             <Settings2 className="h-4 w-4" strokeWidth={2.25} />
-            Change config
+            Cambiar config
           </button>
         </div>
       </div>
@@ -627,7 +627,7 @@ function MistakesPanel({ mistakes }: { mistakes: Mistake[] }) {
       >
         <span className="flex items-center gap-2">
           <X className="h-4 w-4 text-rose-400" strokeWidth={2.5} />
-          Session errors
+          Errores de sesión
           <span className="rounded-full bg-rose-500/15 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-rose-300">
             {mistakes.length}
           </span>
@@ -743,7 +743,7 @@ function Leaderboard({
     if (!parsed.success) {
       pushToast({
         kind: 'error',
-        message: 'Estructura de leaderboard no reconocida',
+        message: 'Estructura de tabla de líderes no reconocida',
       });
       return;
     }
@@ -769,7 +769,7 @@ function Leaderboard({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-sm font-semibold text-content">
           <Crown className="h-4 w-4 text-amber-400" strokeWidth={2.5} />
-          Leaderboard · {formatDurationLabel(duration)}
+          Tabla de líderes · {formatDurationLabel(duration)}
         </div>
         <div className="flex items-center gap-1.5">
           {hasAnyEntry && (
@@ -777,7 +777,7 @@ function Leaderboard({
               type="button"
               onClick={onExport}
               className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-content-muted hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
-              title="Exportar leaderboard como JSON"
+              title="Exportar tabla de líderes como JSON"
             >
               <Download className="h-3 w-3" strokeWidth={2.25} />
               Export
@@ -787,7 +787,7 @@ function Leaderboard({
             type="button"
             onClick={onImportClick}
             className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-content-muted hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
-            title="Importar leaderboard JSON (merge)"
+            title="Importar tabla de líderes JSON (merge)"
           >
             <Upload className="h-3 w-3" strokeWidth={2.25} />
             Import
@@ -816,7 +816,7 @@ function Leaderboard({
       <div className="mt-3">
         {board.length === 0 ? (
           <p className="rounded-lg border border-dashed border-border px-3 py-2 text-xs text-content-muted">
-            No runs todavía — set the first record.
+            Sin partidas todavía — ¡establecé el primer récord!
           </p>
         ) : (
           <ol className="flex flex-col gap-1">

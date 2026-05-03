@@ -168,12 +168,12 @@ export default function EditorPage() {
 
       setIsImportOpen(false);
 
-      const summary = `Imported ${totalHands} hand${totalHands === 1 ? '' : 's'}${
-        replace ? ' (replaced existing)' : ''
+      const summary = `${totalHands} mano${totalHands === 1 ? '' : 's'} importada${totalHands === 1 ? '' : 's'}${
+        replace ? ' (reemplazó las existentes)' : ''
       }`;
       const clampNote =
         clampedCount > 0
-          ? ` · ${clampedCount} combo${clampedCount === 1 ? '' : 's'} clamped to fit ≤100% per cell`
+          ? ` · ${clampedCount} combo${clampedCount === 1 ? '' : 's'} ajustado${clampedCount === 1 ? '' : 's'} a ≤100% por celda`
           : '';
       pushToast({ kind: 'success', message: `${summary}${clampNote}` });
     },
@@ -251,7 +251,7 @@ export default function EditorPage() {
                   className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-content-muted hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
                 >
                   <Upload className="h-3.5 w-3.5" strokeWidth={2.25} />
-                  Import
+                  Importar
                 </button>
                 <ExportMenu
                   activeRange={activeRange}

@@ -63,8 +63,8 @@ export default function TrainerPage() {
     return (
       <>
         <PageHeader
-          title="Trainer"
-          description="Practice decisions against your saved ranges. Classic, drawing and speed modes."
+          title="Entrenador"
+          description="Practicá decisiones contra tus rangos guardados. Modos clásico, dibujo y velocidad."
         />
         <div className="flex flex-wrap items-start justify-end gap-3 pb-4">
           <ModeToggle value={mode} onChange={setMode} />
@@ -100,8 +100,8 @@ export default function TrainerPage() {
             ? `${range.position} · ${SITUATION_LABELS[range.situation] ?? range.situation}`
             : 'Module'
         }
-        title={range ? range.name : 'Trainer'}
-        description="Practice decisions against your saved ranges. Classic and drawing modes."
+        title={range ? range.name : 'Entrenador'}
+        description="Practicá decisiones contra tus rangos guardados. Modos clásico, dibujo y velocidad."
       />
 
       <div className="grid gap-6 md:grid-cols-[220px_minmax(0,1fr)]">
@@ -111,8 +111,8 @@ export default function TrainerPage() {
           onSelect={setTrainerRangeId}
           emptyMessage={
             hasAnyFilter(filters)
-              ? 'No ranges match the current filters.'
-              : 'No ranges yet. Create one in the Editor.'
+              ? 'Ningún rango coincide con los filtros actuales.'
+              : 'Sin rangos todavía. Creá uno en el Editor.'
           }
         />
 
@@ -131,7 +131,7 @@ export default function TrainerPage() {
             )
           ) : (
             <div className="flex min-h-[40vh] items-center justify-center rounded-xl border border-dashed border-border p-6 text-center text-sm text-content-muted">
-              Pick a range from the list to start a session.
+              Elegí un rango de la lista para empezar.
             </div>
           )}
         </div>
@@ -149,32 +149,32 @@ function ModeToggle({ value, onChange }: ModeToggleProps) {
   return (
     <div
       role="tablist"
-      aria-label="Trainer mode"
+      aria-label="Modo"
       className="inline-flex w-fit items-center gap-1 rounded-xl border border-border bg-surface/60 p-1"
     >
       <ModeButton
         active={value === 'classic'}
         onClick={() => onChange('classic')}
         icon={<Dices className="h-3.5 w-3.5" strokeWidth={2.25} />}
-        label="Classic"
+        label="Clásico"
       />
       <ModeButton
         active={value === 'drawing'}
         onClick={() => onChange('drawing')}
         icon={<Brush className="h-3.5 w-3.5" strokeWidth={2.25} />}
-        label="Drawing"
+        label="Dibujo"
       />
       <ModeButton
         active={value === 'speed'}
         onClick={() => onChange('speed')}
         icon={<Zap className="h-3.5 w-3.5" strokeWidth={2.25} />}
-        label="Speed"
+        label="Velocidad"
       />
       <ModeButton
         active={value === 'odds'}
         onClick={() => onChange('odds')}
         icon={<Percent className="h-3.5 w-3.5" strokeWidth={2.25} />}
-        label="Odds"
+        label="Pot Odds"
       />
     </div>
   );

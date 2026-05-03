@@ -115,9 +115,9 @@ export default function ViewerPage() {
         requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
       });
       await exportNodeToPng(node, `${baseName}.png`);
-      pushToast({ kind: 'success', message: 'PNG saved' });
+      pushToast({ kind: 'success', message: 'PNG guardado' });
     } catch {
-      pushToast({ kind: 'error', message: 'Could not export PNG' });
+      pushToast({ kind: 'error', message: 'No se pudo exportar el PNG' });
     } finally {
       setIsExporting(false);
     }
@@ -168,8 +168,8 @@ export default function ViewerPage() {
     return (
       <>
         <PageHeader
-          title="Viewer"
-          description="Explore preflop ranges by format, position, and situation."
+          title="Visualizador"
+          description="Explorá rangos preflop por formato, posición y situación."
         />
         <EmptyState />
       </>
@@ -201,12 +201,12 @@ export default function ViewerPage() {
         }
         title={
           viewMode === 'overview'
-            ? 'Overview'
+            ? 'Resumen'
             : range
               ? range.name
-              : 'Viewer'
+              : 'Visualizador'
         }
-        description="Explore preflop ranges by format, position, and situation."
+        description="Explorá rangos preflop por formato, posición y situación."
       />
 
       <div
@@ -226,8 +226,8 @@ export default function ViewerPage() {
             onSelect={setViewerRangeId}
             emptyMessage={
               hasAnyFilter(filters)
-                ? 'No ranges match the current filters.'
-                : 'No ranges yet. Create one in the Editor.'
+                ? 'Ningún rango coincide con los filtros actuales.'
+                : 'Sin rangos todavía. Creá uno en el Editor.'
             }
           />
         )}
@@ -256,7 +256,7 @@ export default function ViewerPage() {
                   type="button"
                   onClick={handleExportPng}
                   disabled={!canExport}
-                  title="Export PNG"
+                  title="Exportar PNG"
                   className={
                     'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light ' +
                     (canExport
@@ -265,14 +265,14 @@ export default function ViewerPage() {
                   }
                 >
                   <Download className="h-3.5 w-3.5" strokeWidth={2.25} />
-                  Export PNG
+                  Exportar PNG
                 </button>
               )}
               <button
                 type="button"
                 onClick={() => setIsPrintConfigOpen(true)}
                 disabled={!canPrint}
-                title="Print to PDF"
+                title="Imprimir PDF"
                 className={
                   'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light ' +
                   (canPrint
@@ -281,7 +281,7 @@ export default function ViewerPage() {
                 }
               >
                 <Printer className="h-3.5 w-3.5" strokeWidth={2.25} />
-                Print PDF
+                Imprimir PDF
               </button>
             </div>
           </div>
@@ -303,12 +303,12 @@ export default function ViewerPage() {
                 {range ? (
                   <RangePanel range={range} badge="A" />
                 ) : (
-                  <CompareSlot label="Pick a range from the list" />
+                  <CompareSlot label="Elegí un rango de la lista" />
                 )}
                 {compareRange ? (
                   <RangePanel range={compareRange} badge="B" />
                 ) : (
-                  <CompareSlot label="Pick a range to compare with" />
+                  <CompareSlot label="Elegí un rango para comparar" />
                 )}
               </div>
             </div>
@@ -316,7 +316,7 @@ export default function ViewerPage() {
             <>
               {!selectionInFilter && hasAnyFilter(filters) && (
                 <p className="rounded-md border border-dashed border-border px-3 py-2 text-center text-xs text-content-muted">
-                  Showing a range that does not match the current filters.
+                  El rango seleccionado no coincide con los filtros actuales.
                 </p>
               )}
               <div ref={captureRef} className="rounded-xl bg-bg p-2">
@@ -331,12 +331,12 @@ export default function ViewerPage() {
               </div>
               {filteredSummaries.length > 1 && (
                 <p className="text-xs text-content-muted">
-                  Use ← / → to step through the filtered list.
+                  Usá ← / → para navegar por la lista filtrada.
                 </p>
               )}
             </>
           ) : (
-            <CompareSlot label="Select a range from the list to view it." />
+            <CompareSlot label="Seleccioná un rango de la lista para verlo." />
           )}
         </div>
 
@@ -374,19 +374,19 @@ function ViewModeToggle({ value, onChange }: ViewModeToggleProps) {
         active={value === 'single'}
         onClick={() => onChange('single')}
         icon={<Eye className="h-3.5 w-3.5" strokeWidth={2.25} />}
-        label="Single"
+        label="Individual"
       />
       <ModeButton
         active={value === 'compare'}
         onClick={() => onChange('compare')}
         icon={<GitCompare className="h-3.5 w-3.5" strokeWidth={2.25} />}
-        label="Compare"
+        label="Comparar"
       />
       <ModeButton
         active={value === 'overview'}
         onClick={() => onChange('overview')}
         icon={<LayoutGrid className="h-3.5 w-3.5" strokeWidth={2.25} />}
-        label="Overview"
+        label="Resumen"
       />
     </div>
   );

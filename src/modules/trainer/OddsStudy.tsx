@@ -253,7 +253,7 @@ export function OddsStudy() {
             <p className="text-center text-xs text-content-muted">
               {expertMode && isDirectKind(question.kind)
                 ? `Tipea el % · Enter para enviar · tolerancia ±${FREESTYLE_TOLERANCE}%`
-                : 'Pick an answer · keys 1-4 · N to skip after answering'}
+                : 'Elegí una respuesta · teclas 1-4 · N para avanzar después de responder'}
             </p>
           )}
         </div>
@@ -271,7 +271,7 @@ export function OddsStudy() {
                 : 'cursor-not-allowed bg-surface text-content-disabled',
             )}
           >
-            Next
+            Siguiente
             <span className="text-[10px] uppercase tracking-wider text-white/70">
               ↵
             </span>
@@ -282,7 +282,7 @@ export function OddsStudy() {
             className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-content-muted hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
           >
             <RotateCcw className="h-3.5 w-3.5" strokeWidth={2.25} />
-            Reset score
+            Reiniciar puntaje
           </button>
         </div>
       </div>
@@ -359,17 +359,17 @@ function ScoreBar({ score, accuracy }: { score: Score; accuracy: number }) {
   const streakHot = score.streak >= STREAK_BONUS_THRESHOLD;
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-      <Stat label="Accuracy" value={`${accuracy.toFixed(0)}%`} />
-      <Stat label="Correct" value={`${score.correct} / ${score.total}`} />
+      <Stat label="Precisión" value={`${accuracy.toFixed(0)}%`} />
+      <Stat label="Correctas" value={`${score.correct} / ${score.total}`} />
       <Stat
-        label="Streak"
+        label="Racha"
         value={String(score.streak)}
         accent={streakHot}
         {...(streakHot && {
           icon: <Trophy className="h-4 w-4" strokeWidth={2.5} />,
         })}
       />
-      <Stat label="Best streak" value={String(score.bestStreak)} />
+      <Stat label="Mejor racha" value={String(score.bestStreak)} />
     </div>
   );
 }
@@ -635,7 +635,7 @@ function FreestyleInput({
               : 'cursor-not-allowed bg-surface text-content-disabled',
           )}
         >
-          {feedback ? 'Next' : 'Submit'}
+          {feedback ? 'Siguiente' : 'Enviar'}
           <span className="text-[10px] uppercase tracking-wider opacity-70">
             ↵
           </span>

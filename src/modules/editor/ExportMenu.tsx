@@ -86,22 +86,22 @@ export function ExportMenu({ activeRange, allRanges, gridRef }: ExportMenuProps)
     closeAndRestore();
     try {
       await exportNodeToPng(node, `${slugify(activeRange.name)}.png`);
-      pushToast({ kind: 'success', message: 'PNG saved' });
+      pushToast({ kind: 'success', message: 'PNG guardado' });
     } catch {
-      pushToast({ kind: 'error', message: 'Could not export PNG' });
+      pushToast({ kind: 'error', message: 'No se pudo exportar el PNG' });
     }
   }, [activeRange, gridRef, closeAndRestore]);
 
   const entries: MenuEntry[] = useMemo(
     () => [
-      { label: 'Copy notation', disabled: !activeRange, onSelect: handleCopy },
-      { label: 'Download JSON', disabled: !activeRange, onSelect: handleDownloadOne },
+      { label: 'Copiar notación', disabled: !activeRange, onSelect: handleCopy },
+      { label: 'Descargar JSON', disabled: !activeRange, onSelect: handleDownloadOne },
       {
-        label: 'Download all ranges JSON',
+        label: 'Descargar todos los rangos JSON',
         disabled: allRanges.length === 0,
         onSelect: handleDownloadAll,
       },
-      { label: 'Export PNG', disabled: !activeRange, onSelect: handleExportPng },
+      { label: 'Exportar PNG', disabled: !activeRange, onSelect: handleExportPng },
     ],
     [
       activeRange,
@@ -175,13 +175,13 @@ export function ExportMenu({ activeRange, allRanges, gridRef }: ExportMenuProps)
         className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-content-muted hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
       >
         <Download className="h-3.5 w-3.5" strokeWidth={2.25} />
-        Export
+        Exportar
       </button>
       {open && (
         <ul
           ref={menuRef}
           role="menu"
-          aria-label="Export options"
+          aria-label="Opciones de exportación"
           onKeyDown={onMenuKeyDown}
           className="absolute right-0 z-30 mt-1 flex w-60 flex-col rounded-lg border border-border bg-surface p-1 text-sm shadow-surface"
         >

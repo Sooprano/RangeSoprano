@@ -161,7 +161,7 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
   if (!current) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center rounded-xl border border-dashed border-border p-6 text-center text-sm text-content-muted">
-        Loading session…
+        Cargando sesión…
       </div>
     );
   }
@@ -192,7 +192,7 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
             </>
           ) : (
             <p className="text-center text-xs text-content-muted">
-              Pick an action · keys 1-5 · S to skip
+              Elegí una acción · teclas 1-5 · S para omitir
             </p>
           )}
         </div>
@@ -205,7 +205,7 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
           >
             {feedback ? (
               <>
-                Next hand
+                Siguiente mano
                 <span className="text-[10px] uppercase tracking-wider text-white/70">
                   ↵ / auto
                 </span>
@@ -213,7 +213,7 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
             ) : (
               <>
                 <SkipForward className="h-3.5 w-3.5" strokeWidth={2.25} />
-                Skip
+                Omitir
               </>
             )}
           </button>
@@ -223,7 +223,7 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
             className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-content-muted hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
           >
             <RotateCcw className="h-3.5 w-3.5" strokeWidth={2.25} />
-            Reset score
+            Reiniciar puntaje
           </button>
         </div>
       </div>
@@ -234,10 +234,10 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
 function ScoreBar({ score, accuracy }: { score: Score; accuracy: number }) {
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-      <Stat label="Accuracy" value={`${accuracy.toFixed(0)}%`} />
-      <Stat label="Correct" value={`${score.correct} / ${score.total}`} />
-      <Stat label="Streak" value={String(score.streak)} />
-      <Stat label="Best streak" value={String(score.bestStreak)} />
+      <Stat label="Precisión" value={`${accuracy.toFixed(0)}%`} />
+      <Stat label="Correctas" value={`${score.correct} / ${score.total}`} />
+      <Stat label="Racha" value={String(score.streak)} />
+      <Stat label="Mejor racha" value={String(score.bestStreak)} />
     </div>
   );
 }
@@ -357,11 +357,11 @@ function FeedbackPanel({
           <X className="h-4 w-4 text-rose-400" strokeWidth={2.5} />
         )}
         <span className="font-semibold">
-          {feedback.wasCorrect ? 'Correct' : 'Incorrect'}
+          {feedback.wasCorrect ? 'Correcto' : 'Incorrecto'}
         </span>
         <span className="text-content-muted">·</span>
         <span className="text-content-muted">
-          Expected{' '}
+          Esperada{' '}
           <span className="inline-flex items-center gap-1 font-medium text-content">
             <span
               aria-hidden

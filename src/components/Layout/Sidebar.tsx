@@ -20,9 +20,9 @@ type NavItem = {
 };
 
 const NAV_ITEMS: readonly NavItem[] = [
-  { to: '/', label: 'Home', icon: Home, end: true },
-  { to: '/viewer', label: 'Viewer', icon: Eye },
-  { to: '/trainer', label: 'Trainer', icon: Target },
+  { to: '/', label: 'Inicio', icon: Home, end: true },
+  { to: '/viewer', label: 'Visualizador', icon: Eye },
+  { to: '/trainer', label: 'Entrenador', icon: Target },
   { to: '/editor', label: 'Editor', icon: Pencil },
 ];
 
@@ -113,7 +113,7 @@ export function Sidebar({
             ref={closeButtonRef}
             type="button"
             onClick={onCloseMobile}
-            aria-label="Close navigation"
+            aria-label="Cerrar navegación"
             className="ml-auto rounded-md p-1 text-content-muted hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light lg:hidden"
           >
             <X className="h-4 w-4" strokeWidth={2.25} />
@@ -159,9 +159,9 @@ export function Sidebar({
           <button
             type="button"
             onClick={onToggleCollapsed}
-            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            aria-label={collapsed ? 'Expandir barra lateral' : 'Colapsar barra lateral'}
             aria-pressed={collapsed}
-            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            title={collapsed ? 'Expandir barra lateral' : 'Colapsar barra lateral'}
             className={cn(
               'hidden items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-content-muted hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light lg:inline-flex',
               collapsed && 'lg:justify-center lg:px-2',
@@ -172,7 +172,7 @@ export function Sidebar({
             ) : (
               <>
                 <ChevronsLeft className="h-4 w-4 shrink-0" strokeWidth={2.25} />
-                <span>Collapse</span>
+                <span>Colapsar</span>
               </>
             )}
           </button>
@@ -183,7 +183,7 @@ export function Sidebar({
               collapsed && 'lg:hidden',
             )}
           >
-            v0.1.0 · Preflop study
+            v0.1.0 · Estudio preflop
           </div>
         </div>
       </aside>

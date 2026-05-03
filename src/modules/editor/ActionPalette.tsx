@@ -56,7 +56,7 @@ export function ActionPalette({
     setLoadMenuOpen(false);
     const hasCells = Object.keys(range.cells).length > 0;
     if (hasCells) {
-      if (!window.confirm(`Load palette from "${sourceRange.name}"? This will clear all painted cells in the current range.`)) return;
+      if (!window.confirm(`¿Cargar paleta de "${sourceRange.name}"? Esto borrará todas las celdas pintadas del rango actual.`)) return;
     }
     const newActions = [...sourceRange.actions].sort((a, b) => a.order - b.order).map((a) => ({ ...a }));
     replaceActions(range.id, newActions);
@@ -78,8 +78,8 @@ export function ActionPalette({
       c.actions.some((a) => a.action === def.id),
     );
     const msg = usedInCells
-      ? `Delete "${def.label}" and remove it from every cell that uses it?`
-      : `Delete "${def.label}"?`;
+      ? `¿Eliminar "${def.label}" y quitarla de todas las celdas que la usan?`
+      : `¿Eliminar "${def.label}"?`;
     if (!window.confirm(msg)) return;
     deleteAction(range.id, def.id);
     if (activeAction === def.id) {
@@ -157,7 +157,7 @@ export function ActionPalette({
               onClick={() => setLoadMenuOpen((o) => !o)}
               aria-expanded={loadMenuOpen}
               aria-haspopup="menu"
-              title="Load palette from another range"
+              title="Cargar paleta de otro rango"
               className={cn(
                 'inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium text-content-muted',
                 'transition-colors duration-150',
@@ -165,7 +165,7 @@ export function ActionPalette({
                 loadMenuOpen && 'bg-surface-hover text-content',
               )}
             >
-              Load
+              Cargar
               <ChevronDown className="h-3 w-3" strokeWidth={2.25} />
             </button>
             {loadMenuOpen && (
