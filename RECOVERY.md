@@ -13,6 +13,8 @@
 
 | Hito | Hash |
 |---|---|
+| Fase 16e (export/import JSON del leaderboard de Pot Odds Speed) | `f12958d` |
+| Fase 16d (freestyle input numérico en Pot Odds Study) | `9574535` |
 | Fase 16c (pulido Pot Odds Study: MiniPot + auto-advance + streak bonus) | `df65612` |
 | Fase 16b (Pot Odds Speed + leaderboard) | `70fa946` |
 | Fase 16a (Pot Odds Study trainer) | `c9517cb` |
@@ -24,7 +26,7 @@
 
 ## Estado actual
 
-Fases 1-16c completadas ✅. Última feature: pulido del Pot Odds Study (MiniPot visual de barras pot/bet, auto-avance opcional, streak bonus dorado a partir de 5 seguidas).
+Fases 1-16e completadas ✅. Última feature: export/import JSON del leaderboard de Pot Odds Speed (merge silencioso, dedupe por dateIso). Antes: freestyle input numérico en Pot Odds Study con tolerancia ±1%.
 
 Live en https://rangesoprano.com/ (custom domain Cloudflare → GitHub Pages). Indexado en Google Search Console (home + 3 rutas internas) y Bing Webmaster Tools. Lighthouse: SEO 100, Performance 99, Best Practices 100, Accessibility 95.
 
@@ -32,29 +34,7 @@ Live en https://rangesoprano.com/ (custom domain Cloudflare → GitHub Pages). I
 
 ## Roadmap pendiente
 
-Confirmados con el usuario para próxima(s) sesión(es):
-
-### Fase 16d — Freestyle input numérico en Study
-Toggle "Modo experto" al lado del Auto-avance que reemplaza los 4 chips MC por un `<input type="number">` vacío. El usuario tipea el % y submitea con Enter.
-- **Tolerancia ±1%** para que `33%` (redondeo de 33.3%) cuente correcto si tipea `33` o `34`. Hardcodear como constante `FREESTYLE_TOLERANCE`.
-- Solo aplica a preguntas **directas** (`bluff-fe`, `call-eq`) donde la respuesta es un %. Cuando freestyle está activo, las inversas (`bluff-size`, `call-size`) se filtran automáticamente del enabled set (o se siguen mostrando en MC clásico — decidir; primera versión: filtrar).
-- Speed mode NO recibe freestyle (rompe el flow contrarreloj).
-- Input recibe focus al renderizar pregunta. Enter submitea. Backspace normal. Number-only input (no negativos, no decimales — el set de respuestas son enteros con la única excepción de `37.5%`; tratar ese caso: aceptar `37` o `38` por la tolerancia).
-- Parseo del correcto: extraer dígitos de strings tipo `"33%"` y `"37.5%"` con regex, comparar con tolerancia.
-- Estado: `expertMode: boolean` en `OddsStudy`, in-memory.
-- UX feedback: mismo `FeedbackPanel` que MC, pero el badge muestra el número tipeado vs el correcto.
-
-### Fase 16e — Export/Import leaderboard JSON
-Botón **Export JSON** en el `Leaderboard` component de `OddsSpeed.tsx` (tanto en config screen como en finished screen).
-- Descarga `odds-leaderboard-YYYY-MM-DD.json` con shape:
-  ```json
-  { "version": 1, "exportedAt": "ISO", "byDuration": { "30": [...], "60": [...], "120": [...] } }
-  ```
-- Reusa `downloadBlob` y `slugify`/`todayIsoDate` de `src/utils/exportRange.ts`.
-- Botón **Import JSON** paralelo (file picker oculto + label visible). Lee con `file.text()`, valida con un nuevo `zOddsLeaderboardExportPayload`, dispatch a `useOddsLeaderboardStore.setState({ byDuration: merged })`.
-- Estrategia de merge: agregar entradas y reordenar+truncar a top 5 por duración. NO reemplazar (el usuario podría perder runs locales).
-- Cap de seguridad: `MAX_IMPORT_BYTES` reusado de `persist.ts`.
-- UI: dos botones pequeños al lado de "Clear", visibles cuando `board.length > 0` (export) o siempre (import).
+(sin items confirmados para próxima sesión — el roadmap concreto se levanta cuando aparece el siguiente pedido del usuario)
 
 ## Feature deferred
 
@@ -182,3 +162,22 @@ Orden cronológico ascendente. Cada bloque captura el **por qué** detrás de al
 - **Auto-avance**: state `autoAdvance: boolean` en OddsStudy + `useEffect([autoAdvance, feedback])` que dispara `setTimeout(drawNext, 1500)`. Cancela limpio porque `drawNext` resetea `feedback=null` → la dependencia cambia y el cleanup del timeout se ejecuta antes de re-correr el effect. AUTO_ADVANCE_MS = 1500 (consistente con ClassicTrainer).
 - **Streak bonus**: `Stat` extendido con `accent?: boolean` y `icon?: ReactNode`. ScoreBar pasa `accent` cuando `score.streak >= STREAK_BONUS_THRESHOLD` (5). Card cambia a `border-amber-500/60 bg-amber-500/10`, labels `amber-300`, valor `amber-200`, y se inserta `<Trophy>` antes del número. Vuelve a gris al fallar (streak=0). Threshold 5 elegido por testing manual: bajo (≤3) se siente vacuo, alto (≥10) raro de alcanzar.
 - **AutoAdvanceToggle visual**: chip pill con checkbox semánticamente accesible (`<input type="checkbox" sr-only>`) + cuadrado decorativo que cambia color con `value`. `focus-within` para focus ring. Texto incluye duración `(1.5s)` literal para que el usuario entienda qué espera.
+
+### Freestyle input numérico en Study (fase 16d)
+- **Toggle `ExpertModeToggle`** (chip pill amber) al lado de `AutoAdvanceToggle` en la fila de toggles inferior. State `expertMode: boolean` in-memory (no persistido). `FREESTYLE_TOLERANCE = 1` y `DIRECT_KINDS = ['bluff-fe', 'call-eq']` como constantes module-level.
+- **Filtrado del pool**: en `drawNext`, cuando `expertMode && hasDirectEnabled`, se filtra `enabledArr` a sólo `DIRECT_KINDS`. Las inversas (`bluff-size`, `call-size`) tienen respuesta tipo "1/2 pot", no parseable como número.
+- **Effect de redibujo inmediato**: `useEffect([expertMode, question.kind, drawNext])` que llama `drawNext()` si `expertMode && !isDirectKind(question.kind)`. Cubre el caso "activás expert con sizing question en pantalla" → salta directo a una direct sin esperar al siguiente Next.
+- **Effect de auto-OFF**: si `expertMode && !hasDirectEnabled` (usuario apagó ambas directas en KindFilter), fuerza `setExpertMode(false)`. Mantiene la invariante "expert solo aplica si hay direct enabled" sin trabar la UI del KindFilter. El propio `<ExpertModeToggle>` se renderiza condicionalmente bajo `hasDirectEnabled`.
+- **`parsePct(display: string): number`** = `parseFloat(display.replace('%', ''))`. Cubre el único decimal del set (`'37.5%'` → 37.5) sin regex. Comparación: `Math.abs(value - correctNum) <= FREESTYLE_TOLERANCE`. Para `37.5%` la tolerancia ±1 acepta enteros `36-39` (todos a ≤1.5 de distancia, dentro del rango).
+- **`FreestyleInput` componente**: input number-only con `autoFocus`, key implícito por question (state `value: string` reseteado por `useEffect([question.prompt])`). `inputMode="decimal"` para mobile. Botón a la derecha que cambia label `Submit` ↔ `Next` según haya feedback. `onKeyDown` propio: Enter submitea o avanza, N avanza si feedback. `disabled` cuando hay feedback.
+- **Compatibilidad con keyboard listener global**: el handler `useEffect` de OddsStudy ya skipea events cuyo target esté dentro de `input, textarea, select, [contenteditable="true"], [role="grid"]`. El `FreestyleInput` está dentro de un input → keys 1-4 / Enter / N no fugan al window listener. El `<Next>` button del bottom row sigue funcionando con click + window-level Enter cuando el input pierde focus (redundancia OK).
+- **`FeedbackPanel.picked?`**: prop opcional añadido. Cuando set, en estado incorrecto se muestra "Tipeaste X% · Respuesta: Y%". Spread condicional `{...(expertMode && isDirectKind(question.kind) ? { picked: feedback.picked } : {})}` para respetar `exactOptionalPropertyTypes` (no se puede pasar `picked: undefined` directo).
+- **Speed mode no recibe freestyle**: la decisión es de UX (tipear contrarreloj rompe el flow). El componente `OddsSpeed` queda intacto; toda la lógica vive en `OddsStudy`.
+
+### Export/Import JSON del leaderboard de Speed (fase 16e)
+- **`zOddsLeaderboardExportPayload`** en `schemas.ts`: `{ version: literal(1), exportedAt?: string, byDuration: Record<string, OddsEntry[]> }`. `.strict()` para rechazar campos extra. La validación de duraciones soportadas se hace runtime en `mergeImport` (no en el schema), porque querer ignorar duraciones desconocidas silenciosamente es más útil que rechazar todo el archivo. Constante `CURRENT_ODDS_LEADERBOARD_EXPORT_VERSION = 1` exportada para que el caller del Export use el valor canónico.
+- **`mergeImport(byDuration) → number`** en `oddsLeaderboardStore`: itera Object.entries del input, valida `Number(key) ∈ ODDS_DURATIONS`, dedupea por `dateIso` (Set local de `current.map(e => e.dateIso)`), filtra entries `fresh`, mergea con `sortEntries([...current, ...fresh]).slice(0, ODDS_LEADERBOARD_TOP_N)`. Retorna conteo total de entradas insertadas (después del dedupe, antes del cap top 5). Sólo llama `set(...)` si `inserted > 0` para evitar re-renders innecesarios.
+- **Por qué dedupe por `dateIso` y no `addEntry` en loop**: `dateIso` es ISO con offset → unique-ish per run. Un loop de `addEntry()` no dedupearia (la misma entrada llegaría dos veces y pasaría el filtro `madeTop` cada vez). El método `mergeImport` es self-contained y respeta el cap final por duración en una sola operación.
+- **UI en componente `Leaderboard`**: dos botones (Export con icono `Download`, Import con icono `Upload`) en el header, al lado del Clear. Export visible solo si `hasAnyEntry` (selector que evalúa `Object.values(s.byDuration).some(arr => arr.length > 0)`). Import siempre visible. Los botones aparecen en config screen y finished screen porque ambos reusan el mismo componente Leaderboard.
+- **Patrón file picker**: hidden `<input type="file" accept="application/json,.json" ref={fileInputRef}>` + label-button visible que llama `fileInputRef.current?.click()`. Reset `e.target.value = ''` en finally de `onImportChange` para permitir reimportar el mismo archivo. Cap `MAX_IMPORT_BYTES` (3.8 MB) reusado de `persist.ts`. Toasts: `success` con conteo, `info` cuando 0 entradas nuevas (ej. re-import del mismo JSON), `error` por bytes/lectura/JSON inválido/estructura.
+- **Filename canónico**: `odds-leaderboard-${todayIsoDate()}.json` reusando helper de `exportRange.ts`. JSON pretty-printed con `JSON.stringify(payload, null, 2)`.
