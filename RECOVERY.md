@@ -10,6 +10,8 @@
 
 ## Commits estables por fase
 
+- Fase 16 (trainer UX fix + viewer PNG branding): `3985ffd`
+- Fase 16 (trainer UX fix solo): `753287b`
 - Fase 15 (SEO técnico completo): `e2a01ff`
 - Fase 15 (GTOWizard combo-por-combo import): `96e33dc`
 - Fase 15 (ImportModal multi-acción): `b85d017`
@@ -136,6 +138,15 @@ Indexado en Google Search Console (home + 3 rutas internas) y Bing Webmaster Too
 - **Single source of truth** en `src/data/positions.ts` para `SITUATION_LABELS` y `TABLE_FORMAT_LABELS`. Eliminados 8 duplicados locales.
 - **`vs_LIMP`** añadido al enum `SITUATIONS` (entre `RFI` y `vs_RFI`). Villain habilitado en vs Limp.
 - **Subtítulo de rango**: `{position} · {situation}{villain ? ' · vs ' + villain : ''}{HU ? ' · HU' : ''}`.
+
+### Trainer UX (fase 16)
+- **Scroll-reset al cambiar rango** era causado por `key={range.id}` en `TrainerPage` forzando unmount; el placeholder `min-h-[40vh]` del loading colapsaba `scrollHeight` y el navegador clampeaba `scrollY`. Cada modo (Classic/Drawing/Speed) ya tiene su propio `useEffect([range])` con `rangeIdRef` para reset interno → el `key` era redundante. Quitarlo en los 3 modos resuelve el bug sin tocar lógica de reset.
+- **ActionGrid compacta** en Classic y Speed Classic: `grid-cols-2 sm:grid-cols-3`, botones `flex-row justify-between` con swatch (`h-2.5 w-2.5`) a la izquierda, label `flex-1 truncate text-left` al medio, tecla en pill `text-[10px] tabular-nums` a la derecha. Card de la zona de juego de `gap-6 p-6` → `gap-4 p-4 sm:p-5`; `min-h` del slot de feedback en Classic baja de `5rem` a `3.5rem`.
+
+### Viewer PNG branding (fase 16)
+- **`ExportHeader` local** en `ViewerPage` se monta condicional dentro de `captureRef` solo durante el snapshot: state `isExporting` + dos `requestAnimationFrame` antes de llamar `exportNodeToPng` para asegurar que el header está pintado cuando html-to-image clona el DOM. Tras el toPng, `setIsExporting(false)` en `finally`.
+- **Composición**: `Spade text-accent` + "Range Soprano" wordmark + "Poker Ranges" microcopy `tracking-[0.18em]` + `<h2>` con `range.name` + subtítulo `${position} · ${SITUATION_LABELS[situation]}${villain ? ` · vs ${villain}` : ''}` + badge "HU" si `tableFormat==='HU'`. Compare mode usa título compuesto `${rangeA.name} vs ${rangeB.name}` sin subtítulo (los paneles ya llevan labels).
+- **`aria-hidden`** en el header durante el flash de export para no contaminar accesibilidad. Cero cambios en `exportRange.ts`, `PrintPage` ni en el grid/store.
 
 ## Convenciones de implementación
 
