@@ -13,6 +13,7 @@
 
 | Hito | Hash |
 |---|---|
+| Fase 16c (pulido Pot Odds Study: MiniPot + auto-advance + streak bonus) | `df65612` |
 | Fase 16b (Pot Odds Speed + leaderboard) | `70fa946` |
 | Fase 16a (Pot Odds Study trainer) | `c9517cb` |
 | Fase 16 (trainer UX fix + viewer PNG branding) | `3985ffd` |
@@ -23,7 +24,7 @@
 
 ## Estado actual
 
-Fases 1-16b completadas ✅. Última feature: Pot Odds Speed + leaderboard local (sub-pestaña Speed dentro de Odds).
+Fases 1-16c completadas ✅. Última feature: pulido del Pot Odds Study (MiniPot visual de barras pot/bet, auto-avance opcional, streak bonus dorado a partir de 5 seguidas).
 
 Live en https://rangesoprano.com/ (custom domain Cloudflare → GitHub Pages). Indexado en Google Search Console (home + 3 rutas internas) y Bing Webmaster Tools. Lighthouse: SEO 100, Performance 99, Best Practices 100, Accessibility 95.
 
@@ -31,7 +32,7 @@ Live en https://rangesoprano.com/ (custom domain Cloudflare → GitHub Pages). I
 
 ## Roadmap pendiente
 
-- **Fase 16c — Pulido Pot Odds**: mini-pot visual (barras pot vs bet escaladas), auto-advance toggle en Study, streak bonus con Trophy a partir de 5 seguidas.
+_Sin items abiertos._ Próximas ideas posibles (no priorizadas): leaderboard global del Pot Odds (cross-device, requeriría backend), exportar leaderboard a JSON, freestyle input numérico como toggle avanzado en Study.
 
 ## Feature deferred
 
@@ -152,3 +153,10 @@ Orden cronológico ascendente. Cada bloque captura el **por qué** detrás de al
 - **Leaderboard separado** (`src/store/oddsLeaderboardStore.ts`, key `range-soprano/odds-leaderboard`, version 1): indexado por `durationSec` (string-keyed para JSON serializable), NO por rangeId — Odds es universal. Cap top 5 por duración. Sort: `accuracyPct → correct → qpm`. Hidratación con `zOddsLeaderboard.safeParse`; en falla, log en DEV y reset a `INITIAL`.
 - **`EMPTY_ENTRIES`** con `Object.freeze([])` exportado como constante estable: el selector `useOddsBoardForDuration` debe devolver la **misma referencia** cuando la key no existe, sino Zustand detecta cambio en cada render y dispara loop de actualizaciones (`Maximum update depth exceeded`). Mismo patrón que `EMPTY_BOARD` en `leaderboardStore`.
 - **`addEntry` returns `madeTop: boolean`**: el caller usa el flag para mostrar el badge `Trophy + "New top 5!"` en el FinishedScreen sin tener que comparar arrays.
+
+### Pulido Pot Odds Study (fase 16c)
+- **`visualSize?: Sizing`** agregado a `OddsQuestion` en `potOdds.ts`: solo se setea para preguntas directas (`bluff-fe`, `call-eq`) donde el bet sizing es input del prompt. Para las inversas se deja `undefined` para no spoilear (la sizing ES la respuesta). El componente `MiniPot` solo se renderiza cuando `visualSize` está definido.
+- **`MiniPot` con escalado dinámico**: dos `BarRow` (Pot, Bet) compartiendo ancho. `max = Math.max(1, fraction)` → la barra mayor llena 100% y la otra escala proporcionalmente. Para `1.5x`/`2x` la bet bar es más larga y se pinta `bg-amber-400` (overpot); para resto, `bg-accent`. Helper `sizingFraction(size)` exportado para evitar tocar `SIZING_FRACTION` directamente desde la UI.
+- **Auto-avance**: state `autoAdvance: boolean` en OddsStudy + `useEffect([autoAdvance, feedback])` que dispara `setTimeout(drawNext, 1500)`. Cancela limpio porque `drawNext` resetea `feedback=null` → la dependencia cambia y el cleanup del timeout se ejecuta antes de re-correr el effect. AUTO_ADVANCE_MS = 1500 (consistente con ClassicTrainer).
+- **Streak bonus**: `Stat` extendido con `accent?: boolean` y `icon?: ReactNode`. ScoreBar pasa `accent` cuando `score.streak >= STREAK_BONUS_THRESHOLD` (5). Card cambia a `border-amber-500/60 bg-amber-500/10`, labels `amber-300`, valor `amber-200`, y se inserta `<Trophy>` antes del número. Vuelve a gris al fallar (streak=0). Threshold 5 elegido por testing manual: bajo (≤3) se siente vacuo, alto (≥10) raro de alcanzar.
+- **AutoAdvanceToggle visual**: chip pill con checkbox semánticamente accesible (`<input type="checkbox" sr-only>`) + cuadrado decorativo que cambia color con `value`. `focus-within` para focus ring. Texto incluye duración `(1.5s)` literal para que el usuario entienda qué espera.
