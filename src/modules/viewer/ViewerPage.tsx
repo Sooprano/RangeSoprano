@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Download, Eye, GitCompare, LayoutGrid, Printer } from 'lucide-react';
+import { Download, Eye, GitCompare, LayoutGrid, Printer, Spade } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -46,6 +46,7 @@ export default function ViewerPage() {
   const [filters, setFilters] = useState<ViewerFilters>(EMPTY_FILTERS);
   const [compareRangeId, setCompareRangeId] = useState<string | null>(null);
   const [isPrintConfigOpen, setIsPrintConfigOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const captureRef = useRef<HTMLDivElement | null>(null);
 
   const compareEnabled = viewMode === 'compare';
@@ -107,11 +108,18 @@ export default function ViewerPage() {
     const baseName = compareEnabled && compareRange
       ? `${slugify(range.name)}-vs-${slugify(compareRange.name)}`
       : slugify(range.name);
+    setIsExporting(true);
     try {
+      // Two RAFs to ensure the export-only header has been painted.
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      });
       await exportNodeToPng(node, `${baseName}.png`);
       pushToast({ kind: 'success', message: 'PNG saved' });
     } catch {
       pushToast({ kind: 'error', message: 'Could not export PNG' });
+    } finally {
+      setIsExporting(false);
     }
   }, [range, compareRange, compareEnabled]);
 
@@ -281,17 +289,28 @@ export default function ViewerPage() {
           {viewMode === 'overview' ? (
             <OverviewPanel onTileClick={handleOverviewTileClick} />
           ) : compareEnabled ? (
-            <div ref={captureRef} className="grid gap-6 rounded-xl bg-bg p-2 xl:grid-cols-2">
-              {range ? (
-                <RangePanel range={range} badge="A" />
-              ) : (
-                <CompareSlot label="Pick a range from the list" />
+            <div ref={captureRef} className="rounded-xl bg-bg p-2">
+              {isExporting && (range || compareRange) && (
+                <ExportHeader
+                  title={
+                    range && compareRange
+                      ? `${range.name} vs ${compareRange.name}`
+                      : range?.name ?? compareRange?.name ?? 'Range Soprano'
+                  }
+                />
               )}
-              {compareRange ? (
-                <RangePanel range={compareRange} badge="B" />
-              ) : (
-                <CompareSlot label="Pick a range to compare with" />
-              )}
+              <div className="grid gap-6 xl:grid-cols-2">
+                {range ? (
+                  <RangePanel range={range} badge="A" />
+                ) : (
+                  <CompareSlot label="Pick a range from the list" />
+                )}
+                {compareRange ? (
+                  <RangePanel range={compareRange} badge="B" />
+                ) : (
+                  <CompareSlot label="Pick a range to compare with" />
+                )}
+              </div>
             </div>
           ) : range ? (
             <>
@@ -301,6 +320,13 @@ export default function ViewerPage() {
                 </p>
               )}
               <div ref={captureRef} className="rounded-xl bg-bg p-2">
+                {isExporting && (
+                  <ExportHeader
+                    title={range.name}
+                    subtitle={`${range.position} · ${SITUATION_LABELS[range.situation] ?? range.situation}${range.villainPosition ? ` · vs ${range.villainPosition}` : ''}`}
+                    {...(range.tableFormat === 'HU' && { badge: 'HU' })}
+                  />
+                )}
                 <RangeGrid cells={range.cells} actionsMap={actionsMap} />
               </div>
               {filteredSummaries.length > 1 && (
@@ -402,6 +428,48 @@ function CompareSlot({ label }: { label: string }) {
   return (
     <div className="flex min-h-[40vh] items-center justify-center rounded-xl border border-dashed border-border p-6 text-center text-sm text-content-muted">
       {label}
+    </div>
+  );
+}
+
+function ExportHeader({
+  title,
+  subtitle,
+  badge,
+}: {
+  title: string;
+  subtitle?: string;
+  badge?: string;
+}) {
+  return (
+    <div
+      aria-hidden
+      className="mb-2 flex flex-col gap-2 border-b border-border/60 px-3 pb-3 pt-2"
+    >
+      <div className="flex flex-col items-center gap-0.5">
+        <div className="flex items-center gap-1.5">
+          <Spade className="h-3.5 w-3.5 text-accent" strokeWidth={2.5} aria-hidden />
+          <span className="text-sm font-semibold tracking-tight text-content">
+            Range Soprano
+          </span>
+        </div>
+        <span className="text-[9px] font-semibold uppercase tracking-[0.18em] text-content-muted">
+          Poker Ranges
+        </span>
+      </div>
+      <div className="flex items-baseline justify-between gap-3">
+        <div className="flex min-w-0 flex-col">
+          <h2 className="truncate text-base font-bold text-content">{title}</h2>
+          {subtitle && (
+            <p className="truncate text-xs text-content-muted">{subtitle}</p>
+          )}
+        </div>
+        {badge && (
+          <span className="rounded-md border border-border bg-surface px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-content">
+            {badge}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
