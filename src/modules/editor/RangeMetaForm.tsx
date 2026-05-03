@@ -94,14 +94,14 @@ export function RangeMetaForm({ range, className }: Props) {
 
   return (
     <aside
-      aria-label="Range properties"
+      aria-label="Propiedades del rango"
       className={cn(
         'flex flex-col gap-2 rounded-xl border border-border bg-surface/60 p-3',
         className,
       )}
     >
       <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-content-muted">
-        Properties
+        Propiedades
       </h3>
 
       <div className="flex flex-col gap-1">
@@ -125,7 +125,7 @@ export function RangeMetaForm({ range, className }: Props) {
       <div className="grid grid-cols-2 gap-2">
         <div className="flex flex-col gap-1">
           <label htmlFor={positionId} className="text-xs font-medium text-content-muted">
-            Position
+            Posición
           </label>
           <select
             id={positionId}
@@ -142,7 +142,7 @@ export function RangeMetaForm({ range, className }: Props) {
         </div>
         <div className="flex flex-col gap-1">
           <label htmlFor={situationId} className="text-xs font-medium text-content-muted">
-            Situation
+            Situación
           </label>
           <select
             id={situationId}
@@ -161,7 +161,7 @@ export function RangeMetaForm({ range, className }: Props) {
 
       <div className="flex flex-col gap-1">
         <label htmlFor={villainId} className="text-xs font-medium text-content-muted">
-          Villain
+          Villano
         </label>
         <select
           id={villainId}
@@ -170,7 +170,7 @@ export function RangeMetaForm({ range, className }: Props) {
           disabled={villainDisabled}
           className={cn(selectClass, villainDisabled && 'cursor-not-allowed opacity-50')}
         >
-          <option value="">{isHU ? huVillainOf(range.position) : '— None —'}</option>
+          <option value="">{isHU ? huVillainOf(range.position) : '— Ninguno —'}</option>
           {!isHU &&
             POSITIONS.filter((p) => p !== range.position).map((p) => (
               <option key={p} value={p}>
@@ -180,27 +180,27 @@ export function RangeMetaForm({ range, className }: Props) {
         </select>
         {isHU && (
           <span className="text-[10px] text-content-disabled">
-            Auto-set in Heads-Up ({huVillainOf(range.position)} faces {range.position}).
+            Asignado automáticamente en Heads-Up ({huVillainOf(range.position)} enfrenta a {range.position}).
           </span>
         )}
         {!isHU && range.situation === 'RFI' && (
-          <span className="text-[10px] text-content-disabled">Not applicable to RFI.</span>
+          <span className="text-[10px] text-content-disabled">No aplica a RFI.</span>
         )}
       </div>
 
       <div className="flex flex-col gap-1.5 border-t border-border/60 pt-2">
         <div className="flex items-baseline justify-between gap-2">
           <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-content-muted">
-            Print labels
+            Etiquetas de impresión
           </span>
           <span className="text-[10px] text-content-disabled">
-            Shown above each grid in PDF
+            Se muestran arriba de cada grilla en el PDF
           </span>
         </div>
         <div className="grid grid-cols-3 gap-2">
           <div className="flex flex-col gap-1">
             <label htmlFor={stackId} className="text-[10px] font-medium text-content-muted">
-              Stack (left)
+              Stack (izq)
             </label>
             <input
               id={stackId}

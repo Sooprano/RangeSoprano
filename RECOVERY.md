@@ -13,6 +13,7 @@
 
 | Hito | Hash |
 |---|---|
+| Fase 17 (traducción completa UI español latinoamericano voseo) | _(pendiente del commit)_ |
 | Fase 16e (export/import JSON del leaderboard de Pot Odds Speed) | `f12958d` |
 | Fase 16d (freestyle input numérico en Pot Odds Study) | `9574535` |
 | Fase 16c (pulido Pot Odds Study: MiniPot + auto-advance + streak bonus) | `df65612` |
@@ -26,7 +27,7 @@
 
 ## Estado actual
 
-Fases 1-16e completadas ✅. Última feature: export/import JSON del leaderboard de Pot Odds Speed (merge silencioso, dedupe por dateIso). Antes: freestyle input numérico en Pot Odds Study con tolerancia ±1%.
+Fases 1-17 completadas ✅. Última feature: traducción completa de la UI a español latinoamericano voseo (Sidebar, mode tabs Trainer, sub-tabs Odds, stats, Viewer tabs, Editor meta-form + hint, Home module cards, toasts, confirms). Términos preservados en inglés: Stack, Sizing, Call/Raise/Fold, RFI, HU, posiciones BTN/CO/HJ. URLs sin cambios; `lang="es"` ya estaba — sin impacto en SEO.
 
 Live en https://rangesoprano.com/ (custom domain Cloudflare → GitHub Pages). Indexado en Google Search Console (home + 3 rutas internas) y Bing Webmaster Tools. Lighthouse: SEO 100, Performance 99, Best Practices 100, Accessibility 95.
 
@@ -181,3 +182,13 @@ Orden cronológico ascendente. Cada bloque captura el **por qué** detrás de al
 - **UI en componente `Leaderboard`**: dos botones (Export con icono `Download`, Import con icono `Upload`) en el header, al lado del Clear. Export visible solo si `hasAnyEntry` (selector que evalúa `Object.values(s.byDuration).some(arr => arr.length > 0)`). Import siempre visible. Los botones aparecen en config screen y finished screen porque ambos reusan el mismo componente Leaderboard.
 - **Patrón file picker**: hidden `<input type="file" accept="application/json,.json" ref={fileInputRef}>` + label-button visible que llama `fileInputRef.current?.click()`. Reset `e.target.value = ''` en finally de `onImportChange` para permitir reimportar el mismo archivo. Cap `MAX_IMPORT_BYTES` (3.8 MB) reusado de `persist.ts`. Toasts: `success` con conteo, `info` cuando 0 entradas nuevas (ej. re-import del mismo JSON), `error` por bytes/lectura/JSON inválido/estructura.
 - **Filename canónico**: `odds-leaderboard-${todayIsoDate()}.json` reusando helper de `exportRange.ts`. JSON pretty-printed con `JSON.stringify(payload, null, 2)`.
+
+### Traducción UI español latinoamericano voseo (fase 17)
+- **Glosario canónico** acordado con el usuario antes de tocar código: Home→Inicio, Viewer→Visualizador, Trainer→Entrenador, Editor→Editor (igual), Classic→Clásico, Drawing→Dibujo, Speed→Velocidad, Odds→Pot Odds (término técnico), Study→Estudio, Single→Individual, Compare→Comparar, Overview→Resumen, Position/Situation/Villain→Posición/Situación/Villano, Accuracy→Precisión, Correct→Correctas, Streak→Racha, Match/FP/FN→Acierto/Falso positivo/Falso negativo, Leaderboard→Tabla de líderes, etc. **Preservados en inglés**: Stack, Sizing 1/2, Call, Raise, Fold, RFI, HU, posiciones (BTN/CO/HJ/EP/MP/SB/BB), términos de poker que el usuario usa habitualmente.
+- **Voseo argentino/uruguayo** consistente: "Elegí", "Practicá", "Pintá", "Tipeá", "Creá", "Cargá", "Probá". No "Elige/Selecciona/Tú".
+- **`formatRelativeDate`** en `SpeedTrainer`: "just now"→"ahora", "Xm/h/d ago"→"hace Xm/h/d". Único string dinámico que requirió cambiar la lógica del template.
+- **Confirm dialogs y toasts** traducidos manteniendo placeholders interpolados: `"¿Eliminar '${def.label}' y quitarla de todas las celdas que la usan?"`, `"${totalHands} mano${plural} importada${plural}"`. Todas las strings con plural usan ternario `${n === 1 ? '' : 's'}`.
+- **`exactOptionalPropertyTypes` y aria-labels**: aria-labels traducidos pero `data-*` y nombres de props internas quedan en inglés (no son user-facing).
+- **No tocado**: identificadores de tipos (`'classic' | 'drawing' | 'speed' | 'odds'`), `localStorage` keys, `Range.position` enum (sigue siendo `'BTN'`), `Situation` enum (`'RFI' | 'vs_RFI'` etc.) — solo cambian los **labels** que se muestran en pantalla vía `SITUATION_LABELS` (que ya estaba parcialmente traducido en fase 12).
+- **SEO sin impacto**: `lang="es"` ya estaba en `index.html` desde fase 15. URLs (`/viewer`, `/trainer`, `/editor`) no cambian. `useDocumentTitle` usa los nombres en español pero los slugs persisten. No hace falta resubmitir a Google Search Console — Google re-rastreará en el próximo crawl natural. Lighthouse SEO 100 sigue intacto.
+- **Coverage final**: Sidebar.tsx, TrainerPage.tsx, ClassicTrainer.tsx, DrawingTrainer.tsx, SpeedTrainer.tsx, OddsTrainer.tsx, OddsStudy.tsx, OddsSpeed.tsx, ViewerPage.tsx, viewer/EmptyState.tsx, EditorPage.tsx, EditActionsToolbar.tsx, ActionPalette.tsx, ExportMenu.tsx, RangeMetaForm.tsx, NewRangeForm.tsx, SituationSelector.tsx, HomePage.tsx (module cards). Otros (RangeManager, ImportModal, NotesModal, OverviewTile, RangePanel, PrintPage) ya estaban en español o solo tenían strings técnicos.

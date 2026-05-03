@@ -78,20 +78,20 @@ export function SituationSelector({
   return (
     <div
       role="group"
-      aria-label="Filter ranges"
+      aria-label="Filtrar rangos"
       className={cn(
         'flex flex-wrap items-end gap-3 rounded-xl border border-border bg-surface/60 p-3',
         className,
       )}
     >
-      <Field label="Position">
+      <Field label="Posición">
         <select
           value={filters.position ?? ''}
           onChange={(e) => handlePosition(e.target.value)}
           className={selectClass}
-          aria-label="Filter by hero position"
+          aria-label="Filtrar por posición del héroe"
         >
-          <option value="">Any</option>
+          <option value="">Cualquiera</option>
           {POSITIONS.map((p) => (
             <option key={p} value={p}>
               {p}
@@ -100,14 +100,14 @@ export function SituationSelector({
         </select>
       </Field>
 
-      <Field label="Situation">
+      <Field label="Situación">
         <select
           value={filters.situation ?? ''}
           onChange={(e) => handleSituation(e.target.value)}
           className={selectClass}
-          aria-label="Filter by situation"
+          aria-label="Filtrar por situación"
         >
-          <option value="">Any</option>
+          <option value="">Cualquiera</option>
           {SITUATIONS.map((s) => (
             <option key={s} value={s}>
               {SITUATION_LABELS[s]}
@@ -116,15 +116,15 @@ export function SituationSelector({
         </select>
       </Field>
 
-      <Field label="Villain">
+      <Field label="Villano">
         <select
           value={filters.villainPosition ?? ''}
           onChange={(e) => handleVillain(e.target.value)}
           disabled={disabledVillain}
           className={cn(selectClass, disabledVillain && 'cursor-not-allowed opacity-40')}
-          aria-label="Filter by villain position"
+          aria-label="Filtrar por posición del villano"
         >
-          <option value="">Any</option>
+          <option value="">Cualquiera</option>
           {POSITIONS.map((p) => (
             <option key={p} value={p}>
               {p}
@@ -140,7 +140,7 @@ export function SituationSelector({
           className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-content-muted hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
         >
           <X className="h-3 w-3" strokeWidth={2.25} />
-          Clear
+          Limpiar
         </button>
       )}
     </div>

@@ -84,7 +84,7 @@ export function NewRangeForm({ onCreate, onCancel, className }: NewRangeFormProp
     e.preventDefault();
     const cleanName = sanitizeText(name).slice(0, MAX_NAME_LEN);
     if (cleanName.length === 0) {
-      setError('Name is required.');
+      setError('El nombre es obligatorio.');
       return;
     }
     setError(null);
@@ -108,7 +108,7 @@ export function NewRangeForm({ onCreate, onCancel, className }: NewRangeFormProp
     >
       <div className="flex flex-col gap-1">
         <label htmlFor={nameId} className="text-xs font-medium text-content-muted">
-          Name
+          Nombre
         </label>
         <input
           id={nameId}
@@ -117,7 +117,7 @@ export function NewRangeForm({ onCreate, onCancel, className }: NewRangeFormProp
           value={name}
           maxLength={MAX_NAME_LEN}
           onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. BTN RFI 2.5x"
+          placeholder="ej. BTN RFI 2.5x"
           className="rounded-md border border-border bg-bg px-2.5 py-1.5 text-sm text-content placeholder:text-content-disabled focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
         />
       </div>
@@ -125,7 +125,7 @@ export function NewRangeForm({ onCreate, onCancel, className }: NewRangeFormProp
       {allRanges.length > 0 && (
         <div className="flex flex-col gap-1">
           <label htmlFor={paletteId} className="text-xs font-medium text-content-muted">
-            Starting palette
+            Paleta inicial
           </label>
           <select
             id={paletteId}
@@ -133,7 +133,7 @@ export function NewRangeForm({ onCreate, onCancel, className }: NewRangeFormProp
             onChange={(e) => setPaletteSourceId(e.target.value || null)}
             className={selectClass}
           >
-            <option value="">Default (Call + Raise)</option>
+            <option value="">Por defecto (Call + Raise)</option>
             {allRanges.map((r) => (
               <option key={r.id} value={r.id}>
                 {r.name}
@@ -184,7 +184,7 @@ export function NewRangeForm({ onCreate, onCancel, className }: NewRangeFormProp
       <div className="grid grid-cols-2 gap-2">
         <div className="flex flex-col gap-1">
           <label htmlFor={positionId} className="text-xs font-medium text-content-muted">
-            Position
+            Posición
           </label>
           <select
             id={positionId}
@@ -201,7 +201,7 @@ export function NewRangeForm({ onCreate, onCancel, className }: NewRangeFormProp
         </div>
         <div className="flex flex-col gap-1">
           <label htmlFor={situationId} className="text-xs font-medium text-content-muted">
-            Situation
+            Situación
           </label>
           <select
             id={situationId}
@@ -220,7 +220,7 @@ export function NewRangeForm({ onCreate, onCancel, className }: NewRangeFormProp
 
       <div className="flex flex-col gap-1">
         <label htmlFor={villainId} className="text-xs font-medium text-content-muted">
-          Villain
+          Villano
         </label>
         <select
           id={villainId}
@@ -229,7 +229,7 @@ export function NewRangeForm({ onCreate, onCancel, className }: NewRangeFormProp
           disabled={villainDisabled}
           className={cn(selectClass, villainDisabled && 'cursor-not-allowed opacity-50')}
         >
-          <option value="">{isHU ? huVillainOf(position) : '— None —'}</option>
+          <option value="">{isHU ? huVillainOf(position) : '— Ninguno —'}</option>
           {!isHU &&
             POSITIONS.filter((p) => p !== position).map((p) => (
               <option key={p} value={p}>
@@ -239,12 +239,12 @@ export function NewRangeForm({ onCreate, onCancel, className }: NewRangeFormProp
         </select>
         {isHU && (
           <span className="text-[10px] text-content-disabled">
-            Auto-set in Heads-Up ({huVillainOf(position)} faces {position}).
+            Asignado automáticamente en Heads-Up ({huVillainOf(position)} enfrenta a {position}).
           </span>
         )}
         {!isHU && situation === 'RFI' && (
           <span className="text-[10px] text-content-disabled">
-            Not applicable to RFI.
+            No aplica a RFI.
           </span>
         )}
       </div>
@@ -261,13 +261,13 @@ export function NewRangeForm({ onCreate, onCancel, className }: NewRangeFormProp
           onClick={onCancel}
           className="rounded-md px-3 py-1.5 text-sm font-medium text-content-muted hover:bg-surface-hover hover:text-content"
         >
-          Cancel
+          Cancelar
         </button>
         <button
           type="submit"
           className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-accent-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
         >
-          Create
+          Crear
         </button>
       </div>
     </form>

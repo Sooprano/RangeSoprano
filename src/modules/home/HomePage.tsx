@@ -37,18 +37,18 @@ const MODULES: readonly ModuleCard[] = [
   {
     to: '/viewer',
     command: '/viewer',
-    label: 'Viewer',
+    label: 'Visualizador',
     icon: Eye,
     description:
-      'Tres vistas: Single, Compare (dos rangos en paralelo) y Overview (mosaico de carpetas). Filtrá por posición, situación, villano y acción. Exportá a PNG o imprimí varias hojas a PDF con leyenda y etiquetas de stack/sizing.',
+      'Tres vistas: Individual, Comparar (dos rangos en paralelo) y Resumen (mosaico de carpetas). Filtrá por posición, situación, villano y acción. Exportá a PNG o imprimí varias hojas a PDF con leyenda y etiquetas de stack/sizing.',
   },
   {
     to: '/trainer',
     command: '/trainer',
-    label: 'Trainer',
+    label: 'Entrenador',
     icon: Target,
     description:
-      'Entrená manos en mesa 6-max o Heads-Up. Modos Clásico (auto-avance 1.5 s), Speed (contrarreloj con leaderboard local), Drawing (pintar el rango de memoria) y Odds (pot odds: fold equity al apostar y equity al pagar, con MC y fórmula explicada). Filtros por posición, situación y villano.',
+      'Entrená manos en mesa 6-max o Heads-Up. Modos Clásico (auto-avance 1.5 s), Velocidad (contrarreloj con tabla de líderes local), Dibujo (pintar el rango de memoria) y Pot Odds (fold equity al apostar y equity al pagar, con MC y fórmula explicada). Filtros por posición, situación y villano.',
   },
   {
     to: '/editor',
@@ -56,7 +56,7 @@ const MODULES: readonly ModuleCard[] = [
     label: 'Editor',
     icon: Pencil,
     description:
-      'Creá y editá rangos con paleta de acciones por rango, pesos mixtos, notas, undo/redo, carpetas y sub-carpetas. Importá/exportá rangos individuales o el perfil completo.',
+      'Creá y editá rangos con paleta de acciones por rango, pesos mixtos, notas, deshacer/rehacer, carpetas y sub-carpetas. Importá/exportá rangos individuales o el perfil completo.',
   },
 ];
 

@@ -231,7 +231,7 @@ export default function EditorPage() {
             : 'Module'
         }
         title={activeRange ? activeRange.name : 'Editor'}
-        description="Build, import and export preflop ranges with mixed frequencies."
+        description="Construí, importá y exportá rangos preflop con frecuencias mixtas."
       />
 
       <div className="grid gap-6 md:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[220px_minmax(0,1fr)_280px]">
@@ -275,11 +275,11 @@ export default function EditorPage() {
               />
             </div>
             <p className="text-xs text-content-muted">
-              Click paints · drag to paint multiple · right-click to erase ·
-              Ctrl+right-click fills hand+ (e.g. A5o → A5o..AKo, 44 → 44..AA) ·
-              arrow keys + Space/Enter · press 1-9 to switch action · weight
-              &lt; 100 stacks with existing actions · Ctrl+Z undo · Ctrl+Shift+Z
-              redo.
+              Clic para pintar · arrastrá para pintar varias · clic derecho para
+              borrar · Ctrl+clic derecho rellena mano+ (ej. A5o → A5o..AKo, 44 →
+              44..AA) · flechas + Espacio/Enter · 1-9 para cambiar de acción ·
+              peso &lt; 100 acumula con acciones existentes · Ctrl+Z deshacer ·
+              Ctrl+Shift+Z rehacer.
             </p>
           </div>
         ) : (
