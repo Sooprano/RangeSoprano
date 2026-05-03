@@ -84,9 +84,19 @@ type BaseQuestion = {
   options: readonly string[]; // 4 strings, includes correct
   correct: string;
   explanation: string;
+  /**
+   * The bet sizing referenced in the prompt (only for direct kinds where the
+   * size is given as input). `undefined` for inverse kinds where the size IS
+   * the answer and revealing it would spoil the question.
+   */
+  visualSize?: Sizing;
 };
 
 export type OddsQuestion = BaseQuestion;
+
+export function sizingFraction(size: Sizing): number {
+  return SIZING_FRACTION[size];
+}
 
 export function bluffFoldEquity(size: Sizing): string {
   return BLUFF_FE_DISPLAY[size];
@@ -170,6 +180,7 @@ function buildBluffFeQuestion(size: Sizing): OddsQuestion {
     options: buildOptions(pool, idx),
     correct,
     explanation: `bet / (pot + bet) = ${fmtFrac(f)} / (1 + ${fmtFrac(f)}) = ${correct}`,
+    visualSize: size,
   };
 }
 
@@ -184,6 +195,7 @@ function buildCallEqQuestion(size: Sizing): OddsQuestion {
     options: buildOptions(pool, idx),
     correct,
     explanation: `call / (pot + 2·bet) = ${fmtFrac(f)} / (1 + ${fmtFrac(2 * f)}) = ${correct}`,
+    visualSize: size,
   };
 }
 

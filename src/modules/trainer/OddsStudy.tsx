@@ -1,13 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Check, RotateCcw, X } from 'lucide-react';
+import { Check, RotateCcw, Trophy, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import {
   ALL_KINDS,
   generateQuestion,
   KIND_LABEL,
+  sizingFraction,
   type OddsQuestion,
   type QuestionKind,
+  type Sizing,
 } from '@/utils/potOdds';
+
+const AUTO_ADVANCE_MS = 1500;
+const STREAK_BONUS_THRESHOLD = 5;
 
 type Score = {
   correct: number;
@@ -37,6 +42,7 @@ export function OddsStudy() {
   );
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [score, setScore] = useState<Score>(INITIAL_SCORE);
+  const [autoAdvance, setAutoAdvance] = useState(false);
 
   const enabledArr = useMemo(() => Array.from(enabled), [enabled]);
 
@@ -44,6 +50,15 @@ export function OddsStudy() {
     setQuestion(generateQuestion(enabledArr));
     setFeedback(null);
   }, [enabledArr]);
+
+  // Auto-advance: tras feedback, dispara drawNext en AUTO_ADVANCE_MS si el
+  // toggle está activo. Si el usuario toca Next/Enter/N antes, ese effect se
+  // cancela porque drawNext limpia feedback (setFeedback(null) en drawNext).
+  useEffect(() => {
+    if (!autoAdvance || !feedback) return;
+    const id = setTimeout(drawNext, AUTO_ADVANCE_MS);
+    return () => clearTimeout(id);
+  }, [autoAdvance, feedback, drawNext]);
 
   const answer = useCallback(
     (picked: string) => {
@@ -132,6 +147,10 @@ export function OddsStudy() {
           </p>
         </div>
 
+        {question.visualSize !== undefined && (
+          <MiniPot size={question.visualSize} />
+        )}
+
         <div className="mx-auto grid w-full max-w-md grid-cols-2 gap-1.5 sm:grid-cols-4">
           {question.options.map((opt, i) => {
             const isCorrect = feedback && opt === question.correct;
@@ -209,30 +228,166 @@ export function OddsStudy() {
         </div>
       </div>
 
-      <KindFilter enabled={enabled} onToggle={toggleKind} />
+      <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
+        <KindFilter enabled={enabled} onToggle={toggleKind} />
+        <AutoAdvanceToggle value={autoAdvance} onChange={setAutoAdvance} />
+      </div>
+    </div>
+  );
+}
+
+function MiniPot({ size }: { size: Sizing }) {
+  const fraction = sizingFraction(size);
+  // Both bars share the same row width. Scale so the larger of pot=1 and bet
+  // fills 100%; the smaller scales proportionally.
+  const max = Math.max(1, fraction);
+  const potPct = (1 / max) * 100;
+  const betPct = (fraction / max) * 100;
+  const overpot = fraction > 1;
+  return (
+    <div className="mx-auto flex w-full max-w-md flex-col gap-1.5 px-1">
+      <BarRow
+        label="Pot"
+        widthPct={potPct}
+        barClass="bg-content/40"
+        labelClass="text-content-muted"
+      />
+      <BarRow
+        label="Bet"
+        widthPct={betPct}
+        barClass={overpot ? 'bg-amber-400' : 'bg-accent'}
+        labelClass={overpot ? 'text-amber-300' : 'text-accent-light'}
+      />
+    </div>
+  );
+}
+
+function BarRow({
+  label,
+  widthPct,
+  barClass,
+  labelClass,
+}: {
+  label: string;
+  widthPct: number;
+  barClass: string;
+  labelClass: string;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <span
+        className={cn(
+          'w-8 shrink-0 text-[10px] font-semibold uppercase tracking-wider',
+          labelClass,
+        )}
+      >
+        {label}
+      </span>
+      <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface">
+        <div
+          className={cn('h-full rounded-full transition-[width]', barClass)}
+          style={{ width: `${widthPct}%` }}
+        />
+      </div>
     </div>
   );
 }
 
 function ScoreBar({ score, accuracy }: { score: Score; accuracy: number }) {
+  const streakHot = score.streak >= STREAK_BONUS_THRESHOLD;
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       <Stat label="Accuracy" value={`${accuracy.toFixed(0)}%`} />
       <Stat label="Correct" value={`${score.correct} / ${score.total}`} />
-      <Stat label="Streak" value={String(score.streak)} />
+      <Stat
+        label="Streak"
+        value={String(score.streak)}
+        accent={streakHot}
+        {...(streakHot && {
+          icon: <Trophy className="h-4 w-4" strokeWidth={2.5} />,
+        })}
+      />
       <Stat label="Best streak" value={String(score.bestStreak)} />
     </div>
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({
+  label,
+  value,
+  accent,
+  icon,
+}: {
+  label: string;
+  value: string;
+  accent?: boolean;
+  icon?: React.ReactNode;
+}) {
   return (
-    <div className="rounded-xl border border-border bg-surface/40 px-3 py-2">
-      <p className="text-[10px] uppercase tracking-wider text-content-muted">
+    <div
+      className={cn(
+        'rounded-xl border px-3 py-2 transition-colors',
+        accent
+          ? 'border-amber-500/60 bg-amber-500/10'
+          : 'border-border bg-surface/40',
+      )}
+    >
+      <p
+        className={cn(
+          'text-[10px] uppercase tracking-wider',
+          accent ? 'text-amber-300' : 'text-content-muted',
+        )}
+      >
         {label}
       </p>
-      <p className="text-lg font-semibold tabular-nums text-content">{value}</p>
+      <p
+        className={cn(
+          'flex items-center gap-1.5 text-lg font-semibold tabular-nums',
+          accent ? 'text-amber-200' : 'text-content',
+        )}
+      >
+        {icon && <span aria-hidden>{icon}</span>}
+        <span>{value}</span>
+      </p>
     </div>
+  );
+}
+
+function AutoAdvanceToggle({
+  value,
+  onChange,
+}: {
+  value: boolean;
+  onChange: (next: boolean) => void;
+}) {
+  return (
+    <label
+      className={cn(
+        'inline-flex cursor-pointer items-center gap-2 rounded-full border px-2.5 py-1 text-[11px] font-medium',
+        'transition-colors duration-150 ease-out-soft',
+        'focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-light',
+        value
+          ? 'border-accent/60 bg-accent/10 text-content'
+          : 'border-border bg-surface/40 text-content-muted hover:bg-surface-hover hover:text-content',
+      )}
+    >
+      <input
+        type="checkbox"
+        checked={value}
+        onChange={(e) => onChange(e.target.checked)}
+        className="sr-only"
+      />
+      <span
+        aria-hidden
+        className={cn(
+          'inline-block h-3 w-3 rounded-sm border',
+          value
+            ? 'border-accent bg-accent'
+            : 'border-border bg-surface',
+        )}
+      />
+      Auto-avance ({(AUTO_ADVANCE_MS / 1000).toFixed(1)}s)
+    </label>
   );
 }
 
