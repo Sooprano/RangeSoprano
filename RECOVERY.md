@@ -13,7 +13,7 @@
 
 | Hito | Hash |
 |---|---|
-| Fase 17 (traducción completa UI español latinoamericano voseo) | _(pendiente del commit)_ |
+| Fase 17 (traducción completa UI español latinoamericano voseo) | `045a3d7` → `80372c6` |
 | Fase 16e (export/import JSON del leaderboard de Pot Odds Speed) | `f12958d` |
 | Fase 16d (freestyle input numérico en Pot Odds Study) | `9574535` |
 | Fase 16c (pulido Pot Odds Study: MiniPot + auto-advance + streak bonus) | `df65612` |
