@@ -18,7 +18,7 @@ import { TrainerEmptyState } from './TrainerEmptyState';
 import { ClassicTrainer } from './ClassicTrainer';
 import { DrawingTrainer } from './DrawingTrainer';
 import { SpeedTrainer } from './SpeedTrainer';
-import { OddsStudy } from './OddsStudy';
+import { OddsTrainer } from './OddsTrainer';
 import { SITUATION_LABELS } from '@/data/positions';
 
 type TrainerMode = 'classic' | 'drawing' | 'speed' | 'odds';
@@ -86,7 +86,7 @@ export default function TrainerPage() {
           <div className="flex flex-wrap items-start justify-end gap-3">
             <ModeToggle value={mode} onChange={setMode} />
           </div>
-          <OddsStudy />
+          <OddsTrainer />
         </div>
       </>
     );

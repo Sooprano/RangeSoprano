@@ -7,6 +7,9 @@ export const CURRENT_RANGE_STORE_VERSION = 1;
 export const CURRENT_UI_STORE_VERSION = 2;
 export const CURRENT_LEADERBOARD_STORE_VERSION = 1;
 export const LEADERBOARD_TOP_N = 5;
+export const CURRENT_ODDS_LEADERBOARD_VERSION = 1;
+export const ODDS_LEADERBOARD_TOP_N = 5;
+export const ODDS_DURATIONS = [30, 60, 120] as const;
 
 export const MAX_RANGES = 500;
 export const MAX_CELLS_PER_RANGE = 169;
@@ -226,3 +229,33 @@ export type SpeedDrawingEntry = z.infer<typeof zSpeedDrawingEntry>;
 export type SpeedEntry = z.infer<typeof zSpeedEntry>;
 export type RangeLeaderboard = z.infer<typeof zRangeLeaderboard>;
 export type PersistedLeaderboardState = z.infer<typeof zPersistedLeaderboardState>;
+
+const ODDS_DURATION_VALUES = ODDS_DURATIONS as readonly number[];
+
+export const zOddsEntry = z
+  .object({
+    durationSec: z
+      .number()
+      .int()
+      .positive()
+      .refine((n) => ODDS_DURATION_VALUES.includes(n), {
+        message: 'unsupported duration',
+      }),
+    correct: z.number().int().nonnegative(),
+    total: z.number().int().nonnegative(),
+    qpm: z.number().nonnegative(),
+    accuracyPct: z.number().min(0).max(100),
+    dateIso: z.string().datetime({ offset: true }),
+  })
+  .strict();
+
+export const zOddsLeaderboard = z
+  .object({
+    byDuration: z
+      .record(z.string(), z.array(zOddsEntry).max(ODDS_LEADERBOARD_TOP_N))
+      .default({}),
+  })
+  .strict();
+
+export type OddsEntry = z.infer<typeof zOddsEntry>;
+export type OddsLeaderboard = z.infer<typeof zOddsLeaderboard>;

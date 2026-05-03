@@ -6,6 +6,7 @@ export const MAX_IMPORT_BYTES = 3.8 * 1024 * 1024;
 export const RANGE_STORE_KEY = 'range-soprano/ranges';
 export const UI_STORE_KEY = 'range-soprano/ui';
 export const LEADERBOARD_STORE_KEY = 'range-soprano/leaderboard';
+export const ODDS_LEADERBOARD_STORE_KEY = 'range-soprano/odds-leaderboard';
 
 /**
  * Tolerant storage wrapper: falls back to an in-memory map if localStorage
