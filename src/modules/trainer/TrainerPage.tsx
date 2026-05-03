@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Brush, Dices, Zap } from 'lucide-react';
+import { Brush, Dices, Percent, Zap } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -18,9 +18,10 @@ import { TrainerEmptyState } from './TrainerEmptyState';
 import { ClassicTrainer } from './ClassicTrainer';
 import { DrawingTrainer } from './DrawingTrainer';
 import { SpeedTrainer } from './SpeedTrainer';
+import { OddsStudy } from './OddsStudy';
 import { SITUATION_LABELS } from '@/data/positions';
 
-type TrainerMode = 'classic' | 'drawing' | 'speed';
+type TrainerMode = 'classic' | 'drawing' | 'speed' | 'odds';
 
 export default function TrainerPage() {
   useDocumentTitle('Entrenador de rangos · Range Soprano', {
@@ -57,14 +58,36 @@ export default function TrainerPage() {
     }
   }, [ranges, trainerRangeId, setTrainerRangeId]);
 
-  if (ranges.length === 0) {
+  // Odds mode is range-independent — show it even with zero ranges saved.
+  if (ranges.length === 0 && mode !== 'odds') {
     return (
       <>
         <PageHeader
           title="Trainer"
           description="Practice decisions against your saved ranges. Classic, drawing and speed modes."
         />
+        <div className="flex flex-wrap items-start justify-end gap-3 pb-4">
+          <ModeToggle value={mode} onChange={setMode} />
+        </div>
         <TrainerEmptyState />
+      </>
+    );
+  }
+
+  if (mode === 'odds') {
+    return (
+      <>
+        <PageHeader
+          eyebrow="Math · pot odds"
+          title="Pot Odds"
+          description="Aprendé las dos tablas clásicas: fold equity al apostar y equity necesaria al pagar."
+        />
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-start justify-end gap-3">
+            <ModeToggle value={mode} onChange={setMode} />
+          </div>
+          <OddsStudy />
+        </div>
       </>
     );
   }
@@ -146,6 +169,12 @@ function ModeToggle({ value, onChange }: ModeToggleProps) {
         onClick={() => onChange('speed')}
         icon={<Zap className="h-3.5 w-3.5" strokeWidth={2.25} />}
         label="Speed"
+      />
+      <ModeButton
+        active={value === 'odds'}
+        onClick={() => onChange('odds')}
+        icon={<Percent className="h-3.5 w-3.5" strokeWidth={2.25} />}
+        label="Odds"
       />
     </div>
   );
