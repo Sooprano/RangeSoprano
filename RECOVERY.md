@@ -13,6 +13,7 @@
 
 | Hito | Hash |
 |---|---|
+| Fase 16b (Pot Odds Speed + leaderboard) | `70fa946` |
 | Fase 16a (Pot Odds Study trainer) | `c9517cb` |
 | Fase 16 (trainer UX fix + viewer PNG branding) | `3985ffd` |
 | Fase 15 (SEO técnico + GTOWizard import + ImportModal multi-acción) | `e2a01ff` → `b85d017` |
@@ -22,7 +23,7 @@
 
 ## Estado actual
 
-Fases 1-16a completadas ✅. Última feature: Pot Odds Study trainer (4ª pestaña en `/trainer`).
+Fases 1-16b completadas ✅. Última feature: Pot Odds Speed + leaderboard local (sub-pestaña Speed dentro de Odds).
 
 Live en https://rangesoprano.com/ (custom domain Cloudflare → GitHub Pages). Indexado en Google Search Console (home + 3 rutas internas) y Bing Webmaster Tools. Lighthouse: SEO 100, Performance 99, Best Practices 100, Accessibility 95.
 
@@ -30,8 +31,7 @@ Live en https://rangesoprano.com/ (custom domain Cloudflare → GitHub Pages). I
 
 ## Roadmap pendiente
 
-- **Fase 16b — OddsSpeed + leaderboard**: timer, mistake review, store separado en localStorage `range-soprano/odds-leaderboard`.
-- **Fase 16c — Pulido Pot Odds**: mini-pot visual (barras pot vs bet escaladas), auto-advance toggle, streak bonus con Trophy.
+- **Fase 16c — Pulido Pot Odds**: mini-pot visual (barras pot vs bet escaladas), auto-advance toggle en Study, streak bonus con Trophy a partir de 5 seguidas.
 
 ## Feature deferred
 
@@ -142,4 +142,13 @@ Orden cronológico ascendente. Cada bloque captura el **por qué** detrás de al
 - **Distractores por proximidad**: `pickNeighborIndices(correctIdx, total, 3)` ordena por distancia absoluta al índice correcto en `SIZINGS`, ties broken random. Asegura 3 vecinos balanceados sin sesgo direccional cuando el correcto está en el medio. Output shuffleado con Fisher-Yates.
 - **MC fijo de 4 opciones** (no 8): el objetivo en mesa real es discriminación entre buckets adyacentes, no memorización exhaustiva. Atajos `1-4` mantienen ergonomía de home row consistente con `ActionGrid` del Classic.
 - **Explicación con números sustituidos**: tras responder, FeedbackPanel muestra `bet / (pot + bet) = 0.5 / (1 + 0.5) = 33%` en `font-mono`. Helper `fmtFrac()` redondea a 2 decimales, trim trailing zeros.
-- **Estado in-memory only** (sin persistencia): score (correct/total/streak/bestStreak) se reinicia al recargar o al cambiar a otra tab. No hay leaderboard todavía — eso viene en fase 16b.
+- **Estado in-memory only** (sin persistencia): score (correct/total/streak/bestStreak) se reinicia al recargar o al cambiar a otra tab.
+
+### Pot Odds Speed + leaderboard (fase 16b)
+- **`OddsTrainer` wrapper** introduce sub-toggle `Study | Speed` dentro de la pestaña Odds (icons `BookOpen` y `Zap`). `TrainerPage` ahora importa `OddsTrainer` en lugar de `OddsStudy` directo.
+- **Patrón 3 fases** (`config | running | finished`) espejo de `SpeedTrainer`. Duraciones canónicas: `30s / 60s / 120s` declaradas en `ODDS_DURATIONS` (schemas) y refinadas en `zOddsEntry` para rechazar valores inesperados al hidratar.
+- **Timer**: `setInterval(100ms)` con `performance.now()` para precisión sub-segundo; `doneRef` evita doble-finish; `scoreRef`/`onFinishRef` mantienen efectos sin re-suscribirse a props mutables; `enabledRef` permite cambiar question kinds (vía generación) sin invalidar el effect del timer.
+- **Mistakes**: cada error se guarda como `{ prompt, correct, picked, explanation, kind }` (no solo el ID), de modo que el `MistakesPanel` reproduce el FeedbackPanel completo al final con la fórmula sustituida — sin necesidad de re-generar la pregunta.
+- **Leaderboard separado** (`src/store/oddsLeaderboardStore.ts`, key `range-soprano/odds-leaderboard`, version 1): indexado por `durationSec` (string-keyed para JSON serializable), NO por rangeId — Odds es universal. Cap top 5 por duración. Sort: `accuracyPct → correct → qpm`. Hidratación con `zOddsLeaderboard.safeParse`; en falla, log en DEV y reset a `INITIAL`.
+- **`EMPTY_ENTRIES`** con `Object.freeze([])` exportado como constante estable: el selector `useOddsBoardForDuration` debe devolver la **misma referencia** cuando la key no existe, sino Zustand detecta cambio en cada render y dispara loop de actualizaciones (`Maximum update depth exceeded`). Mismo patrón que `EMPTY_BOARD` en `leaderboardStore`.
+- **`addEntry` returns `madeTop: boolean`**: el caller usa el flag para mostrar el badge `Trophy + "New top 5!"` en el FinishedScreen sin tener que comparar arrays.
