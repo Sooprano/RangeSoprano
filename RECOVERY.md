@@ -32,7 +32,29 @@ Live en https://rangesoprano.com/ (custom domain Cloudflare → GitHub Pages). I
 
 ## Roadmap pendiente
 
-_Sin items abiertos._ Próximas ideas posibles (no priorizadas): leaderboard global del Pot Odds (cross-device, requeriría backend), exportar leaderboard a JSON, freestyle input numérico como toggle avanzado en Study.
+Confirmados con el usuario para próxima(s) sesión(es):
+
+### Fase 16d — Freestyle input numérico en Study
+Toggle "Modo experto" al lado del Auto-avance que reemplaza los 4 chips MC por un `<input type="number">` vacío. El usuario tipea el % y submitea con Enter.
+- **Tolerancia ±1%** para que `33%` (redondeo de 33.3%) cuente correcto si tipea `33` o `34`. Hardcodear como constante `FREESTYLE_TOLERANCE`.
+- Solo aplica a preguntas **directas** (`bluff-fe`, `call-eq`) donde la respuesta es un %. Cuando freestyle está activo, las inversas (`bluff-size`, `call-size`) se filtran automáticamente del enabled set (o se siguen mostrando en MC clásico — decidir; primera versión: filtrar).
+- Speed mode NO recibe freestyle (rompe el flow contrarreloj).
+- Input recibe focus al renderizar pregunta. Enter submitea. Backspace normal. Number-only input (no negativos, no decimales — el set de respuestas son enteros con la única excepción de `37.5%`; tratar ese caso: aceptar `37` o `38` por la tolerancia).
+- Parseo del correcto: extraer dígitos de strings tipo `"33%"` y `"37.5%"` con regex, comparar con tolerancia.
+- Estado: `expertMode: boolean` en `OddsStudy`, in-memory.
+- UX feedback: mismo `FeedbackPanel` que MC, pero el badge muestra el número tipeado vs el correcto.
+
+### Fase 16e — Export/Import leaderboard JSON
+Botón **Export JSON** en el `Leaderboard` component de `OddsSpeed.tsx` (tanto en config screen como en finished screen).
+- Descarga `odds-leaderboard-YYYY-MM-DD.json` con shape:
+  ```json
+  { "version": 1, "exportedAt": "ISO", "byDuration": { "30": [...], "60": [...], "120": [...] } }
+  ```
+- Reusa `downloadBlob` y `slugify`/`todayIsoDate` de `src/utils/exportRange.ts`.
+- Botón **Import JSON** paralelo (file picker oculto + label visible). Lee con `file.text()`, valida con un nuevo `zOddsLeaderboardExportPayload`, dispatch a `useOddsLeaderboardStore.setState({ byDuration: merged })`.
+- Estrategia de merge: agregar entradas y reordenar+truncar a top 5 por duración. NO reemplazar (el usuario podría perder runs locales).
+- Cap de seguridad: `MAX_IMPORT_BYTES` reusado de `persist.ts`.
+- UI: dos botones pequeños al lado de "Clear", visibles cuando `board.length > 0` (export) o siempre (import).
 
 ## Feature deferred
 
