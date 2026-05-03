@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, type PersistStorage } from 'zustand/middleware';
 import {
   CURRENT_ODDS_LEADERBOARD_VERSION,
+  ODDS_DURATIONS,
   ODDS_LEADERBOARD_TOP_N,
   zOddsLeaderboard,
   type OddsEntry,
@@ -14,7 +15,16 @@ type OddsLeaderboardStoreState = OddsLeaderboard & {
   addEntry: (entry: OddsEntry) => boolean;
   clearForDuration: (durationSec: number) => void;
   clearAll: () => void;
+  /**
+   * Merges imported entries into existing boards. Unknown durations are
+   * skipped silently. Dedupes by `dateIso` so re-importing the same JSON
+   * doesn't multiply rows. Returns the count of entries actually inserted
+   * (after dedupe + cap, before sort/truncate of older locals).
+   */
+  mergeImport: (byDuration: Record<string, OddsEntry[]>) => number;
 };
+
+const VALID_DURATIONS: readonly number[] = ODDS_DURATIONS;
 
 const INITIAL: OddsLeaderboard = {
   byDuration: {},
@@ -65,6 +75,31 @@ export const useOddsLeaderboardStore = create<OddsLeaderboardStoreState>()(
         }),
 
       clearAll: () => set({ byDuration: {} }),
+
+      mergeImport: (importedByDuration) => {
+        const state = get();
+        const next = { ...state.byDuration };
+        let inserted = 0;
+        for (const [key, entries] of Object.entries(importedByDuration)) {
+          const numKey = Number(key);
+          if (!Number.isFinite(numKey) || !VALID_DURATIONS.includes(numKey)) {
+            continue;
+          }
+          if (entries.length === 0) continue;
+          const current = next[key] ?? [];
+          const seen = new Set(current.map((e) => e.dateIso));
+          const fresh = entries.filter((e) => !seen.has(e.dateIso));
+          if (fresh.length === 0) continue;
+          const merged = sortEntries([...current, ...fresh]).slice(
+            0,
+            ODDS_LEADERBOARD_TOP_N,
+          );
+          next[key] = merged;
+          inserted += fresh.length;
+        }
+        if (inserted > 0) set({ byDuration: next });
+        return inserted;
+      },
     }),
     {
       name: ODDS_LEADERBOARD_STORE_KEY,

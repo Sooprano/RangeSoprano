@@ -9,11 +9,13 @@ import {
   ChevronDown,
   ChevronUp,
   Crown,
+  Download,
   Flag,
   Play,
   RotateCcw,
   Settings2,
   Trophy,
+  Upload,
   X,
   Zap,
 } from 'lucide-react';
@@ -25,11 +27,19 @@ import {
   type OddsQuestion,
   type QuestionKind,
 } from '@/utils/potOdds';
-import { ODDS_DURATIONS, type OddsEntry } from '@/store/schemas';
+import {
+  CURRENT_ODDS_LEADERBOARD_EXPORT_VERSION,
+  ODDS_DURATIONS,
+  zOddsLeaderboardExportPayload,
+  type OddsEntry,
+} from '@/store/schemas';
 import {
   useOddsBoardForDuration,
   useOddsLeaderboardStore,
 } from '@/store/oddsLeaderboardStore';
+import { downloadBlob, todayIsoDate } from '@/utils/exportRange';
+import { MAX_IMPORT_BYTES } from '@/store/persist';
+import { pushToast } from '@/store/toastStore';
 
 type Phase = 'config' | 'running' | 'finished';
 const FEEDBACK_FLASH_MS = 220;
@@ -677,22 +687,130 @@ function Leaderboard({
   highlightDateIso: string | null;
   onClear: (() => void) | null;
 }) {
+  const mergeImport = useOddsLeaderboardStore((s) => s.mergeImport);
+  const hasAnyEntry = useOddsLeaderboardStore((s) =>
+    Object.values(s.byDuration).some((arr) => arr.length > 0),
+  );
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const onExport = () => {
+    const all = useOddsLeaderboardStore.getState().byDuration;
+    const payload = {
+      version: CURRENT_ODDS_LEADERBOARD_EXPORT_VERSION,
+      exportedAt: new Date().toISOString(),
+      byDuration: all,
+    };
+    downloadBlob(
+      JSON.stringify(payload, null, 2),
+      `odds-leaderboard-${todayIsoDate()}.json`,
+      'application/json',
+    );
+    pushToast({ kind: 'success', message: 'Leaderboard exportado' });
+  };
+
+  const onImportClick = () => fileInputRef.current?.click();
+
+  const onImportChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    if (file.size > MAX_IMPORT_BYTES) {
+      pushToast({
+        kind: 'error',
+        message: `Archivo > ${Math.floor(MAX_IMPORT_BYTES / 1024)} KB`,
+      });
+      return;
+    }
+
+    let text: string;
+    try {
+      text = await file.text();
+    } catch {
+      pushToast({ kind: 'error', message: 'No se pudo leer el archivo' });
+      return;
+    }
+
+    let data: unknown;
+    try {
+      data = JSON.parse(text);
+    } catch {
+      pushToast({ kind: 'error', message: 'JSON inválido' });
+      return;
+    }
+
+    const parsed = zOddsLeaderboardExportPayload.safeParse(data);
+    if (!parsed.success) {
+      pushToast({
+        kind: 'error',
+        message: 'Estructura de leaderboard no reconocida',
+      });
+      return;
+    }
+
+    const inserted = mergeImport(parsed.data.byDuration);
+    if (inserted === 0) {
+      pushToast({
+        kind: 'info',
+        message: 'No había entradas nuevas para importar',
+      });
+      return;
+    }
+    pushToast({
+      kind: 'success',
+      message: `${inserted} entrada${inserted === 1 ? '' : 's'} importada${
+        inserted === 1 ? '' : 's'
+      }`,
+    });
+  };
+
   return (
     <div className="rounded-xl border border-border bg-surface/40 p-4">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2 text-sm font-semibold text-content">
           <Crown className="h-4 w-4 text-amber-400" strokeWidth={2.5} />
           Leaderboard · {formatDurationLabel(duration)}
         </div>
-        {onClear && board.length > 0 && (
+        <div className="flex items-center gap-1.5">
+          {hasAnyEntry && (
+            <button
+              type="button"
+              onClick={onExport}
+              className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-content-muted hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
+              title="Exportar leaderboard como JSON"
+            >
+              <Download className="h-3 w-3" strokeWidth={2.25} />
+              Export
+            </button>
+          )}
           <button
             type="button"
-            onClick={onClear}
-            className="text-xs text-content-muted hover:text-content"
+            onClick={onImportClick}
+            className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-content-muted hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
+            title="Importar leaderboard JSON (merge)"
           >
-            Clear
+            <Upload className="h-3 w-3" strokeWidth={2.25} />
+            Import
           </button>
-        )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="application/json,.json"
+            onChange={onImportChange}
+            className="hidden"
+            aria-hidden
+            tabIndex={-1}
+          />
+          {onClear && board.length > 0 && (
+            <button
+              type="button"
+              onClick={onClear}
+              className="rounded-md px-2 py-1 text-xs text-content-muted hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
+            >
+              Clear
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="mt-3">

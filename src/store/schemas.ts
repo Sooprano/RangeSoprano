@@ -259,3 +259,17 @@ export const zOddsLeaderboard = z
 
 export type OddsEntry = z.infer<typeof zOddsEntry>;
 export type OddsLeaderboard = z.infer<typeof zOddsLeaderboard>;
+
+export const CURRENT_ODDS_LEADERBOARD_EXPORT_VERSION = 1;
+
+export const zOddsLeaderboardExportPayload = z
+  .object({
+    version: z.literal(CURRENT_ODDS_LEADERBOARD_EXPORT_VERSION),
+    exportedAt: z.string().optional(),
+    byDuration: z.record(z.string(), z.array(zOddsEntry)),
+  })
+  .strict();
+
+export type OddsLeaderboardExportPayload = z.infer<
+  typeof zOddsLeaderboardExportPayload
+>;
