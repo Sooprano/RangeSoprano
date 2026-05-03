@@ -13,6 +13,7 @@ import {
   FolderOpen,
   HelpCircle,
   Pencil,
+  Percent,
   Save,
   Target,
   type LucideIcon,
@@ -47,7 +48,7 @@ const MODULES: readonly ModuleCard[] = [
     label: 'Trainer',
     icon: Target,
     description:
-      'Entrená manos en mesa 6-max o Heads-Up. Modo Clásico (auto-avance 1.5 s), Speed (contrarreloj con leaderboard local 30 s–10 min) o Drawing (pintá el rango de memoria y comparalo con la verdad). Filtros por posición, situación y villano.',
+      'Entrená manos en mesa 6-max o Heads-Up. Modos Clásico (auto-avance 1.5 s), Speed (contrarreloj con leaderboard local), Drawing (pintar el rango de memoria) y Odds (pot odds: fold equity al apostar y equity al pagar, con MC y fórmula explicada). Filtros por posición, situación y villano.',
   },
   {
     to: '/editor',
@@ -113,6 +114,22 @@ const FAQS: readonly Faq[] = [
   {
     q: '¿Funciona offline?',
     a: 'Sí, una vez cargada la página. Todo es JS estático servido desde GitHub Pages — no hay backend.',
+  },
+  {
+    q: '¿Sirve para aprender pot odds?',
+    a: (
+      <>
+        Sí. El <span className="font-medium text-content">Trainer</span> tiene una pestaña{' '}
+        <span className="font-medium text-content">Odds</span> con cuatro tipos de pregunta sobre pot odds:
+        cuánta fold equity necesitás cuando bluffeás, qué equity necesitás para
+        pagar, y las dos inversas (qué tamaño apostar dado un % de fold equity y
+        hasta qué tamaño podés pagar dado un % de equity). Multiple choice de 4
+        opciones con feedback que muestra la fórmula resuelta. No depende de
+        tener rangos cargados, podés practicar incluso desde un perfil vacío.
+      </>
+    ),
+    aPlain:
+      'Sí. El Trainer tiene una pestaña Odds con cuatro tipos de pregunta sobre pot odds: cuánta fold equity necesitás cuando bluffeás, qué equity necesitás para pagar, y las dos inversas (qué tamaño apostar dado un % de fold equity y hasta qué tamaño podés pagar dado un % de equity). Multiple choice de 4 opciones con feedback que muestra la fórmula resuelta. No depende de tener rangos cargados, podés practicar incluso desde un perfil vacío.',
   },
   {
     q: '¿Puedo contribuir al proyecto?',
@@ -300,6 +317,73 @@ export default function HomePage() {
             </div>
           </li>
         </ol>
+      </section>
+
+      <section aria-labelledby="potodds-heading" className="flex flex-col gap-3">
+        <h2
+          id="potodds-heading"
+          className="text-[11px] font-semibold uppercase tracking-[0.18em] text-content-muted"
+        >
+          Pot odds — matemática esencial
+        </h2>
+        <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-5 text-sm text-content-muted">
+          <div className="flex items-start gap-3">
+            <span
+              aria-hidden
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-accent/15 text-accent"
+            >
+              <Percent className="h-5 w-5" strokeWidth={2.25} />
+            </span>
+            <p>
+              Saber qué manos van en cada rango no es suficiente: en mesa también
+              necesitás saber <span className="font-medium text-content">cuándo apostar es rentable</span> y{' '}
+              <span className="font-medium text-content">hasta qué tamaño podés pagar</span> con tu equity.
+              Esa matemática se llama <span className="font-medium text-content">pot odds</span> y se resume en dos tablas
+              clásicas que conviene tener internalizadas.
+            </p>
+          </div>
+
+          <ul className="grid gap-2 sm:grid-cols-2">
+            <li className="rounded-md border border-border bg-bg p-3">
+              <p className="font-medium text-content">Cuando vos apostás (bluff)</p>
+              <p className="text-xs">
+                Tu apuesta necesita éxito X% del tiempo:{' '}
+                <code className="font-mono text-content">bet / (pot + bet)</code>.
+                Ej. <span className="font-medium text-content">1/2 pot → 33%</span>,{' '}
+                <span className="font-medium text-content">pot-size → 50%</span>,{' '}
+                <span className="font-medium text-content">2x pot → 66%</span>.
+              </p>
+            </li>
+            <li className="rounded-md border border-border bg-bg p-3">
+              <p className="font-medium text-content">Cuando villano apuesta (call)</p>
+              <p className="text-xs">
+                Pagar requiere tener X% de equity:{' '}
+                <code className="font-mono text-content">bet / (pot + 2·bet)</code>.
+                Ej. <span className="font-medium text-content">vs 1/2 → 25%</span>,{' '}
+                <span className="font-medium text-content">vs pot-size → 33%</span>,{' '}
+                <span className="font-medium text-content">vs 2x → 40%</span>.
+              </p>
+            </li>
+          </ul>
+
+          <p>
+            Range Soprano incluye un trainer de pot odds en{' '}
+            <Link to="/trainer" className="font-medium text-accent-light hover:underline">
+              Trainer → tab Odds
+            </Link>
+            : cuatro tipos de pregunta (fold equity al apostar, equity al pagar, y
+            las inversas — qué tamaño apostar / hasta qué bet podés pagar) con
+            multiple choice de 4 opciones, atajos{' '}
+            <kbd className="rounded border border-border bg-bg px-1 py-0.5 font-mono text-[10px] text-content">
+              1
+            </kbd>
+            –
+            <kbd className="rounded border border-border bg-bg px-1 py-0.5 font-mono text-[10px] text-content">
+              4
+            </kbd>{' '}
+            y feedback con la fórmula resuelta. No requiere tener rangos cargados.
+          </p>
+        </div>
       </section>
 
       <section aria-labelledby="shortcuts-heading" className="flex flex-col gap-3">
