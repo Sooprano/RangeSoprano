@@ -10,6 +10,10 @@ export const LEADERBOARD_TOP_N = 5;
 export const CURRENT_ODDS_LEADERBOARD_VERSION = 1;
 export const ODDS_LEADERBOARD_TOP_N = 5;
 export const ODDS_DURATIONS = [30, 60, 120] as const;
+export const CURRENT_PUSHFOLD_LEADERBOARD_VERSION = 1;
+export const PUSHFOLD_LEADERBOARD_TOP_N = 5;
+export const PUSHFOLD_DURATIONS = [30, 60, 120] as const;
+export const PUSHFOLD_KINDS = ['push-or-fold', 'call-or-fold'] as const;
 
 export const MAX_RANGES = 500;
 export const MAX_CELLS_PER_RANGE = 169;
@@ -273,3 +277,37 @@ export const zOddsLeaderboardExportPayload = z
 export type OddsLeaderboardExportPayload = z.infer<
   typeof zOddsLeaderboardExportPayload
 >;
+
+const PUSHFOLD_DURATION_VALUES = PUSHFOLD_DURATIONS as readonly number[];
+const PUSHFOLD_KIND_VALUES = PUSHFOLD_KINDS as readonly string[];
+
+export const zPushFoldEntry = z
+  .object({
+    durationSec: z
+      .number()
+      .int()
+      .positive()
+      .refine((n) => PUSHFOLD_DURATION_VALUES.includes(n), {
+        message: 'unsupported duration',
+      }),
+    correct: z.number().int().nonnegative(),
+    total: z.number().int().nonnegative(),
+    qpm: z.number().nonnegative(),
+    accuracyPct: z.number().min(0).max(100),
+    dateIso: z.string().datetime({ offset: true }),
+    enabledKinds: z
+      .array(z.string().refine((k) => PUSHFOLD_KIND_VALUES.includes(k)))
+      .optional(),
+  })
+  .strict();
+
+export const zPushFoldLeaderboard = z
+  .object({
+    byDuration: z
+      .record(z.string(), z.array(zPushFoldEntry).max(PUSHFOLD_LEADERBOARD_TOP_N))
+      .default({}),
+  })
+  .strict();
+
+export type PushFoldEntry = z.infer<typeof zPushFoldEntry>;
+export type PushFoldLeaderboard = z.infer<typeof zPushFoldLeaderboard>;

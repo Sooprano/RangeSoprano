@@ -7,6 +7,7 @@ export const RANGE_STORE_KEY = 'range-soprano/ranges';
 export const UI_STORE_KEY = 'range-soprano/ui';
 export const LEADERBOARD_STORE_KEY = 'range-soprano/leaderboard';
 export const ODDS_LEADERBOARD_STORE_KEY = 'range-soprano/odds-leaderboard';
+export const PUSHFOLD_LEADERBOARD_STORE_KEY = 'range-soprano/pushfold-leaderboard';
 
 /**
  * Tolerant storage wrapper: falls back to an in-memory map if localStorage

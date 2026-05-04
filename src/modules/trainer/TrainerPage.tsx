@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Brush, Dices, Percent, Zap } from 'lucide-react';
+import { Brush, Crosshair, Dices, Percent, Zap } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -19,9 +19,10 @@ import { ClassicTrainer } from './ClassicTrainer';
 import { DrawingTrainer } from './DrawingTrainer';
 import { SpeedTrainer } from './SpeedTrainer';
 import { OddsTrainer } from './OddsTrainer';
+import { PushFoldTrainer } from './pushfold/PushFoldTrainer';
 import { SITUATION_LABELS } from '@/data/positions';
 
-type TrainerMode = 'classic' | 'drawing' | 'speed' | 'odds';
+type TrainerMode = 'classic' | 'drawing' | 'speed' | 'odds' | 'pushfold';
 
 export default function TrainerPage() {
   useDocumentTitle('Entrenador de rangos · Range Soprano', {
@@ -58,8 +59,8 @@ export default function TrainerPage() {
     }
   }, [ranges, trainerRangeId, setTrainerRangeId]);
 
-  // Odds mode is range-independent — show it even with zero ranges saved.
-  if (ranges.length === 0 && mode !== 'odds') {
+  // Odds and Push/Fold modes are range-independent — show them even with zero ranges saved.
+  if (ranges.length === 0 && mode !== 'odds' && mode !== 'pushfold') {
     return (
       <>
         <PageHeader
@@ -87,6 +88,24 @@ export default function TrainerPage() {
             <ModeToggle value={mode} onChange={setMode} />
           </div>
           <OddsTrainer />
+        </div>
+      </>
+    );
+  }
+
+  if (mode === 'pushfold') {
+    return (
+      <>
+        <PageHeader
+          eyebrow="Math · ICM short stack"
+          title="Push/Fold"
+          description="Aprendé las tablas de Nash de empuje/pago heads-up para stacks cortos."
+        />
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-start justify-end gap-3">
+            <ModeToggle value={mode} onChange={setMode} />
+          </div>
+          <PushFoldTrainer />
         </div>
       </>
     );
@@ -175,6 +194,12 @@ function ModeToggle({ value, onChange }: ModeToggleProps) {
         onClick={() => onChange('odds')}
         icon={<Percent className="h-3.5 w-3.5" strokeWidth={2.25} />}
         label="Pot Odds"
+      />
+      <ModeButton
+        active={value === 'pushfold'}
+        onClick={() => onChange('pushfold')}
+        icon={<Crosshair className="h-3.5 w-3.5" strokeWidth={2.25} />}
+        label="Push/Fold"
       />
     </div>
   );
