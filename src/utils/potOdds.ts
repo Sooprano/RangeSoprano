@@ -78,9 +78,24 @@ export const KIND_LABEL: Record<QuestionKind, string> = {
   'call-size': 'Call size',
 };
 
+/**
+ * Structured question shape for the rich prompt UI.
+ * `scenarioLabel` + `scenarioValue` form a chip (label above muted, value below
+ * highlighted) so the variable datum (sizing or %) is the first thing the eye
+ * catches. `question.keyword` is what the player must compute — rendered in
+ * accent color so the *concept asked* is the second hit. `prompt` stays as the
+ * flat string for a11y / mistakes recap.
+ */
 type BaseQuestion = {
   kind: QuestionKind;
   prompt: string;
+  scenarioLabel: string;
+  scenarioValue: string;
+  question: {
+    lead: string;
+    keyword: string;
+    tail: string;
+  };
   options: readonly string[]; // 4 strings, includes correct
   correct: string;
   explanation: string;
@@ -177,6 +192,13 @@ function buildBluffFeQuestion(size: Sizing): OddsQuestion {
   return {
     kind: 'bluff-fe',
     prompt: `Apostás ${SIZING_PROMPT_LABEL[size]}. ¿Cuánta fold equity necesitás para que el bluff sea rentable?`,
+    scenarioLabel: 'Vos apostás',
+    scenarioValue: SIZING_PROMPT_LABEL[size],
+    question: {
+      lead: '¿Cuánta',
+      keyword: 'fold equity',
+      tail: 'necesitás para que el bluff sea rentable?',
+    },
     options: buildOptions(pool, idx),
     correct,
     explanation: `bet / (pot + bet) = ${fmtFrac(f)} / (1 + ${fmtFrac(f)}) = ${correct}`,
@@ -192,6 +214,13 @@ function buildCallEqQuestion(size: Sizing): OddsQuestion {
   return {
     kind: 'call-eq',
     prompt: `Villano apuesta ${SIZING_PROMPT_LABEL[size]}. ¿Qué equity necesitás para que pagar sea rentable?`,
+    scenarioLabel: 'Villano apuesta',
+    scenarioValue: SIZING_PROMPT_LABEL[size],
+    question: {
+      lead: '¿Qué',
+      keyword: 'equity',
+      tail: 'necesitás para que pagar sea rentable?',
+    },
     options: buildOptions(pool, idx),
     correct,
     explanation: `call / (pot + 2·bet) = ${fmtFrac(f)} / (1 + ${fmtFrac(2 * f)}) = ${correct}`,
@@ -207,6 +236,13 @@ function buildBluffSizeQuestion(size: Sizing): OddsQuestion {
   return {
     kind: 'bluff-size',
     prompt: `Necesitás que villano foldee el ${fe} del tiempo. ¿Qué tamaño deberías apostar?`,
+    scenarioLabel: 'Querés que villano foldee',
+    scenarioValue: fe,
+    question: {
+      lead: '¿Qué',
+      keyword: 'tamaño',
+      tail: 'deberías apostar?',
+    },
     options: buildOptions(SIZINGS, idx),
     correct,
     explanation: `Necesitás bet/(pot+bet) = ${fe} → bet = ${SIZING_PROMPT_LABEL[size]}.`,
@@ -221,6 +257,13 @@ function buildCallSizeQuestion(size: Sizing): OddsQuestion {
   return {
     kind: 'call-size',
     prompt: `Tenés ${eq} de equity. ¿Hasta qué apuesta de villano podés pagar y seguir siendo rentable?`,
+    scenarioLabel: 'Tenés',
+    scenarioValue: `${eq} de equity`,
+    question: {
+      lead: '¿Hasta qué',
+      keyword: 'bet',
+      tail: 'de villano podés pagar y ser rentable?',
+    },
     options: buildOptions(SIZINGS, idx),
     correct,
     explanation: `Con ${eq} de equity rompés con call/(pot+2·bet) = ${eq} → bet máximo = ${SIZING_PROMPT_LABEL[size]}.`,

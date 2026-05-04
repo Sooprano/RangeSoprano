@@ -46,7 +46,7 @@ export function PushFoldQuiz() {
   );
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [score, setScore] = useState<Score>(INITIAL_SCORE);
-  const [autoAdvance, setAutoAdvance] = useState(false);
+  const [autoAdvance, setAutoAdvance] = useState(true);
 
   const enabledArr = useMemo(() => Array.from(enabled), [enabled]);
 

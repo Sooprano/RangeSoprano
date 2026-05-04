@@ -5,12 +5,11 @@ import {
   ALL_KINDS,
   generateQuestion,
   KIND_LABEL,
-  sizingFraction,
   type OddsQuestion,
   type QuestionKind,
-  type Sizing,
 } from '@/utils/potOdds';
 import { CountdownBar } from './CountdownBar';
+import { OddsPrompt } from './OddsPrompt';
 
 const AUTO_ADVANCE_MS = 1500;
 const STREAK_BONUS_THRESHOLD = 5;
@@ -53,7 +52,7 @@ export function OddsStudy() {
   );
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [score, setScore] = useState<Score>(INITIAL_SCORE);
-  const [autoAdvance, setAutoAdvance] = useState(false);
+  const [autoAdvance, setAutoAdvance] = useState(true);
   const [expertMode, setExpertMode] = useState(false);
 
   const enabledArr = useMemo(() => Array.from(enabled), [enabled]);
@@ -184,18 +183,7 @@ export function OddsStudy() {
       <ScoreBar score={score} accuracy={accuracy} />
 
       <div className="flex flex-col items-stretch gap-4 rounded-xl border border-border bg-surface/60 p-4 shadow-surface sm:p-5">
-        <div className="flex flex-col items-center gap-1 text-center">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-content-muted">
-            {KIND_LABEL[question.kind]}
-          </span>
-          <p className="max-w-xl text-sm leading-relaxed text-content sm:text-base">
-            {question.prompt}
-          </p>
-        </div>
-
-        {question.visualSize !== undefined && (
-          <MiniPot size={question.visualSize} />
-        )}
+        <OddsPrompt question={question} />
 
         {expertMode && isDirectKind(question.kind) ? (
           <FreestyleInput
@@ -299,63 +287,6 @@ export function OddsStudy() {
         {hasDirectEnabled && (
           <ExpertModeToggle value={expertMode} onChange={setExpertMode} />
         )}
-      </div>
-    </div>
-  );
-}
-
-function MiniPot({ size }: { size: Sizing }) {
-  const fraction = sizingFraction(size);
-  // Both bars share the same row width. Scale so the larger of pot=1 and bet
-  // fills 100%; the smaller scales proportionally.
-  const max = Math.max(1, fraction);
-  const potPct = (1 / max) * 100;
-  const betPct = (fraction / max) * 100;
-  const overpot = fraction > 1;
-  return (
-    <div className="mx-auto flex w-full max-w-md flex-col gap-1.5 px-1">
-      <BarRow
-        label="Pot"
-        widthPct={potPct}
-        barClass="bg-content/40"
-        labelClass="text-content-muted"
-      />
-      <BarRow
-        label="Bet"
-        widthPct={betPct}
-        barClass={overpot ? 'bg-amber-400' : 'bg-accent'}
-        labelClass={overpot ? 'text-amber-300' : 'text-accent-light'}
-      />
-    </div>
-  );
-}
-
-function BarRow({
-  label,
-  widthPct,
-  barClass,
-  labelClass,
-}: {
-  label: string;
-  widthPct: number;
-  barClass: string;
-  labelClass: string;
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      <span
-        className={cn(
-          'w-8 shrink-0 text-[10px] font-semibold uppercase tracking-wider',
-          labelClass,
-        )}
-      >
-        {label}
-      </span>
-      <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface">
-        <div
-          className={cn('h-full rounded-full transition-[width]', barClass)}
-          style={{ width: `${widthPct}%` }}
-        />
       </div>
     </div>
   );

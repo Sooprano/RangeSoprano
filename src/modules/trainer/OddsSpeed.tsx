@@ -27,6 +27,7 @@ import {
   type OddsQuestion,
   type QuestionKind,
 } from '@/utils/potOdds';
+import { OddsPrompt } from './OddsPrompt';
 import {
   CURRENT_ODDS_LEADERBOARD_EXPORT_VERSION,
   ODDS_DURATIONS,
@@ -407,14 +408,7 @@ function SpeedRun({
       />
 
       <div className="flex flex-col items-stretch gap-4 rounded-xl border border-border bg-surface/60 p-4 shadow-surface sm:p-5">
-        <div className="flex flex-col items-center gap-1 text-center">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-content-muted">
-            {KIND_LABEL[question.kind]}
-          </span>
-          <p className="max-w-xl text-sm leading-relaxed text-content sm:text-base">
-            {question.prompt}
-          </p>
-        </div>
+        <OddsPrompt question={question} />
 
         <div className="mx-auto grid w-full max-w-md grid-cols-2 gap-1.5 sm:grid-cols-4">
           {question.options.map((opt, i) => {
