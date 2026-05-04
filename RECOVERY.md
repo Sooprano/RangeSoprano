@@ -13,6 +13,7 @@
 
 | Hito | Hash |
 |---|---|
+| Fase 17c (QR de donación BTC en home, single source of truth) | `49f37a3` |
 | Fase 17b (traducciones pendientes home + menús editor) | `981452b` |
 | Fase 17 (traducción completa UI español latinoamericano voseo) | `045a3d7` → `80372c6` |
 | Fase 16e (export/import JSON del leaderboard de Pot Odds Speed) | `f12958d` |
@@ -28,7 +29,7 @@
 
 ## Estado actual
 
-Fases 1-17b completadas ✅. Última feature: traducciones pendientes de fase 17 — menús ··· del editor (Renombrar/Mover a grupo…/Duplicar/Eliminar/Renombrar carpeta…), confirms y toasts en español, aria-labels y placeholders del form inline de RangeManager; HomePage: nombres de módulos, tabs del Visualizador (Individual/Comparar/Resumen) y modos del Entrenador (Velocidad/Dibujo) en sección how-to, "tabla de líderes local", labels UI en Organizar rangos, fix "que decidís jugar" en ¿Qué es un rango?. Términos preservados en inglés: Stack, Sizing, Call/Raise/Fold, RFI, HU, posiciones BTN/CO/HJ. URLs sin cambios; SEO intacto.
+Fases 1-17c completadas ✅. Última feature: QR de donación BTC en home generado client-side via `qrcode.react` desde la misma const `BTC_ADDRESS` que alimenta el copy y el `<code>` visible (single source of truth — imposible divergir QR vs address). URI BIP21 (`bitcoin:bc1q...`) para autocomplete en wallets. Tile blanco 140px a la izquierda, address+copy con `flex-1` a la derecha en desktop, vertical en mobile. Cero requests externos.
 
 Live en https://rangesoprano.com/ (custom domain Cloudflare → GitHub Pages). Indexado en Google Search Console (home + 3 rutas internas) y Bing Webmaster Tools. Lighthouse: SEO 100, Performance 99, Best Practices 100, Accessibility 95.
 
