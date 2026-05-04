@@ -18,6 +18,7 @@ import {
   Target,
   type LucideIcon,
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { copyToClipboard } from '@/utils/exportRange';
 import { pushToast } from '@/store/toastStore';
@@ -622,31 +623,52 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <code
-              className="flex-1 select-all break-all rounded-md border border-border bg-bg px-3 py-2 font-mono text-xs text-content"
-              aria-label="Dirección Bitcoin"
-            >
-              {BTC_ADDRESS}
-            </code>
-            <button
-              type="button"
-              onClick={onCopyBtc}
-              className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-surface px-3 py-2 text-sm font-medium text-content hover:bg-surface-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
-              aria-label="Copiar dirección Bitcoin"
-            >
-              {copied ? (
-                <>
-                  <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
-                  Copiado
-                </>
-              ) : (
-                <>
-                  <Copy className="h-3.5 w-3.5" strokeWidth={2.25} />
-                  Copiar
-                </>
-              )}
-            </button>
+          <div className="flex flex-col items-stretch gap-5 sm:flex-row sm:items-start">
+            <div className="flex flex-col items-center gap-2 self-center sm:self-start">
+              <div
+                className="rounded-lg bg-white p-3 shadow-sm ring-1 ring-border"
+                aria-label="Código QR de la dirección Bitcoin"
+              >
+                <QRCodeSVG
+                  value={`bitcoin:${BTC_ADDRESS}`}
+                  size={140}
+                  level="M"
+                  bgColor="#ffffff"
+                  fgColor="#000000"
+                  marginSize={0}
+                />
+              </div>
+              <p className="text-[11px] text-content-muted">
+                Escaneá con tu billetera
+              </p>
+            </div>
+
+            <div className="flex flex-1 flex-col gap-2 sm:min-w-0">
+              <code
+                className="select-all break-all rounded-md border border-border bg-bg px-3 py-2 font-mono text-xs text-content"
+                aria-label="Dirección Bitcoin"
+              >
+                {BTC_ADDRESS}
+              </code>
+              <button
+                type="button"
+                onClick={onCopyBtc}
+                className="inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-surface px-3 py-2 text-sm font-medium text-content hover:bg-surface-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light sm:self-start"
+                aria-label="Copiar dirección Bitcoin"
+              >
+                {copied ? (
+                  <>
+                    <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+                    Copiado
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-3.5 w-3.5" strokeWidth={2.25} />
+                    Copiar
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </section>
