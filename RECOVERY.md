@@ -13,6 +13,7 @@
 
 | Hito | Hash |
 |---|---|
+| Fase 17b (traducciones pendientes home + menús editor) | `981452b` |
 | Fase 17 (traducción completa UI español latinoamericano voseo) | `045a3d7` → `80372c6` |
 | Fase 16e (export/import JSON del leaderboard de Pot Odds Speed) | `f12958d` |
 | Fase 16d (freestyle input numérico en Pot Odds Study) | `9574535` |
@@ -27,7 +28,7 @@
 
 ## Estado actual
 
-Fases 1-17 completadas ✅. Última feature: traducción completa de la UI a español latinoamericano voseo (Sidebar, mode tabs Trainer, sub-tabs Odds, stats, Viewer tabs, Editor meta-form + hint, Home module cards, toasts, confirms). Términos preservados en inglés: Stack, Sizing, Call/Raise/Fold, RFI, HU, posiciones BTN/CO/HJ. URLs sin cambios; `lang="es"` ya estaba — sin impacto en SEO.
+Fases 1-17b completadas ✅. Última feature: traducciones pendientes de fase 17 — menús ··· del editor (Renombrar/Mover a grupo…/Duplicar/Eliminar/Renombrar carpeta…), confirms y toasts en español, aria-labels y placeholders del form inline de RangeManager; HomePage: nombres de módulos, tabs del Visualizador (Individual/Comparar/Resumen) y modos del Entrenador (Velocidad/Dibujo) en sección how-to, "tabla de líderes local", labels UI en Organizar rangos, fix "que decidís jugar" en ¿Qué es un rango?. Términos preservados en inglés: Stack, Sizing, Call/Raise/Fold, RFI, HU, posiciones BTN/CO/HJ. URLs sin cambios; SEO intacto.
 
 Live en https://rangesoprano.com/ (custom domain Cloudflare → GitHub Pages). Indexado en Google Search Console (home + 3 rutas internas) y Bing Webmaster Tools. Lighthouse: SEO 100, Performance 99, Best Practices 100, Accessibility 95.
 
