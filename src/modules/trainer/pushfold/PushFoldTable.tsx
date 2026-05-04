@@ -250,7 +250,7 @@ function PushFoldGrid({
               {hand}
             </span>
             {showBB && active && t < 20 && (
-              <span className="text-[8px] font-medium text-white/85 drop-shadow-[0_1px_1px_rgb(0_0_0/0.65)]">
+              <span className="text-[9px] font-bold text-amber-200 drop-shadow-[0_1px_2px_rgb(0_0_0/0.75)]">
                 {t}
               </span>
             )}
