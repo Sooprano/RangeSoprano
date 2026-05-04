@@ -58,30 +58,41 @@ export function ScenarioChip({
   );
 }
 
-// Visual mini-table: pot stack (100 BB anchor) + bet stack with chips
-// proportional to the sizing. Mirrors what an online table renders so the
-// magnitude is read pre-attentively, without parsing fractions.
+// Visual mini-table: pot stack always centered; villain bets to the LEFT,
+// hero bets to the RIGHT. Spatial side encodes the situation pre-attentively
+// (left → defending vs villain bet → call/equity, right → our bluff → fold
+// equity). Mirrors what an online table renders so the magnitude is read
+// without parsing fractions.
 export function MiniPot({ size, kind }: { size: Sizing; kind: QuestionKind }) {
   const fraction = sizingFraction(size);
   const POT_BB = 100;
   const betBB = Math.round(POT_BB * fraction);
   const overpot = fraction > 1;
   const heroBets = kind === 'bluff-fe' || kind === 'bluff-size';
-  const betLabel = heroBets ? 'Vos apostás' : 'Villano apuesta';
+  const betSlot = (
+    <div className="flex flex-col items-center gap-1">
+      <span
+        className={cn(
+          'text-[9px] font-semibold uppercase tracking-[0.18em]',
+          heroBets ? 'text-accent-light' : 'text-rose-300',
+        )}
+      >
+        {heroBets ? 'Vos apostás' : 'Villano apuesta'}
+      </span>
+      <ChipStack
+        label="Bet"
+        amount={betBB}
+        tone={overpot ? 'amber' : 'accent'}
+      />
+    </div>
+  );
   return (
-    <div className="mx-auto flex w-full max-w-md items-end justify-center gap-6 px-2">
-      <ChipStack label="Pot" amount={POT_BB} tone="muted" />
-      <div className="flex flex-col items-center gap-1">
-        <span
-          className={cn(
-            'text-[9px] font-semibold uppercase tracking-[0.18em]',
-            heroBets ? 'text-accent-light' : 'text-rose-300',
-          )}
-        >
-          {betLabel}
-        </span>
-        <ChipStack label="Bet" amount={betBB} tone={overpot ? 'amber' : 'accent'} />
+    <div className="mx-auto grid w-full max-w-md grid-cols-3 items-end gap-4 px-2">
+      <div className="flex justify-end">{!heroBets && betSlot}</div>
+      <div className="flex justify-center">
+        <ChipStack label="Pot" amount={POT_BB} tone="muted" />
       </div>
+      <div className="flex justify-start">{heroBets && betSlot}</div>
     </div>
   );
 }
