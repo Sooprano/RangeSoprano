@@ -33,6 +33,7 @@ import {
   usePushFoldBoardForDuration,
   usePushFoldLeaderboardStore,
 } from '@/store/pushFoldLeaderboardStore';
+import { HandCards } from '../HandCards';
 
 type Phase = 'config' | 'running' | 'finished';
 const FEEDBACK_FLASH_MS = 220;
@@ -449,21 +450,22 @@ function SpeedRun({
 
 function SpeedPrompt({ question }: { question: PushFoldQuestion }) {
   const isPush = question.scope === 'push';
-  const eyebrow = isPush
-    ? `BTN · push or fold · ${question.stackBB.toFixed(1)} BB`
-    : `BB · call or fold · ${question.stackBB.toFixed(1)} BB`;
+  const eyebrow = isPush ? 'BTN · push or fold' : 'BB · call or fold';
   return (
-    <div className="flex flex-col items-center gap-2 text-center">
+    <div className="flex flex-col items-center gap-3 text-center">
       <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-content-muted">
         {eyebrow}
       </span>
-      <div className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-2 shadow-surface">
-        <span className="text-[10px] uppercase tracking-wider text-content-muted">
-          Mano
-        </span>
-        <span className="font-mono text-2xl font-bold tabular-nums text-content">
-          {question.hand}
-        </span>
+      <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <HandCards hand={question.hand} />
+        <div className="inline-flex flex-col items-center gap-0.5 rounded-xl border border-border bg-surface px-4 py-2 shadow-surface">
+          <span className="text-[10px] uppercase tracking-wider text-content-muted">
+            Stack
+          </span>
+          <span className="font-mono text-2xl font-bold tabular-nums text-amber-200">
+            {question.stackBB.toFixed(1)} BB
+          </span>
+        </div>
       </div>
     </div>
   );

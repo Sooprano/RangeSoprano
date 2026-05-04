@@ -16,6 +16,7 @@ import {
   type TrainerHand,
 } from '@/utils/trainerSampler';
 import { PokerTable } from './PokerTable';
+import { CountdownBar } from './CountdownBar';
 
 const FOLD_ID: ActionId = 'FOLD';
 
@@ -297,25 +298,6 @@ function ActionGrid({ actions, feedback, onAnswer }: ActionGridProps) {
           </button>
         );
       })}
-    </div>
-  );
-}
-
-function CountdownBar({ durationMs }: { durationMs: number }) {
-  const [go, setGo] = useState(false);
-  useEffect(() => {
-    const id = requestAnimationFrame(() => setGo(true));
-    return () => cancelAnimationFrame(id);
-  }, []);
-  return (
-    <div className="w-full h-0.5 rounded-full overflow-hidden bg-border/40">
-      <div
-        className="h-full bg-accent/50"
-        style={{
-          width: go ? '0%' : '100%',
-          transition: go ? `width ${durationMs}ms linear` : 'none',
-        }}
-      />
     </div>
   );
 }

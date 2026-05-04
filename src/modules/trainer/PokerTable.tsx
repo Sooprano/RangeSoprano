@@ -2,40 +2,7 @@ import { cn } from '@/lib/cn';
 import { combosOf } from '@/utils/handUtils';
 import { POSITIONS, huVillainOf } from '@/types/poker';
 import type { Position, TableFormat } from '@/types/poker';
-
-// ── Card rendering ──────────────────────────────────────────────────────────
-
-type Suit = '♠' | '♥' | '♣';
-
-const SUIT_BG: Record<Suit, string> = {
-  '♠': '#1e293b',
-  '♥': '#b91c1c',
-  '♣': '#15803d',
-};
-
-function parseHandCards(
-  hand: string,
-): [{ rank: string; suit: Suit }, { rank: string; suit: Suit }] {
-  if (hand.length === 2) {
-    return [{ rank: hand[0]!, suit: '♠' }, { rank: hand[1]!, suit: '♥' }];
-  }
-  if (hand.endsWith('s')) {
-    return [{ rank: hand[0]!, suit: '♣' }, { rank: hand[1]!, suit: '♣' }];
-  }
-  return [{ rank: hand[0]!, suit: '♥' }, { rank: hand[1]!, suit: '♠' }];
-}
-
-function CardFace({ rank, suit }: { rank: string; suit: Suit }) {
-  return (
-    <div
-      className="flex h-14 w-10 flex-col items-center justify-center gap-0.5 rounded-lg shadow-md select-none"
-      style={{ backgroundColor: SUIT_BG[suit] }}
-    >
-      <span className="text-xl font-bold leading-none text-white">{rank}</span>
-      <span className="text-[10px] leading-none text-white/50">{suit}</span>
-    </div>
-  );
-}
+import { CardFace, parseHandCards } from './HandCards';
 
 // ── Table layout ─────────────────────────────────────────────────────────────
 

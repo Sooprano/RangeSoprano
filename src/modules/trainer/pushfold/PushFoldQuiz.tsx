@@ -10,7 +10,10 @@ import {
   type PushFoldKind,
   type PushFoldQuestion,
 } from '@/utils/pushFold';
+import { HandCards } from '../HandCards';
+import { CountdownBar } from '../CountdownBar';
 
+const AUTO_ADVANCE_MS = 1500;
 const STREAK_BONUS_THRESHOLD = 5;
 const PUSH_COLOR = '#22c55e';
 const CALL_COLOR = '#3b82f6';
@@ -43,6 +46,7 @@ export function PushFoldQuiz() {
   );
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [score, setScore] = useState<Score>(INITIAL_SCORE);
+  const [autoAdvance, setAutoAdvance] = useState(false);
 
   const enabledArr = useMemo(() => Array.from(enabled), [enabled]);
 
@@ -95,6 +99,15 @@ export function PushFoldQuiz() {
   }, []);
 
   const yesAnswer: PushFoldAnswer = question.scope === 'push' ? 'PUSH' : 'CALL';
+
+  // Auto-advance: tras feedback, dispara drawNext en AUTO_ADVANCE_MS si el
+  // toggle está activo. Si el usuario toca Siguiente/Enter/N antes, drawNext
+  // limpia feedback y el cleanup del effect cancela el timeout.
+  useEffect(() => {
+    if (!autoAdvance || !feedback) return;
+    const id = setTimeout(drawNext, AUTO_ADVANCE_MS);
+    return () => clearTimeout(id);
+  }, [autoAdvance, feedback, drawNext]);
 
   // Keyboard: 1 = Push/Call, 2 = Fold, Enter/Space/N = next.
   useEffect(() => {
@@ -151,14 +164,19 @@ export function PushFoldQuiz() {
           onAnswer={answer}
         />
 
-        <div className="min-h-[3.5rem] w-full">
+        <div className="min-h-[3.5rem] w-full flex flex-col gap-2">
           {feedback ? (
-            <FeedbackPanel
-              wasCorrect={feedback.wasCorrect}
-              picked={feedback.picked}
-              correct={question.correct}
-              explanation={describeThreshold(question)}
-            />
+            <>
+              <FeedbackPanel
+                wasCorrect={feedback.wasCorrect}
+                picked={feedback.picked}
+                correct={question.correct}
+                explanation={describeThreshold(question)}
+              />
+              {autoAdvance && (
+                <CountdownBar key={score.total} durationMs={AUTO_ADVANCE_MS} />
+              )}
+            </>
           ) : (
             <p className="text-center text-xs text-content-muted">
               Tecla <kbd className="rounded bg-surface px-1 py-0.5 font-mono text-[10px]">1</kbd> = {yesAnswer === 'PUSH' ? 'Push' : 'Call'} ·{' '}
@@ -197,42 +215,82 @@ export function PushFoldQuiz() {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-center gap-3">
+      <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
         <KindFilter enabled={enabled} onToggle={toggleKind} />
+        <AutoAdvanceToggle value={autoAdvance} onChange={setAutoAdvance} />
       </div>
     </div>
   );
 }
 
+function AutoAdvanceToggle({
+  value,
+  onChange,
+}: {
+  value: boolean;
+  onChange: (next: boolean) => void;
+}) {
+  return (
+    <label
+      className={cn(
+        'inline-flex cursor-pointer items-center gap-2 rounded-full border px-2.5 py-1 text-[11px] font-medium',
+        'transition-colors duration-150 ease-out-soft',
+        'focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-light',
+        value
+          ? 'border-accent/60 bg-accent/10 text-content'
+          : 'border-border bg-surface/40 text-content-muted hover:bg-surface-hover hover:text-content',
+      )}
+    >
+      <input
+        type="checkbox"
+        checked={value}
+        onChange={(e) => onChange(e.target.checked)}
+        className="sr-only"
+      />
+      <span
+        aria-hidden
+        className={cn(
+          'inline-block h-3 w-3 rounded-sm border',
+          value
+            ? 'border-accent bg-accent'
+            : 'border-border bg-surface',
+        )}
+      />
+      Auto-avance ({(AUTO_ADVANCE_MS / 1000).toFixed(1)}s)
+    </label>
+  );
+}
+
 function Prompt({ question }: { question: PushFoldQuestion }) {
   const isPush = question.scope === 'push';
-  const eyebrow = isPush
-    ? `BTN · push or fold · ${question.stackBB.toFixed(1)} BB`
-    : `BB · call or fold · ${question.stackBB.toFixed(1)} BB`;
+  const eyebrow = isPush ? 'BTN · push or fold' : 'BB · call or fold';
   const sentence = isPush
-    ? `Estás en BTN con stack efectivo de ${question.stackBB.toFixed(1)} BB. Te toca actuar.`
-    : `Estás en BB con stack efectivo de ${question.stackBB.toFixed(1)} BB. BTN va all-in.`;
+    ? 'Estás en BTN. Te toca actuar.'
+    : 'Estás en BB. BTN va all-in.';
   return (
-    <div className="flex flex-col items-center gap-2 text-center">
+    <div className="flex flex-col items-center gap-3 text-center">
       <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-content-muted">
         {eyebrow}
       </span>
+      <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+        <HandCards hand={question.hand} />
+        <StackChip bb={question.stackBB} />
+      </div>
       <p className="max-w-xl text-sm leading-relaxed text-content sm:text-base">
         {sentence}
       </p>
-      <HandBadge hand={question.hand} />
     </div>
   );
 }
 
-function HandBadge({ hand }: { hand: string }) {
+function StackChip({ bb }: { bb: number }) {
   return (
-    <div className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-2 shadow-surface">
+    <div className="inline-flex flex-col items-center gap-0.5 rounded-xl border border-border bg-surface px-4 py-2 shadow-surface">
       <span className="text-[10px] uppercase tracking-wider text-content-muted">
-        Mano
+        Stack
       </span>
-      <span className="font-mono text-2xl font-bold tabular-nums text-content">
-        {hand}
+      <span className="font-mono text-2xl font-bold tabular-nums text-amber-200">
+        {bb.toFixed(1)} BB
       </span>
     </div>
   );

@@ -10,6 +10,7 @@ import {
   type QuestionKind,
   type Sizing,
 } from '@/utils/potOdds';
+import { CountdownBar } from './CountdownBar';
 
 const AUTO_ADVANCE_MS = 1500;
 const STREAK_BONUS_THRESHOLD = 5;
@@ -239,16 +240,21 @@ export function OddsStudy() {
           </div>
         )}
 
-        <div className="min-h-[3.5rem] w-full">
+        <div className="min-h-[3.5rem] w-full flex flex-col gap-2">
           {feedback ? (
-            <FeedbackPanel
-              wasCorrect={feedback.wasCorrect}
-              correct={question.correct}
-              explanation={question.explanation}
-              {...(expertMode && isDirectKind(question.kind)
-                ? { picked: feedback.picked }
-                : {})}
-            />
+            <>
+              <FeedbackPanel
+                wasCorrect={feedback.wasCorrect}
+                correct={question.correct}
+                explanation={question.explanation}
+                {...(expertMode && isDirectKind(question.kind)
+                  ? { picked: feedback.picked }
+                  : {})}
+              />
+              {autoAdvance && (
+                <CountdownBar key={score.total} durationMs={AUTO_ADVANCE_MS} />
+              )}
+            </>
           ) : (
             <p className="text-center text-xs text-content-muted">
               {expertMode && isDirectKind(question.kind)
