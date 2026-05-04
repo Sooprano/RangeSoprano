@@ -65,7 +65,7 @@ type Faq = { q: string; a: React.ReactNode; aPlain?: string };
 const FAQS: readonly Faq[] = [
   {
     q: '¿Qué es Range Soprano?',
-    a: 'Una herramienta web gratis para estudiar rangos preflop. Tres módulos: Viewer, Trainer, Editor. Pensada para repasar, memorizar y comparar tus propios rangos (o copiados de un libro/solver) en mesa 6-max o Heads-Up.',
+    a: 'Una herramienta web gratis para estudiar rangos preflop. Tres módulos: Visualizador, Entrenador, Editor. Pensada para repasar, memorizar y comparar tus propios rangos (o copiados de un libro/solver) en mesa 6-max o Heads-Up.',
   },
   {
     q: '¿Por qué no hay login ni cuenta?',
@@ -95,21 +95,21 @@ const FAQS: readonly Faq[] = [
   },
   {
     q: '¿Sirve para 6-max y Heads-Up?',
-    a: 'Sí. Cada rango se crea con un formato (6max o HU). El Trainer pinta la mesa acorde y el Viewer filtra por formato.',
+    a: 'Sí. Cada rango se crea con un formato (6max o HU). El Entrenador pinta la mesa acorde y el Visualizador filtra por formato.',
   },
   {
     q: '¿Cómo imprimo varios rangos a PDF?',
     a: (
       <>
-        En el <span className="font-medium text-content">Viewer</span>, pestaña{' '}
-        <span className="font-medium text-content">Overview</span>, botón{' '}
-        <span className="font-medium text-content">Print PDF</span>. Configurá rangos por
+        En el <span className="font-medium text-content">Visualizador</span>, pestaña{' '}
+        <span className="font-medium text-content">Resumen</span>, botón{' '}
+        <span className="font-medium text-content">Imprimir PDF</span>. Configurá rangos por
         página, etiquetas (stack/sizing), leyenda y badge de formato. Después usá
         <span className="font-medium text-content"> Print / Save as PDF</span> del navegador.
       </>
     ),
     aPlain:
-      'En el Viewer, pestaña Overview, botón Print PDF. Configurá rangos por página, etiquetas (stack/sizing), leyenda y badge de formato. Después usá Print / Save as PDF del navegador.',
+      'En el Visualizador, pestaña Resumen, botón Imprimir PDF. Configurá rangos por página, etiquetas (stack/sizing), leyenda y badge de formato. Después usá Print / Save as PDF del navegador.',
   },
   {
     q: '¿Funciona offline?',
@@ -119,8 +119,8 @@ const FAQS: readonly Faq[] = [
     q: '¿Sirve para aprender pot odds?',
     a: (
       <>
-        Sí. El <span className="font-medium text-content">Trainer</span> tiene una pestaña{' '}
-        <span className="font-medium text-content">Odds</span> con cuatro tipos de pregunta sobre pot odds:
+        Sí. El <span className="font-medium text-content">Entrenador</span> tiene una pestaña{' '}
+        <span className="font-medium text-content">Pot Odds</span> con cuatro tipos de pregunta sobre pot odds:
         cuánta fold equity necesitás cuando bluffeás, qué equity necesitás para
         pagar, y las dos inversas (qué tamaño apostar dado un % de fold equity y
         hasta qué tamaño podés pagar dado un % de equity). Multiple choice de 4
@@ -129,7 +129,7 @@ const FAQS: readonly Faq[] = [
       </>
     ),
     aPlain:
-      'Sí. El Trainer tiene una pestaña Odds con cuatro tipos de pregunta sobre pot odds: cuánta fold equity necesitás cuando bluffeás, qué equity necesitás para pagar, y las dos inversas (qué tamaño apostar dado un % de fold equity y hasta qué tamaño podés pagar dado un % de equity). Multiple choice de 4 opciones con feedback que muestra la fórmula resuelta. No depende de tener rangos cargados, podés practicar incluso desde un perfil vacío.',
+      'Sí. El Entrenador tiene una pestaña Pot Odds con cuatro tipos de pregunta sobre pot odds: cuánta fold equity necesitás cuando bluffeás, qué equity necesitás para pagar, y las dos inversas (qué tamaño apostar dado un % de fold equity y hasta qué tamaño podés pagar dado un % de equity). Multiple choice de 4 opciones con feedback que muestra la fórmula resuelta. No depende de tener rangos cargados, podés practicar incluso desde un perfil vacío.',
   },
   {
     q: '¿Puedo contribuir al proyecto?',
@@ -140,9 +140,9 @@ const FAQS: readonly Faq[] = [
 type Shortcut = { keys: string; desc: string };
 
 const SHORTCUTS: readonly Shortcut[] = [
-  { keys: '1 – 9', desc: 'Trainer · selecciona acción / Editor · pincel rápido' },
-  { keys: 'Enter / Space / N', desc: 'Trainer clásico · siguiente mano (también auto en 1.5 s)' },
-  { keys: 'S', desc: 'Trainer clásico · saltear mano' },
+  { keys: '1 – 9', desc: 'Entrenador · selecciona acción / Editor · pincel rápido' },
+  { keys: 'Enter / Space / N', desc: 'Entrenador Clásico · siguiente mano (también auto en 1.5 s)' },
+  { keys: 'S', desc: 'Entrenador Clásico · saltear mano' },
   { keys: 'Ctrl + Z / Ctrl + Y', desc: 'Editor · Undo / Redo' },
   { keys: 'Ctrl + RightClick', desc: 'Editor / Trainer · Hand+ expansion (ej. 88+ pinta 88, 99, TT…)' },
   { keys: 'RightClick', desc: 'Editor · borra la celda activa' },
@@ -217,7 +217,7 @@ export default function HomePage() {
         <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-5 text-sm text-content-muted">
           <p>
             Un <span className="font-medium text-content">rango de poker preflop</span> es
-            el conjunto de manos con las que jugás (o querés jugar) desde una posición
+            el conjunto de manos que decidís jugar desde una posición
             específica antes del flop. En lugar de decidir mano a mano, definís un rango
             y lo aplicás de forma consistente: por ejemplo, abrir desde el botón con un
             rango más amplio que desde UTG, o defender la BB contra un raise con una mezcla
@@ -282,12 +282,12 @@ export default function HomePage() {
               <Eye className="h-4 w-4" strokeWidth={2} />
             </span>
             <div className="text-content-muted">
-              <span className="font-medium text-content">2. Repasar en el Viewer</span>
+              <span className="font-medium text-content">2. Repasar en el Visualizador</span>
               {' — '}usá la vista{' '}
-              <span className="font-medium text-content">Single</span> para revisar un rango,{' '}
-              <span className="font-medium text-content">Compare</span> para comparar dos
+              <span className="font-medium text-content">Individual</span> para revisar un rango,{' '}
+              <span className="font-medium text-content">Comparar</span> para comparar dos
               en paralelo (ej. abrir vs defender) o{' '}
-              <span className="font-medium text-content">Overview</span> para ver el mosaico
+              <span className="font-medium text-content">Resumen</span> para ver el mosaico
               completo de tus carpetas.
             </div>
           </li>
@@ -296,12 +296,12 @@ export default function HomePage() {
               <Target className="h-4 w-4" strokeWidth={2} />
             </span>
             <div className="text-content-muted">
-              <span className="font-medium text-content">3. Memorizar con el Trainer</span>
+              <span className="font-medium text-content">3. Memorizar con el Entrenador</span>
               {' — '}entrená la decisión preflop con el modo{' '}
               <span className="font-medium text-content">Clásico</span> (precisión),{' '}
-              <span className="font-medium text-content">Speed</span> (velocidad
-              contrarreloj con leaderboard local) o{' '}
-              <span className="font-medium text-content">Drawing</span> (pintá el rango de
+              <span className="font-medium text-content">Velocidad</span> (contrarreloj
+              con tabla de líderes local) o{' '}
+              <span className="font-medium text-content">Dibujo</span> (pintá el rango de
               memoria y compará con la verdad). Las tres modalidades sobre mesa 6-max o HU.
             </div>
           </li>
@@ -423,10 +423,10 @@ export default function HomePage() {
               <kbd className="rounded border border-border bg-bg px-1.5 py-0.5 font-mono text-[10px] text-content">
                 ···
               </kbd>{' '}
-              junto al rango → <span className="font-medium text-content">Move to group…</span> → escribí el
+              junto al rango → <span className="font-medium text-content">Mover a grupo…</span> → escribí el
               nombre de la carpeta (ej.{' '}
               <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">Opening</code>) y Enter.
-              Ojo: el campo <span className="font-medium text-content">Name</span> al crear un rango es el nombre del rango, no
+              Ojo: el campo <span className="font-medium text-content">Nombre</span> al crear un rango es el nombre del rango, no
               de la carpeta.
             </div>
           </li>
@@ -458,7 +458,7 @@ export default function HomePage() {
               <kbd className="rounded border border-border bg-bg px-1.5 py-0.5 font-mono text-[10px] text-content">
                 ···
               </kbd>{' '}
-              → <span className="font-medium text-content">Move to group…</span> → escribí otro nombre (con autocompletado) o
+              → <span className="font-medium text-content">Mover a grupo…</span> → escribí otro nombre (con autocompletado) o
               dejá vacío para sacarlo de toda carpeta.
             </div>
           </li>
@@ -473,7 +473,7 @@ export default function HomePage() {
                 ···
               </kbd>{' '}
               en el header de carpeta →{' '}
-              <span className="font-medium text-content">Rename folder…</span>.{' '}
+              <span className="font-medium text-content">Renombrar carpeta…</span>.{' '}
               Tip: renombrá{' '}
               <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">Opening</code>
               {' → '}

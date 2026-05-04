@@ -174,10 +174,10 @@ export function RangeManager({
 
   const handleDelete = (id: string, name: string) => {
     setOpenMenuId(null);
-    if (window.confirm(`Delete range "${name}"? You can undo with Ctrl+Z.`)) {
+    if (window.confirm(`¿Eliminar el rango "${name}"? Podés deshacer con Ctrl+Z.`)) {
       pushHistory();
       deleteRange(id);
-      pushToast({ kind: 'info', message: `Deleted "${name}" — Ctrl+Z to undo` });
+      pushToast({ kind: 'info', message: `Se eliminó "${name}" — Ctrl+Z para deshacer` });
     }
   };
 
@@ -238,7 +238,7 @@ export function RangeManager({
       pushHistory();
       renameGroup(path, next);
       renameGroupMeta(path, next);
-      pushToast({ kind: 'success', message: `Folder renamed to "${next.split('/').at(-1) ?? next}"` });
+      pushToast({ kind: 'success', message: `Carpeta renombrada a "${next.split('/').at(-1) ?? next}"` });
     }
     setRenamingFolderPath(null);
     setFolderRenameDraft('');
@@ -292,7 +292,7 @@ export function RangeManager({
                     cancelRename();
                   }
                 }}
-                aria-label={`Rename ${s.name}`}
+                aria-label={`Renombrar ${s.name}`}
                 className="w-full rounded-md border border-accent/50 bg-bg px-1.5 py-0.5 text-sm text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
               />
               <span className="text-[10px] uppercase tracking-wider text-content-muted">
@@ -310,7 +310,7 @@ export function RangeManager({
                 list={GROUP_SUGGESTIONS_ID}
                 value={groupDraft}
                 maxLength={MAX_GROUP_LEN}
-                placeholder="Group (empty = ungroup)"
+                placeholder="Grupo (vacío = sin grupo)"
                 onChange={(e) => setGroupDraft(e.target.value)}
                 onBlur={() => commitGroup(s.id, s.group)}
                 onKeyDown={(e) => {
@@ -322,7 +322,7 @@ export function RangeManager({
                     cancelGroup();
                   }
                 }}
-                aria-label={`Group for ${s.name}`}
+                aria-label={`Grupo para ${s.name}`}
                 className="w-full rounded-md border border-accent/50 bg-bg px-1.5 py-0.5 text-xs text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
               />
             </div>
@@ -346,7 +346,7 @@ export function RangeManager({
             <div data-menu-scope={s.id} className="relative mr-1">
               <button
                 type="button"
-                aria-label={`Actions for ${s.name}`}
+                aria-label={`Acciones para ${s.name}`}
                 aria-haspopup="menu"
                 aria-expanded={isMenuOpen}
                 onClick={(e) => {
@@ -370,7 +370,7 @@ export function RangeManager({
                 <div
                   ref={menuPanelRef}
                   role="menu"
-                  aria-label={`Actions for ${s.name}`}
+                  aria-label={`Acciones para ${s.name}`}
                   onKeyDown={onMenuKeyDown}
                   className="absolute right-0 top-full z-20 mt-1 flex min-w-[160px] flex-col rounded-lg border border-border bg-surface p-1 shadow-surface"
                 >
@@ -381,7 +381,7 @@ export function RangeManager({
                     className="inline-flex items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs text-content hover:bg-surface-hover focus-visible:bg-surface-hover focus-visible:outline-none"
                   >
                     <Pencil className="h-3.5 w-3.5" strokeWidth={2} />
-                    Rename
+                    Renombrar
                   </button>
                   <button
                     type="button"
@@ -390,7 +390,7 @@ export function RangeManager({
                     className="inline-flex items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs text-content hover:bg-surface-hover focus-visible:bg-surface-hover focus-visible:outline-none"
                   >
                     <FolderInput className="h-3.5 w-3.5" strokeWidth={2} />
-                    Move to group…
+                    Mover a grupo…
                   </button>
                   <button
                     type="button"
@@ -399,7 +399,7 @@ export function RangeManager({
                     className="inline-flex items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs text-content hover:bg-surface-hover focus-visible:bg-surface-hover focus-visible:outline-none"
                   >
                     <Copy className="h-3.5 w-3.5" strokeWidth={2} />
-                    Duplicate
+                    Duplicar
                   </button>
                   <button
                     type="button"
@@ -408,7 +408,7 @@ export function RangeManager({
                     className="inline-flex items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs text-red-400 hover:bg-surface-hover focus-visible:bg-surface-hover focus-visible:outline-none"
                   >
                     <Trash2 className="h-3.5 w-3.5" strokeWidth={2} />
-                    Delete
+                    Eliminar
                   </button>
                 </div>
               )}
@@ -430,7 +430,7 @@ export function RangeManager({
 
     return (
       <li key={node.path} className="group flex flex-col">
-        <SortableItem id={node.path} ariaLabel={`Drag folder ${node.label}`}>
+        <SortableItem id={node.path} ariaLabel={`Arrastrar carpeta ${node.label}`}>
         {isRenamingFolder ? (
           <div
             className="flex items-center gap-1 py-0.5"
@@ -447,8 +447,8 @@ export function RangeManager({
                 if (e.key === 'Enter') { e.preventDefault(); commitFolderRename(node.path); }
                 if (e.key === 'Escape') { e.preventDefault(); cancelFolderRename(); }
               }}
-              placeholder="Full path, e.g. Parent/FolderName"
-              aria-label={`Rename folder ${node.label}`}
+              placeholder="Ruta completa, ej. Padre/NombreCarpeta"
+              aria-label={`Renombrar carpeta ${node.label}`}
               className="flex-1 rounded-md border border-accent/50 bg-bg px-1.5 py-0.5 text-xs text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
             />
           </div>
@@ -491,7 +491,7 @@ export function RangeManager({
                 <div
                   ref={menuPanelRef}
                   role="menu"
-                  aria-label={`Actions for folder ${node.label}`}
+                  aria-label={`Acciones para carpeta ${node.label}`}
                   onKeyDown={onMenuKeyDown}
                   className="absolute right-0 top-full z-20 mt-1 flex min-w-[160px] flex-col rounded-lg border border-border bg-surface p-1 shadow-surface"
                 >
@@ -502,7 +502,7 @@ export function RangeManager({
                     className="inline-flex items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs text-content hover:bg-surface-hover focus-visible:bg-surface-hover focus-visible:outline-none"
                   >
                     <Pencil className="h-3.5 w-3.5" strokeWidth={2} />
-                    Rename folder…
+                    Renombrar carpeta…
                   </button>
                 </div>
               )}
