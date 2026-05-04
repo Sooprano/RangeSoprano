@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { BookOpen, Zap } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { PushFoldStudy } from './PushFoldStudy';
 
 type PushFoldSubMode = 'study' | 'speed';
 
@@ -12,11 +13,13 @@ export function PushFoldTrainer() {
       <div className="flex justify-end">
         <SubModeToggle value={subMode} onChange={setSubMode} />
       </div>
-      <div className="rounded-xl border border-dashed border-border bg-surface/40 p-6 text-center text-sm text-content-muted">
-        {subMode === 'study'
-          ? 'Estudio · próximamente. Tabla con slider de stack 1-20 BB y quiz Push/Fold.'
-          : 'Velocidad · próximamente. Modo contrarreloj con leaderboard.'}
-      </div>
+      {subMode === 'study' ? (
+        <PushFoldStudy />
+      ) : (
+        <div className="rounded-xl border border-dashed border-border bg-surface/40 p-6 text-center text-sm text-content-muted">
+          Velocidad · próximamente. Modo contrarreloj con leaderboard.
+        </div>
+      )}
     </div>
   );
 }
