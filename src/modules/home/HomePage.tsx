@@ -7,6 +7,7 @@ import {
   Check,
   ChevronDown,
   Copy,
+  Dices,
   Download,
   Eye,
   FolderInput,
@@ -80,11 +81,47 @@ const FAQS: readonly Faq[] = [
         desde <span className="font-medium text-content">Editor → Export → Download all ranges JSON</span>{' '}
         y lo guardás donde quieras (Drive, Dropbox, pendrive). En otra PC o en
         el celular lo importás desde <span className="font-medium text-content">Home → Importar perfil completo</span>{' '}
-        y recuperás todo.
+        y recuperás todo. El archivo también incluye los colores de tus carpetas
+        y la configuración del randomizador (presets, sets, frecuencia), así
+        que el perfil viaja completo.
       </>
     ),
     aPlain:
-      'Es un archivo de texto con todos tus rangos serializados. Lo descargás desde Editor → Export → Download all ranges JSON y lo guardás donde quieras (Drive, Dropbox, pendrive). En otra PC o en el celular lo importás desde Home → Importar perfil completo y recuperás todo.',
+      'Es un archivo de texto con todos tus rangos serializados. Lo descargás desde Editor → Export → Download all ranges JSON y lo guardás donde quieras (Drive, Dropbox, pendrive). En otra PC o en el celular lo importás desde Home → Importar perfil completo y recuperás todo. El archivo también incluye los colores de tus carpetas y la configuración del randomizador (presets, sets, frecuencia), así que el perfil viaja completo.',
+  },
+  {
+    q: '¿Cómo funciona el randomizador?',
+    a: (
+      <>
+        Vivís en el <span className="font-medium text-content">Visualizador → Resumen</span>{' '}
+        como una tarjeta fija arriba a la derecha. Clic en{' '}
+        <span className="font-medium text-content">Tirar</span> (o tecla{' '}
+        <kbd className="rounded border border-border bg-bg px-1 py-0.5 font-mono text-[10px] text-content">
+          Espacio
+        </kbd>
+        ) tira un número del 1 al 100. Los 4 presets editables (
+        <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">
+          60/40
+        </code>
+        ,{' '}
+        <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">
+          50/50
+        </code>
+        , …) se iluminan en verde si el roll cae dentro de su threshold, así
+        leés la decisión de un vistazo: si tu rango dice "AKo 50/50" y el preset{' '}
+        <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">
+          50/50
+        </code>{' '}
+        está iluminado, hacés la acción de la izquierda; si no, la de la derecha.
+        Modo automático con{' '}
+        <kbd className="rounded border border-border bg-bg px-1 py-0.5 font-mono text-[10px] text-content">
+          A
+        </kbd>{' '}
+        y tres sets guardables para alternar configuraciones por formato.
+      </>
+    ),
+    aPlain:
+      'Vive en el Visualizador → Resumen como una tarjeta fija arriba a la derecha. Clic en Tirar (o tecla Espacio) tira un número del 1 al 100. Los 4 presets editables (60/40, 50/50, ...) se iluminan en verde si el roll cae dentro de su threshold, así leés la decisión de un vistazo: si tu rango dice "AKo 50/50" y el preset 50/50 está iluminado, hacés la acción de la izquierda; si no, la de la derecha. Modo automático con A y tres sets guardables para alternar configuraciones por formato.',
   },
   {
     q: '¿Mis rangos se borran si limpio el navegador?',
@@ -383,6 +420,88 @@ export default function HomePage() {
               4
             </kbd>{' '}
             y feedback con la fórmula resuelta. No requiere tener rangos cargados.
+          </p>
+        </div>
+      </section>
+
+      <section aria-labelledby="randomizer-heading" className="flex flex-col gap-3">
+        <h2
+          id="randomizer-heading"
+          className="text-[11px] font-semibold uppercase tracking-[0.18em] text-content-muted"
+        >
+          Randomizador — mixed strategies en mesa
+        </h2>
+        <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-5 text-sm text-content-muted">
+          <div className="flex items-start gap-3">
+            <span
+              aria-hidden
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-accent/15 text-accent"
+            >
+              <Dices className="h-5 w-5" strokeWidth={2.25} />
+            </span>
+            <p>
+              Cuando jugás con frecuencias mixtas (ej. AKo va{' '}
+              <span className="font-medium text-content">50% raise / 50% call</span>), la
+              ejecución correcta requiere un dado: tirás un número del 1 al 100 y
+              decidís según ese valor. Range Soprano trae un{' '}
+              <span className="font-medium text-content">randomizador integrado</span>{' '}
+              en el{' '}
+              <Link to="/viewer" className="font-medium text-accent-light hover:underline">
+                Visualizador → Resumen
+              </Link>
+              {' '}para que tomes la decisión sin salir de la app mientras estudiás.
+            </p>
+          </div>
+
+          <ol className="flex flex-col gap-2">
+            <li>
+              <span className="font-medium text-content">1. Configurá tus presets.</span>{' '}
+              Cuatro botones editables (default{' '}
+              <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">
+                60/40 · 50/50 · 25/75 · 10/90
+              </code>
+              ) que representan los splits más comunes de tus rangos. La etiqueta se
+              autogenera al cambiar el valor (valor 25 → "25/75").
+            </li>
+            <li>
+              <span className="font-medium text-content">2. Tirá.</span> Botón{' '}
+              <span className="font-medium text-content">Tirar</span> o tecla{' '}
+              <kbd className="rounded border border-border bg-bg px-1 py-0.5 font-mono text-[10px] text-content">
+                Espacio
+              </kbd>{' '}
+              te dan un número del 1 al 100. Los presets cuyo valor cubre el roll se
+              iluminan en verde para que leas la decisión de un vistazo (el botón{' '}
+              <kbd className="rounded border border-border bg-bg px-1 py-0.5 font-mono text-[10px] text-content">
+                👁
+              </kbd>{' '}
+              alterna ese resaltado si solo querés ver el número).
+            </li>
+            <li>
+              <span className="font-medium text-content">3. Auto opcional.</span>{' '}
+              Activá el modo automático con{' '}
+              <kbd className="rounded border border-border bg-bg px-1 py-0.5 font-mono text-[10px] text-content">
+                A
+              </kbd>{' '}
+              y el randomizador genera un nuevo número cada{' '}
+              <span className="font-medium text-content">0.5 / 1 / 2 / 5 s</span> (config en
+              el ⚙).
+            </li>
+            <li>
+              <span className="font-medium text-content">4. Tres sets guardados.</span>{' '}
+              Cambiá entre{' '}
+              <span className="font-medium text-content">Set 1 · Set 2 · Set 3</span>{' '}
+              para tener varias configuraciones (ej. uno para SnG con frecuencias
+              típicas de push/fold y otro para cash 6-max).
+            </li>
+          </ol>
+
+          <p className="text-xs">
+            La configuración se guarda automáticamente y viaja en el{' '}
+            <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">
+              .json
+            </code>{' '}
+            cuando exportás tu perfil completo: al importarlo en otro dispositivo
+            recuperás tus presets, sets y frecuencia tal como los dejaste.
           </p>
         </div>
       </section>
