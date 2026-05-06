@@ -28,6 +28,7 @@ export default function TrainerPage() {
   useDocumentTitle('Entrenador de rangos · Range Soprano', {
     description:
       'Entrená manos preflop en mesa 6-max o HU. Modo Clásico, Speed contrarreloj o Drawing.',
+    canonical: 'https://rangesoprano.com/trainer/',
   });
   const ranges = useRangeStore((s) => s.ranges);
   const summaries = useRangeSummaries();

@@ -34,6 +34,7 @@ export default function ViewerPage() {
   useDocumentTitle('Visualizador de rangos · Range Soprano', {
     description:
       'Visualizá rangos preflop con filtros por posición, situación y villano. Compará dos rangos, exportá PNG o imprimí PDF.',
+    canonical: 'https://rangesoprano.com/viewer/',
   });
   const ranges = useRangeStore((s) => s.ranges);
   const summaries = useRangeSummaries();

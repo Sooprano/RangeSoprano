@@ -31,6 +31,7 @@ export default function EditorPage() {
   useDocumentTitle('Editor de rangos · Range Soprano', {
     description:
       'Editor visual con pesos mixtos, paleta de acciones por rango, undo/redo, carpetas e import/export JSON.',
+    canonical: 'https://rangesoprano.com/editor/',
   });
   const activeRange = useActiveRange();
   const activeRangeId = activeRange?.id ?? null;
