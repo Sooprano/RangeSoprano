@@ -1,6 +1,10 @@
 import { toPng } from 'html-to-image';
 import type { Range } from '@/types/poker';
-import { CURRENT_RANGE_STORE_VERSION, type GroupMeta } from '@/store/schemas';
+import {
+  CURRENT_RANGE_STORE_VERSION,
+  type GroupMeta,
+  type PersistedRandomizerState,
+} from '@/store/schemas';
 import { serializeWeightedHands } from './handRangeSerializer';
 import type { WeightedHand } from './handRangeParser';
 
@@ -24,17 +28,21 @@ export function rangeToJson(range: Range): string {
 export function allRangesToJson(
   ranges: Range[],
   groupMeta?: Record<string, GroupMeta>,
+  randomizer?: PersistedRandomizerState,
 ): string {
   const payload: {
     version: number;
     exportedAt: string;
     ranges: Range[];
     groupMeta?: Record<string, GroupMeta>;
+    randomizer?: PersistedRandomizerState;
   } = {
     version: CURRENT_RANGE_STORE_VERSION,
     exportedAt: new Date().toISOString(),
     ranges,
   };
+
+  if (randomizer) payload.randomizer = randomizer;
 
   if (groupMeta) {
     const usedPaths = new Set<string>();

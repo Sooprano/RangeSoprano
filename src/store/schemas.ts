@@ -14,6 +14,11 @@ export const CURRENT_PUSHFOLD_LEADERBOARD_VERSION = 1;
 export const PUSHFOLD_LEADERBOARD_TOP_N = 5;
 export const PUSHFOLD_DURATIONS = [30, 60, 120] as const;
 export const PUSHFOLD_KINDS = ['push-or-fold', 'call-or-fold'] as const;
+export const CURRENT_RANDOMIZER_VERSION = 1;
+export const RANDOMIZER_FREQUENCIES = [500, 1000, 2000, 5000] as const;
+export const RANDOMIZER_SETS_COUNT = 3;
+export const RANDOMIZER_PRESETS_PER_SET = 4;
+export const MAX_RANDOMIZER_LABEL_LEN = 24;
 
 export const MAX_RANGES = 500;
 export const MAX_CELLS_PER_RANGE = 169;
@@ -152,8 +157,8 @@ export const zPersistedRangeState = z
 
 /**
  * Shape of the JSON payload produced by `allRangesToJson` and consumed by the
- * profile importer. Keeps `groupMeta` optional so files exported before folder
- * metadata was bundled still validate.
+ * profile importer. Keeps `groupMeta` and `randomizer` optional so files
+ * exported before folder metadata or the randomizer existed still validate.
  */
 export const zExportPayload = z
   .object({
@@ -161,6 +166,7 @@ export const zExportPayload = z
     exportedAt: z.string().optional(),
     ranges: z.array(zRange).max(MAX_RANGES),
     groupMeta: z.record(z.string(), zGroupMeta).optional(),
+    randomizer: z.lazy(() => zPersistedRandomizerState).optional(),
   })
   .passthrough();
 
@@ -311,3 +317,50 @@ export const zPushFoldLeaderboard = z
 
 export type PushFoldEntry = z.infer<typeof zPushFoldEntry>;
 export type PushFoldLeaderboard = z.infer<typeof zPushFoldLeaderboard>;
+
+const RANDOMIZER_FREQUENCY_VALUES = RANDOMIZER_FREQUENCIES as readonly number[];
+
+export const zRandomizerPreset = z
+  .object({
+    id: z.string().min(1).max(64),
+    label: z.string().max(MAX_RANDOMIZER_LABEL_LEN).transform(sanitizeText),
+    value: z.number().int().min(1).max(100),
+  })
+  .strict();
+
+export const zRandomizerSet = z
+  .object({
+    label: z.string().max(MAX_RANDOMIZER_LABEL_LEN).transform(sanitizeText),
+    presets: z.array(zRandomizerPreset).length(RANDOMIZER_PRESETS_PER_SET),
+  })
+  .strict();
+
+/**
+ * Not `.strict()` on purpose: legacy persisted v1 includes a `listSize` field
+ * that we removed in fase 20a. Stripping it silently preserves the rest of the
+ * config (sets, frequency); .strict() would fail safeParse and reset to defaults.
+ *
+ * `highlightEnabled` defaults to `true` so v1 payloads (which lack the field)
+ * hydrate cleanly without bumping the store version.
+ */
+export const zPersistedRandomizerState = z.object({
+  activeSet: z
+    .number()
+    .int()
+    .min(0)
+    .max(RANDOMIZER_SETS_COUNT - 1),
+  sets: z.array(zRandomizerSet).length(RANDOMIZER_SETS_COUNT),
+  frequency: z
+    .number()
+    .int()
+    .refine((n) => RANDOMIZER_FREQUENCY_VALUES.includes(n), {
+      message: 'unsupported frequency',
+    }),
+  expanded: z.boolean(),
+  highlightEnabled: z.boolean().default(true),
+});
+
+export type RandomizerPreset = z.infer<typeof zRandomizerPreset>;
+export type RandomizerSet = z.infer<typeof zRandomizerSet>;
+export type PersistedRandomizerState = z.infer<typeof zPersistedRandomizerState>;
+export type RandomizerFrequency = (typeof RANDOMIZER_FREQUENCIES)[number];

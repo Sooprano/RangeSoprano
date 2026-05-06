@@ -10,6 +10,7 @@ import { Download } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { pushToast } from '@/store/toastStore';
 import { useUiStore } from '@/store/uiStore';
+import { useRandomizerStore } from '@/store/randomizerStore';
 import type { Range } from '@/types/poker';
 import {
   allRangesToJson,
@@ -40,6 +41,13 @@ export function ExportMenu({ activeRange, allRanges, gridRef }: ExportMenuProps)
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const menuRef = useRef<HTMLUListElement | null>(null);
   const groupMeta = useUiStore((s) => s.groupMeta);
+  const randomizerActiveSet = useRandomizerStore((s) => s.activeSet);
+  const randomizerSets = useRandomizerStore((s) => s.sets);
+  const randomizerFrequency = useRandomizerStore((s) => s.frequency);
+  const randomizerExpanded = useRandomizerStore((s) => s.expanded);
+  const randomizerHighlightEnabled = useRandomizerStore(
+    (s) => s.highlightEnabled,
+  );
 
   const closeAndRestore = useCallback(() => {
     setOpen(false);
@@ -70,7 +78,13 @@ export function ExportMenu({ activeRange, allRanges, gridRef }: ExportMenuProps)
     if (allRanges.length === 0) return;
     closeAndRestore();
     downloadBlob(
-      allRangesToJson(allRanges, groupMeta),
+      allRangesToJson(allRanges, groupMeta, {
+        activeSet: randomizerActiveSet,
+        sets: randomizerSets,
+        frequency: randomizerFrequency,
+        expanded: randomizerExpanded,
+        highlightEnabled: randomizerHighlightEnabled,
+      }),
       `range-soprano-${todayIsoDate()}.json`,
       'application/json',
     );
@@ -78,7 +92,16 @@ export function ExportMenu({ activeRange, allRanges, gridRef }: ExportMenuProps)
       kind: 'success',
       message: `Downloaded ${allRanges.length} range${allRanges.length === 1 ? '' : 's'} as JSON`,
     });
-  }, [allRanges, groupMeta, closeAndRestore]);
+  }, [
+    allRanges,
+    groupMeta,
+    randomizerActiveSet,
+    randomizerSets,
+    randomizerFrequency,
+    randomizerExpanded,
+    randomizerHighlightEnabled,
+    closeAndRestore,
+  ]);
 
   const handleExportPng = useCallback(async () => {
     const node = gridRef.current;

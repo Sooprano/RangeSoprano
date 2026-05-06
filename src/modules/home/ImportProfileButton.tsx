@@ -2,6 +2,7 @@ import { useRef } from 'react';
 import { Upload } from 'lucide-react';
 import { useRangeStore } from '@/store/rangeStore';
 import { useUiStore } from '@/store/uiStore';
+import { useRandomizerStore } from '@/store/randomizerStore';
 import { pushToast } from '@/store/toastStore';
 import { MAX_IMPORT_BYTES } from '@/store/persist';
 import { zExportPayload } from '@/store/schemas';
@@ -10,6 +11,9 @@ export function ImportProfileButton() {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const importRanges = useRangeStore((s) => s.importRanges);
   const mergeGroupMeta = useUiStore((s) => s.mergeGroupMeta);
+  const applyRandomizerConfig = useRandomizerStore(
+    (s) => s.applyImportedConfig,
+  );
 
   const onPick = () => inputRef.current?.click();
 
@@ -42,10 +46,17 @@ export function ImportProfileButton() {
     }
 
     let metaApplied = 0;
+    let randomizerApplied = false;
     try {
       const parsed = zExportPayload.safeParse(JSON.parse(text));
-      if (parsed.success && parsed.data.groupMeta) {
-        metaApplied = mergeGroupMeta(parsed.data.groupMeta);
+      if (parsed.success) {
+        if (parsed.data.groupMeta) {
+          metaApplied = mergeGroupMeta(parsed.data.groupMeta);
+        }
+        if (parsed.data.randomizer) {
+          applyRandomizerConfig(parsed.data.randomizer);
+          randomizerApplied = true;
+        }
       }
     } catch {
       // JSON already validated by importRanges; meta is best-effort.
@@ -57,9 +68,12 @@ export function ImportProfileButton() {
       metaApplied > 0
         ? ` · ${metaApplied} carpeta${metaApplied === 1 ? '' : 's'} con color`
         : '';
+    const randomizerTail = randomizerApplied
+      ? ' · randomizador restaurado'
+      : '';
     pushToast({
       kind: 'success',
-      message: `Importados ${result.accepted} rango${result.accepted === 1 ? '' : 's'}${tail}${metaTail}`,
+      message: `Importados ${result.accepted} rango${result.accepted === 1 ? '' : 's'}${tail}${metaTail}${randomizerTail}`,
     });
   };
 
