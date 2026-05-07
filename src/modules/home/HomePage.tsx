@@ -15,8 +15,10 @@ import {
   HelpCircle,
   Pencil,
   Percent,
+  PictureInPicture2,
   Save,
   Target,
+  Timer,
   type LucideIcon,
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
@@ -124,6 +126,49 @@ const FAQS: readonly Faq[] = [
       'Vive en el Visualizador → Resumen como una tarjeta fija arriba a la derecha. Clic en Tirar (o tecla Espacio) tira un número del 1 al 100. Los 4 presets editables (60/40, 50/50, ...) se iluminan en verde si el roll cae dentro de su threshold, así leés la decisión de un vistazo: si tu rango dice "AKo 50/50" y el preset 50/50 está iluminado, hacés la acción de la izquierda; si no, la de la derecha. Modo automático con A y tres sets guardables para alternar configuraciones por formato.',
   },
   {
+    q: '¿Cómo funciona el cronómetro de sesión?',
+    a: (
+      <>
+        Vivís en el{' '}
+        <span className="font-medium text-content">Visualizador → Resumen</span>{' '}
+        como una tarjeta junto al randomizador. Play/pausa el timer, la
+        bandera (🚩) marca el fin de una sesión y guarda su duración como{' '}
+        <span className="font-medium text-content">vuelta</span>, y el reset (↺)
+        limpia todo. La clave: el cronómetro solo cuenta tiempo mientras está
+        corriendo, así que pausando durante los descansos las vueltas reflejan{' '}
+        <span className="font-medium text-content">solo tu tiempo real de juego</span>{' '}
+        — el descanso queda excluido. El estado persiste si recargás la página
+        (si lo dejaste corriendo, retoma con el offset correcto).
+      </>
+    ),
+    aPlain:
+      'Vive en el Visualizador → Resumen como una tarjeta junto al randomizador. Play/pausa el timer, la bandera marca el fin de una sesión y guarda su duración como vuelta, y el reset limpia todo. La clave: el cronómetro solo cuenta tiempo mientras está corriendo, así que pausando durante los descansos las vueltas reflejan solo tu tiempo real de juego — el descanso queda excluido. El estado persiste si recargás la página (si lo dejaste corriendo, retoma con el offset correcto).',
+  },
+  {
+    q: '¿Qué es la ventana flotante y para qué sirve?',
+    a: (
+      <>
+        Es una ventana del sistema operativo que abre el cronómetro y el
+        randomizador{' '}
+        <span className="font-medium text-content">siempre encima</span> del
+        cliente de poker. Útil para verlos sin hacer Alt+Tab mientras jugás en
+        PokerStars, GG, WPT Global u otra mesa real. Click en el icono⊡{' '}
+        arriba a la derecha del cluster de tools en{' '}
+        <span className="font-medium text-content">Visualizador → Resumen</span>.
+        Es redimensionable arrastrando los bordes y comparte estado con la
+        pestaña — tirar en la flotante también se ve en la pestaña, play/pausa
+        del cronómetro idem. Funciona nativo en{' '}
+        <span className="font-medium text-content">
+          Chrome 116+, Edge, Brave y Opera
+        </span>{' '}
+        (Document Picture-in-Picture API); en Firefox y Safari abre una
+        ventana normal del navegador, redimensionable pero no siempre-encima.
+      </>
+    ),
+    aPlain:
+      'Es una ventana del sistema operativo que abre el cronómetro y el randomizador siempre encima del cliente de poker. Útil para verlos sin hacer Alt+Tab mientras jugás en PokerStars, GG, WPT Global u otra mesa real. Click en el icono arriba a la derecha del cluster de tools en Visualizador → Resumen. Es redimensionable arrastrando los bordes y comparte estado con la pestaña — tirar en la flotante también se ve en la pestaña, play/pausa del cronómetro idem. Funciona nativo en Chrome 116+, Edge, Brave y Opera (Document Picture-in-Picture API); en Firefox y Safari abre una ventana normal del navegador, redimensionable pero no siempre-encima.',
+  },
+  {
     q: '¿Mis rangos se borran si limpio el navegador?',
     a: 'Sí. localStorage muere si limpiás caché/datos del sitio o usás navegación privada. Hacé backup periódico exportando el .json — es la única copia que tenés.',
   },
@@ -228,7 +273,7 @@ export default function HomePage() {
       <PageHeader
         eyebrow="Range Soprano"
         title="Herramienta de estudio de rangos preflop"
-        description="Visualizá, entrená y editá tus rangos en mesa 6-max o Heads-Up con paletas de acciones personalizables, comparación, exportación a PNG/PDF y entrenador con leaderboard local. Todo corre en tu navegador y vos sos dueño de los datos."
+        description="Visualizá, entrená y editá tus rangos en mesa 6-max o Heads-Up con paletas personalizables, comparación, exportación a PNG/PDF y entrenador con leaderboard local. Cronómetro de sesión con vueltas, randomizador para frecuencias mixtas y ventana flotante siempre-encima para usar las tools mientras jugás. Todo corre en tu navegador y vos sos dueño de los datos."
       />
 
       <section aria-labelledby="modules-heading" className="flex flex-col gap-4">
@@ -503,6 +548,169 @@ export default function HomePage() {
             cuando exportás tu perfil completo: al importarlo en otro dispositivo
             recuperás tus presets, sets y frecuencia tal como los dejaste.
           </p>
+        </div>
+      </section>
+
+      <section aria-labelledby="chrono-heading" className="flex flex-col gap-3">
+        <h2
+          id="chrono-heading"
+          className="text-[11px] font-semibold uppercase tracking-[0.18em] text-content-muted"
+        >
+          Cronómetro de sesión — trackear tu tiempo de juego
+        </h2>
+        <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-5 text-sm text-content-muted">
+          <div className="flex items-start gap-3">
+            <span
+              aria-hidden
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-accent/15 text-accent"
+            >
+              <Timer className="h-5 w-5" strokeWidth={2.25} />
+            </span>
+            <p>
+              Profesionalizar el estudio y el juego de poker arranca por saber
+              cuánto tiempo realmente pasás en mesa. Range Soprano incluye un{' '}
+              <span className="font-medium text-content">
+                cronómetro de sesión integrado
+              </span>{' '}
+              en el{' '}
+              <Link to="/viewer" className="font-medium text-accent-light hover:underline">
+                Visualizador → Resumen
+              </Link>{' '}
+              con horas, minutos, segundos y centisegundos. Empezás con Play,
+              marcás cada sesión con la bandera, y al final tenés la lista
+              completa de cuánto duró cada una.
+            </p>
+          </div>
+
+          <p>
+            <span className="font-medium text-content">
+              Pausa-aware: el descanso entre sesiones no cuenta.
+            </span>{' '}
+            Si jugás una hora, te tomás 15 minutos de descanso (y pausás el
+            cronómetro), después jugás otra hora, la siguiente vuelta solo
+            cuenta los 60 minutos de juego — el descanso queda excluido
+            automáticamente. Esto te da la duración{' '}
+            <span className="font-medium text-content">efectiva</span> de cada
+            sesión, no el tiempo total transcurrido.
+          </p>
+
+          <ol className="flex flex-col gap-2">
+            <li>
+              <span className="font-medium text-content">1. Play.</span>{' '}
+              Botón ▶ arranca el cronómetro al sentarte en la mesa.
+            </li>
+            <li>
+              <span className="font-medium text-content">2. Bandera 🚩 al fin de cada sesión.</span>{' '}
+              Guarda la duración como vuelta numerada y dispara un toast con
+              el tiempo. La lista no se abre sola para no desplazar layout.
+            </li>
+            <li>
+              <span className="font-medium text-content">3. Pausa durante el descanso.</span>{' '}
+              Apretá ⏸ cuando te levantás de la mesa. Al volver, ▶ retoma
+              donde quedaste.
+            </li>
+            <li>
+              <span className="font-medium text-content">4. Vueltas en panel desplegable.</span>{' '}
+              El botón "N vueltas ↕" abre un panel absoluto con cada sesión
+              (delta + total). No empuja contenido hacia abajo.
+            </li>
+            <li>
+              <span className="font-medium text-content">5. Reset al final del día.</span>{' '}
+              ↺ limpia todo y empezás de cero la próxima jornada.
+            </li>
+          </ol>
+
+          <p className="text-xs">
+            El estado persiste en localStorage: si recargás la página o cerrás
+            el navegador con el cronómetro corriendo, al volver retoma con el
+            offset correcto basado en{' '}
+            <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">
+              Date.now()
+            </code>
+            . Hasta 50 vueltas guardadas por sesión.
+          </p>
+        </div>
+      </section>
+
+      <section aria-labelledby="floating-heading" className="flex flex-col gap-3">
+        <h2
+          id="floating-heading"
+          className="text-[11px] font-semibold uppercase tracking-[0.18em] text-content-muted"
+        >
+          Ventana flotante — tools siempre encima del cliente de poker
+        </h2>
+        <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-5 text-sm text-content-muted">
+          <div className="flex items-start gap-3">
+            <span
+              aria-hidden
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-accent/15 text-accent"
+            >
+              <PictureInPicture2 className="h-5 w-5" strokeWidth={2.25} />
+            </span>
+            <p>
+              Cuando jugás en{' '}
+              <span className="font-medium text-content">
+                PokerStars, GG, WPT Global, ACR, PartyPoker
+              </span>{' '}
+              o cualquier otra mesa real, hacer Alt+Tab para mirar la web rompe
+              el flow. Range Soprano te permite{' '}
+              <span className="font-medium text-content">
+                sacar el cronómetro y el randomizador en una ventana flotante
+              </span>{' '}
+              del sistema operativo que queda{' '}
+              <span className="font-medium text-content">siempre encima</span>{' '}
+              del cliente de poker. Vía la API web nativa de{' '}
+              <span className="font-medium text-content">
+                Document Picture-in-Picture
+              </span>{' '}
+              — sin instalar nada.
+            </p>
+          </div>
+
+          <ol className="flex flex-col gap-2">
+            <li>
+              <span className="font-medium text-content">1. Click en el icono ⊡.</span>{' '}
+              Está arriba a la derecha del cluster de tools en{' '}
+              <Link to="/viewer" className="font-medium text-accent-light hover:underline">
+                Visualizador → Resumen
+              </Link>
+              .
+            </li>
+            <li>
+              <span className="font-medium text-content">2. Ventana flotante 460×340.</span>{' '}
+              Aparece con el cronómetro arriba y el randomizador abajo,
+              redimensionable arrastrando los bordes. Llevala donde quieras
+              en tu monitor.
+            </li>
+            <li>
+              <span className="font-medium text-content">3. Estado sincronizado.</span>{' '}
+              Tirar en la flotante también queda registrado en la pestaña;
+              play/pausa/bandera del cronómetro idem. Es el mismo store —
+              dos vistas del mismo estado.
+            </li>
+            <li>
+              <span className="font-medium text-content">4. Volver a la página.</span>{' '}
+              Cerrá con la X del SO, click en "Volver a la página" dentro de
+              la ventana, o click en el pill "En ventana flotante · Volver"
+              del header — los cards vuelven a su sitio en la pestaña.
+            </li>
+          </ol>
+
+          <div className="flex flex-col gap-1 rounded-md border border-border bg-bg p-3 text-xs">
+            <p className="font-medium text-content">Soporte de navegador</p>
+            <ul className="flex flex-col gap-0.5">
+              <li>
+                <span className="font-medium text-success">✓ Always-on-top real</span>{' '}
+                en Chrome 116+, Edge, Brave y Opera (Document
+                Picture-in-Picture API).
+              </li>
+              <li>
+                <span className="font-medium text-content">~ Fallback</span> en
+                Firefox y Safari: ventana normal del browser, redimensionable
+                pero no siempre-encima. El tooltip del botón lo aclara.
+              </li>
+            </ul>
+          </div>
         </div>
       </section>
 
