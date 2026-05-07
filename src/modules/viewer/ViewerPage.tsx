@@ -28,6 +28,7 @@ import { RangePanel } from './RangePanel';
 import { OverviewPanel } from './OverviewPanel';
 import { PrintConfigModal } from './PrintConfigModal';
 import { RandomizerPanel } from './Randomizer/RandomizerPanel';
+import { ChronometerCard } from './Chronometer/ChronometerCard';
 
 type ViewMode = 'single' | 'compare' | 'overview';
 
@@ -209,7 +210,14 @@ export default function ViewerPage() {
               : 'Visualizador'
         }
         description="Explorá rangos preflop por formato, posición y situación."
-        {...(viewMode === 'overview' && { actions: <RandomizerPanel /> })}
+        {...(viewMode === 'overview' && {
+          actions: (
+            <>
+              <ChronometerCard />
+              <RandomizerPanel />
+            </>
+          ),
+        })}
       />
 
       <div

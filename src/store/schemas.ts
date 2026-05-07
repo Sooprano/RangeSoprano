@@ -364,3 +364,24 @@ export type RandomizerPreset = z.infer<typeof zRandomizerPreset>;
 export type RandomizerSet = z.infer<typeof zRandomizerSet>;
 export type PersistedRandomizerState = z.infer<typeof zPersistedRandomizerState>;
 export type RandomizerFrequency = (typeof RANDOMIZER_FREQUENCIES)[number];
+
+// ─── Chronometer ─────────────────────────────────────────────────────────────
+
+export const CURRENT_CHRONOMETER_VERSION = 1;
+export const MAX_CHRONOMETER_LAPS = 50;
+
+export const zChronometerLap = z.object({
+  n: z.number().int().positive(),
+  delta: z.number().nonnegative(),
+  total: z.number().nonnegative(),
+});
+
+export const zChronometerState = z.object({
+  running: z.boolean(),
+  elapsed: z.number().nonnegative(),
+  lastStartedAt: z.number().nullable(),
+  laps: z.array(zChronometerLap).max(MAX_CHRONOMETER_LAPS),
+});
+
+export type ChronometerLap = z.infer<typeof zChronometerLap>;
+export type ChronometerPersistedState = z.infer<typeof zChronometerState>;
