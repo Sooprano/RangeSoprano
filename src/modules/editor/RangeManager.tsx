@@ -545,7 +545,12 @@ export function RangeManager({
         )}
         </SortableItem>
         {!isCollapsed && (
-          <div className="flex flex-col gap-0.5">
+          <div className="relative flex flex-col gap-0.5">
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute top-0 bottom-1 w-px bg-border/50"
+              style={{ left: node.depth * 12 + 32 }}
+            />
             {node.rangeIds.length > 0 && (
               <SortableList
                 ids={node.rangeIds}
