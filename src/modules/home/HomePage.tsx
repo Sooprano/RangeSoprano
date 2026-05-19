@@ -25,6 +25,12 @@ import { QRCodeSVG } from 'qrcode.react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { copyToClipboard } from '@/utils/exportRange';
 import { pushToast } from '@/store/toastStore';
+import {
+  DONATION_YEAR,
+  DONATION_GOAL_USD,
+  DONATION_RECEIVED_USD,
+  DONATION_RECEIVED_BTC,
+} from '@/data/donations';
 import { ImportProfileButton } from './ImportProfileButton';
 
 const BTC_ADDRESS = 'bc1qyz4fd8msnedgjj9sv68qlu4theh7mdh57rea8w';
@@ -773,7 +779,9 @@ export default function HomePage() {
               crea o reutiliza la carpeta{' '}
               <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">Preflop</code> y dentro la
               sub-carpeta{' '}
-              <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">Opening</code>.
+              <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">Opening</code>.{' '}
+              También podés mover una carpeta ya existente dentro de otra desde el panel
+              de doble click (ver abajo).
             </div>
           </li>
           <li className="flex items-start gap-3">
@@ -796,19 +804,18 @@ export default function HomePage() {
             </span>
             <div className="text-content-muted">
               <span className="font-medium text-content">Renombrar o mover carpeta</span>
-              {' — '}clic en{' '}
-              <kbd className="rounded border border-border bg-bg px-1.5 py-0.5 font-mono text-[10px] text-content">
-                ···
-              </kbd>{' '}
-              en el header de carpeta →{' '}
-              <span className="font-medium text-content">Renombrar carpeta…</span>.{' '}
-              Tip: renombrá{' '}
-              <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">Opening</code>
-              {' → '}
+              {' — '}
+              <span className="font-medium text-content">doble click</span> sobre el nombre
+              de la carpeta en el sidebar. Se abre un panel con dos campos:{' '}
+              <span className="font-medium text-content">Carpeta padre</span> (elegí del
+              dropdown para moverla dentro de otra, o{' '}
               <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">
-                Preflop/Opening
+                — Sin padre (raíz) —
               </code>{' '}
-              para moverla dentro de Preflop.
+              para sacarla afuera) y{' '}
+              <span className="font-medium text-content">Nombre</span>. Una línea{' '}
+              <span className="font-mono text-content">Resultado:</span> en vivo te muestra
+              el path final antes de guardar.
             </div>
           </li>
         </ul>
@@ -995,6 +1002,59 @@ export default function HomePage() {
                   </>
                 )}
               </button>
+
+              {(() => {
+                const pct = Math.min(
+                  100,
+                  Math.round((DONATION_RECEIVED_USD / DONATION_GOAL_USD) * 100),
+                );
+                return (
+                  <div className="mt-1 flex flex-col gap-2 rounded-md border border-border bg-bg/40 p-3">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-content-muted">
+                        Meta {DONATION_YEAR}
+                      </span>
+                      <span className="font-mono text-sm tabular-nums text-content">
+                        ${DONATION_RECEIVED_USD.toFixed(2)}{' '}
+                        <span className="text-content-muted">/ ${DONATION_GOAL_USD}</span>{' '}
+                        <span className="text-accent-light">({pct}%)</span>
+                      </span>
+                    </div>
+                    <div
+                      role="progressbar"
+                      aria-label={`Donaciones recibidas: ${pct}% de $${DONATION_GOAL_USD}`}
+                      aria-valuenow={pct}
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      className="h-2 overflow-hidden rounded-full bg-surface"
+                    >
+                      <div
+                        className="h-full bg-accent transition-[width] duration-500 ease-out"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <p className="text-[11px] leading-relaxed text-content-muted">
+                      Range Soprano corre sobre dominio + servicios (~$15/año) y se
+                      desarrolla con asistencia de Claude (suscripción mensual
+                      recurrente). Toda contribución ayuda a bancar las próximas
+                      mejoras y que siga gratis.{' '}
+                      <span className="font-mono text-content">
+                        {DONATION_RECEIVED_BTC.toFixed(8)} BTC
+                      </span>{' '}
+                      recibidos —{' '}
+                      <a
+                        href={`https://blockchain.com/explorer/addresses/btc/${BTC_ADDRESS}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-accent-light underline-offset-2 hover:underline"
+                      >
+                        verificar
+                      </a>
+                      .
+                    </p>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>
