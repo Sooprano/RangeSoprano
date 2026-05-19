@@ -34,7 +34,7 @@ export function FolderRow({
   return (
     <div
       className="relative flex items-center gap-1"
-      style={{ paddingLeft: node.depth * 16 }}
+      style={{ paddingLeft: node.depth * 12 }}
     >
       <button
         type="button"

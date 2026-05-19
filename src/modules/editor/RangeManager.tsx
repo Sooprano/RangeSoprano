@@ -278,7 +278,7 @@ export function RangeManager({
     setFolderRenameName('');
   };
 
-  const renderRangeRow = (s: RangeSummary) => {
+  const renderRangeRow = (s: RangeSummary, indentLevel = 0) => {
     const isActive = s.id === activeRangeId;
     const isMenuOpen = openMenuId === s.id;
     const isRenaming = renamingId === s.id;
@@ -292,8 +292,13 @@ export function RangeManager({
     ]
       .filter(Boolean)
       .join(' · ');
+    const indentStyle = indentLevel > 0 ? { paddingLeft: indentLevel * 12 } : undefined;
     return (
-      <li key={s.id} className="group">
+      <li
+        key={s.id}
+        className="group"
+        {...(indentStyle ? { style: indentStyle } : {})}
+      >
         <SortableItem id={s.id} ariaLabel={`Drag ${s.name}`}>
         <div
           className={cn(
@@ -540,10 +545,7 @@ export function RangeManager({
         )}
         </SortableItem>
         {!isCollapsed && (
-          <div
-            className="border-l border-border"
-            style={{ marginLeft: (node.depth + 1) * 16 + 4, paddingLeft: 8 }}
-          >
+          <div className="flex flex-col gap-0.5">
             {node.rangeIds.length > 0 && (
               <SortableList
                 ids={node.rangeIds}
@@ -552,7 +554,7 @@ export function RangeManager({
                 <ul className="flex flex-col gap-0.5">
                   {node.rangeIds.map((id) => {
                     const s = summaryById.get(id);
-                    return s ? renderRangeRow(s) : null;
+                    return s ? renderRangeRow(s, node.depth + 1) : null;
                   })}
                 </ul>
               </SortableList>
@@ -562,7 +564,7 @@ export function RangeManager({
                 ids={childFolderIds}
                 onReorder={(orderedPaths) => reorderFolders(node.path, orderedPaths)}
               >
-                <ul className="mt-0.5 flex flex-col gap-0.5">
+                <ul className="flex flex-col gap-0.5">
                   {node.children.map(renderFolder)}
                 </ul>
               </SortableList>
