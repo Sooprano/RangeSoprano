@@ -51,7 +51,8 @@ export function RangeManager({
   const [groupDraft, setGroupDraft] = useState('');
   const [colorPickerPath, setColorPickerPath] = useState<string | null>(null);
   const [renamingFolderPath, setRenamingFolderPath] = useState<string | null>(null);
-  const [folderRenameDraft, setFolderRenameDraft] = useState('');
+  const [folderRenameParent, setFolderRenameParent] = useState<string>('');
+  const [folderRenameName, setFolderRenameName] = useState<string>('');
   const renameInputRef = useRef<HTMLInputElement | null>(null);
   const groupInputRef = useRef<HTMLInputElement | null>(null);
   const folderRenameInputRef = useRef<HTMLInputElement | null>(null);
@@ -227,26 +228,54 @@ export function RangeManager({
   };
 
   const startFolderRename = (path: string) => {
+    const lastSlash = path.lastIndexOf('/');
+    setFolderRenameParent(lastSlash >= 0 ? path.slice(0, lastSlash) : '');
+    setFolderRenameName(lastSlash >= 0 ? path.slice(lastSlash + 1) : path);
     setRenamingFolderPath(path);
-    setFolderRenameDraft(path);
     setOpenMenuId(null);
   };
 
-  const commitFolderRename = (path: string) => {
-    const next = sanitizeText(folderRenameDraft).trim().slice(0, MAX_GROUP_LEN);
-    if (next.length > 0 && next !== path) {
-      pushHistory();
-      renameGroup(path, next);
-      renameGroupMeta(path, next);
-      pushToast({ kind: 'success', message: `Carpeta renombrada a "${next.split('/').at(-1) ?? next}"` });
+  const commitFolderRename = (oldPath: string) => {
+    const cleanName = sanitizeText(folderRenameName).trim();
+    const cleanParent = sanitizeText(folderRenameParent).trim();
+    if (cleanName.length === 0) {
+      setRenamingFolderPath(null);
+      setFolderRenameParent('');
+      setFolderRenameName('');
+      return;
     }
+    const nextPath = (cleanParent ? `${cleanParent}/${cleanName}` : cleanName).slice(0, MAX_GROUP_LEN);
+    if (nextPath === oldPath) {
+      setRenamingFolderPath(null);
+      setFolderRenameParent('');
+      setFolderRenameName('');
+      return;
+    }
+    if (cleanParent === oldPath || cleanParent.startsWith(oldPath + '/')) {
+      pushToast({ kind: 'error', message: 'No se puede mover una carpeta dentro de sí misma' });
+      return;
+    }
+    pushHistory();
+    renameGroup(oldPath, nextPath);
+    renameGroupMeta(oldPath, nextPath);
+    const oldDepth = oldPath.split('/').length;
+    const newDepth = nextPath.split('/').length;
+    const message =
+      newDepth > oldDepth
+        ? `Carpeta "${cleanName}" movida dentro de "${cleanParent}"`
+        : newDepth < oldDepth
+          ? `Carpeta "${cleanName}" movida al nivel raíz`
+          : `Carpeta renombrada a "${cleanName}"`;
+    pushToast({ kind: 'success', message });
     setRenamingFolderPath(null);
-    setFolderRenameDraft('');
+    setFolderRenameParent('');
+    setFolderRenameName('');
   };
 
   const cancelFolderRename = () => {
     setRenamingFolderPath(null);
-    setFolderRenameDraft('');
+    setFolderRenameParent('');
+    setFolderRenameName('');
   };
 
   const renderRangeRow = (s: RangeSummary) => {
@@ -424,90 +453,89 @@ export function RangeManager({
     const meta = groupMeta[node.path];
     const isCollapsed = meta?.collapsed ?? false;
     const childFolderIds = node.children.map((c) => c.path);
-    const folderMenuId = `folder:${node.path}`;
-    const isFolderMenuOpen = openMenuId === folderMenuId;
     const isRenamingFolder = renamingFolderPath === node.path;
+    const parentOptions = isRenamingFolder
+      ? groupSuggestions.filter((p) => p !== node.path && !p.startsWith(node.path + '/'))
+      : [];
 
     return (
       <li key={node.path} className="group flex flex-col">
         <SortableItem id={node.path} ariaLabel={`Arrastrar carpeta ${node.label}`}>
         {isRenamingFolder ? (
           <div
-            className="flex items-center gap-1 py-0.5"
-            style={{ paddingLeft: node.depth * 16 + 4 }}
+            className="flex flex-col gap-1.5 rounded-md border border-accent/40 bg-surface/60 p-2"
+            style={{ marginLeft: node.depth * 16 + 4 }}
           >
-            <input
-              ref={folderRenameInputRef}
-              type="text"
-              value={folderRenameDraft}
-              maxLength={MAX_GROUP_LEN}
-              onChange={(e) => setFolderRenameDraft(e.target.value)}
-              onBlur={() => commitFolderRename(node.path)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') { e.preventDefault(); commitFolderRename(node.path); }
-                if (e.key === 'Escape') { e.preventDefault(); cancelFolderRename(); }
-              }}
-              placeholder="Ruta completa, ej. Padre/NombreCarpeta"
-              aria-label={`Renombrar carpeta ${node.label}`}
-              className="flex-1 rounded-md border border-accent/50 bg-bg px-1.5 py-0.5 text-xs text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
-            />
+            <label className="flex flex-col gap-0.5">
+              <span className="text-[10px] uppercase tracking-wider text-content-muted">
+                Carpeta padre
+              </span>
+              <select
+                value={folderRenameParent}
+                onChange={(e) => setFolderRenameParent(e.target.value)}
+                aria-label={`Carpeta padre de ${node.label}`}
+                className="rounded-md border border-border bg-bg px-1.5 py-0.5 text-xs text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
+              >
+                <option value="">— Sin padre (raíz) —</option>
+                {parentOptions.map((p) => (
+                  <option key={p} value={p}>{p}</option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-0.5">
+              <span className="text-[10px] uppercase tracking-wider text-content-muted">
+                Nombre
+              </span>
+              <input
+                ref={folderRenameInputRef}
+                type="text"
+                value={folderRenameName}
+                maxLength={MAX_GROUP_LEN}
+                onChange={(e) => setFolderRenameName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') { e.preventDefault(); commitFolderRename(node.path); }
+                  if (e.key === 'Escape') { e.preventDefault(); cancelFolderRename(); }
+                }}
+                aria-label={`Nombre de carpeta ${node.label}`}
+                className="rounded-md border border-accent/50 bg-bg px-1.5 py-0.5 text-xs text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
+              />
+            </label>
+            <p className="text-[10px] text-content-muted">
+              Resultado:{' '}
+              <span className="font-mono text-content">
+                {folderRenameParent ? `${folderRenameParent}/` : ''}
+                {folderRenameName || '…'}
+              </span>
+            </p>
+            <div className="flex justify-end gap-1">
+              <button
+                type="button"
+                onClick={cancelFolderRename}
+                className="rounded-md px-2 py-0.5 text-[11px] text-content-muted hover:bg-surface-hover hover:text-content"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => commitFolderRename(node.path)}
+                className="rounded-md bg-accent/20 px-2 py-0.5 text-[11px] font-medium text-accent-light hover:bg-accent/30"
+              >
+                Guardar
+              </button>
+            </div>
           </div>
         ) : (
         <FolderRow
           node={node}
           meta={meta}
           onToggleCollapse={() => toggleGroupCollapsed(node.path)}
+          onStartRename={() => startFolderRename(node.path)}
           onColorDotClick={() =>
             setColorPickerPath((prev) => (prev === node.path ? null : node.path))
           }
           colorPickerOpen={colorPickerPath === node.path}
           onColorChange={(color) => setGroupColor(node.path, color)}
           onColorPickerClose={() => setColorPickerPath(null)}
-          trailing={
-            <div data-menu-scope={folderMenuId} className="relative mr-1 shrink-0">
-              <button
-                type="button"
-                aria-label={`Actions for folder ${node.label}`}
-                aria-haspopup="menu"
-                aria-expanded={isFolderMenuOpen}
-                onClick={(e) => {
-                  if (isFolderMenuOpen) {
-                    closeMenuAndRestoreFocus(false);
-                  } else {
-                    menuTriggerRef.current = e.currentTarget;
-                    setOpenMenuId(folderMenuId);
-                  }
-                }}
-                className={cn(
-                  'rounded-md p-0.5 text-content-muted hover:bg-surface hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light',
-                  isFolderMenuOpen
-                    ? 'inline-flex bg-surface text-content'
-                    : 'hidden group-hover:inline-flex focus-visible:inline-flex',
-                )}
-              >
-                <MoreHorizontal className="h-3.5 w-3.5" strokeWidth={2.25} />
-              </button>
-              {isFolderMenuOpen && (
-                <div
-                  ref={menuPanelRef}
-                  role="menu"
-                  aria-label={`Acciones para carpeta ${node.label}`}
-                  onKeyDown={onMenuKeyDown}
-                  className="absolute right-0 top-full z-20 mt-1 flex min-w-[160px] flex-col rounded-lg border border-border bg-surface p-1 shadow-surface"
-                >
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => startFolderRename(node.path)}
-                    className="inline-flex items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-xs text-content hover:bg-surface-hover focus-visible:bg-surface-hover focus-visible:outline-none"
-                  >
-                    <Pencil className="h-3.5 w-3.5" strokeWidth={2} />
-                    Renombrar carpeta…
-                  </button>
-                </div>
-              )}
-            </div>
-          }
         />
         )}
         </SortableItem>

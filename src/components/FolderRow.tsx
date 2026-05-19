@@ -8,6 +8,7 @@ type Props = {
   meta: GroupMeta | undefined;
   forceExpand?: boolean;
   onToggleCollapse: () => void;
+  onStartRename?: () => void;
   onColorDotClick?: () => void;
   colorPickerOpen?: boolean;
   onColorChange?: (color: string | undefined) => void;
@@ -20,6 +21,7 @@ export function FolderRow({
   meta,
   forceExpand = false,
   onToggleCollapse,
+  onStartRename,
   onColorDotClick,
   colorPickerOpen = false,
   onColorChange,
@@ -37,8 +39,17 @@ export function FolderRow({
       <button
         type="button"
         onClick={onToggleCollapse}
+        {...(onStartRename
+          ? {
+              onDoubleClick: (e: React.MouseEvent<HTMLButtonElement>) => {
+                e.preventDefault();
+                onStartRename();
+              },
+            }
+          : {})}
         aria-expanded={!isCollapsed}
         aria-label={`${isCollapsed ? 'Expand' : 'Collapse'} ${node.label}`}
+        title={onStartRename ? 'Doble click para renombrar o mover' : undefined}
         className="flex flex-1 items-center gap-1.5 rounded-md px-1 py-0.5 text-left text-[10px] font-semibold uppercase tracking-wider text-content-muted hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
       >
         {isCollapsed ? (
