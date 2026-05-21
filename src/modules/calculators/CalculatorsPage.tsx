@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Coins, DollarSign, TrendingUp, Users, Waves } from 'lucide-react';
+import { Bomb, Coins, DollarSign, TrendingUp, Users, Waves } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { EvBasicCalc } from './EvBasicCalc';
 import { EvComplexCalc } from './EvComplexCalc';
+import { AllInEvCalc } from './AllInEvCalc';
 import { ImpliedOddsCalc } from './ImpliedOddsCalc';
 import { FloatEvCalc } from './FloatEvCalc';
 import { CombinedFoldEquityCalc } from './CombinedFoldEquityCalc';
@@ -12,6 +13,7 @@ import { CombinedFoldEquityCalc } from './CombinedFoldEquityCalc';
 type CalcMode =
   | 'ev-basic'
   | 'ev-complex'
+  | 'all-in-ev'
   | 'implied-odds'
   | 'float-ev'
   | 'combined-fold';
@@ -39,6 +41,7 @@ export default function CalculatorsPage() {
 
       {mode === 'ev-basic' && <EvBasicCalc />}
       {mode === 'ev-complex' && <EvComplexCalc />}
+      {mode === 'all-in-ev' && <AllInEvCalc />}
       {mode === 'implied-odds' && <ImpliedOddsCalc />}
       {mode === 'float-ev' && <FloatEvCalc />}
       {mode === 'combined-fold' && <CombinedFoldEquityCalc />}
@@ -70,6 +73,12 @@ function ModeToggle({
         onClick={() => onChange('ev-complex')}
         icon={<Coins className="h-3.5 w-3.5" strokeWidth={2.25} />}
         label="EV con fold equity"
+      />
+      <ModeButton
+        active={value === 'all-in-ev'}
+        onClick={() => onChange('all-in-ev')}
+        icon={<Bomb className="h-3.5 w-3.5" strokeWidth={2.25} />}
+        label="All-in EV"
       />
       <ModeButton
         active={value === 'implied-odds'}

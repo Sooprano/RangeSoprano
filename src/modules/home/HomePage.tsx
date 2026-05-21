@@ -75,7 +75,7 @@ const MODULES: readonly ModuleCard[] = [
     label: 'Calculadoras',
     icon: Calculator,
     description:
-      'Cinco herramientas matemáticas: EV básico, EV con fold equity (semi-bluffs y shoves), Implied Odds para draws, EV de flotar (call flop con plan de robar el turn) y Fold equity combinada para shoves multi-way. Cada una con la fórmula explicada y los valores sustituidos en vivo.',
+      'Seis herramientas matemáticas: EV básico, EV con fold equity (semi-bluffs y shoves), All-in EV (shove preflop sobre apuesta del villano con tabla de sensibilidad), Implied Odds para draws, EV de flotar (call flop con plan de robar el turn) y Fold equity combinada para shoves multi-way. Cada una con la fórmula explicada y los valores sustituidos en vivo.',
   },
 ];
 
@@ -237,11 +237,14 @@ const FAQS: readonly Faq[] = [
         <Link to="/calculadoras" className="font-medium text-accent-light hover:underline">
           Calculadoras
         </Link>
-        . Tenés cinco herramientas:{' '}
+        . Tenés seis herramientas:{' '}
         <span className="font-medium text-content">EV básico</span> (decisión binaria con
         $W / W% / $L / L%),{' '}
         <span className="font-medium text-content">EV con fold equity</span> (semi-bluffs
         y shoves: F% de fold + showdown EV cuando te pagan),{' '}
+        <span className="font-medium text-content">All-in EV</span> (shove preflop sobre
+        la apuesta del villano: pot + call + shove + equity + fold, con tabla de
+        sensibilidad ±5/±10% y breakeven F% automático),{' '}
         <span className="font-medium text-content">Implied Odds</span> (tenés un draw,
         ¿cuánto más necesitás ganarle en futuras calles cuando pegues para que el call sea
         rentable?),{' '}
@@ -254,7 +257,7 @@ const FAQS: readonly Faq[] = [
       </>
     ),
     aPlain:
-      'Desde la barra lateral entrá a Calculadoras. Tenés cinco herramientas: EV básico (decisión binaria con $W / W% / $L / L%), EV con fold equity (semi-bluffs y shoves: F% de fold + showdown EV cuando te pagan), Implied Odds (tenés un draw, ¿cuánto más necesitás ganarle en futuras calles cuando pegues para que el call sea rentable?), EV de flotar (callear el flop para robar el turn dadas las frecuencias de barrel y check-fold del villano) y Fold equity combinada (probabilidad de que todos los villanos foldeen en un shove multi-way). Cada calculadora muestra la fórmula y los valores sustituidos en un bloque colapsable.',
+      'Desde la barra lateral entrá a Calculadoras. Tenés seis herramientas: EV básico (decisión binaria con $W / W% / $L / L%), EV con fold equity (semi-bluffs y shoves: F% de fold + showdown EV cuando te pagan), All-in EV (shove preflop sobre la apuesta del villano: pot + call + shove + equity + fold, con tabla de sensibilidad ±5/±10% y breakeven F% automático), Implied Odds (tenés un draw, ¿cuánto más necesitás ganarle en futuras calles cuando pegues para que el call sea rentable?), EV de flotar (callear el flop para robar el turn dadas las frecuencias de barrel y check-fold del villano) y Fold equity combinada (probabilidad de que todos los villanos foldeen en un shove multi-way). Cada calculadora muestra la fórmula y los valores sustituidos en un bloque colapsable.',
   },
   {
     q: '¿Puedo contribuir al proyecto?',

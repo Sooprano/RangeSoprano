@@ -80,6 +80,40 @@ export function floatEv(input: FloatEvInput): number {
   );
 }
 
+export type AllInEvInput = {
+  pot: number;
+  call: number;
+  shove: number;
+  equityPct: number;
+  foldPct: number;
+};
+
+export type AllInEvResult = {
+  ev: number;
+  // Fold equity needed for EV=0 (analytic). null si no hay solución finita.
+  breakevenFoldPct: number | null;
+};
+
+// EV = F% · Pot + (1−F%) · Eq · (Pot + Shove − Call) − (1−F%) · (1−Eq) · Shove
+export function allInEv(input: AllInEvInput): AllInEvResult {
+  const f = input.foldPct / 100;
+  const eq = input.equityPct / 100;
+  const winWhenCalled = input.pot + input.shove - input.call;
+  const ev =
+    f * input.pot +
+    (1 - f) * eq * winWhenCalled -
+    (1 - f) * (1 - eq) * input.shove;
+
+  // EV = 0 ⟹ F* = B / (B − A)   con A = Pot, B = Eq·(Pot+Shove−Call) − (1−Eq)·Shove
+  const a = input.pot;
+  const b = eq * winWhenCalled - (1 - eq) * input.shove;
+  const denom = b - a;
+  // Raw analytic value; UI decide cómo mostrar valores fuera de [0, 100].
+  const breakevenFoldPct = Math.abs(denom) < 1e-9 ? null : (b / denom) * 100;
+
+  return { ev, breakevenFoldPct };
+}
+
 // Combined fold equity = ∏(fold_i / 100) · 100 sobre los inputs no nulos.
 // Devuelve 0..100. Si todos los inputs son null, devuelve null (no hay datos).
 export function combinedFoldEquity(
