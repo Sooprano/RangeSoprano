@@ -13,7 +13,7 @@
 
 | Hito | Hash |
 |---|---|
-| Fase 24 (sección Calculadoras: EV básico + EV complex + Implied Odds en `/calculadoras`) | _(pendiente de commit)_ |
+| Fase 24 (sección Calculadoras: EV básico + EV con fold equity + Implied Odds + EV de flotar + Fold equity combinada en `/calculadoras`) | `4e95f39` |
 | Fase 23 (UX carpetas en /editor + home docs + barra de donaciones meta anual) | `2126f6a` → `2fad96a` |
 | Fase 22 (pop out combinado de cronómetro + randomizador via Document PiP) | `186c948` |
 | Fase 21 (cronómetro de sesión en /viewer Resumen) | `fc03fa3` |
