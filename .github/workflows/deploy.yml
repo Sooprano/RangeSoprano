@@ -34,7 +34,7 @@ jobs:
 
       - name: Pre-render SPA routes for SEO (HTTP 200 instead of 404)
         run: |
-          for route in viewer trainer editor; do
+          for route in viewer trainer editor calculadoras; do
             mkdir -p dist/$route
             cp dist/index.html dist/$route/index.html
           done

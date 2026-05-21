@@ -80,7 +80,7 @@ export default function TrainerPage() {
     return (
       <>
         <PageHeader
-          eyebrow="Math · pot odds"
+          eyebrow="Matemática · pot odds"
           title="Pot Odds"
           description="Aprendé las dos tablas clásicas: fold equity al apostar y equity necesaria al pagar."
         />
@@ -98,7 +98,7 @@ export default function TrainerPage() {
     return (
       <>
         <PageHeader
-          eyebrow="Math · ICM short stack"
+          eyebrow="Matemática · ICM short stack"
           title="Push/Fold"
           description="Aprendé las tablas de Nash de empuje/pago heads-up para stacks cortos."
         />

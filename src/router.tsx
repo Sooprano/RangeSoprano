@@ -8,6 +8,7 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 const HomePage = lazy(() => import('@/modules/home/HomePage'));
 const TrainerPage = lazy(() => import('@/modules/trainer/TrainerPage'));
 const EditorPage = lazy(() => import('@/modules/editor/EditorPage'));
+const CalculatorsPage = lazy(() => import('@/modules/calculators/CalculatorsPage'));
 const PrintPage = lazy(() => import('@/modules/viewer/PrintPage'));
 
 function PageFallback() {
@@ -76,6 +77,14 @@ export const router = createBrowserRouter(
           element: (
             <Suspense fallback={<PageFallback />}>
               <EditorPage />
+            </Suspense>
+          ),
+        },
+        {
+          path: 'calculadoras',
+          element: (
+            <Suspense fallback={<PageFallback />}>
+              <CalculatorsPage />
             </Suspense>
           ),
         },

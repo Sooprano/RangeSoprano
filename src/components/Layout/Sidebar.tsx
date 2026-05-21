@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
+  Calculator,
   ChevronsLeft,
   ChevronsRight,
   Eye,
@@ -24,6 +25,7 @@ const NAV_ITEMS: readonly NavItem[] = [
   { to: '/viewer', label: 'Visualizador', icon: Eye },
   { to: '/trainer', label: 'Entrenador', icon: Target },
   { to: '/editor', label: 'Editor', icon: Pencil },
+  { to: '/calculadoras', label: 'Calculadoras', icon: Calculator },
 ];
 
 type SidebarProps = {

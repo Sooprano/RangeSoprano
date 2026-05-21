@@ -4,6 +4,7 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import {
   ArrowRight,
   Bitcoin,
+  Calculator,
   Check,
   ChevronDown,
   Copy,
@@ -67,6 +68,14 @@ const MODULES: readonly ModuleCard[] = [
     icon: Pencil,
     description:
       'Creá y editá rangos con paleta de acciones por rango, pesos mixtos, notas, deshacer/rehacer, carpetas y sub-carpetas. Importá/exportá rangos individuales o el perfil completo.',
+  },
+  {
+    to: '/calculadoras',
+    command: '/calculadoras',
+    label: 'Calculadoras',
+    icon: Calculator,
+    description:
+      'Cinco herramientas matemáticas: EV básico, EV con fold equity (semi-bluffs y shoves), Implied Odds para draws, EV de flotar (call flop con plan de robar el turn) y Fold equity combinada para shoves multi-way. Cada una con la fórmula explicada y los valores sustituidos en vivo.',
   },
 ];
 
@@ -221,6 +230,33 @@ const FAQS: readonly Faq[] = [
       'Sí. El Entrenador tiene una pestaña Pot Odds con cuatro tipos de pregunta sobre pot odds: cuánta fold equity necesitás cuando bluffeás, qué equity necesitás para pagar, y las dos inversas (qué tamaño apostar dado un % de fold equity y hasta qué tamaño podés pagar dado un % de equity). Multiple choice de 4 opciones con feedback que muestra la fórmula resuelta. No depende de tener rangos cargados, podés practicar incluso desde un perfil vacío.',
   },
   {
+    q: '¿Cómo uso las calculadoras de EV?',
+    a: (
+      <>
+        Desde la barra lateral entrá a{' '}
+        <Link to="/calculadoras" className="font-medium text-accent-light hover:underline">
+          Calculadoras
+        </Link>
+        . Tenés cinco herramientas:{' '}
+        <span className="font-medium text-content">EV básico</span> (decisión binaria con
+        $W / W% / $L / L%),{' '}
+        <span className="font-medium text-content">EV con fold equity</span> (semi-bluffs
+        y shoves: F% de fold + showdown EV cuando te pagan),{' '}
+        <span className="font-medium text-content">Implied Odds</span> (tenés un draw,
+        ¿cuánto más necesitás ganarle en futuras calles cuando pegues para que el call sea
+        rentable?),{' '}
+        <span className="font-medium text-content">EV de flotar</span> (callear el flop
+        para robar el turn dadas las frecuencias de barrel y check-fold del villano) y{' '}
+        <span className="font-medium text-content">Fold equity combinada</span>{' '}
+        (probabilidad de que todos los villanos foldeen en un shove multi-way — útil en
+        BTN / SB cuando hay varios por hablar). Cada calculadora muestra la fórmula y los
+        valores sustituidos en un bloque colapsable, así seguís el cálculo paso a paso.
+      </>
+    ),
+    aPlain:
+      'Desde la barra lateral entrá a Calculadoras. Tenés cinco herramientas: EV básico (decisión binaria con $W / W% / $L / L%), EV con fold equity (semi-bluffs y shoves: F% de fold + showdown EV cuando te pagan), Implied Odds (tenés un draw, ¿cuánto más necesitás ganarle en futuras calles cuando pegues para que el call sea rentable?), EV de flotar (callear el flop para robar el turn dadas las frecuencias de barrel y check-fold del villano) y Fold equity combinada (probabilidad de que todos los villanos foldeen en un shove multi-way). Cada calculadora muestra la fórmula y los valores sustituidos en un bloque colapsable.',
+  },
+  {
     q: '¿Puedo contribuir al proyecto?',
     a: 'Si te resulta útil podés dejar una propina en BTC desde la sección de abajo — cualquier monto suma y ayuda a mantener el proyecto vivo. Reportes de bugs y sugerencias también son bienvenidos.',
   },
@@ -289,7 +325,7 @@ export default function HomePage() {
         >
           Módulos
         </h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {MODULES.map((m) => (
             <ModuleCardView key={m.to} card={m} />
           ))}
@@ -806,7 +842,7 @@ export default function HomePage() {
               <span className="font-medium text-content">Renombrar o mover carpeta</span>
               {' — '}
               <span className="font-medium text-content">doble click</span> sobre el nombre
-              de la carpeta en el sidebar. Se abre un panel con dos campos:{' '}
+              de la carpeta en la barra lateral. Se abre un panel con dos campos:{' '}
               <span className="font-medium text-content">Carpeta padre</span> (elegí del
               dropdown para moverla dentro de otra, o{' '}
               <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">
