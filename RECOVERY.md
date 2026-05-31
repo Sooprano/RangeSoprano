@@ -13,7 +13,7 @@
 
 | Hito | Hash |
 |---|---|
-| Fase 26 (tres calcs nuevas: Multi-way Call EV + EV de bluff + Check vs Bet — 6 → 9 sub-tabs en `/calculadoras`) | `a8fe7f8` |
+| Fase 26 (tres calcs nuevas: Multi-way Call EV + EV de bluff + Check vs Bet — 6 → 9 sub-tabs en `/calculadoras` · fix copy es-AR: río→ríver, llamar→pagar, callear→pagar, Checkear detrás→Check behind) | `a8fe7f8` → `fa5b8f5` |
 | Fase 25 (All-in EV calc + tabla de sensibilidad ±5/±10 — cierra item 11 diferido de fase 24) | `512d54f` |
 | Fase 24 (sección Calculadoras: EV básico + EV con fold equity + Implied Odds + EV de flotar + Fold equity combinada en `/calculadoras`) | `4e95f39` |
 | Fase 23 (UX carpetas en /editor + home docs + barra de donaciones meta anual) | `2126f6a` → `2fad96a` |
