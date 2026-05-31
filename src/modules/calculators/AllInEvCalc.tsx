@@ -138,14 +138,14 @@ export function AllInEvCalc() {
           />
           <NumberField
             id="aiev-call"
-            label="Cuánto sería callear"
+            label="Cuánto sería pagar"
             value={call}
             onChange={setCall}
             prefix="$"
             min={0}
             step={1}
             invalid={call.trim() !== '' && callNum === null}
-            hint="Lo que pagarías si callearas en vez de shovear"
+            hint="Lo que arriesgás si pagás en vez de shovear"
           />
           <NumberField
             id="aiev-shove"

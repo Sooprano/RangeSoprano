@@ -92,17 +92,17 @@ export function CheckVsBetCalc() {
   return (
     <div className="flex flex-col gap-5">
       <section className="rounded-xl border border-border bg-surface/40 p-5">
-        <h2 className="mb-1 text-base font-semibold text-content">Check vs Bet (río)</h2>
+        <h2 className="mb-1 text-base font-semibold text-content">Check vs Bet (ríver)</h2>
         <p className="mb-4 text-sm text-content-muted">
           Comparación de EV entre checkear (ir a showdown) y apostar (con fold
-          equity + showdown si te pagan). Útil en el río cuando dudás si
-          apostar valor delgado, blockear o controlar el bote checkeando.
+          equity + showdown si te pagan). Útil en el ríver cuando dudás si
+          apostar valor fino, blockear o controlar el bote checkeando.
         </p>
 
         <div className="mb-4 max-w-sm">
           <NumberField
             id="cvb-pot"
-            label="Pot del río"
+            label="Pot del ríver"
             value={pot}
             onChange={setPot}
             prefix="$"
@@ -115,7 +115,7 @@ export function CheckVsBetCalc() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface/30 p-4">
-            <h3 className="text-sm font-semibold text-content">Checkear detrás</h3>
+            <h3 className="text-sm font-semibold text-content">Check behind</h3>
             <NumberField
               id="cvb-check-win"
               label="Win% al showdown"
@@ -158,7 +158,7 @@ export function CheckVsBetCalc() {
               max={100}
               step={1}
               invalid={winWhenCalledPct.trim() !== '' && wcNum === null}
-              hint="Equity vs el rango que te llama (0% si bluffeás sin outs)"
+              hint="Equity vs el rango que te paga (0% si bluffeás sin outs)"
             />
             <NumberField
               id="cvb-fold"

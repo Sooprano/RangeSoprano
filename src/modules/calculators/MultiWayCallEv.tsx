@@ -19,7 +19,7 @@ type Scenario = {
 };
 
 const SCENARIOS: readonly Scenario[] = [
-  { id: 'hu', label: 'HU only', hint: 'Si nadie más llama (OC = 0%)', othersCallOverride: 0 },
+  { id: 'hu', label: 'HU only', hint: 'Si nadie más paga (OC = 0%)', othersCallOverride: 0 },
   { id: 'actual', label: 'Actual', hint: 'Con tu estimación de OC', othersCallOverride: null },
   { id: 'mw', label: 'MW only', hint: 'Si siempre va MW (OC = 100%)', othersCallOverride: 100 },
 ];
@@ -81,7 +81,7 @@ export function MultiWayCallEv() {
   const mwPotHint =
     potNum !== null && callNum !== null && mwPotNum !== null && mwPotNum < potNum + callNum
       ? `Cuando va MW el pot efectivo es al menos $${(potNum + callNum).toFixed(0)} (lo que hay + tu call). Verificá el valor.`
-      : 'Pot final si todos los relevantes llaman (incluye tu call)';
+      : 'Pot final si todos los relevantes pagan (incluye tu call)';
 
   const formula =
     'EV = pot · huEq · (1−OC) − call · (1−huEq) · (1−OC) + (mwPot − call) · mwEq · OC − call · (1−mwEq) · OC';
@@ -95,9 +95,9 @@ export function MultiWayCallEv() {
       <section className="rounded-xl border border-border bg-surface/40 p-5">
         <h2 className="mb-1 text-base font-semibold text-content">Call multi-way</h2>
         <p className="mb-4 text-sm text-content-muted">
-          EV de llamar un shove preflop cuando hay jugadores por hablar que
+          EV de pagar un shove preflop cuando hay jugadores por hablar que
           pueden coldcallar. Ramifica el resultado en dos escenarios: HU vs el
-          shover (prob = 1 − OC%) o multi-way si otros llaman (prob = OC%), cada
+          shover (prob = 1 − OC%) o multi-way si otros pagan (prob = OC%), cada
           uno con su propia equity.
         </p>
 
@@ -111,11 +111,11 @@ export function MultiWayCallEv() {
             min={0}
             step={1}
             invalid={pot.trim() !== '' && potNum === null}
-            hint="Lo que ya hay en el centro antes de que llames"
+            hint="Lo que ya hay en el centro antes de que pagues"
           />
           <NumberField
             id="mwc-call"
-            label="Cuánto callear"
+            label="Cuánto pagar"
             value={call}
             onChange={setCall}
             prefix="$"
@@ -138,7 +138,7 @@ export function MultiWayCallEv() {
           />
           <NumberField
             id="mwc-oc"
-            label="OC% — Frecuencia con que otros llaman"
+            label="OC% — Frecuencia con que otros pagan"
             value={othersCallPct}
             onChange={setOthersCallPct}
             suffix="%"
@@ -238,7 +238,7 @@ function ScenarioCards({
     <section className="rounded-xl border border-border bg-surface/40 p-5">
       <h3 className="mb-1 text-sm font-semibold text-content">Escenarios</h3>
       <p className="mb-3 text-xs text-content-muted">
-        Cómo cambia el EV según la frecuencia con que otros llaman. Tus equities
+        Cómo cambia el EV según la frecuencia con que otros pagan. Tus equities
         HU y MW se mantienen iguales — sólo se mueve <span className="font-mono">OC%</span>.
       </p>
 
