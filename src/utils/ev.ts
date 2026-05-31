@@ -124,3 +124,76 @@ export function combinedFoldEquity(
   const product = valid.reduce((acc, p) => acc * (p / 100), 1);
   return product * 100;
 }
+
+export type CheckRiverEvInput = {
+  pot: number;
+  winPct: number;  // 0-100, frecuencia con que ganás al showdown si checkeás detrás
+};
+
+// EV = pot · win%  (cuando perdés simplemente no ganás nada extra; no hay bet en riesgo)
+// Excel: =(D5*D6)
+export function checkRiverEv(input: CheckRiverEvInput): number {
+  return input.pot * (input.winPct / 100);
+}
+
+export type BetRiverEvInput = {
+  pot: number;
+  bet: number;
+  winWhenCalledPct: number;  // 0-100, equity contra el rango que te paga (0% para bluff puro)
+  foldPct: number;            // 0-100
+};
+
+// EV = F% · Pot + (1−F%) · WCalled% · (Pot + Bet) − (1−F%) · (1−WCalled%) · Bet
+// Excel: =(D19*D16)+((1-D19)*D18*(D17+D16))-((1-D19)*(1-D18)*D17)
+export function betRiverEv(input: BetRiverEvInput): number {
+  const f = input.foldPct / 100;
+  const w = input.winWhenCalledPct / 100;
+  return f * input.pot + (1 - f) * w * (input.pot + input.bet) - (1 - f) * (1 - w) * input.bet;
+}
+
+export type BluffEvInput = {
+  pot: number;
+  bet: number;
+  foldPct: number;  // 0-100
+};
+
+export type BluffEvResult = {
+  ev: number;
+  pickupAmount: number;     // foldPct · pot — lo que te llevás cuando se tira
+  lossAmount: number;       // (1−foldPct) · bet — lo que perdés cuando paga
+  // Breakeven bluff frequency: F* = bet / (bet + pot). Siempre en [0,100] si pot,bet ≥ 0.
+  // null si pot + bet = 0 (sin solución).
+  breakevenFoldPct: number | null;
+};
+
+// EV = F% · Pot − (1−F%) · Bet   (bluff puro, sin equity en showdown)
+export function bluffEv(input: BluffEvInput): BluffEvResult {
+  const f = input.foldPct / 100;
+  const pickupAmount = f * input.pot;
+  const lossAmount = (1 - f) * input.bet;
+  const ev = pickupAmount - lossAmount;
+  const denom = input.bet + input.pot;
+  const breakevenFoldPct = denom > 0 ? (input.bet / denom) * 100 : null;
+  return { ev, pickupAmount, lossAmount, breakevenFoldPct };
+}
+
+export type MultiWayCallEvInput = {
+  pot: number;          // pot pre-mi-call (lo que ya hay en el centro antes de que yo llame)
+  call: number;         // monto que llamo
+  huEquityPct: number;  // 0-100, equity HU vs el shover
+  othersCallPct: number;// 0-100, prob de que otros jugadores también llamen
+  mwPot: number;        // pot efectivo si el bote queda MW (incluye mi call y los chips de los overcallers)
+  mwEquityPct: number;  // 0-100, equity en el pot multi-way
+};
+
+// EV = pot·huEq·(1−oc) − call·(1−huEq)·(1−oc)
+//    + (mwPot−call)·mwEq·oc − call·(1−mwEq)·oc
+// Excel: =(C3*C6*(1-C8)) - (C4*(1-C6)*(1-C8)) + ((C9-C4)*C10*C8) - (C4*(1-C10)*C8)
+export function multiWayCallEv(input: MultiWayCallEvInput): number {
+  const huEq = input.huEquityPct / 100;
+  const oc = input.othersCallPct / 100;
+  const mwEq = input.mwEquityPct / 100;
+  const evHu = input.pot * huEq - input.call * (1 - huEq);
+  const evMw = (input.mwPot - input.call) * mwEq - input.call * (1 - mwEq);
+  return evHu * (1 - oc) + evMw * oc;
+}

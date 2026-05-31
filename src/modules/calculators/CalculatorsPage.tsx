@@ -1,22 +1,28 @@
 import { useState } from 'react';
-import { Bomb, Coins, DollarSign, TrendingUp, Users, Waves } from 'lucide-react';
+import { Bomb, Coins, DollarSign, GitFork, Scale, TrendingUp, Users, VenetianMask, Waves } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { EvBasicCalc } from './EvBasicCalc';
 import { EvComplexCalc } from './EvComplexCalc';
+import { BluffEvCalc } from './BluffEvCalc';
+import { CheckVsBetCalc } from './CheckVsBetCalc';
 import { AllInEvCalc } from './AllInEvCalc';
 import { ImpliedOddsCalc } from './ImpliedOddsCalc';
 import { FloatEvCalc } from './FloatEvCalc';
 import { CombinedFoldEquityCalc } from './CombinedFoldEquityCalc';
+import { MultiWayCallEv } from './MultiWayCallEv';
 
 type CalcMode =
   | 'ev-basic'
   | 'ev-complex'
+  | 'bluff-ev'
+  | 'check-vs-bet'
   | 'all-in-ev'
   | 'implied-odds'
   | 'float-ev'
-  | 'combined-fold';
+  | 'combined-fold'
+  | 'multiway-call';
 
 export default function CalculatorsPage() {
   useDocumentTitle('Calculadoras de poker · Range Soprano', {
@@ -41,10 +47,13 @@ export default function CalculatorsPage() {
 
       {mode === 'ev-basic' && <EvBasicCalc />}
       {mode === 'ev-complex' && <EvComplexCalc />}
+      {mode === 'bluff-ev' && <BluffEvCalc />}
+      {mode === 'check-vs-bet' && <CheckVsBetCalc />}
       {mode === 'all-in-ev' && <AllInEvCalc />}
       {mode === 'implied-odds' && <ImpliedOddsCalc />}
       {mode === 'float-ev' && <FloatEvCalc />}
       {mode === 'combined-fold' && <CombinedFoldEquityCalc />}
+      {mode === 'multiway-call' && <MultiWayCallEv />}
     </>
   );
 }
@@ -75,6 +84,18 @@ function ModeToggle({
         label="EV con fold equity"
       />
       <ModeButton
+        active={value === 'bluff-ev'}
+        onClick={() => onChange('bluff-ev')}
+        icon={<VenetianMask className="h-3.5 w-3.5" strokeWidth={2.25} />}
+        label="EV de bluff"
+      />
+      <ModeButton
+        active={value === 'check-vs-bet'}
+        onClick={() => onChange('check-vs-bet')}
+        icon={<Scale className="h-3.5 w-3.5" strokeWidth={2.25} />}
+        label="Check vs Bet"
+      />
+      <ModeButton
         active={value === 'all-in-ev'}
         onClick={() => onChange('all-in-ev')}
         icon={<Bomb className="h-3.5 w-3.5" strokeWidth={2.25} />}
@@ -97,6 +118,12 @@ function ModeToggle({
         onClick={() => onChange('combined-fold')}
         icon={<Users className="h-3.5 w-3.5" strokeWidth={2.25} />}
         label="Fold equity combinada"
+      />
+      <ModeButton
+        active={value === 'multiway-call'}
+        onClick={() => onChange('multiway-call')}
+        icon={<GitFork className="h-3.5 w-3.5" strokeWidth={2.25} />}
+        label="Call multi-way"
       />
     </div>
   );
