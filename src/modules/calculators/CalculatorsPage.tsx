@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bomb, ChevronsUp, Coins, DollarSign, Flame, GitFork, Ratio, Scale, Swords, TrendingUp, Users, VenetianMask, Waves } from 'lucide-react';
+import { Bomb, ChevronsUp, Coins, DollarSign, Flame, GitFork, Ratio, Scale, Shield, Swords, TrendingUp, Users, VenetianMask, Waves } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -10,6 +10,7 @@ import { DoubleBarrelEvCalc } from './DoubleBarrelEvCalc';
 import { ValueBluffCalc } from './ValueBluffCalc';
 import { CheckVsBetCalc } from './CheckVsBetCalc';
 import { AllInEvCalc } from './AllInEvCalc';
+import { FoldEquityRequiredCalc } from './FoldEquityRequiredCalc';
 import { CallVsRaiseCalc } from './CallVsRaiseCalc';
 import { RaiseSizingCalc } from './RaiseSizingCalc';
 import { ImpliedOddsCalc } from './ImpliedOddsCalc';
@@ -25,6 +26,7 @@ type CalcMode =
   | 'value-bluff'
   | 'check-vs-bet'
   | 'all-in-ev'
+  | 'fold-equity-required'
   | 'call-vs-raise'
   | 'raise-sizing'
   | 'implied-odds'
@@ -60,6 +62,7 @@ export default function CalculatorsPage() {
       {mode === 'value-bluff' && <ValueBluffCalc />}
       {mode === 'check-vs-bet' && <CheckVsBetCalc />}
       {mode === 'all-in-ev' && <AllInEvCalc />}
+      {mode === 'fold-equity-required' && <FoldEquityRequiredCalc />}
       {mode === 'call-vs-raise' && <CallVsRaiseCalc />}
       {mode === 'raise-sizing' && <RaiseSizingCalc />}
       {mode === 'implied-odds' && <ImpliedOddsCalc />}
@@ -124,6 +127,12 @@ function ModeToggle({
         onClick={() => onChange('all-in-ev')}
         icon={<Bomb className="h-3.5 w-3.5" strokeWidth={2.25} />}
         label="All-in EV"
+      />
+      <ModeButton
+        active={value === 'fold-equity-required'}
+        onClick={() => onChange('fold-equity-required')}
+        icon={<Shield className="h-3.5 w-3.5" strokeWidth={2.25} />}
+        label="FE requerida"
       />
       <ModeButton
         active={value === 'call-vs-raise'}

@@ -13,6 +13,7 @@
 
 | Hito | Hash |
 |---|---|
+| Fase 31 (Fold equity requerida con equity — 14ª sub-tab de `/calculadoras`: cómo el breakeven de fold equity baja al shovear all-in con equity de respaldo · valida contra Excel + web fold equity calculator) | `<pendiente>` |
 | Fase 30 (Value / Bluff combos máx — 13ª sub-tab de `/calculadoras`: cuántos combos de farol meter respecto a los de valor sin desbalancear, con InsightCard de over/under-bluff opcional) | `611b4d7` |
 | Fase 29 (Doble barrel turn + river — 12ª sub-tab de `/calculadoras`: EV del bet turn solo vs EV de la línea completa turn + barrel river, con InsightCard que muestra si el barrel rescata una apuesta de turn −EV) | `030496f` |
 | Fase 28 (Raise sizing & pot odds — 11ª sub-tab de `/calculadoras`, combina las 3 calcs "vs Raise flop" del Excel: % del pot del raise + conversión inversa a fichas + equity para pagar un raise) | `0c6129d` |
@@ -46,7 +47,15 @@
 
 ## Estado actual
 
-Fases 1-30 completadas ✅. Última iteración: **Value / Bluff combos máx** (13ª sub-tab de `/calculadoras`, icono `Ratio`, después de Doble barrel). Migra el Excel "Calculadora de Value / Bluff". Decisiones clave:
+Fases 1-31 completadas ✅. Última iteración: **Fold equity requerida con equity** (14ª sub-tab de `/calculadoras`, icono `Shield`, label "FE requerida", después de All-in EV). El usuario tenía la fórmula pero no la calc armada; objetivo: enseñar que el breakeven de fold equity **baja** cuando shoveás all-in con equity de respaldo (draw en flop/turn). Decisiones clave:
+
+1. **Fórmula del break-point**: `EV = −x + F·(x+1) + (1−F)·E·(1+2x) = 0` → `F = [x − E·(1+2x)] / [1 + x − E·(1+2x)]`, con `x = shove/pot` (fracción del pot que shoveás) y `E` = equity cuando te pagan. Con E=0 colapsa a `x/(1+x) = bet/(pot+bet)` (breakeven de bluff puro), lo que da el caso base para contrastar.
+2. **El número puede ser negativo o null**. F negativo = +EV con 0 folds (tu equity sola alcanza). `denom = 1 + x − E(1+2x) ≤ 0` cuando la equity es muy alta (E ≳ (1+x)/(1+2x), ~75% para x=0.5) → `breakevenFoldPct = null` + `alwaysProfitable`. La UI muestra "≤ 0%" + caption en vez de un número espurio. Mostrar el negativo (−25%) es **pedagógicamente clave**: el alumno ve que el breakeven cruzó el cero.
+3. **Dos cifras lado a lado**: ResultCard con el breakeven CON equity + ReadOnlyField con el breakeven SIN equity (bluff puro). El InsightCard verbaliza la baja y el delta. Eso ataca directo el objetivo "entender que el breakeven baja con equity".
+4. **Validación cruzada doble**: matchea el Excel del usuario (pot=100/shove=50/E=35 → −25%; E=0 → 33.3%) **y** el "fold equity calculator" web que mandó como referencia (pot=100/shove=150/E=10 → 52.4% ≈ el 52% del sitio). Sanity corrido con node antes de commitear.
+5. **HomePage propagation** (convención `feedback_calculators.md`): ModuleCard "Trece" → "Catorce herramientas" + FAQ JSX + `aPlain`. **Sin tocar** sitemap/deploy/canonical.
+
+Iteración previa (resumen): **Value / Bluff combos máx** (13ª sub-tab de `/calculadoras`, icono `Ratio`, después de Doble barrel). Migra el Excel "Calculadora de Value / Bluff". Decisiones clave:
 
 1. **Simplificación algebraica del Excel**. El Excel calcula bluff combos como `=E116*E113/F116` = `bluffFreq·value/(1−bluffFreq)`. Como `bluffFreq = bet/(pot+2bet)` y `1−bluffFreq = (pot+bet)/(pot+2bet)`, el cociente colapsa limpio a **`value · bet/(pot+bet)`**. Implementé la forma simplificada (más legible y un solo paso) en vez de encadenar bluffFreq. Verificado: 40·64/164 = 15.61 ✓ y el sanity cruzado 15.61/(15.61+40) = 28.07% = bluffFreq.
 2. **Cuatro outputs del Excel**: maxBluffCombos (headline), bluffFreq = bet/(pot+2bet) (% del rango que son faroles), callFreq = pot/(pot+bet) (MDF del villano), odds = (pot+bet)/bet (precio del call). Los tres secundarios van en ReadOnlyFields bajo "Frecuencias óptimas".

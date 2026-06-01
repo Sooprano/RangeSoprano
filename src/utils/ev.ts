@@ -314,3 +314,50 @@ export function valueBluffCombos(input: ValueBluffInput): ValueBluffResult {
   const oddsRatio = input.bet > 0 ? potPlusBet / input.bet : 0;
   return { maxBluffCombos, bluffFreqPct, callFreqPct, oddsRatio };
 }
+
+export type FoldEquityRequiredInput = {
+  pot: number;         // bote antes del shove
+  shove: number;       // lo que shoveás (bet del hero); x = shove/pot
+  equityPct: number;   // 0-100, tu equity cuando te pagan
+};
+
+export type FoldEquityRequiredResult = {
+  shoveFractionPct: number;          // x·100 — el shove como % del pot
+  // Fold breakeven teniendo en cuenta tu equity. null si tu equity ya domina
+  // (denominador ≤ 0 → +EV con cualquier fold). Puede ser negativo: +EV con 0 folds.
+  breakevenFoldPct: number | null;
+  breakevenFoldNoEquityPct: number;  // referencia con E=0: x/(1+x)·100
+  alwaysProfitable: boolean;         // true si es +EV aunque el villano nunca foldee
+};
+
+// Fold equity requerida cuando el raise es all-in, teniendo en cuenta tu equity.
+// EV = −x + F·(x+1) + (1−F)·E·(1+2x), con EV=0 en el break-point:
+//   F = [x − E·(1+2x)] / [1 + x − E·(1+2x)]
+// donde x = fracción del pot que shoveás y E = tu equity cuando te pagan (0-1).
+// Con E=0 colapsa a x/(1+x) = bet/(pot+bet) (breakeven de bluff puro).
+export function foldEquityRequired(
+  input: FoldEquityRequiredInput,
+): FoldEquityRequiredResult {
+  const x = input.pot > 0 ? input.shove / input.pot : 0;
+  const e = input.equityPct / 100;
+  const onePlus2x = 1 + 2 * x;
+  const num = x - e * onePlus2x;
+  const denom = 1 + x - e * onePlus2x;
+  const breakevenFoldNoEquityPct = 1 + x > 0 ? (x / (1 + x)) * 100 : 0;
+  if (denom <= 1e-9) {
+    // Equity tan alta que el shove es +EV pase lo que pase con el fold.
+    return {
+      shoveFractionPct: x * 100,
+      breakevenFoldPct: null,
+      breakevenFoldNoEquityPct,
+      alwaysProfitable: true,
+    };
+  }
+  const f = num / denom;
+  return {
+    shoveFractionPct: x * 100,
+    breakevenFoldPct: f * 100,
+    breakevenFoldNoEquityPct,
+    alwaysProfitable: f <= 0,
+  };
+}
