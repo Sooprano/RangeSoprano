@@ -93,7 +93,7 @@ function ModeToggle({
     <div
       role="tablist"
       aria-label="Calculadora"
-      className="inline-flex flex-wrap items-center gap-1 rounded-xl border border-border bg-surface/60 p-1"
+      className="inline-flex flex-wrap items-center gap-1.5 rounded-xl border border-border bg-surface/60 p-1.5"
     >
       <ModeButton
         active={value === 'ev-basic'}
@@ -224,7 +224,7 @@ function ModeButton({
         'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light',
         active
           ? 'bg-surface text-content shadow-[inset_0_0_0_1px_rgb(var(--color-accent)/0.6)]'
-          : 'text-content-muted hover:bg-surface-hover hover:text-content',
+          : 'bg-surface/30 ring-1 ring-inset ring-border/50 text-content-muted hover:bg-surface-hover hover:text-content hover:ring-border',
       )}
     >
       {icon}

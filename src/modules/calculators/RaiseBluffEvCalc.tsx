@@ -12,10 +12,10 @@ import {
 } from './CalcShared';
 
 export function RaiseBluffEvCalc() {
-  const [pot, setPot] = useState('6');
-  const [villainBet, setVillainBet] = useState('2');
-  const [raiseCost, setRaiseCost] = useState('9');
-  const [foldPct, setFoldPct] = useState('40');
+  const [pot, setPot] = useState('100');
+  const [villainBet, setVillainBet] = useState('50');
+  const [raiseCost, setRaiseCost] = useState('150');
+  const [foldPct, setFoldPct] = useState('55');
   const [useCombos, setUseCombos] = useState(false);
   const [combosBet, setCombosBet] = useState('10');
   const [combosCall, setCombosCall] = useState('5.8');

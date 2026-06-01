@@ -73,8 +73,8 @@ export function CheckCompoundEvCalc() {
         </h2>
         <p className="mb-4 text-sm text-content-muted">
           Cuánto rinde checkear en total, juntando las dos cosas que pueden pasar:
-          a veces el villano apuesta y vos pagás (check-call), a veces checkea
-          atrás y van a showdown gratis (check-check). Compará este número con el
+          a veces el villano apuesta y vos pagás (check-call), a veces hace check
+          behind y van a showdown gratis (check-check). Compará este número con el
           EV de apostar para decidir.
         </p>
 
@@ -100,7 +100,7 @@ export function CheckCompoundEvCalc() {
             max={100}
             step={1}
             invalid={villainBetsPct.trim() !== '' && betsNum === null}
-            hint={`Checkea atrás el ${checksBackDisplay}% restante`}
+            hint={`Hace check behind el ${checksBackDisplay}% restante`}
           />
         </div>
 
@@ -136,7 +136,7 @@ export function CheckCompoundEvCalc() {
 
           <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface/30 p-4">
             <h3 className="text-sm font-semibold text-content">
-              Si checkea atrás → check-check
+              Si hace check behind → check-check
             </h3>
             <NumberField
               id="cc-xx-eq"
@@ -148,7 +148,7 @@ export function CheckCompoundEvCalc() {
               max={100}
               step={1}
               invalid={xxEquityPct.trim() !== '' && xxEqNum === null}
-              hint="Tu equity a showdown vs su rango que checkea (suele ser más alta)"
+              hint="Tu equity a showdown vs su rango de check behind (suele ser más alta)"
             />
           </div>
         </div>
@@ -172,7 +172,7 @@ export function CheckCompoundEvCalc() {
           label="EV check-check ="
           display={xxDisplay}
           tone={toneOf(result?.evCheckCheck)}
-          caption="Cuando checkea atrás y vas a showdown gratis."
+          caption="Cuando hace check behind y vas a showdown gratis."
         />
       </div>
 

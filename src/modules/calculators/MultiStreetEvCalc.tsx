@@ -52,10 +52,16 @@ export function MultiStreetEvCalc() {
           EV conjunto multi-calle
         </h2>
         <p className="mb-4 text-sm text-content-muted">
-          Encadena el EV de dos calles para ver si la línea completa es rentable.
-          Una apuesta en el turn puede ser −EV por sí sola, pero si solo a veces se
-          ve el river, la jugada conjunta puede cambiar. Calculá el EV de cada
-          calle en las otras herramientas y traélo acá.
+          Combinador genérico de dos calles: traés el EV ya calculado del turn y
+          del river (con cualquier otra herramienta) y los encadena según cada
+          cuánto llegás al river.{' '}
+          <span className="font-medium text-content">
+            A diferencia de Doble barrel
+          </span>{' '}
+          —que calcula una línea fija de bluff + bluff desde los tamaños de
+          apuesta— acá vos traés los dos EV ya hechos, así sirve para cualquier
+          combinación: value bet + check, semi-bluff + give-up, o dos calles
+          calculadas con tools distintas.
         </p>
 
         <div className="grid gap-4 sm:grid-cols-3">
