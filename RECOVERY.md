@@ -13,6 +13,7 @@
 
 | Hito | Hash |
 |---|---|
+| Fase 29 (Doble barrel turn + river — 12ª sub-tab de `/calculadoras`: EV del bet turn solo vs EV de la línea completa turn + barrel river, con InsightCard que muestra si el barrel rescata una apuesta de turn −EV) | `<pendiente>` |
 | Fase 28 (Raise sizing & pot odds — 11ª sub-tab de `/calculadoras`, combina las 3 calcs "vs Raise flop" del Excel: % del pot del raise + conversión inversa a fichas + equity para pagar un raise) | `0c6129d` |
 | Fase 27 (Call vs Raise EV — 10ª sub-tab de `/calculadoras`, 2ª calc dual: pagar vs restear all-in encima de la apuesta del villano en el río, recomendación best-of {Call/Raise/Fold=0}) | `b411a31` |
 | Fase 26 (tres calcs nuevas: Multi-way Call EV + EV de bluff + Check vs Bet — 6 → 9 sub-tabs en `/calculadoras` · fix copy es-AR: río→ríver, llamar→pagar, callear→pagar, Checkear detrás→Check behind) | `a8fe7f8` → `fa5b8f5` |
@@ -44,7 +45,19 @@
 
 ## Estado actual
 
-Fases 1-28 completadas ✅. Última iteración: **Raise sizing & pot odds** (11ª sub-tab de `/calculadoras`, icono `ChevronsUp`, entre Call vs Raise e Implied Odds). Combina los **tres bloques "vs Raise flop"** del Excel del usuario en una sola tab — comparten Bote + Bet. Decisiones clave:
+Fases 1-29 completadas ✅. Última iteración: **Doble barrel turn + river** (12ª sub-tab de `/calculadoras`, icono `Flame`, después de EV de bluff). Migra los dos bloques del Excel "EV del bet Turn" + "EV de Bet turn + Barrel River". Decisiones clave:
+
+1. **Una tab con dos resultados, no dos tabs**. El objetivo del usuario es comparar: el bet del turn solo (posiblemente −EV) vs la línea completa turn+barrel (que puede ser +EV). Ambos EV en `ResultCard`s lado a lado + `InsightCard` que verbaliza la relación.
+2. **EV combinado verificado con contabilidad de fichas**, no copiado a ciegas. El Excel lo descompone raro (`=F90+H99-H100` cruzando celdas de los dos bloques). Lo reconstruí calle por calle: fold turn → ganás Pot_t; call turn + fold river → ganás Pot_t+Bet_t (= riverPot−Bet_t); call + call → perdés Bet_t+Bet_r en showdown (0 equity). Fórmula final `fold_t·Pot_t + (1−fold_t)·fold_r·(Pot_t+Bet_t) − (1−fold_t)·(1−fold_r)·(Bet_t+Bet_r)` = 6.25 ✓.
+3. **riverPot derivado** = `Pot_t + 2·Bet_t`, mostrado en ReadOnlyField (no editable). El Excel lo tenía como input manual (200) pero es derivable y dejarlo editable invita inconsistencia. La fórmula usa `Pot_t+Bet_t` para el win de la línea fold-river (= riverPot−Bet_t).
+4. **PME = bet/(pot+bet) = fold breakeven** del bet como bluff puro (turn 33.33%, river 42.86%). Coincide con el `breakevenFoldPct` de `bluffEv`. Mostrado en ReadOnlyField por calle para contexto (cuánto fold necesitás para que cada bet solo sea 0 EV).
+5. **InsightCard con 4 casos** según signos de (evTurnOnly, evCombined): el barrel rescata una apuesta −EV (caso típico, emerald) / ambas +EV / ni el barrel rescata (rose) / el turn gana solo pero seguir baja el EV (mejor checkear river).
+6. **Reuso**: el bloque turn-solo es exactamente `bluffEv` (pot=Pot_t, bet=Bet_t, fold=fold_t). No lo importé para mantener `doubleBarrelEv` self-contained con la fórmula explícita, pero comparten la misma matemática (caso degenerado de evComplex sin equity).
+7. **HomePage propagation** (convención `feedback_calculators.md`): ModuleCard "Once" → "Doce herramientas" + FAQ JSX + `aPlain`. **Sin tocar** sitemap/deploy/canonical.
+
+> **Checkpoint de deploy**: fases 27-28 pusheadas a `origin/main` (commit `16e9ee4`) antes de empezar 29 → ya live en producción. Fase 29 commiteada + pusheada aparte.
+
+Iteración previa (resumen): **Raise sizing & pot odds** (11ª sub-tab de `/calculadoras`, icono `ChevronsUp`, entre Call vs Raise e Implied Odds). Combina los **tres bloques "vs Raise flop"** del Excel del usuario en una sola tab — comparten Bote + Bet. Decisiones clave:
 
 1. **Una sola tab, no tres**. El usuario pidió "agregar estas 3 calculadoras juntas para ver". Las tres giran sobre el mismo escenario (raise en el flop) y comparten Bote + Bet, así que se unifican: inputs compartidos arriba (`grid sm:grid-cols-3` Bote/Bet/Raise size), dos ResultCards principales (% del pot del raise · equity para pagar) y una sección "Conversor inverso" para el calc 2 (% objetivo → fichas). Cuenta como **1 herramienta** (10 → 11).
 2. **Tres funciones puras en `ev.ts`** replicando los formulas exactas del Excel: `raisePctOfPot` (`=E67/((3*E66)+E65)`), `raiseSizeFromPct` (inverso, `=(3*E74+E73)*E76`), `potOddsVsRaise` (`=(E82-E81)/(2*E82+E80)`). Los denominadores `3·bet+bote` y `2·raise+bote` son los del Excel y se replican **literal** — no los reinterpreté; se exponen en el `FormulaDetails` sustituido para que el usuario vea el cálculo. Guard `denom>0` evita NaN/Infinity con inputs en 0.

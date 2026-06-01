@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Bomb, ChevronsUp, Coins, DollarSign, GitFork, Scale, Swords, TrendingUp, Users, VenetianMask, Waves } from 'lucide-react';
+import { Bomb, ChevronsUp, Coins, DollarSign, Flame, GitFork, Scale, Swords, TrendingUp, Users, VenetianMask, Waves } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { EvBasicCalc } from './EvBasicCalc';
 import { EvComplexCalc } from './EvComplexCalc';
 import { BluffEvCalc } from './BluffEvCalc';
+import { DoubleBarrelEvCalc } from './DoubleBarrelEvCalc';
 import { CheckVsBetCalc } from './CheckVsBetCalc';
 import { AllInEvCalc } from './AllInEvCalc';
 import { CallVsRaiseCalc } from './CallVsRaiseCalc';
@@ -19,6 +20,7 @@ type CalcMode =
   | 'ev-basic'
   | 'ev-complex'
   | 'bluff-ev'
+  | 'double-barrel'
   | 'check-vs-bet'
   | 'all-in-ev'
   | 'call-vs-raise'
@@ -52,6 +54,7 @@ export default function CalculatorsPage() {
       {mode === 'ev-basic' && <EvBasicCalc />}
       {mode === 'ev-complex' && <EvComplexCalc />}
       {mode === 'bluff-ev' && <BluffEvCalc />}
+      {mode === 'double-barrel' && <DoubleBarrelEvCalc />}
       {mode === 'check-vs-bet' && <CheckVsBetCalc />}
       {mode === 'all-in-ev' && <AllInEvCalc />}
       {mode === 'call-vs-raise' && <CallVsRaiseCalc />}
@@ -94,6 +97,12 @@ function ModeToggle({
         onClick={() => onChange('bluff-ev')}
         icon={<VenetianMask className="h-3.5 w-3.5" strokeWidth={2.25} />}
         label="EV de bluff"
+      />
+      <ModeButton
+        active={value === 'double-barrel'}
+        onClick={() => onChange('double-barrel')}
+        icon={<Flame className="h-3.5 w-3.5" strokeWidth={2.25} />}
+        label="Doble barrel"
       />
       <ModeButton
         active={value === 'check-vs-bet'}

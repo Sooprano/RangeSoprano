@@ -246,3 +246,41 @@ export function potOddsVsRaise(input: RaiseSizingInput): number {
   const denom = 2 * input.raiseSize + input.bote;
   return denom > 0 ? ((input.raiseSize - input.bet) / denom) * 100 : 0;
 }
+
+export type DoubleBarrelEvInput = {
+  potTurn: number;       // pot en el turn antes del bet del hero
+  betTurn: number;       // bet del hero en el turn
+  foldTurnPct: number;   // 0-100, fold del villano en el turn
+  betRiver: number;      // bet del hero en el river (barrel)
+  foldRiverPct: number;  // 0-100, fold del villano en el river (condicional a pagar el turn)
+};
+
+export type DoubleBarrelEvResult = {
+  evTurnOnly: number;    // EV del bet del turn como bluff puro de una calle
+  evCombined: number;    // EV de la línea completa turn + barrel river
+  riverPot: number;      // pot del river derivado = potTurn + 2·betTurn
+  pmeTurnPct: number;    // fold breakeven del turn = bet/(pot+bet)
+  pmeRiverPct: number;   // fold breakeven del river = bet/(pot+bet)
+};
+
+// Línea de doble barrel (bluff en turn + barrel en river, 0 equity en showdown).
+//   EV turn solo = fold_t·Pot_t − (1−fold_t)·Bet_t                         (Excel: =E93*E90-(1-E93)*E91)
+//   EV combinado = fold_t·Pot_t                                            ← villano foldea el turn
+//                + (1−fold_t)·fold_r·(Pot_t + Bet_t)                       ← paga turn, foldea river
+//                − (1−fold_t)·(1−fold_r)·(Bet_t + Bet_r)                   ← paga ambas, perdés en showdown
+//   (Excel descompuesto: =F90+H99-H100). riverPot = Pot_t + 2·Bet_t.
+export function doubleBarrelEv(input: DoubleBarrelEvInput): DoubleBarrelEvResult {
+  const ft = input.foldTurnPct / 100;
+  const fr = input.foldRiverPct / 100;
+  const riverPot = input.potTurn + 2 * input.betTurn;
+  const evTurnOnly = ft * input.potTurn - (1 - ft) * input.betTurn;
+  const evCombined =
+    ft * input.potTurn +
+    (1 - ft) * fr * (input.potTurn + input.betTurn) -
+    (1 - ft) * (1 - fr) * (input.betTurn + input.betRiver);
+  const turnDenom = input.potTurn + input.betTurn;
+  const riverDenom = riverPot + input.betRiver;
+  const pmeTurnPct = turnDenom > 0 ? (input.betTurn / turnDenom) * 100 : 0;
+  const pmeRiverPct = riverDenom > 0 ? (input.betRiver / riverDenom) * 100 : 0;
+  return { evTurnOnly, evCombined, riverPot, pmeTurnPct, pmeRiverPct };
+}
