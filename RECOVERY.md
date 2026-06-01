@@ -13,7 +13,7 @@
 
 | Hito | Hash |
 |---|---|
-| Fase 31 (Fold equity requerida con equity — 14ª sub-tab de `/calculadoras`: cómo el breakeven de fold equity baja al shovear all-in con equity de respaldo · valida contra Excel + web fold equity calculator) | `<pendiente>` |
+| Fase 31 (Fold equity requerida con equity — 14ª sub-tab de `/calculadoras`: cómo el breakeven de fold equity baja al shovear all-in con equity de respaldo · valida contra Excel + web fold equity calculator) | `65f6827` |
 | Fase 30 (Value / Bluff combos máx — 13ª sub-tab de `/calculadoras`: cuántos combos de farol meter respecto a los de valor sin desbalancear, con InsightCard de over/under-bluff opcional) | `611b4d7` |
 | Fase 29 (Doble barrel turn + river — 12ª sub-tab de `/calculadoras`: EV del bet turn solo vs EV de la línea completa turn + barrel river, con InsightCard que muestra si el barrel rescata una apuesta de turn −EV) | `030496f` |
 | Fase 28 (Raise sizing & pot odds — 11ª sub-tab de `/calculadoras`, combina las 3 calcs "vs Raise flop" del Excel: % del pot del raise + conversión inversa a fichas + equity para pagar un raise) | `0c6129d` |
