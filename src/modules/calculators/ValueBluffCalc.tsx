@@ -47,7 +47,14 @@ export function ValueBluffCalc() {
     result === null ? '—' : `${result.oddsRatio.toFixed(2)} : 1`;
 
   const insight = (() => {
-    if (result === null || actualNum === null || potNum === null) return null;
+    if (
+      result === null ||
+      actualNum === null ||
+      potNum === null ||
+      betNum === null
+    ) {
+      return null;
+    }
     const max = result.maxBluffCombos;
     const diff = actualNum - max;
     if (Math.abs(diff) < 0.5) {
@@ -57,9 +64,10 @@ export function ValueBluffCalc() {
       };
     }
     if (diff > 0) {
+      const overflowCost = diff * betNum;
       return {
         tone: 'negative' as const,
-        text: `Te estás pasando de faroles: tenés ${formatCombos(actualNum)} pero el máximo balanceado es ${formatCombos(max)} (${formatCombos(diff)} de más). Con tantos bluffs, un villano que paga seguido te explota — sacá ~${formatCombos(diff)} combos.`,
+        text: `Te estás pasando de faroles: tenés ${formatCombos(actualNum)} pero el máximo balanceado es ${formatCombos(max)} (${formatCombos(diff)} de más). Si el villano paga seguido (lo correcto contra tu exceso de bluffs), cada farol de más se estrella perdiendo la apuesta: estás regalando hasta ${formatCurrency(overflowCost)} cuando te pagan. Sacá ~${formatCombos(diff)} combos.`,
       };
     }
     const missing = -diff;
@@ -156,11 +164,14 @@ export function ValueBluffCalc() {
         <p className="mt-4 rounded-lg border border-border bg-surface/30 px-3 py-2.5 text-[12px] leading-relaxed text-content-muted">
           <span className="font-semibold text-content">Ojo con el matiz GTO:</span> en
           equilibrio un farol es break-even (0 EV). Cuando el villano paga a la
-          frecuencia correcta (MDF), bluffear y rendirse rinden lo mismo. Por eso
-          bluffeás: no porque el farol gane plata directa, sino para que el villano no
-          pueda foldear sus bluff-catchers y tus apuestas de valor sigan cobrando. La
-          fold equity de arriba se realiza cuando el villano sobre-foldea (lo que debería
-          hacer si no balanceás).
+          frecuencia correcta (MDF), bluffear y rendirse rinden lo mismo. Balanceás para
+          no darle una explotación, no por EV directo del farol. Si bluffeás{' '}
+          <span className="font-semibold text-content">de menos</span>, el villano puede
+          sobre-foldear sus bluff-catchers y tus apuestas de valor dejan de cobrar (perdés
+          fold equity). Si bluffeás{' '}
+          <span className="font-semibold text-content">de más</span>, puede sobre-pagar y
+          tus faroles de más se estrellan perdiendo la apuesta. Los costos de arriba se
+          realizan solo cuando el villano se desvía para explotarte.
         </p>
       </section>
 
