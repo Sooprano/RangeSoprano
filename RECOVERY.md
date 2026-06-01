@@ -13,6 +13,7 @@
 
 | Hito | Hash |
 |---|---|
+| Fase 27 (Call vs Raise EV — 10ª sub-tab de `/calculadoras`, 2ª calc dual: pagar vs restear all-in encima de la apuesta del villano en el río, recomendación best-of {Call/Raise/Fold=0}) | `<pendiente>` |
 | Fase 26 (tres calcs nuevas: Multi-way Call EV + EV de bluff + Check vs Bet — 6 → 9 sub-tabs en `/calculadoras` · fix copy es-AR: río→ríver, llamar→pagar, callear→pagar, Checkear detrás→Check behind) | `a8fe7f8` → `fa5b8f5` |
 | Fase 25 (All-in EV calc + tabla de sensibilidad ±5/±10 — cierra item 11 diferido de fase 24) | `512d54f` |
 | Fase 24 (sección Calculadoras: EV básico + EV con fold equity + Implied Odds + EV de flotar + Fold equity combinada en `/calculadoras`) | `4e95f39` |
@@ -42,7 +43,17 @@
 
 ## Estado actual
 
-Fases 1-26 completadas ✅. Última iteración: **tres calcs nuevas en `/calculadoras`** (6 → 9 sub-tabs) migrando los Excels restantes del usuario en una sola sesión: **Multi-way Call EV** (icono `GitFork`), **EV de bluff** (icono `VenetianMask`) y **Check vs Bet** (icono `Scale`, primera calc dual del proyecto con dos paneles + recomendación). Decisiones clave:
+Fases 1-27 completadas ✅. Última iteración: **Call vs Raise EV** (10ª sub-tab de `/calculadoras`, icono `Swords`, entre All-in EV e Implied Odds). 2ª calc dual del proyecto tras Check vs Bet — migra los dos bloques restantes del Excel de río del usuario ("EV of calling their river bet" + "EV of shoving over their river bet") en una comparación lado a lado. Decisiones clave:
+
+1. **Cero matemática nueva relevante — reuso máximo**. El lado *Raise* es **idéntico** a `allInEv` (ya existente de fase 25): misma fórmula del shove + breakeven F% gratis. Se reutiliza tal cual sin tocarla. El lado *Call* es un wrapper trivial `callRiverBetEv({pot, call, equityPct}) = Pot·eq − Call·(1−eq)` — agregado como función semántica propia (no inline) para colgar el docstring del Excel `=(D7*D5)-(D6*(1-D7))` y que el componente lea limpio, espejo de cómo `checkRiverEv` envuelve un caso de `evBasic`.
+2. **Pot + Monto a pagar compartidos arriba** (no duplicados por opción como en el Excel) — es el mismo villain bet, duplicarlo invita a divergencia. Mismo criterio que el Pot compartido de Check vs Bet. Dos paneles `grid sm:grid-cols-2`: Call (Equity al pagar + ReadOnly Lose%) / Raise (Tu all-in total + Win% si te pagan + F% fold + ReadOnly continúa%).
+3. **Recomendación best-of {Call, Raise, Fold=0} — mejora sobre el Excel**. El Excel solo muestra los dos EV sueltos. La `RecommendationCard` los ordena junto con Fold (EV 0 siempre disponible) vía `sort((a,b)=>b.ev-a.ev)` y recomienda el mejor con delta vs el segundo; si ambas acciones son negativas recomienda **Fold**. Empate con `|delta| < 0.005`. Destructuring `[best, second]` con guard `=== undefined` para satisfacer `noUncheckedIndexedAccess`.
+4. **Breakeven F% en caption de la card Raise**. `allInEv` ya lo devuelve — se muestra abreviado (4-case display compacto del de AllInEvCalc). La card Call no lleva caption (su EV es lineal, sin breakeven natural interesante).
+5. **Términos Call/Raise/Fold en inglés** (glosario fase 17); verbos en es-AR voseo (pagar/restear), "ríver" (convención fix copy fase 26).
+6. **Sanity vs Excel**: defaults pot=150/call=50/eqCall=25%/shove=200/winWhenCalled=25%/fold=50% → EV Call **$0** ✓, EV Raise **$37.5** ✓ ($38 redondeado del Excel), recomendación Raise por $37.5.
+7. **HomePage propagation** (convención `feedback_calculators.md`): ModuleCard "Nueve" → "Diez herramientas" + FAQ JSX + `aPlain` sincronizados, mismo commit. **Sin tocar** sitemap/deploy/canonical — sub-tab interna de `/calculadoras` (ruta ya pre-renderizada desde fase 19). Bundle: `CalculatorsPage` 41.38 → 48.12 kB (gzip 10.20 → 11.24).
+
+Iteración previa (resumen): **tres calcs nuevas en `/calculadoras`** (6 → 9 sub-tabs) migrando los Excels restantes del usuario en una sola sesión: **Multi-way Call EV** (icono `GitFork`), **EV de bluff** (icono `VenetianMask`) y **Check vs Bet** (icono `Scale`, primera calc dual del proyecto con dos paneles + recomendación). Decisiones clave:
 
 1. **Una sola fase consolidada (26), no 26/27/28 separadas**. Las tres calcs salieron en la misma sesión, comparten patrón arquitectónico (componente local + función pura en `ev.ts` + sub-tab en `CalculatorsPage` + propagación HomePage), y el commit feat es uno solo. Patrón cercano: fase 24 que también juntó 5 calcs. Subdividir 26a/b/c daría 3 hashes para rollback selectivo pero ningún caso de uso real lo justifica — si una calc revierte, el resto del commit es trivial de revertir junto.
 2. **Multi-way Call EV — sin breakeven, con 3 ScenarioCards**. El Excel del usuario tenía un chart de barras de 3 escenarios (HU ONLY $9 / ACTUAL $11 / MULTIWAY ONLY $14) en lugar de SensitivityTable. Replicado como 3 cards en `grid sm:grid-cols-3` overrideando `othersCallPct` a 0/actual/100. ACTUAL lleva `ring-1 ring-accent` (mismo highlight que la columna Actual del SensitivityTable de All-in EV). Sin breakeven analítico — la dimensión "natural" no es fold equity sino un mix de 2 equities × 1 probabilidad; los 3 escenarios comunican mejor la sensibilidad. Hint dinámico bajo "Pot efectivo si va MW": si `mwPot < pot + call`, muestra "Cuando va MW el pot efectivo es al menos $X (lo que hay + tu call)" — sin bloquear el cálculo (el user puede tener pot post-rake).

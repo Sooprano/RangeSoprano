@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bomb, Coins, DollarSign, GitFork, Scale, TrendingUp, Users, VenetianMask, Waves } from 'lucide-react';
+import { Bomb, Coins, DollarSign, GitFork, Scale, Swords, TrendingUp, Users, VenetianMask, Waves } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -8,6 +8,7 @@ import { EvComplexCalc } from './EvComplexCalc';
 import { BluffEvCalc } from './BluffEvCalc';
 import { CheckVsBetCalc } from './CheckVsBetCalc';
 import { AllInEvCalc } from './AllInEvCalc';
+import { CallVsRaiseCalc } from './CallVsRaiseCalc';
 import { ImpliedOddsCalc } from './ImpliedOddsCalc';
 import { FloatEvCalc } from './FloatEvCalc';
 import { CombinedFoldEquityCalc } from './CombinedFoldEquityCalc';
@@ -19,6 +20,7 @@ type CalcMode =
   | 'bluff-ev'
   | 'check-vs-bet'
   | 'all-in-ev'
+  | 'call-vs-raise'
   | 'implied-odds'
   | 'float-ev'
   | 'combined-fold'
@@ -50,6 +52,7 @@ export default function CalculatorsPage() {
       {mode === 'bluff-ev' && <BluffEvCalc />}
       {mode === 'check-vs-bet' && <CheckVsBetCalc />}
       {mode === 'all-in-ev' && <AllInEvCalc />}
+      {mode === 'call-vs-raise' && <CallVsRaiseCalc />}
       {mode === 'implied-odds' && <ImpliedOddsCalc />}
       {mode === 'float-ev' && <FloatEvCalc />}
       {mode === 'combined-fold' && <CombinedFoldEquityCalc />}
@@ -100,6 +103,12 @@ function ModeToggle({
         onClick={() => onChange('all-in-ev')}
         icon={<Bomb className="h-3.5 w-3.5" strokeWidth={2.25} />}
         label="All-in EV"
+      />
+      <ModeButton
+        active={value === 'call-vs-raise'}
+        onClick={() => onChange('call-vs-raise')}
+        icon={<Swords className="h-3.5 w-3.5" strokeWidth={2.25} />}
+        label="Call vs Raise"
       />
       <ModeButton
         active={value === 'implied-odds'}

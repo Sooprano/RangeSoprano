@@ -151,6 +151,19 @@ export function betRiverEv(input: BetRiverEvInput): number {
   return f * input.pot + (1 - f) * w * (input.pot + input.bet) - (1 - f) * (1 - w) * input.bet;
 }
 
+export type CallRiverBetEvInput = {
+  pot: number;        // pot del río incluyendo la apuesta del villano
+  call: number;       // monto que pagás
+  equityPct: number;  // 0-100, equity cuando pagás (qué tan seguido ganás el pot)
+};
+
+// EV = Pot · eq − Call · (1−eq)   (pagar una apuesta de río; sin acción futura)
+// Excel: =(D7*D5)-(D6*(1-D7))
+export function callRiverBetEv(input: CallRiverBetEvInput): number {
+  const eq = input.equityPct / 100;
+  return input.pot * eq - input.call * (1 - eq);
+}
+
 export type BluffEvInput = {
   pot: number;
   bet: number;
