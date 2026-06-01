@@ -53,10 +53,10 @@ export function EvBasicCalc() {
       <section className="rounded-xl border border-border bg-surface/40 p-5">
         <h2 className="mb-1 text-base font-semibold text-content">EV básico</h2>
         <p className="mb-4 text-sm text-content-muted">
-          Cuánto rinde en promedio una jugada con dos finales: ganás y te llevás
-          el pot, o perdés y dejás tu apuesta. Ingresá el pot en juego, cada
-          cuánto esperás ganar y lo que arriesgás — sirve para ver si pagar o
-          apostar es rentable a la larga.
+          EV de una jugada con dos finales: ganás y te llevás el pot, o perdés tu
+          apuesta. Ingresá el tamaño del pot en juego, cada cuánto esperás ganar y
+          lo que arriesgás — sirve para ver si pagar o apostar es rentable a la
+          larga.
         </p>
 
         <div className="grid gap-4 sm:grid-cols-2">

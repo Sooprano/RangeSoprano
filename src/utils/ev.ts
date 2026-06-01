@@ -369,3 +369,74 @@ export function foldEquityRequired(
     alwaysProfitable: f <= 0,
   };
 }
+
+// ── C · EV de checkear (compuesto: check-call vs check-check) ─────────────────
+export type CheckCompoundEvInput = {
+  pot: number;                  // pot cuando checkeás
+  villainBetsPct: number;       // 0-100, prob de que el villano apueste
+  villainBet: number;           // tamaño de la apuesta del villano si apuesta
+  callEquityPct: number;        // 0-100, tu equity si pagás su apuesta
+  checkCheckEquityPct: number;  // 0-100, tu equity si va a showdown sin apostar
+};
+
+export type CheckCompoundEvResult = {
+  evCheckCall: number;   // eq·(pot+vbet) − (1−eq)·vbet
+  evCheckCheck: number;  // eq·pot
+  evTotal: number;       // pBet·checkCall + (1−pBet)·checkCheck
+};
+
+// Checkeás: a veces el villano apuesta y pagás (check-call), a veces checkea
+// atrás y vas a showdown (check-check). Combina las dos ramas ponderadas.
+export function checkCompoundEv(input: CheckCompoundEvInput): CheckCompoundEvResult {
+  const pBet = input.villainBetsPct / 100;
+  const eqCall = input.callEquityPct / 100;
+  const eqXx = input.checkCheckEquityPct / 100;
+  const evCheckCall =
+    eqCall * (input.pot + input.villainBet) - (1 - eqCall) * input.villainBet;
+  const evCheckCheck = eqXx * input.pot;
+  const evTotal = pBet * evCheckCall + (1 - pBet) * evCheckCheck;
+  return { evCheckCall, evCheckCheck, evTotal };
+}
+
+// ── D · EV del raise (bluff-raise; fold% directo o derivado de combos) ────────
+export type RaiseBluffEvInput = {
+  pot: number;         // bote antes del raise
+  villainBet: number;  // apuesta del villano que vas a subir
+  raiseCost: number;   // coste total de tu raise (lo que ponés de tu stack)
+  foldPct: number;     // 0-100, fold del villano frente a tu raise
+};
+
+export type RaiseBluffEvResult = {
+  ev: number;
+  breakevenFoldPct: number;  // raiseCost / (raiseCost + pot + villainBet)
+};
+
+// Raise como bluff puro (0 equity si te pagan): si foldea te llevás pot+apuesta,
+// si paga perdés el coste de tu raise. EV = F·(pot+vbet) − (1−F)·raiseCost.
+export function raiseBluffEv(input: RaiseBluffEvInput): RaiseBluffEvResult {
+  const f = input.foldPct / 100;
+  const win = input.pot + input.villainBet;
+  const ev = f * win - (1 - f) * input.raiseCost;
+  const denom = input.raiseCost + win;
+  const breakevenFoldPct = denom > 0 ? (input.raiseCost / denom) * 100 : 0;
+  return { ev, breakevenFoldPct };
+}
+
+// Fold% derivado de combos: 1 − combosPagan/combosApuestan. Devuelve 0-100.
+export function foldPctFromCombos(combosBet: number, combosCall: number): number {
+  if (combosBet <= 0) return 0;
+  const fold = 1 - combosCall / combosBet;
+  return Math.max(0, Math.min(100, fold * 100));
+}
+
+// ── E · EV conjunto multi-calle (encadena turn + river) ──────────────────────
+export type MultiStreetEvInput = {
+  evTurn: number;       // EV de la acción del turn (puede ser negativo)
+  seeRiverPct: number;  // 0-100, prob de llegar al river
+  evRiver: number;      // EV de la acción del river (condicional a llegar)
+};
+
+// EV total = EV_turn + P(ver river) · EV_river.
+export function multiStreetEv(input: MultiStreetEvInput): number {
+  return input.evTurn + (input.seeRiverPct / 100) * input.evRiver;
+}

@@ -13,6 +13,7 @@
 
 | Hito | Hash |
 |---|---|
+| Fase 33 (tres calcs nuevas C/D/E: EV de checkear compuesto + EV del raise bluff con combos + EV multi-calle — 14 → 17 sub-tabs, separan Bote/Apuesta del villano · reframe EV básico) | `<pendiente>` |
 | Fase 32 (pulido de claridad: captions de interpretación EV + raise% en Check vs Bet + PME/breakeven consistente — A+B+F del audit de calcs vs Excels del usuario) | `16ff55b` |
 | Fase 31 (Fold equity requerida con equity — 14ª sub-tab de `/calculadoras`: cómo el breakeven de fold equity baja al shovear all-in con equity de respaldo · valida contra Excel + web fold equity calculator) | `65f6827` |
 | Fase 30 (Value / Bluff combos máx — 13ª sub-tab de `/calculadoras`: cuántos combos de farol meter respecto a los de valor sin desbalancear, con InsightCard de over/under-bluff opcional) | `611b4d7` |
@@ -48,7 +49,17 @@
 
 ## Estado actual
 
-Fases 1-32 completadas ✅. Última iteración: **pulido de claridad (A+B+F)** sobre calcs existentes, surgido de auditar las capturas de Excel del usuario contra nuestras 14 calcs. NO agrega sub-tabs. Decisiones clave:
+Fases 1-33 completadas ✅. Última iteración: **tres calcs nuevas (C/D/E)** que cierran los bloques restantes del Excel del usuario (EV del call/check/bet/raise + conjunto). 14 → 17 sub-tabs en `/calculadoras`. Decisiones clave:
+
+1. **Separan Bote / Apuesta del villano** como inputs distintos (el usuario lo pidió explícito tras notar que el Excel nunca te hace sumar mentalmente). Las viejas (Call vs Raise, Implied Odds) piden el pot combinado; las nuevas no.
+2. **C — EV de checkear** (`Hand`, tras Check vs Bet): la contraparte real del bet que faltaba. Junta las dos ramas de checkear ponderadas: si el villano apuesta → check-call (`eqCall·(pot+vbet)−(1−eqCall)·vbet`), si checkea atrás → check-check (`eqXx·pot`). Hint clave: la equity de check-check suele ser MÁS alta que la de call (el villano apuesta con rango más fuerte). Dos ResultCards de rama + total. Sanity Excel 55.24 ✓.
+3. **D — EV del raise** (`ArrowBigUp`, tras Raise sizing): bluff-raise `F·(pot+vbet)−(1−F)·raiseCost` con breakeven `raiseCost/(raiseCost+pot+vbet)`. Toggle "derivar fold% de combos" (`foldPctFromCombos = 1−call/bet`) que swapea el input fold% por combos apuestan/pagan. Sanity Excel −2.20 / 52.94% / combos 42% → −0.75 ✓.
+4. **E — EV multi-calle** (`Workflow`, tras Doble barrel): chain genérico `evTurn + P(ver river)·evRiver`. Campos EV permiten **negativos** (parseField sin min). El usuario mete EVs calculados en otras tabs. Sanity Excel −43.66 ✓.
+5. **Verificación con node** de las 3 fórmulas contra el Excel antes de commitear (patrón ya usado en fases anteriores).
+6. **EV básico reframeado** en el mismo arco (feedback del usuario: "decisión binaria/embolsás/tirás" sonaba abstracto): labels Pot / % que esperás ganar / Tu apuesta, defaults pot=100, ReadOnlys de breakeven + apuesta como % del pot.
+7. **HomePage**: "Catorce" → "Diecisiete", FAQ JSX + `aPlain`. El `aPlain` estaba **stale en "doce"** desde fases 30/31 (se actualizó el JSX pero no el texto plano del JSON-LD) — resincronizado. Lección: al bumpear el conteo, tocar JSX **y** aPlain.
+
+Iteración previa (resumen): **pulido de claridad (A+B+F)** sobre calcs existentes, surgido de auditar las capturas de Excel del usuario contra las calcs. NO agrega sub-tabs. Decisiones clave:
 
 1. **Auditoría previa**: crucé dos imágenes de Excel (un combo de bloques EV del call/check/bet/raise + el "Bet vs Check IP") contra las 14 calcs. Conclusión: ~80% de la matemática ya existe (mapea a `callRiverBetEv`, `checkRiverEv`, `bluffEv`, `allInEv`, `evComplex`). Lo verifiqué número por número con node.
 2. **A — captions de interpretación**. Las calcs viejas (EV básico / EV con fold equity / EV de flotar) mostraban el EV en $ con color por signo pero sin una línea de "cómo leerlo", a diferencia de las nuevas. Helper `evInterpretation(ev)` en `CalcShared` centraliza el texto ("a largo plazo ganás/perdés $X en promedio cada vez (+EV/−EV)" / break-even).

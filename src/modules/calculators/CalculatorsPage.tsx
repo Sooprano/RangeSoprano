@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bomb, ChevronsUp, Coins, DollarSign, Flame, GitFork, Ratio, Scale, Shield, Swords, TrendingUp, Users, VenetianMask, Waves } from 'lucide-react';
+import { ArrowBigUp, Bomb, ChevronsUp, Coins, DollarSign, Flame, GitFork, Hand, Ratio, Scale, Shield, Swords, TrendingUp, Users, VenetianMask, Waves, Workflow } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -7,12 +7,15 @@ import { EvBasicCalc } from './EvBasicCalc';
 import { EvComplexCalc } from './EvComplexCalc';
 import { BluffEvCalc } from './BluffEvCalc';
 import { DoubleBarrelEvCalc } from './DoubleBarrelEvCalc';
+import { MultiStreetEvCalc } from './MultiStreetEvCalc';
 import { ValueBluffCalc } from './ValueBluffCalc';
 import { CheckVsBetCalc } from './CheckVsBetCalc';
+import { CheckCompoundEvCalc } from './CheckCompoundEvCalc';
 import { AllInEvCalc } from './AllInEvCalc';
 import { FoldEquityRequiredCalc } from './FoldEquityRequiredCalc';
 import { CallVsRaiseCalc } from './CallVsRaiseCalc';
 import { RaiseSizingCalc } from './RaiseSizingCalc';
+import { RaiseBluffEvCalc } from './RaiseBluffEvCalc';
 import { ImpliedOddsCalc } from './ImpliedOddsCalc';
 import { FloatEvCalc } from './FloatEvCalc';
 import { CombinedFoldEquityCalc } from './CombinedFoldEquityCalc';
@@ -23,12 +26,15 @@ type CalcMode =
   | 'ev-complex'
   | 'bluff-ev'
   | 'double-barrel'
+  | 'multi-street'
   | 'value-bluff'
   | 'check-vs-bet'
+  | 'check-ev'
   | 'all-in-ev'
   | 'fold-equity-required'
   | 'call-vs-raise'
   | 'raise-sizing'
+  | 'raise-bluff'
   | 'implied-odds'
   | 'float-ev'
   | 'combined-fold'
@@ -59,12 +65,15 @@ export default function CalculatorsPage() {
       {mode === 'ev-complex' && <EvComplexCalc />}
       {mode === 'bluff-ev' && <BluffEvCalc />}
       {mode === 'double-barrel' && <DoubleBarrelEvCalc />}
+      {mode === 'multi-street' && <MultiStreetEvCalc />}
       {mode === 'value-bluff' && <ValueBluffCalc />}
       {mode === 'check-vs-bet' && <CheckVsBetCalc />}
+      {mode === 'check-ev' && <CheckCompoundEvCalc />}
       {mode === 'all-in-ev' && <AllInEvCalc />}
       {mode === 'fold-equity-required' && <FoldEquityRequiredCalc />}
       {mode === 'call-vs-raise' && <CallVsRaiseCalc />}
       {mode === 'raise-sizing' && <RaiseSizingCalc />}
+      {mode === 'raise-bluff' && <RaiseBluffEvCalc />}
       {mode === 'implied-odds' && <ImpliedOddsCalc />}
       {mode === 'float-ev' && <FloatEvCalc />}
       {mode === 'combined-fold' && <CombinedFoldEquityCalc />}
@@ -111,6 +120,12 @@ function ModeToggle({
         label="Doble barrel"
       />
       <ModeButton
+        active={value === 'multi-street'}
+        onClick={() => onChange('multi-street')}
+        icon={<Workflow className="h-3.5 w-3.5" strokeWidth={2.25} />}
+        label="EV multi-calle"
+      />
+      <ModeButton
         active={value === 'value-bluff'}
         onClick={() => onChange('value-bluff')}
         icon={<Ratio className="h-3.5 w-3.5" strokeWidth={2.25} />}
@@ -121,6 +136,12 @@ function ModeToggle({
         onClick={() => onChange('check-vs-bet')}
         icon={<Scale className="h-3.5 w-3.5" strokeWidth={2.25} />}
         label="Check vs Bet"
+      />
+      <ModeButton
+        active={value === 'check-ev'}
+        onClick={() => onChange('check-ev')}
+        icon={<Hand className="h-3.5 w-3.5" strokeWidth={2.25} />}
+        label="EV de checkear"
       />
       <ModeButton
         active={value === 'all-in-ev'}
@@ -145,6 +166,12 @@ function ModeToggle({
         onClick={() => onChange('raise-sizing')}
         icon={<ChevronsUp className="h-3.5 w-3.5" strokeWidth={2.25} />}
         label="Raise sizing"
+      />
+      <ModeButton
+        active={value === 'raise-bluff'}
+        onClick={() => onChange('raise-bluff')}
+        icon={<ArrowBigUp className="h-3.5 w-3.5" strokeWidth={2.25} />}
+        label="EV del raise"
       />
       <ModeButton
         active={value === 'implied-odds'}
