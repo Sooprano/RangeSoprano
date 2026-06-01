@@ -128,7 +128,7 @@ export function RaiseSizingCalc() {
           label="% del pot del raise ="
           display={pctDisplay}
           tone="neutral"
-          caption="Qué porcentaje del pot representa ese raise."
+          caption="Relativo a un raise pot-completo (3·Bet + Bote). 100% = raise del tamaño del pot."
         />
         <ResultCard
           label="Equity para pagar vs raise ="
@@ -144,7 +144,8 @@ export function RaiseSizingCalc() {
         </h3>
         <p className="mb-4 text-sm text-content-muted">
           Usa el mismo bote y apuesta de arriba. Ingresá el % del pot al que querés
-          raisear y obtené el tamaño en fichas.
+          raisear y obtené el tamaño en fichas. El % es relativo a un raise
+          pot-completo: 100% = un raise del tamaño del pot (3·Bet + Bote).
         </p>
         <div className="grid items-start gap-4 sm:grid-cols-2">
           <NumberField
@@ -157,7 +158,7 @@ export function RaiseSizingCalc() {
             max={100}
             step={1}
             invalid={pctTarget.trim() !== '' && pctNum === null}
-            hint="A qué porcentaje del pot querés raisear"
+            hint="% de un raise pot-completo (100% = raise del tamaño del pot)"
           />
           <ResultCard
             label="Raise ="
