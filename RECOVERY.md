@@ -13,7 +13,7 @@
 
 | Hito | Hash |
 |---|---|
-| Fase 33 (tres calcs nuevas C/D/E: EV de checkear compuesto + EV del raise bluff con combos + EV multi-calle — 14 → 17 sub-tabs, separan Bote/Apuesta del villano · reframe EV básico) | `<pendiente>` |
+| Fase 33 (tres calcs nuevas C/D/E: EV de checkear compuesto + EV del raise bluff con combos + EV multi-calle — 14 → 17 sub-tabs, separan Bote/Apuesta del villano · reframe EV básico) | `f954ca5` |
 | Fase 32 (pulido de claridad: captions de interpretación EV + raise% en Check vs Bet + PME/breakeven consistente — A+B+F del audit de calcs vs Excels del usuario) | `16ff55b` |
 | Fase 31 (Fold equity requerida con equity — 14ª sub-tab de `/calculadoras`: cómo el breakeven de fold equity baja al shovear all-in con equity de respaldo · valida contra Excel + web fold equity calculator) | `65f6827` |
 | Fase 30 (Value / Bluff combos máx — 13ª sub-tab de `/calculadoras`: cuántos combos de farol meter respecto a los de valor sin desbalancear, con InsightCard de over/under-bluff opcional) | `611b4d7` |
