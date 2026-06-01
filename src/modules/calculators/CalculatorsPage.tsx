@@ -1,23 +1,23 @@
-import { useState } from 'react';
-import { ArrowBigUp, Bomb, ChevronsUp, Coins, DollarSign, Flame, GitFork, Hand, Ratio, Scale, Shield, Swords, TrendingUp, Users, VenetianMask, Waves, Workflow } from 'lucide-react';
+import { Fragment, useState } from 'react';
+import { ArrowBigUp, Bomb, ChevronsUp, Coins, DollarSign, Flame, GitFork, Hand, Ratio, Scale, Shield, Swords, TrendingUp, Users, VenetianMask, Waves, Workflow, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { EvBasicCalc } from './EvBasicCalc';
 import { EvComplexCalc } from './EvComplexCalc';
 import { BluffEvCalc } from './BluffEvCalc';
-import { DoubleBarrelEvCalc } from './DoubleBarrelEvCalc';
-import { MultiStreetEvCalc } from './MultiStreetEvCalc';
-import { ValueBluffCalc } from './ValueBluffCalc';
 import { CheckVsBetCalc } from './CheckVsBetCalc';
 import { CheckCompoundEvCalc } from './CheckCompoundEvCalc';
-import { AllInEvCalc } from './AllInEvCalc';
-import { FoldEquityRequiredCalc } from './FoldEquityRequiredCalc';
-import { CallVsRaiseCalc } from './CallVsRaiseCalc';
-import { RaiseSizingCalc } from './RaiseSizingCalc';
-import { RaiseBluffEvCalc } from './RaiseBluffEvCalc';
+import { ValueBluffCalc } from './ValueBluffCalc';
+import { DoubleBarrelEvCalc } from './DoubleBarrelEvCalc';
+import { MultiStreetEvCalc } from './MultiStreetEvCalc';
 import { ImpliedOddsCalc } from './ImpliedOddsCalc';
 import { FloatEvCalc } from './FloatEvCalc';
+import { CallVsRaiseCalc } from './CallVsRaiseCalc';
+import { RaiseBluffEvCalc } from './RaiseBluffEvCalc';
+import { RaiseSizingCalc } from './RaiseSizingCalc';
+import { AllInEvCalc } from './AllInEvCalc';
+import { FoldEquityRequiredCalc } from './FoldEquityRequiredCalc';
 import { CombinedFoldEquityCalc } from './CombinedFoldEquityCalc';
 import { MultiWayCallEv } from './MultiWayCallEv';
 
@@ -25,20 +25,70 @@ type CalcMode =
   | 'ev-basic'
   | 'ev-complex'
   | 'bluff-ev'
-  | 'double-barrel'
-  | 'multi-street'
-  | 'value-bluff'
   | 'check-vs-bet'
   | 'check-ev'
-  | 'all-in-ev'
-  | 'fold-equity-required'
-  | 'call-vs-raise'
-  | 'raise-sizing'
-  | 'raise-bluff'
+  | 'value-bluff'
+  | 'double-barrel'
+  | 'multi-street'
   | 'implied-odds'
   | 'float-ev'
+  | 'call-vs-raise'
+  | 'raise-bluff'
+  | 'raise-sizing'
+  | 'all-in-ev'
+  | 'fold-equity-required'
   | 'combined-fold'
   | 'multiway-call';
+
+type CalcItem = { mode: CalcMode; Icon: LucideIcon; label: string };
+type CalcGroup = { label: string; items: readonly CalcItem[] };
+
+// Orden pedagógico: agrupado por la acción que tenés enfrente, de fundamentos
+// a situaciones específicas. Editar este array reordena el selector.
+const CALC_GROUPS: readonly CalcGroup[] = [
+  {
+    label: 'Fundamentos',
+    items: [
+      { mode: 'ev-basic', Icon: DollarSign, label: 'EV básico' },
+      { mode: 'ev-complex', Icon: Coins, label: 'EV con fold equity' },
+      { mode: 'bluff-ev', Icon: VenetianMask, label: 'EV de bluff' },
+    ],
+  },
+  {
+    label: 'Cuando apostás vos',
+    items: [
+      { mode: 'check-vs-bet', Icon: Scale, label: 'Check vs Bet' },
+      { mode: 'check-ev', Icon: Hand, label: 'EV de checkear' },
+      { mode: 'value-bluff', Icon: Ratio, label: 'Value / Bluff' },
+      { mode: 'double-barrel', Icon: Flame, label: 'Doble barrel' },
+      { mode: 'multi-street', Icon: Workflow, label: 'EV multi-calle' },
+    ],
+  },
+  {
+    label: 'Cuando enfrentás una apuesta',
+    items: [
+      { mode: 'implied-odds', Icon: TrendingUp, label: 'Implied Odds' },
+      { mode: 'float-ev', Icon: Waves, label: 'EV de flotar' },
+      { mode: 'call-vs-raise', Icon: Swords, label: 'Call vs Raise' },
+      { mode: 'raise-bluff', Icon: ArrowBigUp, label: 'EV del raise' },
+      { mode: 'raise-sizing', Icon: ChevronsUp, label: 'Raise sizing' },
+    ],
+  },
+  {
+    label: 'All-in',
+    items: [
+      { mode: 'all-in-ev', Icon: Bomb, label: 'All-in EV' },
+      { mode: 'fold-equity-required', Icon: Shield, label: 'FE requerida' },
+    ],
+  },
+  {
+    label: 'Multi-way',
+    items: [
+      { mode: 'combined-fold', Icon: Users, label: 'Fold equity combinada' },
+      { mode: 'multiway-call', Icon: GitFork, label: 'Call multi-way' },
+    ],
+  },
+];
 
 export default function CalculatorsPage() {
   useDocumentTitle('Calculadoras de poker · Range Soprano', {
@@ -57,25 +107,25 @@ export default function CalculatorsPage() {
         description="Herramientas matemáticas para analizar decisiones. Ingresá los valores y obtené el resultado al instante."
       />
 
-      <div className="mb-6 flex justify-start">
+      <div className="mb-6">
         <ModeToggle value={mode} onChange={setMode} />
       </div>
 
       {mode === 'ev-basic' && <EvBasicCalc />}
       {mode === 'ev-complex' && <EvComplexCalc />}
       {mode === 'bluff-ev' && <BluffEvCalc />}
-      {mode === 'double-barrel' && <DoubleBarrelEvCalc />}
-      {mode === 'multi-street' && <MultiStreetEvCalc />}
-      {mode === 'value-bluff' && <ValueBluffCalc />}
       {mode === 'check-vs-bet' && <CheckVsBetCalc />}
       {mode === 'check-ev' && <CheckCompoundEvCalc />}
-      {mode === 'all-in-ev' && <AllInEvCalc />}
-      {mode === 'fold-equity-required' && <FoldEquityRequiredCalc />}
-      {mode === 'call-vs-raise' && <CallVsRaiseCalc />}
-      {mode === 'raise-sizing' && <RaiseSizingCalc />}
-      {mode === 'raise-bluff' && <RaiseBluffEvCalc />}
+      {mode === 'value-bluff' && <ValueBluffCalc />}
+      {mode === 'double-barrel' && <DoubleBarrelEvCalc />}
+      {mode === 'multi-street' && <MultiStreetEvCalc />}
       {mode === 'implied-odds' && <ImpliedOddsCalc />}
       {mode === 'float-ev' && <FloatEvCalc />}
+      {mode === 'call-vs-raise' && <CallVsRaiseCalc />}
+      {mode === 'raise-bluff' && <RaiseBluffEvCalc />}
+      {mode === 'raise-sizing' && <RaiseSizingCalc />}
+      {mode === 'all-in-ev' && <AllInEvCalc />}
+      {mode === 'fold-equity-required' && <FoldEquityRequiredCalc />}
       {mode === 'combined-fold' && <CombinedFoldEquityCalc />}
       {mode === 'multiway-call' && <MultiWayCallEv />}
     </>
@@ -93,110 +143,24 @@ function ModeToggle({
     <div
       role="tablist"
       aria-label="Calculadora"
-      className="inline-flex flex-wrap items-center gap-1.5 rounded-xl border border-border bg-surface/60 p-1.5"
+      className="flex flex-wrap items-center gap-1.5 rounded-xl border border-border bg-surface/60 p-2"
     >
-      <ModeButton
-        active={value === 'ev-basic'}
-        onClick={() => onChange('ev-basic')}
-        icon={<DollarSign className="h-3.5 w-3.5" strokeWidth={2.25} />}
-        label="EV básico"
-      />
-      <ModeButton
-        active={value === 'ev-complex'}
-        onClick={() => onChange('ev-complex')}
-        icon={<Coins className="h-3.5 w-3.5" strokeWidth={2.25} />}
-        label="EV con fold equity"
-      />
-      <ModeButton
-        active={value === 'bluff-ev'}
-        onClick={() => onChange('bluff-ev')}
-        icon={<VenetianMask className="h-3.5 w-3.5" strokeWidth={2.25} />}
-        label="EV de bluff"
-      />
-      <ModeButton
-        active={value === 'double-barrel'}
-        onClick={() => onChange('double-barrel')}
-        icon={<Flame className="h-3.5 w-3.5" strokeWidth={2.25} />}
-        label="Doble barrel"
-      />
-      <ModeButton
-        active={value === 'multi-street'}
-        onClick={() => onChange('multi-street')}
-        icon={<Workflow className="h-3.5 w-3.5" strokeWidth={2.25} />}
-        label="EV multi-calle"
-      />
-      <ModeButton
-        active={value === 'value-bluff'}
-        onClick={() => onChange('value-bluff')}
-        icon={<Ratio className="h-3.5 w-3.5" strokeWidth={2.25} />}
-        label="Value / Bluff"
-      />
-      <ModeButton
-        active={value === 'check-vs-bet'}
-        onClick={() => onChange('check-vs-bet')}
-        icon={<Scale className="h-3.5 w-3.5" strokeWidth={2.25} />}
-        label="Check vs Bet"
-      />
-      <ModeButton
-        active={value === 'check-ev'}
-        onClick={() => onChange('check-ev')}
-        icon={<Hand className="h-3.5 w-3.5" strokeWidth={2.25} />}
-        label="EV de checkear"
-      />
-      <ModeButton
-        active={value === 'all-in-ev'}
-        onClick={() => onChange('all-in-ev')}
-        icon={<Bomb className="h-3.5 w-3.5" strokeWidth={2.25} />}
-        label="All-in EV"
-      />
-      <ModeButton
-        active={value === 'fold-equity-required'}
-        onClick={() => onChange('fold-equity-required')}
-        icon={<Shield className="h-3.5 w-3.5" strokeWidth={2.25} />}
-        label="FE requerida"
-      />
-      <ModeButton
-        active={value === 'call-vs-raise'}
-        onClick={() => onChange('call-vs-raise')}
-        icon={<Swords className="h-3.5 w-3.5" strokeWidth={2.25} />}
-        label="Call vs Raise"
-      />
-      <ModeButton
-        active={value === 'raise-sizing'}
-        onClick={() => onChange('raise-sizing')}
-        icon={<ChevronsUp className="h-3.5 w-3.5" strokeWidth={2.25} />}
-        label="Raise sizing"
-      />
-      <ModeButton
-        active={value === 'raise-bluff'}
-        onClick={() => onChange('raise-bluff')}
-        icon={<ArrowBigUp className="h-3.5 w-3.5" strokeWidth={2.25} />}
-        label="EV del raise"
-      />
-      <ModeButton
-        active={value === 'implied-odds'}
-        onClick={() => onChange('implied-odds')}
-        icon={<TrendingUp className="h-3.5 w-3.5" strokeWidth={2.25} />}
-        label="Implied Odds"
-      />
-      <ModeButton
-        active={value === 'float-ev'}
-        onClick={() => onChange('float-ev')}
-        icon={<Waves className="h-3.5 w-3.5" strokeWidth={2.25} />}
-        label="EV de flotar"
-      />
-      <ModeButton
-        active={value === 'combined-fold'}
-        onClick={() => onChange('combined-fold')}
-        icon={<Users className="h-3.5 w-3.5" strokeWidth={2.25} />}
-        label="Fold equity combinada"
-      />
-      <ModeButton
-        active={value === 'multiway-call'}
-        onClick={() => onChange('multiway-call')}
-        icon={<GitFork className="h-3.5 w-3.5" strokeWidth={2.25} />}
-        label="Call multi-way"
-      />
+      {CALC_GROUPS.map((group) => (
+        <Fragment key={group.label}>
+          <span className="mt-2 w-full px-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-content-disabled first:mt-0">
+            {group.label}
+          </span>
+          {group.items.map((item) => (
+            <ModeButton
+              key={item.mode}
+              active={value === item.mode}
+              onClick={() => onChange(item.mode)}
+              icon={<item.Icon className="h-3.5 w-3.5" strokeWidth={2.25} />}
+              label={item.label}
+            />
+          ))}
+        </Fragment>
+      ))}
     </div>
   );
 }
