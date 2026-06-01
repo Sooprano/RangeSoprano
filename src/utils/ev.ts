@@ -284,3 +284,33 @@ export function doubleBarrelEv(input: DoubleBarrelEvInput): DoubleBarrelEvResult
   const pmeRiverPct = riverDenom > 0 ? (input.betRiver / riverDenom) * 100 : 0;
   return { evTurnOnly, evCombined, riverPot, pmeTurnPct, pmeRiverPct };
 }
+
+export type ValueBluffInput = {
+  pot: number;          // bote antes de la apuesta
+  bet: number;          // bet del hero
+  valueCombos: number;  // combos de valor en tu rango de apuesta
+};
+
+export type ValueBluffResult = {
+  maxBluffCombos: number;  // combos de farol máximos para balancear el rango
+  bluffFreqPct: number;    // % del rango de apuesta que son faroles = bet/(pot+2·bet)
+  callFreqPct: number;     // MDF del villano = pot/(pot+bet)
+  oddsRatio: number;       // precio del call = (pot+bet)/bet
+};
+
+// Cuántos combos de farol podés tener respecto a tus combos de valor para que el
+// rango de apuesta quede balanceado (no explotable).
+//   bluff combos = value · bet/(pot+bet)                    (Excel: =E116*E113/F116 simplificado)
+//   frecuencia bluff = bet/(pot+2·bet)                       (Excel: =E112/(E111+2*E112))
+//   frecuencia call (MDF) = pot/(pot+bet)                    (Excel: =-((E112/(E112+E111))-1))
+//   odds = (pot+bet)/bet
+export function valueBluffCombos(input: ValueBluffInput): ValueBluffResult {
+  const potPlusBet = input.pot + input.bet;
+  const potPlus2Bet = input.pot + 2 * input.bet;
+  const maxBluffCombos =
+    potPlusBet > 0 ? input.valueCombos * (input.bet / potPlusBet) : 0;
+  const bluffFreqPct = potPlus2Bet > 0 ? (input.bet / potPlus2Bet) * 100 : 0;
+  const callFreqPct = potPlusBet > 0 ? (input.pot / potPlusBet) * 100 : 0;
+  const oddsRatio = input.bet > 0 ? potPlusBet / input.bet : 0;
+  return { maxBluffCombos, bluffFreqPct, callFreqPct, oddsRatio };
+}

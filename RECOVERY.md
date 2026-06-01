@@ -13,6 +13,7 @@
 
 | Hito | Hash |
 |---|---|
+| Fase 30 (Value / Bluff combos máx — 13ª sub-tab de `/calculadoras`: cuántos combos de farol meter respecto a los de valor sin desbalancear, con InsightCard de over/under-bluff opcional) | `<pendiente>` |
 | Fase 29 (Doble barrel turn + river — 12ª sub-tab de `/calculadoras`: EV del bet turn solo vs EV de la línea completa turn + barrel river, con InsightCard que muestra si el barrel rescata una apuesta de turn −EV) | `030496f` |
 | Fase 28 (Raise sizing & pot odds — 11ª sub-tab de `/calculadoras`, combina las 3 calcs "vs Raise flop" del Excel: % del pot del raise + conversión inversa a fichas + equity para pagar un raise) | `0c6129d` |
 | Fase 27 (Call vs Raise EV — 10ª sub-tab de `/calculadoras`, 2ª calc dual: pagar vs restear all-in encima de la apuesta del villano en el río, recomendación best-of {Call/Raise/Fold=0}) | `b411a31` |
@@ -45,7 +46,14 @@
 
 ## Estado actual
 
-Fases 1-29 completadas ✅. Última iteración: **Doble barrel turn + river** (12ª sub-tab de `/calculadoras`, icono `Flame`, después de EV de bluff). Migra los dos bloques del Excel "EV del bet Turn" + "EV de Bet turn + Barrel River". Decisiones clave:
+Fases 1-30 completadas ✅. Última iteración: **Value / Bluff combos máx** (13ª sub-tab de `/calculadoras`, icono `Ratio`, después de Doble barrel). Migra el Excel "Calculadora de Value / Bluff". Decisiones clave:
+
+1. **Simplificación algebraica del Excel**. El Excel calcula bluff combos como `=E116*E113/F116` = `bluffFreq·value/(1−bluffFreq)`. Como `bluffFreq = bet/(pot+2bet)` y `1−bluffFreq = (pot+bet)/(pot+2bet)`, el cociente colapsa limpio a **`value · bet/(pot+bet)`**. Implementé la forma simplificada (más legible y un solo paso) en vez de encadenar bluffFreq. Verificado: 40·64/164 = 15.61 ✓ y el sanity cruzado 15.61/(15.61+40) = 28.07% = bluffFreq.
+2. **Cuatro outputs del Excel**: maxBluffCombos (headline), bluffFreq = bet/(pot+2bet) (% del rango que son faroles), callFreq = pot/(pot+bet) (MDF del villano), odds = (pot+bet)/bet (precio del call). Los tres secundarios van en ReadOnlyFields bajo "Frecuencias óptimas".
+3. **Extra sobre el Excel — InsightCard de over/under-bluff**. El usuario explicitó el objetivo "no pasarme de combos de bluff o meter menos". Agregué un campo opcional "Bluff combos actuales" que, si se completa, dispara una InsightCard de 3 casos: balanceado (emerald), te pasás (rose, dice cuántos sacar), bluffeás de menos (amber, dice cuántos agregar). Vacío = no se muestra. Sirve directo al objetivo declarado, sin romper la fidelidad al Excel base.
+4. **HomePage propagation** (convención `feedback_calculators.md`): ModuleCard "Doce" → "Trece herramientas" + FAQ JSX + `aPlain`. **Sin tocar** sitemap/deploy/canonical.
+
+Iteración previa (resumen): **Doble barrel turn + river** (12ª sub-tab de `/calculadoras`, icono `Flame`, después de EV de bluff). Migra los dos bloques del Excel "EV del bet Turn" + "EV de Bet turn + Barrel River". Decisiones clave:
 
 1. **Una tab con dos resultados, no dos tabs**. El objetivo del usuario es comparar: el bet del turn solo (posiblemente −EV) vs la línea completa turn+barrel (que puede ser +EV). Ambos EV en `ResultCard`s lado a lado + `InsightCard` que verbaliza la relación.
 2. **EV combinado verificado con contabilidad de fichas**, no copiado a ciegas. El Excel lo descompone raro (`=F90+H99-H100` cruzando celdas de los dos bloques). Lo reconstruí calle por calle: fold turn → ganás Pot_t; call turn + fold river → ganás Pot_t+Bet_t (= riverPot−Bet_t); call + call → perdés Bet_t+Bet_r en showdown (0 equity). Fórmula final `fold_t·Pot_t + (1−fold_t)·fold_r·(Pot_t+Bet_t) − (1−fold_t)·(1−fold_r)·(Bet_t+Bet_r)` = 6.25 ✓.
