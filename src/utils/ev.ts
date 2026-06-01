@@ -210,3 +210,39 @@ export function multiWayCallEv(input: MultiWayCallEvInput): number {
   const evMw = (input.mwPot - input.call) * mwEq - input.call * (1 - mwEq);
   return evHu * (1 - oc) + evMw * oc;
 }
+
+// ── Raise sizing & pot odds vs raise (flop) ──────────────────────────────────
+// Los tres comparten Bote + Bet. Denominador `3·Bet + Bote` en el sizing y
+// `2·Raise + Bote` en las pot odds son los del Excel del usuario; se replican
+// tal cual (la UI muestra la fórmula sustituida).
+
+export type RaiseSizingInput = {
+  bote: number;       // pot antes de la apuesta
+  bet: number;        // tamaño de la apuesta
+  raiseSize: number;  // tamaño del raise en fichas
+};
+
+// % del pot que representa un raise. Devuelve 0-100. Excel: =E67/((3*E66)+E65)
+export function raisePctOfPot(input: RaiseSizingInput): number {
+  const denom = 3 * input.bet + input.bote;
+  return denom > 0 ? (input.raiseSize / denom) * 100 : 0;
+}
+
+export type RaiseSizeFromPctInput = {
+  bote: number;
+  bet: number;
+  pctOfPot: number;   // 0-100, % objetivo del pot
+};
+
+// Fichas del raise dado un % objetivo (inverso de raisePctOfPot).
+// Excel: =(3*E74+E73)*E76
+export function raiseSizeFromPct(input: RaiseSizeFromPctInput): number {
+  return (3 * input.bet + input.bote) * (input.pctOfPot / 100);
+}
+
+// Equity necesaria para pagar un raise (pot odds). Devuelve 0-100.
+// Excel: =(E82-E81)/(2*E82+E80)
+export function potOddsVsRaise(input: RaiseSizingInput): number {
+  const denom = 2 * input.raiseSize + input.bote;
+  return denom > 0 ? ((input.raiseSize - input.bet) / denom) * 100 : 0;
+}

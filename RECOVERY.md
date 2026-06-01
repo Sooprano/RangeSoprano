@@ -13,6 +13,7 @@
 
 | Hito | Hash |
 |---|---|
+| Fase 28 (Raise sizing & pot odds — 11ª sub-tab de `/calculadoras`, combina las 3 calcs "vs Raise flop" del Excel: % del pot del raise + conversión inversa a fichas + equity para pagar un raise) | `<pendiente>` |
 | Fase 27 (Call vs Raise EV — 10ª sub-tab de `/calculadoras`, 2ª calc dual: pagar vs restear all-in encima de la apuesta del villano en el río, recomendación best-of {Call/Raise/Fold=0}) | `b411a31` |
 | Fase 26 (tres calcs nuevas: Multi-way Call EV + EV de bluff + Check vs Bet — 6 → 9 sub-tabs en `/calculadoras` · fix copy es-AR: río→ríver, llamar→pagar, callear→pagar, Checkear detrás→Check behind) | `a8fe7f8` → `fa5b8f5` |
 | Fase 25 (All-in EV calc + tabla de sensibilidad ±5/±10 — cierra item 11 diferido de fase 24) | `512d54f` |
@@ -43,7 +44,16 @@
 
 ## Estado actual
 
-Fases 1-27 completadas ✅. Última iteración: **Call vs Raise EV** (10ª sub-tab de `/calculadoras`, icono `Swords`, entre All-in EV e Implied Odds). 2ª calc dual del proyecto tras Check vs Bet — migra los dos bloques restantes del Excel de río del usuario ("EV of calling their river bet" + "EV of shoving over their river bet") en una comparación lado a lado. Decisiones clave:
+Fases 1-28 completadas ✅. Última iteración: **Raise sizing & pot odds** (11ª sub-tab de `/calculadoras`, icono `ChevronsUp`, entre Call vs Raise e Implied Odds). Combina los **tres bloques "vs Raise flop"** del Excel del usuario en una sola tab — comparten Bote + Bet. Decisiones clave:
+
+1. **Una sola tab, no tres**. El usuario pidió "agregar estas 3 calculadoras juntas para ver". Las tres giran sobre el mismo escenario (raise en el flop) y comparten Bote + Bet, así que se unifican: inputs compartidos arriba (`grid sm:grid-cols-3` Bote/Bet/Raise size), dos ResultCards principales (% del pot del raise · equity para pagar) y una sección "Conversor inverso" para el calc 2 (% objetivo → fichas). Cuenta como **1 herramienta** (10 → 11).
+2. **Tres funciones puras en `ev.ts`** replicando los formulas exactas del Excel: `raisePctOfPot` (`=E67/((3*E66)+E65)`), `raiseSizeFromPct` (inverso, `=(3*E74+E73)*E76`), `potOddsVsRaise` (`=(E82-E81)/(2*E82+E80)`). Los denominadores `3·bet+bote` y `2·raise+bote` son los del Excel y se replican **literal** — no los reinterpreté; se exponen en el `FormulaDetails` sustituido para que el usuario vea el cálculo. Guard `denom>0` evita NaN/Infinity con inputs en 0.
+3. **calc 1 y calc 2 son inversos** (chips↔% con el mismo denominador `3·bet+bote`). No los até bidireccionalmente (complejidad de binding con `useState<string>`); calc 1+3 usan el Raise size en fichas compartido, calc 2 tiene su propio input "% objetivo" en la sección inversa. Más claro que un converter bidireccional.
+4. **tone neutral en las cards** — los outputs son porcentajes/tamaños, no EV con signo +/−, así que no aplica el verde/rojo de las otras calcs. Helper `formatChips()` local (round 1 decimal + " fichas") porque `formatCurrency` mete `$` y estos son fichas.
+5. **Sanity Excel**: bote=10/bet=3/raise=9 → % del pot 9/19=47.4% ✓ (E68), equity (9−3)/28=21.4% ✓ (E83); %objetivo=47 → 19·0.47=8.9 fichas ✓ (E75≈9).
+6. **HomePage propagation** (convención `feedback_calculators.md`): ModuleCard "Diez" → "Once herramientas" + FAQ JSX + `aPlain` sincronizados. **Sin tocar** sitemap/deploy/canonical — sub-tab interna de `/calculadoras`. Bundle: `CalculatorsPage` 48.10 → 52.30 kB (gzip 11.25 → 12.12).
+
+Iteración previa (resumen): **Call vs Raise EV** (10ª sub-tab de `/calculadoras`, icono `Swords`, entre All-in EV e Implied Odds). 2ª calc dual del proyecto tras Check vs Bet — migra los dos bloques restantes del Excel de río del usuario ("EV of calling their river bet" + "EV of shoving over their river bet") en una comparación lado a lado. Decisiones clave:
 
 1. **Cero matemática nueva relevante — reuso máximo**. El lado *Raise* es **idéntico** a `allInEv` (ya existente de fase 25): misma fórmula del shove + breakeven F% gratis. Se reutiliza tal cual sin tocarla. El lado *Call* es un wrapper trivial `callRiverBetEv({pot, call, equityPct}) = Pot·eq − Call·(1−eq)` — agregado como función semántica propia (no inline) para colgar el docstring del Excel `=(D7*D5)-(D6*(1-D7))` y que el componente lea limpio, espejo de cómo `checkRiverEv` envuelve un caso de `evBasic`.
 2. **Pot + Monto a pagar compartidos arriba** (no duplicados por opción como en el Excel) — es el mismo villain bet, duplicarlo invita a divergencia. Mismo criterio que el Pot compartido de Check vs Bet. Dos paneles `grid sm:grid-cols-2`: Call (Equity al pagar + ReadOnly Lose%) / Raise (Tu all-in total + Win% si te pagan + F% fold + ReadOnly continúa%).
