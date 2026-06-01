@@ -13,7 +13,7 @@
 
 | Hito | Hash |
 |---|---|
-| Fase 28 (Raise sizing & pot odds — 11ª sub-tab de `/calculadoras`, combina las 3 calcs "vs Raise flop" del Excel: % del pot del raise + conversión inversa a fichas + equity para pagar un raise) | `<pendiente>` |
+| Fase 28 (Raise sizing & pot odds — 11ª sub-tab de `/calculadoras`, combina las 3 calcs "vs Raise flop" del Excel: % del pot del raise + conversión inversa a fichas + equity para pagar un raise) | `0c6129d` |
 | Fase 27 (Call vs Raise EV — 10ª sub-tab de `/calculadoras`, 2ª calc dual: pagar vs restear all-in encima de la apuesta del villano en el río, recomendación best-of {Call/Raise/Fold=0}) | `b411a31` |
 | Fase 26 (tres calcs nuevas: Multi-way Call EV + EV de bluff + Check vs Bet — 6 → 9 sub-tabs en `/calculadoras` · fix copy es-AR: río→ríver, llamar→pagar, callear→pagar, Checkear detrás→Check behind) | `a8fe7f8` → `fa5b8f5` |
 | Fase 25 (All-in EV calc + tabla de sensibilidad ±5/±10 — cierra item 11 diferido de fase 24) | `512d54f` |
