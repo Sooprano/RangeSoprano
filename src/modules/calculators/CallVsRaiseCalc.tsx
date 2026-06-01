@@ -127,10 +127,10 @@ export function CallVsRaiseCalc() {
           Call vs Raise (ríver)
         </h2>
         <p className="mb-4 text-sm text-content-muted">
-          Enfrentás una apuesta en el ríver: ¿pagás o resteás all-in encima? Compara
-          el EV de pagar (vas a showdown con tu equity) contra el de restear (fold
-          equity + showdown si te pagan). Si ambas opciones son negativas, lo mejor
-          es tirar.
+          Enfrentás una apuesta en el ríver: ¿pagás o raiseas all-in? Compara
+          el EV de pagar (vas a showdown con tu equity) contra el de restarse All-in
+          o raisear (fold equity + showdown si te pagan). Si ambas opciones son
+          negativas, lo mejor es Foldear.
         </p>
 
         <div className="mb-4 grid gap-4 sm:grid-cols-2">
@@ -143,7 +143,7 @@ export function CallVsRaiseCalc() {
             min={0}
             step={1}
             invalid={pot.trim() !== '' && potNum === null}
-            hint="Incluye la apuesta del villano · compartido entre las dos opciones"
+            hint="Incluye la apuesta del villano + Pot."
           />
           <NumberField
             id="cvr-call"
@@ -154,7 +154,7 @@ export function CallVsRaiseCalc() {
             min={0}
             step={1}
             invalid={call.trim() !== '' && callNum === null}
-            hint="La apuesta que estás enfrentando · compartido"
+            hint="La apuesta que estás enfrentando."
           />
         </div>
 
@@ -182,7 +182,7 @@ export function CallVsRaiseCalc() {
           </div>
 
           <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface/30 p-4">
-            <h3 className="text-sm font-semibold text-content">Raise (restear all-in)</h3>
+            <h3 className="text-sm font-semibold text-content">Raise (restarse all-in)</h3>
             <NumberField
               id="cvr-shove"
               label="Tu all-in (total)"
@@ -192,7 +192,7 @@ export function CallVsRaiseCalc() {
               min={0}
               step={1}
               invalid={shove.trim() !== '' && shoveNum === null}
-              hint="El total que resteás (no adicional al call)"
+              hint="El total con lo que te restas (no adicional al call)"
             />
             <NumberField
               id="cvr-wc"
