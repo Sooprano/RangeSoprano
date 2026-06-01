@@ -6,6 +6,7 @@ import {
   NumberField,
   ReadOnlyField,
   ResultCard,
+  formatCurrency,
   formatPct,
   parseField,
 } from './CalcShared';
@@ -46,7 +47,7 @@ export function ValueBluffCalc() {
     result === null ? '—' : `${result.oddsRatio.toFixed(2)} : 1`;
 
   const insight = (() => {
-    if (result === null || actualNum === null) return null;
+    if (result === null || actualNum === null || potNum === null) return null;
     const max = result.maxBluffCombos;
     const diff = actualNum - max;
     if (Math.abs(diff) < 0.5) {
@@ -61,9 +62,11 @@ export function ValueBluffCalc() {
         text: `Te estás pasando de faroles: tenés ${formatCombos(actualNum)} pero el máximo balanceado es ${formatCombos(max)} (${formatCombos(diff)} de más). Con tantos bluffs, un villano que paga seguido te explota — sacá ~${formatCombos(diff)} combos.`,
       };
     }
+    const missing = -diff;
+    const foldEquityLeft = missing * potNum;
     return {
       tone: 'neutral' as const,
-      text: `Estás bluffeando de menos: tenés ${formatCombos(actualNum)} y podés meter hasta ${formatCombos(max)} (${formatCombos(-diff)} disponibles). Estás dejando valor sobre la mesa: podés agregar ~${formatCombos(-diff)} faroles más sin desbalancearte.`,
+      text: `Estás bluffeando de menos: tenés ${formatCombos(actualNum)} y podés meter hasta ${formatCombos(max)} (${formatCombos(missing)} disponibles). Si el villano foldea sus bluff-catchers (lo correcto contra tu rango cargado de valor), cada farol que falta gana el bote: estás dejando hasta ${formatCurrency(foldEquityLeft)} de fold equity sobre la mesa. Agregá ~${formatCombos(missing)} faroles más.`,
     };
   })();
 
@@ -150,6 +153,15 @@ export function ValueBluffCalc() {
           />
           <InsightCard insight={insight} />
         </div>
+        <p className="mt-4 rounded-lg border border-border bg-surface/30 px-3 py-2.5 text-[12px] leading-relaxed text-content-muted">
+          <span className="font-semibold text-content">Ojo con el matiz GTO:</span> en
+          equilibrio un farol es break-even (0 EV). Cuando el villano paga a la
+          frecuencia correcta (MDF), bluffear y rendirse rinden lo mismo. Por eso
+          bluffeás: no porque el farol gane plata directa, sino para que el villano no
+          pueda foldear sus bluff-catchers y tus apuestas de valor sigan cobrando. La
+          fold equity de arriba se realiza cuando el villano sobre-foldea (lo que debería
+          hacer si no balanceás).
+        </p>
       </section>
 
       <section className="rounded-xl border border-border bg-surface/40 p-5">
