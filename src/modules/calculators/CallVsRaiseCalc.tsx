@@ -7,6 +7,7 @@ import {
   ReadOnlyField,
   ResultCard,
   formatCurrency,
+  formatPct,
   parseField,
 } from './CalcShared';
 
@@ -26,6 +27,10 @@ export function CallVsRaiseCalc() {
   const fNum = parseField(foldPct, { min: 0, max: 100 });
 
   const callLoseDisplay = callEqNum !== null ? (100 - callEqNum).toFixed(1) : '—';
+  const pmeCallDisplay =
+    potNum !== null && callNum !== null && potNum + callNum > 0
+      ? formatPct((callNum / (potNum + callNum)) * 100)
+      : '—';
   const continueDisplay = fNum !== null ? (100 - fNum).toFixed(1) : '—';
 
   const callResult = useMemo(() => {
@@ -178,6 +183,11 @@ export function CallVsRaiseCalc() {
               display={callLoseDisplay}
               suffix="%"
               hint="Complemento — calculado automáticamente"
+            />
+            <ReadOnlyField
+              label="PME — equity para pagar"
+              display={pmeCallDisplay}
+              hint="Call/(Pot+Call) · si tu equity supera esto, pagar es +EV"
             />
           </div>
 

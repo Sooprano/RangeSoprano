@@ -5,6 +5,7 @@ import {
   NumberField,
   ReadOnlyField,
   ResultCard,
+  evInterpretation,
   formatCurrency,
   parseField,
 } from './CalcShared';
@@ -139,7 +140,12 @@ export function EvComplexCalc() {
         </div>
       </section>
 
-      <ResultCard label="EV =" display={display} tone={tone} />
+      <ResultCard
+        label="EV ="
+        display={display}
+        tone={tone}
+        {...(result !== null ? { caption: evInterpretation(result) } : {})}
+      />
 
       <FormulaDetails
         formula={formula}

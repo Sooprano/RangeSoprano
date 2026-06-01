@@ -141,14 +141,22 @@ export type BetRiverEvInput = {
   bet: number;
   winWhenCalledPct: number;  // 0-100, equity contra el rango que te paga (0% para bluff puro)
   foldPct: number;            // 0-100
+  raisePct?: number;          // 0-100, frecuencia de raise del villano (foldeás perdiendo tu bet)
 };
 
-// EV = F% · Pot + (1−F%) · WCalled% · (Pot + Bet) − (1−F%) · (1−WCalled%) · Bet
-// Excel: =(D19*D16)+((1-D19)*D18*(D17+D16))-((1-D19)*(1-D18)*D17)
+// EV = F·Pot + C·(W·(Pot+Bet) − (1−W)·Bet) − R·Bet   con C = 1 − F − R (call)
+// Con R=0 colapsa al modelo fold/call simple.
+// Excel (Bet vs Check IP): el villano puede fold / call / raise; al raise foldeás.
 export function betRiverEv(input: BetRiverEvInput): number {
   const f = input.foldPct / 100;
+  const r = (input.raisePct ?? 0) / 100;
+  const c = 1 - f - r;
   const w = input.winWhenCalledPct / 100;
-  return f * input.pot + (1 - f) * w * (input.pot + input.bet) - (1 - f) * (1 - w) * input.bet;
+  return (
+    f * input.pot +
+    c * (w * (input.pot + input.bet) - (1 - w) * input.bet) -
+    r * input.bet
+  );
 }
 
 export type CallRiverBetEvInput = {

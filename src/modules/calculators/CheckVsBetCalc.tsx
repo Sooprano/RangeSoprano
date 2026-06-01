@@ -7,6 +7,7 @@ import {
   ReadOnlyField,
   ResultCard,
   formatCurrency,
+  formatPct,
   parseField,
 } from './CalcShared';
 
@@ -16,15 +17,22 @@ export function CheckVsBetCalc() {
   const [bet, setBet] = useState('50');
   const [winWhenCalledPct, setWinWhenCalledPct] = useState('0');
   const [foldPct, setFoldPct] = useState('20');
+  const [raisePct, setRaisePct] = useState('0');
 
   const potNum = parseField(pot, { min: 0 });
   const checkWinNum = parseField(checkWinPct, { min: 0, max: 100 });
   const betNum = parseField(bet, { min: 0 });
   const wcNum = parseField(winWhenCalledPct, { min: 0, max: 100 });
   const fNum = parseField(foldPct, { min: 0, max: 100 });
+  const rNum = parseField(raisePct, { min: 0, max: 100 });
 
   const checkLoseDisplay = checkWinNum !== null ? (100 - checkWinNum).toFixed(1) : '—';
-  const continueDisplay = fNum !== null ? (100 - fNum).toFixed(1) : '—';
+  const callPct = fNum !== null && rNum !== null ? 100 - fNum - rNum : null;
+  const callDisplay = callPct !== null ? callPct.toFixed(1) : '—';
+  const pmeBetDisplay =
+    potNum !== null && betNum !== null && potNum + betNum > 0
+      ? formatPct((betNum / (potNum + betNum)) * 100)
+      : '—';
 
   const checkResult = useMemo(() => {
     if (potNum === null || checkWinNum === null) return null;
@@ -32,18 +40,32 @@ export function CheckVsBetCalc() {
   }, [potNum, checkWinNum]);
 
   const betResult = useMemo(() => {
-    if (potNum === null || betNum === null || wcNum === null || fNum === null) return null;
+    if (
+      potNum === null ||
+      betNum === null ||
+      wcNum === null ||
+      fNum === null ||
+      rNum === null
+    ) {
+      return null;
+    }
+    if (fNum + rNum > 100) return null; // fold + raise no pueden superar 100%
     return betRiverEv({
       pot: potNum,
       bet: betNum,
       winWhenCalledPct: wcNum,
       foldPct: fNum,
+      raisePct: rNum,
     });
-  }, [potNum, betNum, wcNum, fNum]);
+  }, [potNum, betNum, wcNum, fNum, rNum]);
 
   const checkAllValid = potNum !== null && checkWinNum !== null;
   const betAllValid =
-    potNum !== null && betNum !== null && wcNum !== null && fNum !== null;
+    potNum !== null &&
+    betNum !== null &&
+    wcNum !== null &&
+    fNum !== null &&
+    rNum !== null;
 
   const checkTone =
     checkResult === null
@@ -83,9 +105,9 @@ export function CheckVsBetCalc() {
   const checkResultStr = checkResult !== null ? formatCurrency(checkResult) : '—';
 
   const betFormula =
-    'EV bet = F% · Pot + (1−F%) · W% · (Pot+Bet) − (1−F%) · (1−W%) · Bet';
+    'EV bet = F·Pot + C·(W·(Pot+Bet) − (1−W)·Bet) − R·Bet   ·   C = 1−F−R';
   const betSubstituted = betAllValid
-    ? `${(fNum / 100).toFixed(2)} · ${potNum} + ${((100 - fNum) / 100).toFixed(2)} · ${(wcNum / 100).toFixed(2)} · (${potNum} + ${betNum}) − ${((100 - fNum) / 100).toFixed(2)} · ${((100 - wcNum) / 100).toFixed(2)} · ${betNum}`
+    ? `${(fNum / 100).toFixed(2)}·${potNum} + ${((100 - fNum - rNum) / 100).toFixed(2)}·(${(wcNum / 100).toFixed(2)}·(${potNum}+${betNum}) − ${((100 - wcNum) / 100).toFixed(2)}·${betNum}) − ${(rNum / 100).toFixed(2)}·${betNum}`
     : '—';
   const betResultStr = betResult !== null ? formatCurrency(betResult) : '—';
 
@@ -94,8 +116,9 @@ export function CheckVsBetCalc() {
       <section className="rounded-xl border border-border bg-surface/40 p-5">
         <h2 className="mb-1 text-base font-semibold text-content">Check vs Bet (ríver)</h2>
         <p className="mb-4 text-sm text-content-muted">
-          Comparación de EV entre checkear (ir a showdown) y apostar (con fold
-          equity + showdown si te pagan). Útil en el ríver cuando dudás si
+          Comparación de EV entre checkear (ir a showdown) y apostar. El villano
+          puede tirarse (te llevás el pot), pagar (vas a showdown con tu equity) o
+          subir (foldeás perdiendo tu apuesta). Útil en el ríver cuando dudás si
           apostar valor fino, blockear o controlar el bote checkeando.
         </p>
 
@@ -170,7 +193,34 @@ export function CheckVsBetCalc() {
               max={100}
               step={1}
               invalid={foldPct.trim() !== '' && fNum === null}
-              hint={`Continúa con ${continueDisplay}%`}
+              hint="Se tira y te llevás el pot"
+            />
+            <NumberField
+              id="cvb-raise"
+              label="R% — Frecuencia de raise"
+              value={raisePct}
+              onChange={setRaisePct}
+              suffix="%"
+              min={0}
+              max={100}
+              step={1}
+              invalid={raisePct.trim() !== '' && rNum === null}
+              hint="Te sube y foldeás perdiendo tu apuesta (0% si no te suben)"
+            />
+            <ReadOnlyField
+              label="C% — Te paga (call)"
+              display={callDisplay}
+              suffix="%"
+              hint={
+                callPct !== null && callPct < 0
+                  ? '⚠ Fold% + Raise% supera 100% — ajustá los valores'
+                  : '100% − Fold% − Raise%'
+              }
+            />
+            <ReadOnlyField
+              label="PME — pot odds que ofrecés"
+              display={pmeBetDisplay}
+              hint="Bet/(Pot+Bet) · equity que el villano necesita para pagar"
             />
           </div>
         </div>

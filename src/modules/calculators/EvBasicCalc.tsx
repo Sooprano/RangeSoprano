@@ -5,7 +5,9 @@ import {
   NumberField,
   ReadOnlyField,
   ResultCard,
+  evInterpretation,
   formatCurrency,
+  formatPct,
   parseField,
 } from './CalcShared';
 
@@ -19,6 +21,11 @@ export function EvBasicCalc() {
   const lNum = parseField(loseAmount, { min: 0 });
 
   const losePctDisplay = wpNum !== null ? (100 - wpNum).toFixed(1) : '—';
+
+  const breakevenWDisplay =
+    wNum !== null && lNum !== null && wNum + lNum > 0
+      ? formatPct((lNum / (wNum + lNum)) * 100)
+      : '—';
 
   const result = useMemo(() => {
     if (wNum === null || wpNum === null || lNum === null) return null;
@@ -84,10 +91,20 @@ export function EvBasicCalc() {
             suffix="%"
             hint="Se calcula como 100% − W%"
           />
+          <ReadOnlyField
+            label="Breakeven W% — equity para EV 0"
+            display={breakevenWDisplay}
+            hint="$L / ($W + $L) · necesitás ganar al menos esto para no perder"
+          />
         </div>
       </section>
 
-      <ResultCard label="EV =" display={display} tone={tone} />
+      <ResultCard
+        label="EV ="
+        display={display}
+        tone={tone}
+        {...(result !== null ? { caption: evInterpretation(result) } : {})}
+      />
 
       <FormulaDetails
         formula={formula}

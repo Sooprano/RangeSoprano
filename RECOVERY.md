@@ -13,6 +13,7 @@
 
 | Hito | Hash |
 |---|---|
+| Fase 32 (pulido de claridad: captions de interpretación EV + raise% en Check vs Bet + PME/breakeven consistente — A+B+F del audit de calcs vs Excels del usuario) | `<pendiente>` |
 | Fase 31 (Fold equity requerida con equity — 14ª sub-tab de `/calculadoras`: cómo el breakeven de fold equity baja al shovear all-in con equity de respaldo · valida contra Excel + web fold equity calculator) | `65f6827` |
 | Fase 30 (Value / Bluff combos máx — 13ª sub-tab de `/calculadoras`: cuántos combos de farol meter respecto a los de valor sin desbalancear, con InsightCard de over/under-bluff opcional) | `611b4d7` |
 | Fase 29 (Doble barrel turn + river — 12ª sub-tab de `/calculadoras`: EV del bet turn solo vs EV de la línea completa turn + barrel river, con InsightCard que muestra si el barrel rescata una apuesta de turn −EV) | `030496f` |
@@ -47,7 +48,15 @@
 
 ## Estado actual
 
-Fases 1-31 completadas ✅. Última iteración: **Fold equity requerida con equity** (14ª sub-tab de `/calculadoras`, icono `Shield`, label "FE requerida", después de All-in EV). El usuario tenía la fórmula pero no la calc armada; objetivo: enseñar que el breakeven de fold equity **baja** cuando shoveás all-in con equity de respaldo (draw en flop/turn). Decisiones clave:
+Fases 1-32 completadas ✅. Última iteración: **pulido de claridad (A+B+F)** sobre calcs existentes, surgido de auditar las capturas de Excel del usuario contra nuestras 14 calcs. NO agrega sub-tabs. Decisiones clave:
+
+1. **Auditoría previa**: crucé dos imágenes de Excel (un combo de bloques EV del call/check/bet/raise + el "Bet vs Check IP") contra las 14 calcs. Conclusión: ~80% de la matemática ya existe (mapea a `callRiverBetEv`, `checkRiverEv`, `bluffEv`, `allInEv`, `evComplex`). Lo verifiqué número por número con node.
+2. **A — captions de interpretación**. Las calcs viejas (EV básico / EV con fold equity / EV de flotar) mostraban el EV en $ con color por signo pero sin una línea de "cómo leerlo", a diferencia de las nuevas. Helper `evInterpretation(ev)` en `CalcShared` centraliza el texto ("a largo plazo ganás/perdés $X en promedio cada vez (+EV/−EV)" / break-even).
+3. **B — raise% en Check vs Bet**. El Excel "Bet vs Check IP" divide la continuación del villano en fold/call/raise (al raise, foldeás perdiendo tu bet). `betRiverEv` ganó `raisePct?` opcional → `F·Pot + C·(W·(Pot+Bet)−(1−W)·Bet) − R·Bet`, `C=1−F−R`. R=0 colapsa al modelo previo (backward-compat: verificado que el default da el mismo −20 de antes). Guard `betResult=null` si F+R>100, con warning en el ReadOnly de C%. Matchea el Excel: 285.5 ✓.
+4. **F — PME/breakeven consistente**. El Excel siempre muestra el PME al lado del EV. Agregué ReadOnlys: "PME pot odds que ofrecés" `bet/(pot+bet)` (Check vs Bet), "PME equity para pagar" `call/(pot+call)` (Call vs Raise), "Breakeven W%" `$L/($W+$L)` (EV básico). Solo donde el breakeven es un número limpio y único — no forcé en EV con fold equity / flotar (multivariable, sería ruido).
+5. **Confirmado para la próxima fase**: las calcs nuevas C/D/E (EV de checkear compuesto, EV del raise con combos→fold%, EV conjunto multi-street) van a **separar "Bote / Apuesta del villano"** como inputs distintos, como el Excel (el usuario lo pidió explícito). Diferido a la fase siguiente.
+
+Iteración previa (resumen): **Fold equity requerida con equity** (14ª sub-tab de `/calculadoras`, icono `Shield`, label "FE requerida", después de All-in EV). El usuario tenía la fórmula pero no la calc armada; objetivo: enseñar que el breakeven de fold equity **baja** cuando shoveás all-in con equity de respaldo (draw en flop/turn). Decisiones clave:
 
 1. **Fórmula del break-point**: `EV = −x + F·(x+1) + (1−F)·E·(1+2x) = 0` → `F = [x − E·(1+2x)] / [1 + x − E·(1+2x)]`, con `x = shove/pot` (fracción del pot que shoveás) y `E` = equity cuando te pagan. Con E=0 colapsa a `x/(1+x) = bet/(pot+bet)` (breakeven de bluff puro), lo que da el caso base para contrastar.
 2. **El número puede ser negativo o null**. F negativo = +EV con 0 folds (tu equity sola alcanza). `denom = 1 + x − E(1+2x) ≤ 0` cuando la equity es muy alta (E ≳ (1+x)/(1+2x), ~75% para x=0.5) → `breakevenFoldPct = null` + `alwaysProfitable`. La UI muestra "≤ 0%" + caption en vez de un número espurio. Mostrar el negativo (−25%) es **pedagógicamente clave**: el alumno ve que el breakeven cruzó el cero.

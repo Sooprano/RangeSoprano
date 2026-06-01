@@ -31,6 +31,17 @@ export function formatPct(n: number): string {
   return `${rounded}%`;
 }
 
+// Línea de interpretación de un EV en dinero, para que se lea cómo afecta a largo plazo.
+export function evInterpretation(ev: number): string {
+  if (Math.abs(ev) < 0.005) {
+    return 'Es break-even: en promedio ni ganás ni perdés con esta jugada.';
+  }
+  const abs = formatCurrency(Math.abs(ev));
+  return ev > 0
+    ? `A largo plazo ganás ${abs} en promedio cada vez que tomás esta decisión (+EV).`
+    : `A largo plazo perdés ${abs} en promedio cada vez que tomás esta decisión (−EV).`;
+}
+
 export function NumberField({
   id,
   label,
