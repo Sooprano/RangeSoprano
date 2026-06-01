@@ -75,7 +75,7 @@ const MODULES: readonly ModuleCard[] = [
     label: 'Calculadoras',
     icon: Calculator,
     description:
-      'Diez herramientas matemáticas: EV básico, EV con fold equity (semi-bluffs y shoves), EV de bluff (bluff puro sin equity en showdown con breakeven F% automático), Check vs Bet (comparación lado a lado de check behind vs apostar el ríver con recomendación), All-in EV (shove preflop sobre apuesta del villano con tabla de sensibilidad), Call vs Raise (enfrentando una apuesta en el ríver: pagar vs restear all-in encima, con fold como tercera opción), Implied Odds para draws, EV de flotar (call flop con plan de robar el turn), Fold equity combinada para shoves multi-way y Call multi-way (pagar un shove preflop con potenciales overcallers detrás). Cada una con la fórmula explicada y los valores sustituidos en vivo.',
+      'Diez herramientas de EV y matemática de poker para analizar tus manos y decisiones: fold equity, all-in, implied odds, floating y más. Cada una con la fórmula explicada y los valores sustituidos en vivo.',
   },
 ];
 
