@@ -11,6 +11,7 @@ import {
   Dices,
   Download,
   Eye,
+  FileSearch,
   FolderInput,
   FolderOpen,
   HelpCircle,
@@ -76,6 +77,14 @@ const MODULES: readonly ModuleCard[] = [
     icon: Calculator,
     description:
       'Diecisiete herramientas de EV y matemática de poker para analizar tus manos y decisiones: fold equity, all-in, doble barrel, value/bluff, EV de checkear y de raise, multi-calle, implied odds, raise sizing, floating y más. Cada una con la fórmula explicada y los valores sustituidos en vivo.',
+  },
+  {
+    to: '/analisis',
+    command: '/analisis',
+    label: 'Análisis de manos',
+    icon: FileSearch,
+    description:
+      'Pegá el historial .txt de una mano real y la web extrae el spot (board, pot y apuesta de cada decisión) y por cada jugada del héroe te abre la calculadora de EV adecuada, ya cargada con los números. La equity la traés de Flopzilla y la tipeás: la web hace el razonamiento de EV y te enseña qué herramienta usar.',
   },
 ];
 
@@ -288,6 +297,32 @@ const FAQS: readonly Faq[] = [
     ),
     aPlain:
       'Desde la barra lateral entrá a Calculadoras. Tenés diecisiete herramientas: EV básico (EV de una jugada con dos finales: pot, % que esperás ganar y lo que arriesgás), EV con fold equity (semi-bluffs y shoves: F% de fold + showdown EV cuando te pagan), EV de bluff (bluff puro sin equity en showdown — river bluffs y blocker bets — con breakeven F% automático), Doble barrel (EV de la línea completa turn + barrel river: muestra si el conjunto es +EV aunque el bet del turn solo sea −EV), EV multi-calle (encadena el EV de dos calles turn + river ponderando cada cuánto se ve el river), Value / Bluff (cuántos combos de farol podés tener respecto a tus combos de valor para no desbalancear el rango de apuesta), Check vs Bet (comparación lado a lado de check behind vs apostar el ríver con recomendación y delta de EV), EV de checkear (cuánto rinde checkear juntando check-call si el villano apuesta y check-check si hace check behind), All-in EV (shove preflop sobre la apuesta del villano: pot + call + shove + equity + fold, con tabla de sensibilidad ±5/±10% y breakeven F% automático), FE requerida (fold equity para shovear all-in teniendo en cuenta tu equity: el breakeven baja cuando vas con outs en flop o turn), Call vs Raise (enfrentando una apuesta en el ríver: pagar vs restear all-in encima, con fold como tercera opción), Raise sizing (en el flop: raise como % del pot, conversión inversa a fichas y equity para pagar un raise), EV del raise (EV de subir como bluff sobre la apuesta del villano, con fold% directo o derivado de combos), Implied Odds (tenés un draw, ¿cuánto más necesitás ganarle en futuras calles cuando pegues para que el call sea rentable?), EV de flotar (pagar el flop para robar el turn dadas las frecuencias de barrel y check-fold del villano), Fold equity combinada (probabilidad de que todos los villanos foldeen en un shove multi-way) y Call multi-way (pagar un shove preflop con potenciales overcallers detrás: modela HU vs MW con dos equities distintas y tres escenarios). Cada calculadora muestra la fórmula y los valores sustituidos en un bloque colapsable.',
+  },
+  {
+    q: '¿Cómo analizo una mano que jugué?',
+    a: (
+      <>
+        Entrá a{' '}
+        <Link to="/analisis" className="font-medium text-accent-light hover:underline">
+          Análisis de manos
+        </Link>{' '}
+        y pegá el historial{' '}
+        <span className="font-medium text-content">.txt</span> que exporta tu sala. La web
+        lo lee y arma una hoja de estudio: posiciones, stacks, board calle por calle y{' '}
+        <span className="font-medium text-content">el pot y la apuesta de cada decisión</span>
+        . Por cada jugada agresiva del héroe te ofrece un botón{' '}
+        <span className="font-medium text-content">Analizar</span> que abre la calculadora
+        de EV adecuada —EV de bluff, doble barrel, all-in, call vs raise— ya pre-llenada con
+        esos números. Vos solo tipeás la{' '}
+        <span className="font-medium text-content">equity o el fold% que sacaste de Flopzilla</span>{' '}
+        y la web hace el razonamiento de EV. No reproduce la mano (para eso ya tenés tu
+        replayer) ni calcula equity (eso lo hace Flopzilla): lo que aporta es enseñarte qué
+        herramienta usar y automatizar el cálculo. Podés alternar entre fichas y BB y dejar
+        tu conclusión escrita.
+      </>
+    ),
+    aPlain:
+      'Entrá a Análisis de manos y pegá el historial .txt que exporta tu sala. La web lo lee y arma una hoja de estudio: posiciones, stacks, board calle por calle y el pot y la apuesta de cada decisión. Por cada jugada agresiva del héroe te ofrece un botón Analizar que abre la calculadora de EV adecuada (EV de bluff, doble barrel, all-in, call vs raise) ya pre-llenada con esos números. Vos solo tipeás la equity o el fold% que sacaste de Flopzilla y la web hace el razonamiento de EV. No reproduce la mano (para eso ya tenés tu replayer) ni calcula equity (eso lo hace Flopzilla): lo que aporta es enseñarte qué herramienta usar y automatizar el cálculo. Podés alternar entre fichas y BB y dejar tu conclusión escrita.',
   },
   {
     q: '¿Puedo contribuir al proyecto?',
