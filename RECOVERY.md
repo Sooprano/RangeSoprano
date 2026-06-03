@@ -13,6 +13,7 @@
 
 | Hito | Hash |
 |---|---|
+| Fase 34 (módulo "Análisis de manos" — fase 1: Worksheet desde `.txt`. Parser tolerante del formato iPoker + motor de pot + `spotCalc` mapeo decisión→calc con seeds enriquecidos + worksheet que abre la calc adecuada inline pre-llenada · ruta `/analisis` · NO reconstruye replayer/Flopzilla — la equity la trae el usuario de Flopzilla) | `2eceb6a` → `5b77a0f` |
 | Fase 33 (tres calcs nuevas C/D/E: EV de checkear compuesto + EV del raise bluff con combos + EV multi-calle — 14 → 17 sub-tabs, separan Bote/Apuesta del villano · reframe EV básico · pulido UX post-feedback + reorden pedagógico agrupado del selector) | `f954ca5` → `d8ddbd4` |
 | Fase 32 (pulido de claridad: captions de interpretación EV + raise% en Check vs Bet + PME/breakeven consistente — A+B+F del audit de calcs vs Excels del usuario) | `16ff55b` |
 | Fase 31 (Fold equity requerida con equity — 14ª sub-tab de `/calculadoras`: cómo el breakeven de fold equity baja al shovear all-in con equity de respaldo · valida contra Excel + web fold equity calculator) | `65f6827` |
@@ -49,7 +50,18 @@
 
 ## Estado actual
 
-Fases 1-33 completadas ✅. Última iteración: **tres calcs nuevas (C/D/E)** que cierran los bloques restantes del Excel del usuario (EV del call/check/bet/raise + conjunto). 14 → 17 sub-tabs en `/calculadoras`. Decisiones clave:
+Fases 1-34 completadas ✅. Última iteración: **módulo "Análisis de manos" — fase 1: Worksheet desde `.txt`** (`2eceb6a` → `5b77a0f`, ruta `/analisis`). Nuevo eje del proyecto: ayudar al **aprendizaje/análisis** estilo *The Postflop Poker Workbook* de SplitSuit. Decisiones clave:
+
+1. **Alcance acotado por el usuario**: NO reconstruir el replayer (ya tiene PokerTracker) ni Flopzilla (ya lo usa). El aporte de Range Soprano es la capa workbook + el **puente** mano real → calc de EV adecuada pre-llenada. La equity la sigue sacando de Flopzilla y la tipea (patrón "modo experto" de Pot Odds). Ver `feedback_hand_analysis.md` en memoria.
+2. **Parser tolerante** `src/utils/handHistory.ts` del formato iPoker/PokerTracker. Cartas palo-primero (`[HJ S9]`, H/S/C/**D**, `10`→`T`). Motor de pot por contribución corrida: `potBefore` de cada decisión es lo que siembra las calcs. Verificado con node vs el `.txt` de ejemplo (pots 70/140/350, board A♥7♥9♣3♥8♠).
+3. **`spotCalc.ts` = el cerebro compartido**: `suggestCalcForDecision` mapea cada jugada del héroe a la calc adecuada. Es el mismo conocimiento que evaluará el futuro drill "¿Qué calculadora?" (fase 2) → se construyó una vez. Reglas: bet→bluff-ev (o double-barrel si hay barrel siguiente), allin→all-in-ev, call→call-vs-raise, **check en river→check-vs-bet/check-ev**.
+4. **Seeds enriquecidos (fix post-feedback)**: el seed de cada decisión lleva TODOS los campos genéricos (pot/bet/currentPot/loseAmount/potTurn/betTurn/betRiver) para que al cambiar de calc alternativa los datos sigan pre-llenados, no los defaults. `barrelPairSeed` reconstruye la línea de 2 barriles en ambas direcciones.
+5. **`flopzillaInputsFor(mode)`** lista qué inputs trae el usuario de Flopzilla por calc → `DataSourceLegend` verde/ámbar en el worksheet indica qué está cargado de la mano vs qué ingresar de Flopzilla.
+6. **Calcs sembrables**: 8 componentes de `/calculadoras` ganan props `initial*` opcionales (`?: string | undefined` por exactOptionalPropertyTypes), backward-compatible — `/calculadoras` queda idéntico. El worksheet las renderiza inline con `key={decision.id}-${mode}` para re-sembrar al cambiar.
+7. **Pulido UX iterado en sesión**: badge de pot ámbar visible, monto en chip ámbar (no texto blanco perdido), sizing `% pot` al lado del monto, toggle Fichas↔BB, panel verde/ámbar de fuentes de datos.
+8. **Próxima fase elegida por el usuario**: Modo Workbook con drills y puntaje, empezando por "¿Qué calculadora?" (reusa `spotCalc.ts`).
+
+Iteración previa (resumen): **tres calcs nuevas (C/D/E)** que cierran los bloques restantes del Excel del usuario (EV del call/check/bet/raise + conjunto). 14 → 17 sub-tabs en `/calculadoras`. Decisiones clave:
 
 1. **Separan Bote / Apuesta del villano** como inputs distintos (el usuario lo pidió explícito tras notar que el Excel nunca te hace sumar mentalmente). Las viejas (Call vs Raise, Implied Odds) piden el pot combinado; las nuevas no.
 2. **C — EV de checkear** (`Hand`, tras Check vs Bet): la contraparte real del bet que faltaba. Junta las dos ramas de checkear ponderadas: si el villano apuesta → check-call (`eqCall·(pot+vbet)−(1−eqCall)·vbet`), si checkea atrás → check-check (`eqXx·pot`). Hint clave: la equity de check-check suele ser MÁS alta que la de call (el villano apuesta con rango más fuerte). Dos ResultCards de rama + total. Sanity Excel 55.24 ✓.
