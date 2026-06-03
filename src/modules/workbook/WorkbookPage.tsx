@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Calculator, Layers, Scale, Shield } from 'lucide-react';
+import { Calculator, Gauge, Layers, Scale, Shield } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -7,8 +7,9 @@ import { WhichCalcDrill } from './WhichCalcDrill';
 import { ComboCountDrill } from './ComboCountDrill';
 import { ValueBluffDrill } from './ValueBluffDrill';
 import { FoldEquityDrill } from './FoldEquityDrill';
+import { SprDrill } from './SprDrill';
 
-type Drill = 'which-calc' | 'combos' | 'value-bluff' | 'fold-equity';
+type Drill = 'which-calc' | 'combos' | 'value-bluff' | 'fold-equity' | 'spr';
 
 export default function WorkbookPage() {
   useDocumentTitle('Ejercicios de poker · Range Soprano', {
@@ -24,7 +25,7 @@ export default function WorkbookPage() {
       <PageHeader
         eyebrow="Entrenamiento"
         title="Ejercicios"
-        description="Drills de active recall para internalizar el postflop: elige qué calculadora usar en un spot real, cuenta combos tras los bloqueadores, balancea tu rango de apuesta con la cantidad correcta de faroles, o calcula la fold equity mínima para un bluff. Cada respuesta viene con su explicación."
+        description="Drills de active recall para internalizar el postflop: elige qué calculadora usar en un spot real, cuenta combos tras los bloqueadores, balancea tu rango de apuesta con faroles, calcula la fold equity mínima de un bluff, o decide si comprometerte a cada SPR. Cada respuesta viene con su explicación."
       />
 
       <div className="mx-auto w-full max-w-3xl">
@@ -35,6 +36,7 @@ export default function WorkbookPage() {
         {drill === 'combos' && <ComboCountDrill />}
         {drill === 'value-bluff' && <ValueBluffDrill />}
         {drill === 'fold-equity' && <FoldEquityDrill />}
+        {drill === 'spr' && <SprDrill />}
       </div>
     </>
   );
@@ -76,6 +78,12 @@ function DrillToggle({
         onClick={() => onChange('fold-equity')}
         icon={<Shield className="h-3.5 w-3.5" strokeWidth={2.25} />}
         label="Fold equity"
+      />
+      <DrillButton
+        active={value === 'spr'}
+        onClick={() => onChange('spr')}
+        icon={<Gauge className="h-3.5 w-3.5" strokeWidth={2.25} />}
+        label="SPR"
       />
     </div>
   );
