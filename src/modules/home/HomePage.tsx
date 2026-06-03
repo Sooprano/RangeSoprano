@@ -93,7 +93,7 @@ const MODULES: readonly ModuleCard[] = [
     label: 'Ejercicios',
     icon: Dumbbell,
     description:
-      'Drills de active recall para el postflop. Conceptos: "¿Qué calculadora?" (eliges la herramienta de EV para un spot real), "Conteo de combos" (cuántos quedan tras los bloqueadores), "Value / Bluff" (faroles para balancear), "Fold equity" (% de fold mínimo de un bluff) y "SPR" (si comprometerte es +EV). Tablas: "Pot Odds" (fold equity al apostar y equity al pagar, con MC y fórmula) y "Push/Fold" (las tablas de Nash de empuje/pago heads-up para stacks cortos). Con puntaje, racha y atajos de teclado.',
+      'Drills de active recall para el postflop. Conceptos: "¿Qué calculadora?" (eliges la herramienta de EV para un spot real), "Conteo de combos" (cuántos quedan tras los bloqueadores), "Value / Bluff" (faroles para balancear), "Fold equity" (% de fold mínimo de un bluff), "SPR" (si comprometerte es +EV) y "Runouts" (probabilidad de un runout en turn, river y completo). Tablas: "Pot Odds" (fold equity al apostar y equity al pagar, con MC y fórmula) y "Push/Fold" (las tablas de Nash de empuje/pago heads-up para stacks cortos). Con puntaje, racha y atajos de teclado.',
   },
 ];
 
@@ -347,7 +347,7 @@ const FAQS: readonly Faq[] = [
         <Link to="/ejercicios" className="font-medium text-accent-light hover:underline">
           Ejercicios
         </Link>{' '}
-        hay dos grupos. <span className="font-medium text-content">Conceptos</span> reúne cinco
+        hay dos grupos. <span className="font-medium text-content">Conceptos</span> reúne seis
         drills de active recall. <span className="font-medium text-content">¿Qué calculadora?</span>:
         te mostramos un spot real —tu mano, el board y la apuesta de la decisión— y eliges
         entre cuatro calculadoras cuál usarías; al responder ves por qué es esa herramienta y
@@ -368,7 +368,11 @@ const FAQS: readonly Faq[] = [
         complemento de la MDF.{' '}
         <span className="font-medium text-content">SPR</span>: con tu equity (de Flopzilla) y
         el SPR, decides si comprometerte —pagar un all-in o hacerlo tú— es +EV o mejor fold,
-        o calculas el EV exacto. El otro grupo,{' '}
+        o calculas el EV exacto.{' '}
+        <span className="font-medium text-content">Runouts</span>: estimas con qué frecuencia
+        sale un runout determinado —en el turn (1 carta), en el river (1 carta) y completo (las
+        dos cartas, por el método del complemento)— contando bloqueadores, como el capítulo de
+        runouts del workbook. El otro grupo,{' '}
         <span className="font-medium text-content">Tablas</span>, son dos entrenadores con modo
         Estudio y Velocidad (con tabla de líderes local):{' '}
         <span className="font-medium text-content">Pot Odds</span> (fold equity al apostar y
@@ -378,7 +382,7 @@ const FAQS: readonly Faq[] = [
       </>
     ),
     aPlain:
-      'En Ejercicios hay dos grupos. Conceptos reúne cinco drills de active recall. "¿Qué calculadora?": te mostramos un spot real (tu mano, el board y la apuesta de la decisión) y eliges entre cuatro calculadoras cuál usarías; al responder ves por qué es esa herramienta y qué datos traerías de Flopzilla (es el mismo razonamiento de Análisis de manos pero como entrenamiento). "Conteo de combos": te damos una mano (por ejemplo AK), un board y tus cartas, y cuentas cuántos combos quedan tras los bloqueadores; el feedback descompone base − bloqueados = quedan. "Value / Bluff": dado el tamaño de tu apuesta y tus combos de valor, eliges cuántos faroles para balancear el rango (medio bote ≈ 3:1 valor:farol, pot-size ≈ 2:1, overbet ≈ 1.5:1). "Fold equity": dado un bote y tu apuesta, el % de fold mínimo para que el bluff sea break-even (auto-profit), el alpha complemento de la MDF. "SPR": con tu equity (de Flopzilla) y el SPR, decides si comprometerte (pagar o hacer el all-in) es +EV o mejor fold, o calculas el EV exacto. El otro grupo, Tablas, son dos entrenadores con modo Estudio y Velocidad (con tabla de líderes local): Pot Odds (fold equity al apostar y equity al pagar) y Push/Fold (las tablas de Nash de empuje/pago heads-up para stacks cortos). Todos llevan puntaje, racha y atajos de teclado.',
+      'En Ejercicios hay dos grupos. Conceptos reúne seis drills de active recall. "¿Qué calculadora?": te mostramos un spot real (tu mano, el board y la apuesta de la decisión) y eliges entre cuatro calculadoras cuál usarías; al responder ves por qué es esa herramienta y qué datos traerías de Flopzilla (es el mismo razonamiento de Análisis de manos pero como entrenamiento). "Conteo de combos": te damos una mano (por ejemplo AK), un board y tus cartas, y cuentas cuántos combos quedan tras los bloqueadores; el feedback descompone base − bloqueados = quedan. "Value / Bluff": dado el tamaño de tu apuesta y tus combos de valor, eliges cuántos faroles para balancear el rango (medio bote ≈ 3:1 valor:farol, pot-size ≈ 2:1, overbet ≈ 1.5:1). "Fold equity": dado un bote y tu apuesta, el % de fold mínimo para que el bluff sea break-even (auto-profit), el alpha complemento de la MDF. "SPR": con tu equity (de Flopzilla) y el SPR, decides si comprometerte (pagar o hacer el all-in) es +EV o mejor fold, o calculas el EV exacto. "Runouts": estimas con qué frecuencia sale un runout determinado en el turn (1 carta), en el river (1 carta) y completo (las dos cartas, por el método del complemento), contando bloqueadores. El otro grupo, Tablas, son dos entrenadores con modo Estudio y Velocidad (con tabla de líderes local): Pot Odds (fold equity al apostar y equity al pagar) y Push/Fold (las tablas de Nash de empuje/pago heads-up para stacks cortos). Todos llevan puntaje, racha y atajos de teclado.',
   },
   {
     q: '¿Puedo contribuir al proyecto?',
