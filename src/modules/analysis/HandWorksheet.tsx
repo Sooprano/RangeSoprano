@@ -270,10 +270,13 @@ function DecisionRow({
   onMode: (m: CalcMode) => void;
 }) {
   const suggestion = suggestCalcForDecision(decision, hand);
-  // Skip the noisy preflop blind-completion call.
-  const analyzable =
-    suggestion != null &&
-    !(decision.street === 'preflop' && decision.type === 'call');
+  // Skip the noisy preflop limp / blind-completion (call ≤ BB), but keep
+  // preflop calls that face a raise (call > BB) — those are worth analyzing.
+  const isBlindCompletion =
+    decision.street === 'preflop' &&
+    decision.type === 'call' &&
+    (hand.bigBlind == null || decision.amount <= hand.bigBlind);
+  const analyzable = suggestion != null && !isBlindCompletion;
 
   // Bet sizing as % of the pot it went into (ratio — unit-independent).
   const isAggro =
@@ -423,7 +426,10 @@ function ShowdownCard({
 }) {
   return (
     <section className="rounded-xl border border-border bg-surface/40 p-5">
-      <h3 className="mb-3 text-sm font-semibold text-content">Showdown</h3>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+        <h3 className="text-sm font-semibold text-content">Showdown</h3>
+        {hand.board.length > 0 && <BoardCards cards={hand.board} />}
+      </div>
       <ul className="flex flex-col gap-2">
         {hand.shows.map((s, i) => (
           <li key={`${s.name}-${i}`} className="flex flex-wrap items-center gap-3 text-sm">

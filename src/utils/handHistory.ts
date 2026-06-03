@@ -96,31 +96,63 @@ const VALID_RANKS = new Set([
   '2',
 ]);
 
-/** Parses a single card token like "HJ", "C9" or "D10" → { rank, suit }. */
+/**
+ * Parses a single card token, order-agnostic, so both dialects work:
+ *   - iPoker: suit-first uppercase, e.g. "HJ", "C9", "D10"
+ *   - GGPoker/Stars: rank-first, suit lowercase, e.g. "Js", "Td", "9c"
+ * The suit is the single char in {s,h,c,d} (any case); the rest is the rank.
+ * Rank letters (A,K,Q,J,T) never collide with suit letters (S,H,C,D).
+ */
 export function parseCardToken(token: string): Card | null {
   const t = token.trim();
   if (t.length < 2) return null;
-  const suit = SUIT_MAP[t[0]!.toUpperCase()];
+  let suit: Suit | undefined;
+  let rankChars = '';
+  for (const ch of t) {
+    const up = ch.toUpperCase();
+    if (up === 'S' || up === 'H' || up === 'C' || up === 'D') {
+      if (suit) return null; // two suit chars → not a card
+      suit = SUIT_MAP[up];
+    } else {
+      rankChars += ch;
+    }
+  }
   if (!suit) return null;
-  let rank = t.slice(1).toUpperCase();
+  let rank = rankChars.toUpperCase();
   if (rank === '10') rank = 'T';
   if (!VALID_RANKS.has(rank)) return null;
   return { rank, suit };
 }
 
-/** Parses the bracketed card list inside a line, e.g. "[HA H7 C9]". */
-function parseCardsInBrackets(line: string): Card[] | null {
-  const match = line.match(/\[([^\]]*)\]/);
-  if (!match) return null;
-  const tokens = match[1]!.trim().split(/\s+/).filter(Boolean);
+/**
+ * Parses every bracketed card group in a line, concatenated.
+ *   - iPoker "[HA H7 C9]" → 3 cards; "[H3]" → 1 card
+ *   - GG "[2h Qc 5s] [Ah]" → 4 cards (full board repeated each street)
+ * Returns null if any token fails to parse.
+ */
+function parseAllCardsInBrackets(line: string): Card[] | null {
+  const groups = line.match(/\[([^\]]*)\]/g);
+  if (!groups) return null;
   const cards: Card[] = [];
-  for (const tok of tokens) {
-    const card = parseCardToken(tok);
-    if (!card) return null;
-    cards.push(card);
+  for (const group of groups) {
+    const inner = group.slice(1, -1).trim();
+    if (!inner) continue;
+    for (const tok of inner.split(/\s+/).filter(Boolean)) {
+      const card = parseCardToken(tok);
+      if (!card) return null;
+      cards.push(card);
+    }
   }
   return cards;
 }
+
+/** Expected total board size once a street is reached. */
+const BOARD_SIZE: Record<Street, number> = {
+  preflop: 0,
+  flop: 3,
+  turn: 4,
+  river: 5,
+};
 
 /** Extracts the first monetary amount and currency symbol from a string. */
 function parseAmount(text: string): { amount: number; currency: string } | null {
@@ -162,8 +194,18 @@ export function parseHandHistory(raw: string): HandParseResult {
   let hero: string | null = null;
   let heroCards: Card[] = [];
   let totalPot: number | null = null;
+  let buttonSeat: number | null = null;
   const shows: Showdown[] = [];
   const winners: { name: string; amount: number }[] = [];
+
+  const addShow = (name: string, cards: Card[], description: string) => {
+    if (shows.some((s) => s.name === name)) return;
+    shows.push({ name, cards, description });
+  };
+  const addWinner = (name: string, amount: number) => {
+    if (winners.some((w) => w.name === name)) return;
+    winners.push({ name, amount });
+  };
 
   // Street accumulators.
   const streets: StreetData[] = [];
@@ -216,12 +258,20 @@ export function parseHandHistory(raw: string): HandParseResult {
     const line = rawLine.trim();
     if (!line) continue;
 
-    // ── Header ────────────────────────────────────────────────────────────
-    if (line.startsWith('GAME #')) {
-      const idMatch = line.match(/GAME #(\d+)/);
+    // ── Header (iPoker "GAME #…" / GG-Stars "Poker Hand #…") ────────────────
+    if (line.startsWith('GAME #') || line.startsWith('Poker Hand #')) {
+      const idMatch = line.match(/#(\S+?)[\s:]/);
       gameId = idMatch ? idMatch[1]! : null;
-      const dateMatch = line.match(/(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})/);
+      const dateMatch = line.match(
+        /(\d{4}[-/]\d{2}[-/]\d{2} \d{2}:\d{2}:\d{2})/,
+      );
       dateTime = dateMatch ? dateMatch[1]! : null;
+      // GG/Stars carry blinds in the level, e.g. "Level1(10/20)".
+      const level = line.match(/Level\d+\s*\((\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)\)/i);
+      if (level) {
+        smallBlind = Number(level[1]);
+        bigBlind = Number(level[2]);
+      }
       continue;
     }
 
@@ -233,6 +283,13 @@ export function parseHandHistory(raw: string): HandParseResult {
       }
       const anteMatch = line.match(/Ante:\s*([\d.]+)/i);
       if (anteMatch) ante = Number(anteMatch[1]);
+      continue;
+    }
+
+    // GG/Stars table line: "Table '36270' 3-max Seat #1 is the button"
+    if (line.startsWith('Table ')) {
+      const btn = line.match(/Seat #(\d+) is the button/i);
+      if (btn) buttonSeat = Number(btn[1]);
       continue;
     }
 
@@ -262,10 +319,14 @@ export function parseHandHistory(raw: string): HandParseResult {
       }
       const street = STREET_OF_MARKER[marker];
       if (street) {
-        const cards = parseCardsInBrackets(line);
+        const cards = parseAllCardsInBrackets(line);
         if (cards) {
-          currentBoard = currentBoard.concat(cards);
-        } else if (marker === 'FLOP' || marker === 'TURN' || marker === 'RIVER') {
+          // GG repeats the full board each street (length === expected); iPoker
+          // lists only the new card(s) → concat. Pick whichever yields the board.
+          const expected = BOARD_SIZE[street];
+          currentBoard =
+            cards.length === expected ? cards : currentBoard.concat(cards);
+        } else {
           errors.push({ line, reason: 'No pude leer el board de la calle' });
         }
         currentStreet = street;
@@ -276,13 +337,34 @@ export function parseHandHistory(raw: string): HandParseResult {
       continue;
     }
 
-    // ── Hero hole cards ───────────────────────────────────────────────────
+    // ── Hero hole cards (only the line with brackets is the hero; in GG the
+    //    opponents also have "Dealt to X" lines but without cards) ───────────
     const dealtMatch = line.match(/^Dealt to\s+(.+?)\s+\[/);
     if (dealtMatch) {
       hero = dealtMatch[1]!.trim();
-      const cards = parseCardsInBrackets(line);
+      const cards = parseAllCardsInBrackets(line);
       if (cards) heroCards = cards;
       else errors.push({ line, reason: 'No pude leer las cartas del héroe' });
+      continue;
+    }
+
+    // ── Uncalled bet returned (subtract from pot — it was never matched) ────
+    const uncalled = line.match(/^Uncalled bet \(([\d.,]+)\) returned to (.+)$/i);
+    if (uncalled) {
+      const amt = Number(uncalled[1]!.replace(/,/g, ''));
+      const name = uncalled[2]!.trim();
+      if (Number.isFinite(amt)) {
+        runningPot -= amt;
+        committed[name] = (committed[name] ?? 0) - amt;
+      }
+      continue;
+    }
+
+    // ── Winner via "name collected X from pot" (GG showdown body) ───────────
+    const collected = line.match(/^(.+?)\s+collected\s+([\d.,]+)\s+from pot/i);
+    if (collected && !inSummary) {
+      const amt = parseAmount(collected[2]!);
+      if (amt) addWinner(collected[1]!.trim(), amt.amount);
       continue;
     }
 
@@ -296,23 +378,32 @@ export function parseHandHistory(raw: string): HandParseResult {
         }
         continue;
       }
+      // iPoker: "Balans3: Shows [HJ S9] One Pair, Nines"
       const showsMatch = line.match(/^(.+?):\s*Shows?\s+\[([^\]]*)\]\s*(.*)$/i);
       if (showsMatch) {
-        const cards = parseCardsInBrackets(line) ?? [];
-        shows.push({
-          name: showsMatch[1]!.trim(),
-          cards,
-          description: (showsMatch[3] ?? '').trim(),
-        });
+        addShow(showsMatch[1]!.trim(), parseAllCardsInBrackets(line) ?? [], (showsMatch[3] ?? '').trim());
         continue;
       }
+      // iPoker: "Balans3: wins €350.00"
       const winsMatch = line.match(/^(.+?):\s*wins\s+(.+)$/i);
       if (winsMatch) {
         const amt = parseAmount(winsMatch[2]!);
         if (amt) {
-          winners.push({ name: winsMatch[1]!.trim(), amount: amt.amount });
+          addWinner(winsMatch[1]!.trim(), amt.amount);
           setCurrency(amt.currency);
         }
+        continue;
+      }
+      // GG/Stars: "Seat 1: Hero (big blind) showed [9c Qh] and won (540) with a pair of Queens"
+      const ggSeat = line.match(/^Seat\s+\d+:\s+(.+?)\s+\(/);
+      if (ggSeat) {
+        const name = ggSeat[1]!.trim();
+        if (/show(?:ed|s)?\s+\[/i.test(line)) {
+          const desc = line.match(/\bwith\s+(.+)$/i);
+          addShow(name, parseAllCardsInBrackets(line) ?? [], desc ? desc[1]!.trim() : '');
+        }
+        const won = line.match(/\bwon\s+\(([\d.,]+)\)/i);
+        if (won) addWinner(name, Number(won[1]!.replace(/,/g, '')));
         continue;
       }
       continue;
@@ -341,7 +432,17 @@ export function parseHandHistory(raw: string): HandParseResult {
         pushDecision(actor, 'fold', 0);
         continue;
       }
+      // GG all-in runout shows cards inline: "Hero: shows [9c Qh]"
+      if (lower.startsWith('show')) {
+        const cards = parseAllCardsInBrackets(line);
+        if (cards) addShow(actor, cards, '');
+        continue;
+      }
+
+      const isAllin = lower.includes('all-in') || lower.includes('allin');
+
       if (lower.startsWith('call')) {
+        // A call that is all-in is still a call (matches what's in front).
         const amt = parseAmount(rest);
         if (amt) {
           setCurrency(amt.currency);
@@ -349,33 +450,37 @@ export function parseHandHistory(raw: string): HandParseResult {
         }
         continue;
       }
-      if (lower.startsWith('bet')) {
-        const amt = parseAmount(rest);
-        if (amt) {
-          setCurrency(amt.currency);
-          pushDecision(actor, 'bet', amt.amount);
-        }
-        continue;
-      }
-      if (lower.startsWith('raise') || lower.includes('all-in') || lower.includes('allin')) {
-        const isAllin = lower.includes('all-in') || lower.includes('allin');
+      if (lower.startsWith('bet') || lower.startsWith('raise')) {
         const to = parseRaiseTo(rest);
         const amt = parseAmount(rest);
-        // Prefer the "to Y" total when present (additional = total − committed).
+        // Raises use "to Y" (additional = total − already committed this street);
+        // bets/all-in shoves give the amount directly.
         let added: number | null = null;
-        if (to !== null) {
+        if (lower.startsWith('raise') && to !== null) {
           added = to - (committed[actor] ?? 0);
         } else if (amt) {
           added = amt.amount;
         }
         if (amt) setCurrency(amt.currency);
         if (added !== null && added >= 0) {
-          pushDecision(actor, isAllin ? 'allin' : 'raise', added);
+          const type: ActionType = isAllin
+            ? 'allin'
+            : lower.startsWith('bet')
+              ? 'bet'
+              : 'raise';
+          pushDecision(actor, type, added);
         }
         continue;
       }
       // Unknown action verb — ignore quietly (tolerant).
       continue;
+    }
+  }
+
+  // GG/Stars mark the button on the table line, not the seat line.
+  if (buttonSeat !== null) {
+    for (const p of players) {
+      if (p.seat === buttonSeat) p.isDealer = true;
     }
   }
 
