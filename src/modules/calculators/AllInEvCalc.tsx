@@ -38,16 +38,20 @@ export function AllInEvCalc({
   initialPot,
   initialCall,
   initialShove,
+  initialEquityPct,
+  initialFoldPct,
 }: {
   initialPot?: string | undefined;
   initialCall?: string | undefined;
   initialShove?: string | undefined;
+  initialEquityPct?: string | undefined;
+  initialFoldPct?: string | undefined;
 } = {}) {
   const [pot, setPot] = useState(initialPot ?? '100');
   const [call, setCall] = useState(initialCall ?? '75');
   const [shove, setShove] = useState(initialShove ?? '400');
-  const [equityPct, setEquityPct] = useState('33');
-  const [foldPct, setFoldPct] = useState('66');
+  const [equityPct, setEquityPct] = useState(initialEquityPct ?? '33');
+  const [foldPct, setFoldPct] = useState(initialFoldPct ?? '66');
 
   const potNum = parseField(pot, { min: 0 });
   const callNum = parseField(call, { min: 0 });

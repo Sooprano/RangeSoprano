@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Check, RotateCcw, X } from 'lucide-react';
+import { Calculator, Check, ChevronDown, RotateCcw, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { CountdownBar } from '@/modules/trainer/CountdownBar';
+import { AllInEvCalc } from '@/modules/calculators/AllInEvCalc';
+import { EvBasicCalc } from '@/modules/calculators/EvBasicCalc';
 import { generateSprQuestion, type SprQuestion } from './sprSpots';
 import { AutoAdvanceToggle, ScoreBar } from './drillUi';
 import {
@@ -28,17 +30,20 @@ export function SprDrill() {
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [score, setScore] = useState<Score>(INITIAL_SCORE);
   const [autoAdvance, setAutoAdvance] = useState(true);
+  const [showCalc, setShowCalc] = useState(false);
 
   const drawNext = useCallback(() => {
     setQuestion(generateSprQuestion());
     setFeedback(null);
+    setShowCalc(false);
   }, []);
 
+  // Opening the calc pauses auto-advance so it isn't whisked away mid-read.
   useEffect(() => {
-    if (!autoAdvance || !feedback) return;
+    if (!autoAdvance || !feedback || showCalc) return;
     const id = setTimeout(drawNext, AUTO_ADVANCE_MS);
     return () => clearTimeout(id);
-  }, [autoAdvance, feedback, drawNext]);
+  }, [autoAdvance, feedback, showCalc, drawNext]);
 
   const grade = useCallback((wasCorrect: boolean, pickedLabel: string) => {
     setFeedback({ wasCorrect, pickedLabel });
@@ -134,7 +139,12 @@ export function SprDrill() {
           {feedback ? (
             <>
               <FeedbackPanel question={question} feedback={feedback} />
-              {autoAdvance && (
+              <CalcReveal
+                question={question}
+                open={showCalc}
+                onToggle={() => setShowCalc((v) => !v)}
+              />
+              {autoAdvance && !showCalc && (
                 <CountdownBar key={score.total} durationMs={AUTO_ADVANCE_MS} />
               )}
             </>
@@ -317,6 +327,61 @@ function ValueOptions({
           </button>
         );
       })}
+    </div>
+  );
+}
+
+function CalcReveal({
+  question,
+  open,
+  onToggle,
+}: {
+  question: SprQuestion;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  const { situation, pot, stack, equityPct, foldPct } = question;
+  return (
+    <div className="flex flex-col gap-2">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className={cn(
+          'inline-flex items-center justify-center gap-1.5 self-center rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors',
+          'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light',
+          open
+            ? 'border-accent/60 bg-accent/10 text-content'
+            : 'border-border bg-surface/40 text-content-muted hover:bg-surface-hover hover:text-content',
+        )}
+      >
+        <Calculator className="h-3.5 w-3.5" strokeWidth={2.25} />
+        {open ? 'Ocultar calculadora' : 'Ver el cálculo en la calculadora'}
+        <ChevronDown
+          className={cn('h-3.5 w-3.5 transition-transform', open && 'rotate-180')}
+          strokeWidth={2.25}
+        />
+      </button>
+
+      {open && (
+        <div className="rounded-lg border border-border bg-bg-subtle/60 p-4">
+          {situation === 'shove' ? (
+            <AllInEvCalc
+              initialPot={String(pot)}
+              initialCall="0"
+              initialShove={String(stack)}
+              initialEquityPct={String(equityPct)}
+              initialFoldPct={String(foldPct ?? 0)}
+            />
+          ) : (
+            <EvBasicCalc
+              initialWinAmount={String(pot + stack)}
+              initialWinPct={String(equityPct)}
+              initialLoseAmount={String(stack)}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 }

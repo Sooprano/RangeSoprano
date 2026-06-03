@@ -11,10 +11,18 @@ import {
   parseField,
 } from './CalcShared';
 
-export function EvBasicCalc() {
-  const [winAmount, setWinAmount] = useState('100');
-  const [winPct, setWinPct] = useState('40');
-  const [loseAmount, setLoseAmount] = useState('50');
+export function EvBasicCalc({
+  initialWinAmount,
+  initialWinPct,
+  initialLoseAmount,
+}: {
+  initialWinAmount?: string | undefined;
+  initialWinPct?: string | undefined;
+  initialLoseAmount?: string | undefined;
+} = {}) {
+  const [winAmount, setWinAmount] = useState(initialWinAmount ?? '100');
+  const [winPct, setWinPct] = useState(initialWinPct ?? '40');
+  const [loseAmount, setLoseAmount] = useState(initialLoseAmount ?? '50');
 
   const wNum = parseField(winAmount, { min: 0 });
   const wpNum = parseField(winPct, { min: 0, max: 100 });
