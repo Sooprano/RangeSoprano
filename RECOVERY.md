@@ -13,7 +13,7 @@
 
 | Hito | Hash |
 |---|---|
-| Fase 34 (módulo "Análisis de manos" — fase 1: Worksheet desde `.txt`. Parser tolerante + motor de pot + `spotCalc` mapeo decisión→calc con seeds enriquecidos + worksheet que abre la calc adecuada inline pre-llenada · ruta `/analisis` · **34d** GGPoker/Stars · **34e** Winamax (3 salas soportadas) · NO reconstruye replayer/Flopzilla — la equity la trae el usuario de Flopzilla) | `2eceb6a` → `a73daaa` |
+| Fase 34 (módulo "Análisis de manos" — fase 1: Worksheet desde `.txt`. Parser tolerante + motor de pot + `spotCalc` mapeo decisión→calc con seeds enriquecidos + worksheet que abre la calc adecuada inline pre-llenada · ruta `/analisis` · **34d** GGPoker/Stars · **34e** Winamax · **34f** PokerStars cash+spins (4 salas soportadas) · NO reconstruye replayer/Flopzilla — la equity la trae el usuario de Flopzilla) | `2eceb6a` → `32ba57c` |
 | Fase 33 (tres calcs nuevas C/D/E: EV de checkear compuesto + EV del raise bluff con combos + EV multi-calle — 14 → 17 sub-tabs, separan Bote/Apuesta del villano · reframe EV básico · pulido UX post-feedback + reorden pedagógico agrupado del selector) | `f954ca5` → `d8ddbd4` |
 | Fase 32 (pulido de claridad: captions de interpretación EV + raise% en Check vs Bet + PME/breakeven consistente — A+B+F del audit de calcs vs Excels del usuario) | `16ff55b` |
 | Fase 31 (Fold equity requerida con equity — 14ª sub-tab de `/calculadoras`: cómo el breakeven de fold equity baja al shovear all-in con equity de respaldo · valida contra Excel + web fold equity calculator) | `65f6827` |
@@ -185,7 +185,7 @@ Live en https://rangesoprano.com/ (custom domain Cloudflare → GitHub Pages). I
 ## Roadmap pendiente
 
 - **Análisis de manos · fase 2 — Modo Workbook con drills** (confirmado por el usuario): ejercicios con puntaje estilo trainer (config/corriendo/resultado + leaderboard + panel de errores), **empezando por "¿Qué calculadora?"** que reusa `src/utils/spotCalc.ts`. Después: conteo de combos (combinatoria pura con bloqueadores), fold equity / auto-profit, textura de board, value/bluff balance, SPR.
-- **Análisis de manos — parsear `.txt` de OTRAS salas** (pedido del usuario, trabajo futuro continuo): `src/utils/handHistory.ts` ya lee **iPoker** (34), **GGPoker/PokerStars** (34d) y **Winamax** (34e). Falta sumar más salas a medida que el usuario las use (888, partypoker, etc.) — la arquitectura ya está lista: agregar las variantes de header/seat/post/acción/board al parser tolerante; el resto del módulo (`spotCalc`, worksheet) es agnóstico al formato porque consume el mismo `ParsedHand`. Cuando el usuario mande un `.txt` de una sala nueva, replicar el patrón de 34d/34e (cartas order-agnostic + acciones con/sin dos puntos ya cubren la mayoría).
+- **Análisis de manos — parsear `.txt` de OTRAS salas** (pedido del usuario, trabajo futuro continuo): `src/utils/handHistory.ts` ya lee **iPoker** (34), **GGPoker/PokerStars-derivado** (34d), **Winamax** (34e) y **PokerStars nativo cash+spins** (34f, con currency `$` y split pots). Falta sumar más salas a medida que el usuario las use (888, partypoker, etc.) — la arquitectura ya está lista: agregar las variantes de header/seat/post/acción/board al parser tolerante; el resto del módulo (`spotCalc`, worksheet) es agnóstico al formato porque consume el mismo `ParsedHand`. Cuando el usuario mande un `.txt` de una sala nueva, replicar el patrón de 34d/34e/34f.
 
 ## Feature deferred
 
