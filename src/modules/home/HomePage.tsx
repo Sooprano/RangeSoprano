@@ -93,7 +93,7 @@ const MODULES: readonly ModuleCard[] = [
     label: 'Ejercicios',
     icon: Dumbbell,
     description:
-      'Drills de active recall para el postflop. "¿Qué calculadora?": te mostramos un spot real y eliges qué herramienta de EV usarías, con explicación y qué traer de Flopzilla. "Conteo de combos": cuenta cuántos combos de una mano quedan tras los bloqueadores del board y tus cartas. "Value / Bluff": cuántos faroles puedes tener para balancear tu rango de apuesta según el tamaño. Con puntaje, racha y atajos de teclado.',
+      'Drills de active recall para el postflop. "¿Qué calculadora?": te mostramos un spot real y eliges qué herramienta de EV usarías. "Conteo de combos": cuántos combos de una mano quedan tras los bloqueadores del board y tus cartas. "Value / Bluff": cuántos faroles para balancear tu rango de apuesta según el tamaño. "Fold equity": el % de fold mínimo para que un bluff sea rentable. Con puntaje, racha y atajos de teclado.',
   },
 ];
 
@@ -355,12 +355,15 @@ const FAQS: readonly Faq[] = [
         ; el feedback descompone base − bloqueados = quedan.{' '}
         <span className="font-medium text-content">Value / Bluff</span>: dado el tamaño de tu
         apuesta y tus combos de valor, eliges cuántos faroles puedes tener para que el rango
-        quede balanceado (medio bote ≈ 3:1 valor:farol, pot-size ≈ 2:1, overbet ≈ 1.5:1). Los
-        tres llevan puntaje, racha y atajos de teclado (1-4 para responder, N para avanzar).
+        quede balanceado (medio bote ≈ 3:1 valor:farol, pot-size ≈ 2:1, overbet ≈ 1.5:1).{' '}
+        <span className="font-medium text-content">Fold equity</span>: dado un bote y tu
+        apuesta, el % de fold mínimo para que el bluff sea break-even (auto-profit) — el alpha,
+        complemento de la MDF. Los cuatro llevan puntaje, racha y atajos de teclado (1-4 para
+        responder, N para avanzar).
       </>
     ),
     aPlain:
-      'En Ejercicios hay tres drills de active recall. "¿Qué calculadora?": te mostramos un spot real (tu mano, el board y la apuesta de la decisión) y eliges entre cuatro calculadoras cuál usarías; al responder ves por qué es esa herramienta y qué datos traerías de Flopzilla (es el mismo razonamiento de Análisis de manos pero como entrenamiento). "Conteo de combos": te damos una mano (por ejemplo AK), un board y tus cartas, y cuentas cuántos combos quedan tras los bloqueadores; el feedback descompone base − bloqueados = quedan. "Value / Bluff": dado el tamaño de tu apuesta y tus combos de valor, eliges cuántos faroles para balancear el rango (medio bote ≈ 3:1 valor:farol, pot-size ≈ 2:1, overbet ≈ 1.5:1). Los tres llevan puntaje, racha y atajos de teclado (1-4 para responder, N para avanzar).',
+      'En Ejercicios hay cuatro drills de active recall. "¿Qué calculadora?": te mostramos un spot real (tu mano, el board y la apuesta de la decisión) y eliges entre cuatro calculadoras cuál usarías; al responder ves por qué es esa herramienta y qué datos traerías de Flopzilla (es el mismo razonamiento de Análisis de manos pero como entrenamiento). "Conteo de combos": te damos una mano (por ejemplo AK), un board y tus cartas, y cuentas cuántos combos quedan tras los bloqueadores; el feedback descompone base − bloqueados = quedan. "Value / Bluff": dado el tamaño de tu apuesta y tus combos de valor, eliges cuántos faroles para balancear el rango (medio bote ≈ 3:1 valor:farol, pot-size ≈ 2:1, overbet ≈ 1.5:1). "Fold equity": dado un bote y tu apuesta, el % de fold mínimo para que el bluff sea break-even (auto-profit), el alpha complemento de la MDF. Los cuatro llevan puntaje, racha y atajos de teclado (1-4 para responder, N para avanzar).',
   },
   {
     q: '¿Puedo contribuir al proyecto?',
