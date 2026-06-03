@@ -132,7 +132,7 @@ function HeaderCard({
             <div className="flex items-center gap-3">
               <div className="flex flex-col">
                 <span className="text-[11px] uppercase tracking-[0.14em] text-content-muted">
-                  Héroe
+                  Hero
                 </span>
                 <span className="text-sm font-semibold text-content">
                   {hand.hero}

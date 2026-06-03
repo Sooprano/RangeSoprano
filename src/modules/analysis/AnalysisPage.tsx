@@ -8,32 +8,32 @@ import { HandWorksheet } from './HandWorksheet';
 const EXAMPLE = `GAME #12139533229 Version:25.9.1.9 Uncalled:Y Texas Hold'em NL  Tournament 2026-03-28 02:15:56/GMT
 Table Info: Size: 3, Blinds: 15/30, Ante: 5
 Table Twister €20 SNG, 1158648211, 1158648210 (Tournament: Twister €20 SNG Buy-In: €18.60 + €1.40)
-Seat 6: Balans3 (€572.00 in chips)  DEALER
-Seat 10: denf0rdz (€928.00 in chips)
-Balans3: Post Ante €5.00
-denf0rdz: Post Ante €5.00
-Balans3: Post SB €15.00
-denf0rdz: Post BB €30.00
+Seat 6: hero (€572.00 in chips)  DEALER
+Seat 10: villano (€928.00 in chips)
+hero: Post Ante €5.00
+villano: Post Ante €5.00
+hero: Post SB €15.00
+villano: Post BB €30.00
 *** HOLE CARDS ***
-Dealt to Balans3 [HJ S9]
-Balans3: Call €15.00
-denf0rdz: Check
+Dealt to hero [HJ S9]
+hero: Call €15.00
+villano: Check
 *** FLOP *** [HA H7 C9]
-denf0rdz: Check
-Balans3: Bet €35.00
-denf0rdz: Call €35.00
+villano: Check
+hero: Bet €35.00
+villano: Call €35.00
 *** TURN *** [H3]
-denf0rdz: Check
-Balans3: Bet €105.00
-denf0rdz: Call €105.00
+villano: Check
+hero: Bet €105.00
+villano: Call €105.00
 *** RIVER *** [S8]
-denf0rdz: Check
-Balans3: Check
+villano: Check
+hero: Check
 *** SUMMARY ***
 Total pot €350.00 Rake €0.00
-Balans3: Shows [HJ S9] One Pair, Nines
-denf0rdz: Shows [HK D10] High Card, Ace
-Balans3: wins €350.00`;
+hero: Shows [HJ S9] One Pair, Nines
+villano: Shows [HK D10] High Card, Ace
+hero: wins €350.00`;
 
 export default function AnalysisPage() {
   useDocumentTitle('Análisis de manos · Range Soprano', {
@@ -53,9 +53,9 @@ export default function AnalysisPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Análisis · workbook"
+        eyebrow="Estudio de manos"
         title="Análisis de manos"
-        description="Pega el historial .txt de una mano jugada. La web extrae el spot (board, pot y apuesta de cada decisión) y por cada jugada del héroe te abre la calculadora de EV adecuada, ya cargada con los números. La equity la traes de Flopzilla y la tipeas."
+        description="Pega el historial .txt de una mano jugada (el que exporta PokerTracker 4). La web extrae el spot (board, pot y apuesta de cada decisión) y por cada jugada de hero te abre la calculadora de EV adecuada, ya cargada con los números. La equity la traes de Flopzilla y la ingresas."
       />
 
       <div className="flex flex-col gap-5">
@@ -78,7 +78,7 @@ export default function AnalysisPage() {
             onChange={(e) => setText(e.target.value)}
             rows={8}
             spellCheck={false}
-            placeholder="Pega acá el texto exportado de la mano…"
+            placeholder="Pega aquí el texto exportado de la mano…"
             className="w-full resize-y rounded-lg border border-border bg-surface/60 px-3 py-2 font-mono text-xs text-content placeholder:text-content-disabled focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
           />
           <div className="mt-3 flex items-center gap-3">

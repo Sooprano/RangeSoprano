@@ -232,7 +232,7 @@ export default function EditorPage() {
             : 'Module'
         }
         title={activeRange ? activeRange.name : 'Editor'}
-        description="Construí, importá y exportá rangos preflop con frecuencias mixtas."
+        description="Construye, importa y exporta rangos preflop con frecuencias mixtas."
       />
 
       <div className="grid gap-6 md:grid-cols-[220px_minmax(0,1fr)] xl:grid-cols-[220px_minmax(0,1fr)_280px]">

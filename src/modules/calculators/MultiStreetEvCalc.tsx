@@ -59,7 +59,7 @@ export function MultiStreetEvCalc() {
             A diferencia de Doble barrel
           </span>{' '}
           —que calcula una línea fija de bluff + bluff desde los tamaños de
-          apuesta— acá tú traes los dos EV ya hechos, así sirve para cualquier
+          apuesta— aquí tú traes los dos EV ya hechos, así sirve para cualquier
           combinación: value bet + check, semi-bluff + give-up, o dos calles
           calculadas con tools distintas. Los valores de ejemplo son los del
           default de Doble barrel: un bet de turn de −$12.5 que, sumandole el

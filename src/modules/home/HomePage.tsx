@@ -10,6 +10,7 @@ import {
   Copy,
   Dices,
   Download,
+  Dumbbell,
   Eye,
   FileSearch,
   FolderInput,
@@ -52,7 +53,7 @@ const MODULES: readonly ModuleCard[] = [
     label: 'Visualizador',
     icon: Eye,
     description:
-      'Tres vistas: Individual, Comparar (dos rangos en paralelo) y Resumen (mosaico de carpetas). Filtrá por posición, situación, villano y acción. Exportá a PNG o imprime varias hojas a PDF con leyenda y etiquetas de stack/sizing.',
+      'Tres vistas: Individual, Comparar (dos rangos en paralelo) y Resumen (mosaico de carpetas). Filtra por posición, situación, villano y acción. Exporta a PNG o imprime varias hojas a PDF con leyenda y etiquetas de stack/sizing.',
   },
   {
     to: '/trainer',
@@ -68,7 +69,7 @@ const MODULES: readonly ModuleCard[] = [
     label: 'Editor',
     icon: Pencil,
     description:
-      'Crea y edita rangos con paleta de acciones por rango, pesos mixtos, notas, deshacer/rehacer, carpetas y sub-carpetas. Importá/exportá rangos individuales o el perfil completo.',
+      'Crea y edita rangos con paleta de acciones por rango, pesos mixtos, notas, deshacer/rehacer, carpetas y sub-carpetas. Importa/exporta rangos individuales o el perfil completo.',
   },
   {
     to: '/calculadoras',
@@ -84,7 +85,15 @@ const MODULES: readonly ModuleCard[] = [
     label: 'Análisis de manos',
     icon: FileSearch,
     description:
-      'Pega el historial .txt de una mano real y la web extrae el spot (board, pot y apuesta de cada decisión) y por cada jugada del héroe te abre la calculadora de EV adecuada, ya cargada con los números. La equity la traes de Flopzilla y la tipeas: la web hace el razonamiento de EV y te enseña qué herramienta usar.',
+      'Pega el historial .txt de una mano real (el que exporta PokerTracker 4) y la web extrae el spot (board, pot y apuesta de cada decisión) y por cada jugada de hero te abre la calculadora de EV adecuada, ya cargada con los números. La equity la traes de Flopzilla y la ingresas: la web hace el razonamiento de EV y te enseña qué herramienta usar.',
+  },
+  {
+    to: '/ejercicios',
+    command: '/ejercicios',
+    label: 'Ejercicios',
+    icon: Dumbbell,
+    description:
+      'Entrena el reflejo de elegir la calculadora correcta. Te mostramos un spot real (tu mano, el board y la apuesta) y eliges qué herramienta de EV usarías para analizarlo. Después ves por qué es esa y qué datos traerías de Flopzilla. Con puntaje, racha y atajos de teclado.',
   },
 ];
 
@@ -93,7 +102,7 @@ type Faq = { q: string; a: React.ReactNode; aPlain?: string };
 const FAQS: readonly Faq[] = [
   {
     q: '¿Qué es Range Soprano?',
-    a: 'Una herramienta web gratis para estudiar rangos preflop. Tres módulos: Visualizador, Entrenador, Editor. Pensada para repasar, memorizar y comparar tus propios rangos (o copiados de un libro/solver) en mesa 6-max o Heads-Up.',
+    a: 'Una herramienta web gratis para estudiar poker. Empezó con tres módulos para rangos preflop —Visualizador, Entrenador y Editor— y hoy suma Calculadoras de EV, Análisis de manos desde el historial .txt y Ejercicios para practicar. Pensada para repasar, memorizar y comparar tus propios rangos (o copiados de un libro/solver) en mesa 6-max o Heads-Up, y para estudiar la matemática de tus decisiones.',
   },
   {
     q: '¿Por qué no hay login ni cuenta?',
@@ -198,7 +207,7 @@ const FAQS: readonly Faq[] = [
   },
   {
     q: '¿Cuántos rangos puedo guardar?',
-    a: 'Hasta ~3.8 MB en localStorage (≈100 rangos llenos). Si te queda corto exportá unos a .json y borralos del store.',
+    a: 'Hasta ~3.8 MB en localStorage (≈100 rangos llenos). Si te queda corto exporta unos a .json y bórralos del store.',
   },
   {
     q: '¿Sirve para 6-max y Heads-Up?',
@@ -210,13 +219,13 @@ const FAQS: readonly Faq[] = [
       <>
         En el <span className="font-medium text-content">Visualizador</span>, pestaña{' '}
         <span className="font-medium text-content">Resumen</span>, botón{' '}
-        <span className="font-medium text-content">Imprimir PDF</span>. Configurá rangos por
+        <span className="font-medium text-content">Imprimir PDF</span>. Configura rangos por
         página, etiquetas (stack/sizing), leyenda y badge de formato. Después usa
         <span className="font-medium text-content"> Print / Save as PDF</span> del navegador.
       </>
     ),
     aPlain:
-      'En el Visualizador, pestaña Resumen, botón Imprimir PDF. Configurá rangos por página, etiquetas (stack/sizing), leyenda y badge de formato. Después usa Print / Save as PDF del navegador.',
+      'En el Visualizador, pestaña Resumen, botón Imprimir PDF. Configura rangos por página, etiquetas (stack/sizing), leyenda y badge de formato. Después usa Print / Save as PDF del navegador.',
   },
   {
     q: '¿Funciona offline?',
@@ -242,7 +251,7 @@ const FAQS: readonly Faq[] = [
     q: '¿Cómo uso las calculadoras de EV?',
     a: (
       <>
-        Desde la barra lateral entrá a{' '}
+        Desde la barra lateral entra a{' '}
         <Link to="/calculadoras" className="font-medium text-accent-light hover:underline">
           Calculadoras
         </Link>
@@ -276,7 +285,7 @@ const FAQS: readonly Faq[] = [
         apuesta en el ríver y comparas pagar vs restear all-in encima, con fold como
         tercera opción si ambas son negativas),{' '}
         <span className="font-medium text-content">Raise sizing</span> (en el flop:
-        dimensioná tu raise como % del pot, la conversión inversa a fichas y la equity
+        dimensiona tu raise como % del pot, la conversión inversa a fichas y la equity
         que necesitas para pagar un raise),{' '}
         <span className="font-medium text-content">EV del raise</span> (EV de subir como
         bluff sobre la apuesta del villano, con fold% directo o derivado de combos),{' '}
@@ -296,24 +305,24 @@ const FAQS: readonly Faq[] = [
       </>
     ),
     aPlain:
-      'Desde la barra lateral entrá a Calculadoras. Tienes diecisiete herramientas: EV básico (EV de una jugada con dos finales: pot, % que esperas ganar y lo que arriesgas), EV con fold equity (semi-bluffs y shoves: F% de fold + showdown EV cuando te pagan), EV de bluff (bluff puro sin equity en showdown — river bluffs y blocker bets — con breakeven F% automático), Doble barrel (EV de la línea completa turn + barrel river: muestra si el conjunto es +EV aunque el bet del turn solo sea −EV), EV multi-calle (encadena el EV de dos calles turn + river ponderando cada cuánto se ve el river), Value / Bluff (cuántos combos de farol puedes tener respecto a tus combos de valor para no desbalancear el rango de apuesta), Check vs Bet (comparación lado a lado de check behind vs apostar el ríver con recomendación y delta de EV), EV de checkear (cuánto rinde checkear juntando check-call si el villano apuesta y check-check si hace check behind), All-in EV (shove preflop sobre la apuesta del villano: pot + call + shove + equity + fold, con tabla de sensibilidad ±5/±10% y breakeven F% automático), FE requerida (fold equity para shovear all-in teniendo en cuenta tu equity: el breakeven baja cuando vas con outs en flop o turn), Call vs Raise (enfrentando una apuesta en el ríver: pagar vs restear all-in encima, con fold como tercera opción), Raise sizing (en el flop: raise como % del pot, conversión inversa a fichas y equity para pagar un raise), EV del raise (EV de subir como bluff sobre la apuesta del villano, con fold% directo o derivado de combos), Implied Odds (tienes un draw, ¿cuánto más necesitas ganarle en futuras calles cuando pegues para que el call sea rentable?), EV de flotar (pagar el flop para robar el turn dadas las frecuencias de barrel y check-fold del villano), Fold equity combinada (probabilidad de que todos los villanos foldeen en un shove multi-way) y Call multi-way (pagar un shove preflop con potenciales overcallers detrás: modela HU vs MW con dos equities distintas y tres escenarios). Cada calculadora muestra la fórmula y los valores sustituidos en un bloque colapsable.',
+      'Desde la barra lateral entra a Calculadoras. Tienes diecisiete herramientas: EV básico (EV de una jugada con dos finales: pot, % que esperas ganar y lo que arriesgas), EV con fold equity (semi-bluffs y shoves: F% de fold + showdown EV cuando te pagan), EV de bluff (bluff puro sin equity en showdown — river bluffs y blocker bets — con breakeven F% automático), Doble barrel (EV de la línea completa turn + barrel river: muestra si el conjunto es +EV aunque el bet del turn solo sea −EV), EV multi-calle (encadena el EV de dos calles turn + river ponderando cada cuánto se ve el river), Value / Bluff (cuántos combos de farol puedes tener respecto a tus combos de valor para no desbalancear el rango de apuesta), Check vs Bet (comparación lado a lado de check behind vs apostar el ríver con recomendación y delta de EV), EV de checkear (cuánto rinde checkear juntando check-call si el villano apuesta y check-check si hace check behind), All-in EV (shove preflop sobre la apuesta del villano: pot + call + shove + equity + fold, con tabla de sensibilidad ±5/±10% y breakeven F% automático), FE requerida (fold equity para shovear all-in teniendo en cuenta tu equity: el breakeven baja cuando vas con outs en flop o turn), Call vs Raise (enfrentando una apuesta en el ríver: pagar vs restear all-in encima, con fold como tercera opción), Raise sizing (en el flop: raise como % del pot, conversión inversa a fichas y equity para pagar un raise), EV del raise (EV de subir como bluff sobre la apuesta del villano, con fold% directo o derivado de combos), Implied Odds (tienes un draw, ¿cuánto más necesitas ganarle en futuras calles cuando pegues para que el call sea rentable?), EV de flotar (pagar el flop para robar el turn dadas las frecuencias de barrel y check-fold del villano), Fold equity combinada (probabilidad de que todos los villanos foldeen en un shove multi-way) y Call multi-way (pagar un shove preflop con potenciales overcallers detrás: modela HU vs MW con dos equities distintas y tres escenarios). Cada calculadora muestra la fórmula y los valores sustituidos en un bloque colapsable.',
   },
   {
     q: '¿Cómo analizo una mano que jugué?',
     a: (
       <>
-        Entrá a{' '}
+        Entra a{' '}
         <Link to="/analisis" className="font-medium text-accent-light hover:underline">
           Análisis de manos
         </Link>{' '}
         y pega el historial{' '}
-        <span className="font-medium text-content">.txt</span> que exporta tu sala. La web
-        lo lee y arma una hoja de estudio: posiciones, stacks, board calle por calle y{' '}
+        <span className="font-medium text-content">.txt</span> que exporta PokerTracker 4.
+        La web lo lee y arma una hoja de estudio: posiciones, stacks, board calle por calle y{' '}
         <span className="font-medium text-content">el pot y la apuesta de cada decisión</span>
-        . Por cada jugada agresiva del héroe te ofrece un botón{' '}
+        . Por cada jugada agresiva de hero te ofrece un botón{' '}
         <span className="font-medium text-content">Analizar</span> que abre la calculadora
         de EV adecuada —EV de bluff, doble barrel, all-in, call vs raise— ya pre-llenada con
-        esos números. Tú solo tipeas la{' '}
+        esos números. Tú solo ingresas la{' '}
         <span className="font-medium text-content">equity o el fold% que sacaste de Flopzilla</span>{' '}
         y la web hace el razonamiento de EV. No reproduce la mano (para eso ya tienes tu
         replayer) ni calcula equity (eso lo hace Flopzilla): lo que aporta es enseñarte qué
@@ -322,7 +331,30 @@ const FAQS: readonly Faq[] = [
       </>
     ),
     aPlain:
-      'Entrá a Análisis de manos y pega el historial .txt que exporta tu sala. La web lo lee y arma una hoja de estudio: posiciones, stacks, board calle por calle y el pot y la apuesta de cada decisión. Por cada jugada agresiva del héroe te ofrece un botón Analizar que abre la calculadora de EV adecuada (EV de bluff, doble barrel, all-in, call vs raise) ya pre-llenada con esos números. Tú solo tipeas la equity o el fold% que sacaste de Flopzilla y la web hace el razonamiento de EV. No reproduce la mano (para eso ya tienes tu replayer) ni calcula equity (eso lo hace Flopzilla): lo que aporta es enseñarte qué herramienta usar y automatizar el cálculo. Puedes alternar entre fichas y BB y dejar tu conclusión escrita.',
+      'Entra a Análisis de manos y pega el historial .txt que exporta PokerTracker 4. La web lo lee y arma una hoja de estudio: posiciones, stacks, board calle por calle y el pot y la apuesta de cada decisión. Por cada jugada agresiva de hero te ofrece un botón Analizar que abre la calculadora de EV adecuada (EV de bluff, doble barrel, all-in, call vs raise) ya pre-llenada con esos números. Tú solo ingresas la equity o el fold% que sacaste de Flopzilla y la web hace el razonamiento de EV. No reproduce la mano (para eso ya tienes tu replayer) ni calcula equity (eso lo hace Flopzilla): lo que aporta es enseñarte qué herramienta usar y automatizar el cálculo. Puedes alternar entre fichas y BB y dejar tu conclusión escrita.',
+  },
+  {
+    q: '¿Cómo practico elegir la calculadora correcta?',
+    a: (
+      <>
+        Entra a{' '}
+        <Link to="/ejercicios" className="font-medium text-accent-light hover:underline">
+          Ejercicios
+        </Link>
+        . Te mostramos un spot real de una mano jugada —tu mano, el board y la{' '}
+        <span className="font-medium text-content">apuesta de la decisión</span>— y eliges
+        entre cuatro calculadoras cuál usarías para analizarlo. Al responder ves si
+        acertaste, <span className="font-medium text-content">por qué es esa herramienta</span>{' '}
+        y qué datos traerías de Flopzilla. Es el mismo razonamiento de{' '}
+        <Link to="/analisis" className="font-medium text-accent-light hover:underline">
+          Análisis de manos
+        </Link>{' '}
+        pero como entrenamiento: internalizas qué herramienta corresponde a cada spot. Lleva
+        puntaje, racha y atajos de teclado (1-4 para responder, N para avanzar).
+      </>
+    ),
+    aPlain:
+      'Entra a Ejercicios. Te mostramos un spot real de una mano jugada (tu mano, el board y la apuesta de la decisión) y eliges entre cuatro calculadoras cuál usarías para analizarlo. Al responder ves si acertaste, por qué es esa herramienta y qué datos traerías de Flopzilla. Es el mismo razonamiento de Análisis de manos pero como entrenamiento: internalizas qué herramienta corresponde a cada spot. Lleva puntaje, racha y atajos de teclado (1-4 para responder, N para avanzar).',
   },
   {
     q: '¿Puedo contribuir al proyecto?',
@@ -383,7 +415,7 @@ export default function HomePage() {
       <PageHeader
         eyebrow="Range Soprano"
         title="Herramienta de estudio de rangos preflop"
-        description="Visualiza, entrena y edita tus rangos en mesa 6-max o Heads-Up con paletas personalizables, comparación, exportación a PNG/PDF y entrenador con leaderboard local. Incluye calculadoras de EV y un módulo para analizar las manos que jugaste, importando el historial .txt de tu sala (iPoker, GGPoker, PokerStars o Winamax). Cronómetro de sesión, randomizador para frecuencias mixtas y ventana flotante siempre-encima. Todo corre en tu navegador y los datos son tuyos."
+        description="Visualiza, entrena y edita tus rangos en mesa 6-max o Heads-Up con paletas personalizables, comparación, exportación a PNG/PDF y entrenador con leaderboard local. Incluye calculadoras de EV, un módulo para analizar las manos que jugaste (importando el historial .txt de tu sala: iPoker, GGPoker, PokerStars o Winamax) y ejercicios para entrenar qué herramienta usar en cada spot. Cronómetro de sesión, randomizador para frecuencias mixtas y ventana flotante siempre-encima. Todo corre en tu navegador y los datos son tuyos."
         descriptionClassName="text-justify"
         actions={
           <ImportProfileButton
@@ -471,7 +503,7 @@ export default function HomePage() {
               <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">
                 AcKs: 0.78, AdKc: 1, ...
               </code>
-              ) con frecuencias mixtas exactas. O importá tu perfil completo en{' '}
+              ) con frecuencias mixtas exactas. O importa tu perfil completo en{' '}
               <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">.json</code>
               {' '}desde la sección{' '}
               <span className="font-medium text-content">Guardar y portabilidad</span>.
@@ -511,8 +543,8 @@ export default function HomePage() {
             </span>
             <div className="text-content-muted">
               <span className="font-medium text-content">4. Imprimir o exportar</span>
-              {' — '}generá un PDF imprimible con varios rangos por hoja para estudio
-              offline, o exportá una imagen PNG individual para compartir en foros y
+              {' — '}genera un PDF imprimible con varios rangos por hoja para estudio
+              offline, o exporta una imagen PNG individual para compartir en foros y
               Discord.
             </div>
           </li>
@@ -982,8 +1014,8 @@ export default function HomePage() {
             Tus rangos se guardan automáticamente en{' '}
             <span className="font-mono text-content">localStorage</span> (cap 3.8 MB, suficiente
             para ~100 rangos completos).
-            Si quieres moverlos a otro dispositivo, exportá un archivo JSON y volvé a
-            importarlo desde acá.
+            Si quieres moverlos a otro dispositivo, exporta un archivo JSON y vuelve a
+            importarlo desde aquí.
           </p>
 
           <ol className="flex flex-col gap-3 text-sm">
@@ -1027,7 +1059,7 @@ export default function HomePage() {
                       <span className="font-medium text-content">
                         Importar perfil completo
                       </span>{' '}
-                      acá abajo.
+                      aquí abajo.
                     </li>
                     <li>Elige el archivo .json que exportaste antes.</li>
                     <li>

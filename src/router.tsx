@@ -10,6 +10,7 @@ const TrainerPage = lazy(() => import('@/modules/trainer/TrainerPage'));
 const EditorPage = lazy(() => import('@/modules/editor/EditorPage'));
 const CalculatorsPage = lazy(() => import('@/modules/calculators/CalculatorsPage'));
 const AnalysisPage = lazy(() => import('@/modules/analysis/AnalysisPage'));
+const WorkbookPage = lazy(() => import('@/modules/workbook/WorkbookPage'));
 const PrintPage = lazy(() => import('@/modules/viewer/PrintPage'));
 
 function PageFallback() {
@@ -94,6 +95,14 @@ export const router = createBrowserRouter(
           element: (
             <Suspense fallback={<PageFallback />}>
               <AnalysisPage />
+            </Suspense>
+          ),
+        },
+        {
+          path: 'ejercicios',
+          element: (
+            <Suspense fallback={<PageFallback />}>
+              <WorkbookPage />
             </Suspense>
           ),
         },

@@ -4,6 +4,7 @@ import {
   Calculator,
   ChevronsLeft,
   ChevronsRight,
+  Dumbbell,
   Eye,
   FileSearch,
   Home,
@@ -28,6 +29,7 @@ const NAV_ITEMS: readonly NavItem[] = [
   { to: '/editor', label: 'Editor', icon: Pencil },
   { to: '/calculadoras', label: 'Calculadoras', icon: Calculator },
   { to: '/analisis', label: 'Análisis', icon: FileSearch },
+  { to: '/ejercicios', label: 'Ejercicios', icon: Dumbbell },
 ];
 
 type SidebarProps = {

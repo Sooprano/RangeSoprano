@@ -13,6 +13,7 @@
 
 | Hito | Hash |
 |---|---|
+| Fase 35 (módulo "Ejercicios" — fase 1 del Workbook: drill "¿Qué calculadora?". Ruta SEPARADA `/ejercicios` (icono `Dumbbell`), NO dentro de `/analisis`. Banco de manos parseadas → cada spot postflop del héroe pasa por `suggestCalcForDecision` (single source of truth con el worksheet); MC de 4 con distractores del mismo grupo excluyendo alternativas válidas. Sin leaderboard/persistencia por decisión del usuario. Mismo commit: FAQ "¿Qué es Range Soprano?" al día + hero + ronda de residuos de voseo + `/analisis` anonimiza el ejemplo (hero/villano), menciona PT4, `de hero`/`la ingresas`, quita "workbook" de eyebrows) | `<este commit>` |
 | Fase 34 (módulo "Análisis de manos" — fase 1: Worksheet desde `.txt`. Parser tolerante + motor de pot + `spotCalc` mapeo decisión→calc con seeds enriquecidos + worksheet que abre la calc adecuada inline pre-llenada · ruta `/analisis` · **34d** GGPoker/Stars · **34e** Winamax · **34f** PokerStars cash+spins (4 salas soportadas) · NO reconstruye replayer/Flopzilla — la equity la trae el usuario de Flopzilla) | `2eceb6a` → `32ba57c` |
 | Fase 33 (tres calcs nuevas C/D/E: EV de checkear compuesto + EV del raise bluff con combos + EV multi-calle — 14 → 17 sub-tabs, separan Bote/Apuesta del villano · reframe EV básico · pulido UX post-feedback + reorden pedagógico agrupado del selector) | `f954ca5` → `d8ddbd4` |
 | Fase 32 (pulido de claridad: captions de interpretación EV + raise% en Check vs Bet + PME/breakeven consistente — A+B+F del audit de calcs vs Excels del usuario) | `16ff55b` |
@@ -50,7 +51,7 @@
 
 ## Estado actual
 
-Fases 1-34 completadas ✅. Última iteración: **módulo "Análisis de manos" — fase 1: Worksheet desde `.txt`** (`2eceb6a` → `5b77a0f`, ruta `/analisis`). Nuevo eje del proyecto: ayudar al **aprendizaje/análisis** estilo *The Postflop Poker Workbook* de SplitSuit. Decisiones clave:
+Fases 1-35 completadas ✅. Última iteración: **módulo "Ejercicios" — fase 1 del Workbook: drill "¿Qué calculadora?"** (ruta SEPARADA `/ejercicios`, `src/modules/workbook/`, reusa `spotCalc.ts`, sin leaderboard por decisión del usuario). Antes: **módulo "Análisis de manos" — Worksheet desde `.txt`** (`2eceb6a` → `5b77a0f`, ruta `/analisis`). Nuevo eje del proyecto desde 2026-06: ayudar al **aprendizaje/análisis** estilo *The Postflop Poker Workbook* de SplitSuit. Decisiones clave (fase 34):
 
 1. **Alcance acotado por el usuario**: NO reconstruir el replayer (ya tiene PokerTracker) ni Flopzilla (ya lo usa). El aporte de Range Soprano es la capa workbook + el **puente** mano real → calc de EV adecuada pre-llenada. La equity la sigue sacando de Flopzilla y la tipea (patrón "modo experto" de Pot Odds). Ver `feedback_hand_analysis.md` en memoria.
 2. **Parser tolerante** `src/utils/handHistory.ts` del formato iPoker/PokerTracker. Cartas palo-primero (`[HJ S9]`, H/S/C/**D**, `10`→`T`). Motor de pot por contribución corrida: `potBefore` de cada decisión es lo que siembra las calcs. Verificado con node vs el `.txt` de ejemplo (pots 70/140/350, board A♥7♥9♣3♥8♠).
@@ -185,7 +186,7 @@ Live en https://rangesoprano.com/ (custom domain Cloudflare → GitHub Pages). I
 ## Roadmap pendiente
 
 - ~~Migración de idioma voseo → neutro~~ **HECHA** (`82ae10f`, 2026-06-04): toda la UI migrada a español latinoamericano neutro (tuteo) en una pasada token-a-token sobre ~40 archivos. De acá en más todo string nuevo va en neutro. Ver `feedback_language.md`.
-- **Análisis de manos · fase 2 — Modo Workbook con drills** (confirmado por el usuario): ejercicios con puntaje estilo trainer (config/corriendo/resultado + leaderboard + panel de errores), **empezando por "¿Qué calculadora?"** que reusa `src/utils/spotCalc.ts`. Después: conteo de combos (combinatoria pura con bloqueadores), fold equity / auto-profit, textura de board, value/bluff balance, SPR.
+- ~~**Modo Workbook · drill "¿Qué calculadora?"**~~ **HECHO** (fase 35): ruta SEPARADA `/ejercicios` (`src/modules/workbook/`), NO dentro de `/analisis`. Reusa `spotCalc.ts`. SIN leaderboard (decisión del usuario). **Próximos drills del Workbook** (cuando el usuario los pida): conteo de combos (combinatoria pura con bloqueadores), fold equity / auto-profit, textura de board, value/bluff balance, SPR. Todos como nuevos drills dentro de `/ejercicios` (se puede agregar un `ModeToggle` cuando haya >1), reusando `spotCalc`/`ev`.
 - **Análisis de manos — parsear `.txt` de OTRAS salas** (pedido del usuario, trabajo futuro continuo): `src/utils/handHistory.ts` ya lee **iPoker** (34), **GGPoker/PokerStars-derivado** (34d), **Winamax** (34e) y **PokerStars nativo cash+spins** (34f, con currency `$` y split pots). Falta sumar más salas a medida que el usuario las use (888, partypoker, etc.) — la arquitectura ya está lista: agregar las variantes de header/seat/post/acción/board al parser tolerante; el resto del módulo (`spotCalc`, worksheet) es agnóstico al formato porque consume el mismo `ParsedHand`. Cuando el usuario mande un `.txt` de una sala nueva, replicar el patrón de 34d/34e/34f.
 
 ## Feature deferred
