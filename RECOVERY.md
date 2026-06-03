@@ -13,7 +13,7 @@
 
 | Hito | Hash |
 |---|---|
-| Fase 40 (reorganización en dos bloques Rangos/Matemáticas + Pot Odds y Push/Fold migrados de `/entrenador` a `/ejercicios`: solo re-ruteo, archivos quedan en `src/modules/trainer/`. TrainerPage baja a 3 modos. WorkbookPage `DrillToggle` con grupos Conceptos/Tablas + wrapper `max-w-5xl` para las tablas. Sidebar `NAV_SECTIONS` con encabezados. HomePage ModuleCards+FAQ+aPlain. Sin tocar rutas/sitemap/canonical) | `PENDIENTE` |
+| Fase 40 (reorganización en dos bloques Rangos/Matemáticas + Pot Odds y Push/Fold migrados de `/entrenador` a `/ejercicios`: solo re-ruteo, archivos quedan en `src/modules/trainer/`. TrainerPage baja a 3 modos. WorkbookPage `DrillToggle` con grupos Conceptos/Tablas + wrapper `max-w-5xl` para las tablas. Sidebar `NAV_SECTIONS` con encabezados. HomePage ModuleCards+FAQ+aPlain. Sin tocar rutas/sitemap/canonical) | `2eac6c4` |
 | Fase 39b (botón "Ver el cálculo en la calculadora" en SPR + Value/Bluff + Fold equity, estilo `/analisis`: tras responder despliega la calc adecuada pre-llenada. Genérico `CalcReveal` en `drillUi.tsx`. Calcs ganan props `initial*`. Fix: sembrar el F% de break-even en Fold equity para que muestre EV=$0) | `126004b` → `9c12472` |
 | Fase 39 (módulo "Ejercicios" — 5º drill "SPR / compromiso": EV de comprometerse, port de "SPR: EV Practice". Equity dada (no Flopzilla). Mezcla decisión/EV × shove/pagar, reusa allInEv+callRiverBetEv. Decisión balanceada ~50/50. Verificado vs libro ($151/$258). Textura de board descartada → drills completos por ahora) | `d14b834` |
 | Fase 38 (módulo "Ejercicios" — 4º drill "Fold equity": auto-profit / FE mínima de un bluff con fichas concretas, reusa `bluffEv`; distractores = MDF complemento + bet/pot. Verificado con node) | `4232809` |
