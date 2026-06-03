@@ -1,8 +1,8 @@
 import { Fragment, useState } from 'react';
-import { ArrowBigUp, Bomb, ChevronsUp, Coins, DollarSign, Flame, GitFork, Hand, Ratio, Scale, Shield, Swords, TrendingUp, Users, VenetianMask, Waves, Workflow, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { CALC_GROUPS, type CalcMode } from './calcMeta';
 import { EvBasicCalc } from './EvBasicCalc';
 import { EvComplexCalc } from './EvComplexCalc';
 import { BluffEvCalc } from './BluffEvCalc';
@@ -20,75 +20,6 @@ import { AllInEvCalc } from './AllInEvCalc';
 import { FoldEquityRequiredCalc } from './FoldEquityRequiredCalc';
 import { CombinedFoldEquityCalc } from './CombinedFoldEquityCalc';
 import { MultiWayCallEv } from './MultiWayCallEv';
-
-type CalcMode =
-  | 'ev-basic'
-  | 'ev-complex'
-  | 'bluff-ev'
-  | 'check-vs-bet'
-  | 'check-ev'
-  | 'value-bluff'
-  | 'double-barrel'
-  | 'multi-street'
-  | 'implied-odds'
-  | 'float-ev'
-  | 'call-vs-raise'
-  | 'raise-bluff'
-  | 'raise-sizing'
-  | 'all-in-ev'
-  | 'fold-equity-required'
-  | 'combined-fold'
-  | 'multiway-call';
-
-type CalcItem = { mode: CalcMode; Icon: LucideIcon; label: string };
-type CalcGroup = { label: string; items: readonly CalcItem[] };
-
-// Orden pedagógico: agrupado por la acción que tenés enfrente, de fundamentos
-// a situaciones específicas. Editar este array reordena el selector.
-const CALC_GROUPS: readonly CalcGroup[] = [
-  {
-    label: 'Fundamentos',
-    items: [
-      { mode: 'ev-basic', Icon: DollarSign, label: 'EV básico' },
-      { mode: 'ev-complex', Icon: Coins, label: 'EV con fold equity' },
-      { mode: 'bluff-ev', Icon: VenetianMask, label: 'EV de bluff' },
-    ],
-  },
-  {
-    label: 'Cuando apostás vos',
-    items: [
-      { mode: 'check-vs-bet', Icon: Scale, label: 'Check vs Bet' },
-      { mode: 'check-ev', Icon: Hand, label: 'EV de checkear' },
-      { mode: 'value-bluff', Icon: Ratio, label: 'Value / Bluff' },
-      { mode: 'double-barrel', Icon: Flame, label: 'Doble barrel' },
-      { mode: 'multi-street', Icon: Workflow, label: 'EV multi-calle' },
-    ],
-  },
-  {
-    label: 'Cuando enfrentás una apuesta',
-    items: [
-      { mode: 'implied-odds', Icon: TrendingUp, label: 'Implied Odds' },
-      { mode: 'float-ev', Icon: Waves, label: 'EV de flotar' },
-      { mode: 'call-vs-raise', Icon: Swords, label: 'Call vs Raise' },
-      { mode: 'raise-bluff', Icon: ArrowBigUp, label: 'EV del raise' },
-      { mode: 'raise-sizing', Icon: ChevronsUp, label: 'Raise sizing' },
-    ],
-  },
-  {
-    label: 'All-in',
-    items: [
-      { mode: 'all-in-ev', Icon: Bomb, label: 'All-in EV' },
-      { mode: 'fold-equity-required', Icon: Shield, label: 'FE requerida' },
-    ],
-  },
-  {
-    label: 'Multi-way',
-    items: [
-      { mode: 'combined-fold', Icon: Users, label: 'Fold equity combinada' },
-      { mode: 'multiway-call', Icon: GitFork, label: 'Call multi-way' },
-    ],
-  },
-];
 
 export default function CalculatorsPage() {
   useDocumentTitle('Calculadoras de poker · Range Soprano', {
