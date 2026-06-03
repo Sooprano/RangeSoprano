@@ -202,6 +202,14 @@ export function parseHandHistory(raw: string): HandParseResult {
     if (shows.some((s) => s.name === name)) return;
     shows.push({ name, cards, description });
   };
+  // Body "collected" lines are authoritative and can repeat per player on split
+  // pots (main + side) — sum them.
+  const addCollected = (name: string, amount: number) => {
+    const existing = winners.find((w) => w.name === name);
+    if (existing) existing.amount += amount;
+    else winners.push({ name, amount });
+  };
+  // Summary "won/wins" is a fallback — skip if the player already has a total.
   const addWinner = (name: string, amount: number) => {
     if (winners.some((w) => w.name === name)) return;
     winners.push({ name, amount });
@@ -258,10 +266,11 @@ export function parseHandHistory(raw: string): HandParseResult {
     const line = rawLine.trim();
     if (!line) continue;
 
-    // ── Header (iPoker "GAME #…" / GG-Stars "Poker Hand #…" / Winamax) ───────
+    // ── Header (iPoker "GAME #…" / GG "Poker Hand #…" / PokerStars / Winamax) ─
     if (
       line.startsWith('GAME #') ||
       line.startsWith('Poker Hand #') ||
+      line.startsWith('PokerStars') ||
       line.startsWith('Winamax')
     ) {
       const idMatch = line.match(/#(\S+?)[\s:]/);
@@ -270,11 +279,15 @@ export function parseHandHistory(raw: string): HandParseResult {
         /(\d{4}[-/]\d{2}[-/]\d{2} \d{2}:\d{2}:\d{2})/,
       );
       dateTime = dateMatch ? dateMatch[1]! : null;
-      // Blinds in parens: GG "Level1(10/20)", Winamax "no limit (40/80)".
-      const blinds = line.match(/\((\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)\)/);
+      // Blinds in parens, with optional currency: GG "Level1(10/20)",
+      // Winamax "(40/80)", PokerStars cash "($0.02/$0.05 USD)".
+      const blinds = line.match(
+        /\(\s*([€$£]?)(\d+(?:\.\d+)?)\s*\/\s*[€$£]?(\d+(?:\.\d+)?)/,
+      );
       if (blinds) {
-        smallBlind = Number(blinds[1]);
-        bigBlind = Number(blinds[2]);
+        setCurrency(blinds[1] ?? '');
+        smallBlind = Number(blinds[2]);
+        bigBlind = Number(blinds[3]);
       }
       continue;
     }
@@ -356,22 +369,29 @@ export function parseHandHistory(raw: string): HandParseResult {
     }
 
     // ── Uncalled bet returned (subtract from pot — it was never matched) ────
-    const uncalled = line.match(/^Uncalled bet \(([\d.,]+)\) returned to (.+)$/i);
+    //    PokerStars wraps the amount with currency: "Uncalled bet ($1.01)".
+    const uncalled = line.match(/^Uncalled bet \(([^)]+)\) returned to (.+)$/i);
     if (uncalled) {
-      const amt = Number(uncalled[1]!.replace(/,/g, ''));
+      const amt = parseAmount(uncalled[1]!);
       const name = uncalled[2]!.trim();
-      if (Number.isFinite(amt)) {
-        runningPot -= amt;
-        committed[name] = (committed[name] ?? 0) - amt;
+      if (amt) {
+        setCurrency(amt.currency);
+        runningPot -= amt.amount;
+        committed[name] = (committed[name] ?? 0) - amt.amount;
       }
       continue;
     }
 
-    // ── Winner via "name collected X from [main/side] pot" (GG / Winamax) ────
-    const collected = line.match(/^(.+?)\s+collected\s+([\d.,]+)\s+from\b/i);
+    // ── Winner via "name collected X from [main/side] pot" (GG/Stars/Winamax) ─
+    const collected = line.match(
+      /^(.+?)\s+collected\s+([€$£]?[\d.,]+)\s+from\b/i,
+    );
     if (collected && !inSummary) {
       const amt = parseAmount(collected[2]!);
-      if (amt) addWinner(collected[1]!.trim(), amt.amount);
+      if (amt) {
+        setCurrency(amt.currency);
+        addCollected(collected[1]!.trim(), amt.amount);
+      }
       continue;
     }
 
@@ -409,9 +429,13 @@ export function parseHandHistory(raw: string): HandParseResult {
           const desc = line.match(/\bwith\s+(.+)$/i);
           addShow(name, parseAllCardsInBrackets(line) ?? [], desc ? desc[1]!.trim() : '');
         }
-        // GG "won (540)" / Winamax "won 1438" (with or without parens).
-        const won = line.match(/\bwon\s+\(?([\d.,]+)/i);
-        if (won) addWinner(name, Number(won[1]!.replace(/,/g, '')));
+        // "won (540)" / "won 1438" / PokerStars "won ($2.67)" — parens and
+        // currency optional.
+        const won = line.match(/\bwon\s+\(?([€$£]?[\d.,]+)/i);
+        if (won) {
+          const a = parseAmount(won[1]!);
+          if (a) addWinner(name, a.amount);
+        }
         continue;
       }
       continue;
