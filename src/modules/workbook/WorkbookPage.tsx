@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { Calculator, Layers } from 'lucide-react';
+import { Calculator, Layers, Scale } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { WhichCalcDrill } from './WhichCalcDrill';
 import { ComboCountDrill } from './ComboCountDrill';
+import { ValueBluffDrill } from './ValueBluffDrill';
 
-type Drill = 'which-calc' | 'combos';
+type Drill = 'which-calc' | 'combos' | 'value-bluff';
 
 export default function WorkbookPage() {
   useDocumentTitle('Ejercicios de poker · Range Soprano', {
@@ -22,14 +23,16 @@ export default function WorkbookPage() {
       <PageHeader
         eyebrow="Entrenamiento"
         title="Ejercicios"
-        description="Drills de active recall para internalizar el postflop. Elige qué calculadora usar en un spot real, o cuenta cuántos combos de una mano quedan tras los bloqueadores del board y tus cartas. Cada respuesta viene con su explicación."
+        description="Drills de active recall para internalizar el postflop: elige qué calculadora usar en un spot real, cuenta combos tras los bloqueadores, o balancea tu rango de apuesta con la cantidad correcta de faroles. Cada respuesta viene con su explicación."
       />
 
       <div className="mx-auto w-full max-w-3xl">
         <div className="mb-4 flex justify-center">
           <DrillToggle value={drill} onChange={setDrill} />
         </div>
-        {drill === 'which-calc' ? <WhichCalcDrill /> : <ComboCountDrill />}
+        {drill === 'which-calc' && <WhichCalcDrill />}
+        {drill === 'combos' && <ComboCountDrill />}
+        {drill === 'value-bluff' && <ValueBluffDrill />}
       </div>
     </>
   );
@@ -59,6 +62,12 @@ function DrillToggle({
         onClick={() => onChange('combos')}
         icon={<Layers className="h-3.5 w-3.5" strokeWidth={2.25} />}
         label="Conteo de combos"
+      />
+      <DrillButton
+        active={value === 'value-bluff'}
+        onClick={() => onChange('value-bluff')}
+        icon={<Scale className="h-3.5 w-3.5" strokeWidth={2.25} />}
+        label="Value / Bluff"
       />
     </div>
   );

@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Check, RotateCcw, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
-import { BoardCards } from '@/modules/analysis/BoardCards';
 import { CountdownBar } from '@/modules/trainer/CountdownBar';
-import { generateComboQuestion, type ComboQuestion } from './comboSpots';
+import {
+  generateValueBluffQuestion,
+  type ValueBluffQuestion,
+} from './valueBluffSpots';
 import { AutoAdvanceToggle, ScoreBar } from './drillUi';
 import {
   AUTO_ADVANCE_MS,
@@ -14,16 +16,16 @@ import {
 
 type Feedback = { picked: number; wasCorrect: boolean };
 
-export function ComboCountDrill() {
-  const [question, setQuestion] = useState<ComboQuestion>(() =>
-    generateComboQuestion(),
+export function ValueBluffDrill() {
+  const [question, setQuestion] = useState<ValueBluffQuestion>(() =>
+    generateValueBluffQuestion(),
   );
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [score, setScore] = useState<Score>(INITIAL_SCORE);
   const [autoAdvance, setAutoAdvance] = useState(true);
 
   const drawNext = useCallback(() => {
-    setQuestion(generateComboQuestion());
+    setQuestion(generateValueBluffQuestion());
     setFeedback(null);
   }, []);
 
@@ -124,7 +126,7 @@ export function ComboCountDrill() {
             </>
           ) : (
             <p className="text-center text-xs text-content-muted">
-              ¿Cuántos combos quedan? · teclas 1-4 · N para avanzar después de responder
+              ¿Cuántos faroles para balancear? · teclas 1-4 · N para avanzar después de responder
             </p>
           )}
         </div>
@@ -163,30 +165,31 @@ export function ComboCountDrill() {
   );
 }
 
-function SpotCard({ question }: { question: ComboQuestion }) {
+function SpotCard({ question }: { question: ValueBluffQuestion }) {
   return (
     <div className="flex flex-col items-center gap-3 rounded-lg border border-border bg-bg-subtle/60 p-4">
-      <p className="text-center text-sm font-medium text-content">
-        ¿Cuántos combos de{' '}
-        <span className="font-mono text-lg font-bold text-accent-light">
-          {question.target.label}
-        </span>{' '}
-        quedan?
-      </p>
-      <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-3">
-        <div className="flex flex-col items-center gap-1">
-          <span className="text-[10px] uppercase tracking-wider text-content-muted">
-            Tus cartas
-          </span>
-          <BoardCards cards={question.heroCards} />
-        </div>
-        <div className="flex flex-col items-center gap-1">
-          <span className="text-[10px] uppercase tracking-wider text-content-muted">
-            Board
-          </span>
-          <BoardCards cards={question.board} />
-        </div>
+      <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-content-muted">
+        Value / Bluff · river
+      </span>
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        <Chip label="Apuestas" value={question.sizing.label} />
+        <Chip label="Valor" value={`${question.valueCombos} combos`} />
       </div>
+      <p className="max-w-md text-center text-sm font-medium text-content">
+        ¿Cuántos combos de farol puedes tener para que el rango de apuesta quede
+        balanceado?
+      </p>
+    </div>
+  );
+}
+
+function Chip({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-col items-center gap-0.5 rounded-lg border border-border bg-surface/60 px-3 py-1.5">
+      <span className="text-[10px] uppercase tracking-wider text-content-muted">
+        {label}
+      </span>
+      <span className="text-sm font-semibold text-amber-200">{value}</span>
     </div>
   );
 }
@@ -195,12 +198,11 @@ function FeedbackPanel({
   question,
   wasCorrect,
 }: {
-  question: ComboQuestion;
+  question: ValueBluffQuestion;
   wasCorrect: boolean;
 }) {
-  const { baseCombos, correct, blockedBy } = question;
-  const removed = baseCombos - correct;
-  const cards = blockedBy.map((c) => `${c.rank}${c.suit}`).join(', ');
+  const { valueCombos, correct, bluffOfValuePct, ratioValueToBluff, bluffFreqPct } =
+    question;
   return (
     <div
       className={cn(
@@ -219,27 +221,19 @@ function FeedbackPanel({
         <span className="font-semibold">{wasCorrect ? 'Correcto' : 'Incorrecto'}</span>
         <span className="text-content-muted">·</span>
         <span className="text-content-muted">
-          Quedan{' '}
           <span className="font-semibold tabular-nums text-content">{correct}</span>{' '}
-          combos de{' '}
-          <span className="font-mono font-medium text-content">{question.target.label}</span>
+          combos de farol
         </span>
       </div>
       <p className="text-xs text-content-muted">
-        Base:{' '}
-        <span className="font-medium text-content tabular-nums">{baseCombos}</span> combos
-        {removed > 0 ? (
-          <>
-            {' · '}
-            <span className="font-medium text-amber-300 tabular-nums">−{removed}</span>{' '}
-            bloqueados por{' '}
-            <span className="font-mono text-content">{cards}</span>
-          </>
-        ) : (
-          ' · sin bloqueadores en el board ni en tus cartas'
-        )}
-        {' · quedan '}
-        <span className="font-medium text-content tabular-nums">{correct}</span>.
+        Faroles = valor × bet/(pot+bet) ={' '}
+        <span className="font-medium text-content tabular-nums">{valueCombos}</span> ×{' '}
+        <span className="font-medium text-content tabular-nums">{bluffOfValuePct}%</span> ={' '}
+        <span className="font-medium text-content tabular-nums">{correct}</span>. Es ≈{' '}
+        <span className="font-medium text-amber-300 tabular-nums">{ratioValueToBluff}:1</span>{' '}
+        valor:farol — el{' '}
+        <span className="font-medium text-content tabular-nums">{bluffFreqPct}%</span> de tu
+        rango de apuesta son faroles. Cuanto más grande la apuesta, más faroles puedes tener.
       </p>
     </div>
   );
