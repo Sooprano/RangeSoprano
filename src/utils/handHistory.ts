@@ -258,19 +258,23 @@ export function parseHandHistory(raw: string): HandParseResult {
     const line = rawLine.trim();
     if (!line) continue;
 
-    // ── Header (iPoker "GAME #…" / GG-Stars "Poker Hand #…") ────────────────
-    if (line.startsWith('GAME #') || line.startsWith('Poker Hand #')) {
+    // ── Header (iPoker "GAME #…" / GG-Stars "Poker Hand #…" / Winamax) ───────
+    if (
+      line.startsWith('GAME #') ||
+      line.startsWith('Poker Hand #') ||
+      line.startsWith('Winamax')
+    ) {
       const idMatch = line.match(/#(\S+?)[\s:]/);
       gameId = idMatch ? idMatch[1]! : null;
       const dateMatch = line.match(
         /(\d{4}[-/]\d{2}[-/]\d{2} \d{2}:\d{2}:\d{2})/,
       );
       dateTime = dateMatch ? dateMatch[1]! : null;
-      // GG/Stars carry blinds in the level, e.g. "Level1(10/20)".
-      const level = line.match(/Level\d+\s*\((\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)\)/i);
-      if (level) {
-        smallBlind = Number(level[1]);
-        bigBlind = Number(level[2]);
+      // Blinds in parens: GG "Level1(10/20)", Winamax "no limit (40/80)".
+      const blinds = line.match(/\((\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)\)/);
+      if (blinds) {
+        smallBlind = Number(blinds[1]);
+        bigBlind = Number(blinds[2]);
       }
       continue;
     }
@@ -286,8 +290,11 @@ export function parseHandHistory(raw: string): HandParseResult {
       continue;
     }
 
-    // GG/Stars table line: "Table '36270' 3-max Seat #1 is the button"
-    if (line.startsWith('Table ')) {
+    // Table line with the button seat:
+    //   GG:      "Table '36270' 3-max Seat #1 is the button"
+    //   Winamax: "Table: 'Expresso(…)#0' 3-max (real money) Seat #3 is the button"
+    // (iPoker "Table Info:" was already handled above.)
+    if (line.startsWith('Table')) {
       const btn = line.match(/Seat #(\d+) is the button/i);
       if (btn) buttonSeat = Number(btn[1]);
       continue;
@@ -360,8 +367,8 @@ export function parseHandHistory(raw: string): HandParseResult {
       continue;
     }
 
-    // ── Winner via "name collected X from pot" (GG showdown body) ───────────
-    const collected = line.match(/^(.+?)\s+collected\s+([\d.,]+)\s+from pot/i);
+    // ── Winner via "name collected X from [main/side] pot" (GG / Winamax) ────
+    const collected = line.match(/^(.+?)\s+collected\s+([\d.,]+)\s+from\b/i);
     if (collected && !inSummary) {
       const amt = parseAmount(collected[2]!);
       if (amt) addWinner(collected[1]!.trim(), amt.amount);
@@ -402,18 +409,43 @@ export function parseHandHistory(raw: string): HandParseResult {
           const desc = line.match(/\bwith\s+(.+)$/i);
           addShow(name, parseAllCardsInBrackets(line) ?? [], desc ? desc[1]!.trim() : '');
         }
-        const won = line.match(/\bwon\s+\(([\d.,]+)\)/i);
+        // GG "won (540)" / Winamax "won 1438" (with or without parens).
+        const won = line.match(/\bwon\s+\(?([\d.,]+)/i);
         if (won) addWinner(name, Number(won[1]!.replace(/,/g, '')));
         continue;
       }
       continue;
     }
 
-    // ── Action lines: "<name>: <verb> [amount]" ───────────────────────────
-    const actionMatch = line.match(/^(.+?):\s+(.+)$/);
-    if (actionMatch) {
-      const actor = actionMatch[1]!.trim();
-      const rest = actionMatch[2]!.trim();
+    // ── Action lines ──────────────────────────────────────────────────────
+    // iPoker/GG/Stars use "Name: verb …"; Winamax omits the colon
+    // ("Atenea. posts small blind 40"). Try the colon form first, then fall
+    // back to a verb-anchored match for the colon-less dialect.
+    // Only treat a colon line as an action if what follows the colon is a known
+    // verb — Winamax hand descriptions contain " : " (e.g. "Two pairs : 5 and
+    // 4") which would otherwise false-match the "Name: rest" shape.
+    const colonRaw = line.match(/^(.+?):\s+(.+)$/);
+    const colonMatch =
+      colonRaw &&
+      /^(posts?|raises?|calls?|checks?|folds?|bets?|shows?|wins?)\b/i.test(
+        colonRaw[2]!,
+      )
+        ? colonRaw
+        : null;
+    const wmxMatch = colonMatch
+      ? null
+      : line.match(
+          /^(\S.*?)\s+(posts|raises|calls|checks|folds|bets|shows)\b\s*(.*)$/i,
+        );
+    const actor = colonMatch
+      ? colonMatch[1]!.trim()
+      : wmxMatch
+        ? wmxMatch[1]!.trim()
+        : null;
+    if (actor !== null) {
+      const rest = colonMatch
+        ? colonMatch[2]!.trim()
+        : `${wmxMatch![2]} ${wmxMatch![3] ?? ''}`.trim();
       const lower = rest.toLowerCase();
 
       if (lower.startsWith('post')) {
@@ -432,10 +464,14 @@ export function parseHandHistory(raw: string): HandParseResult {
         pushDecision(actor, 'fold', 0);
         continue;
       }
-      // GG all-in runout shows cards inline: "Hero: shows [9c Qh]"
+      // Cards shown inline (GG all-in runout / Winamax show down):
+      //   "Hero: shows [9c Qh]" · "Atenea. shows [5h 5c] (Two pairs : 5 and 4)"
       if (lower.startsWith('show')) {
         const cards = parseAllCardsInBrackets(line);
-        if (cards) addShow(actor, cards, '');
+        if (cards) {
+          const parenDesc = line.match(/\(([^)]*)\)\s*$/);
+          addShow(actor, cards, parenDesc ? parenDesc[1]!.trim() : '');
+        }
         continue;
       }
 
