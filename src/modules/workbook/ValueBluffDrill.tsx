@@ -2,11 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Check, RotateCcw, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { CountdownBar } from '@/modules/trainer/CountdownBar';
+import { ValueBluffCalc } from '@/modules/calculators/ValueBluffCalc';
 import {
   generateValueBluffQuestion,
   type ValueBluffQuestion,
 } from './valueBluffSpots';
-import { AutoAdvanceToggle, ScoreBar } from './drillUi';
+import { AutoAdvanceToggle, CalcReveal, ScoreBar } from './drillUi';
 import {
   AUTO_ADVANCE_MS,
   INITIAL_SCORE,
@@ -23,17 +24,19 @@ export function ValueBluffDrill() {
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [score, setScore] = useState<Score>(INITIAL_SCORE);
   const [autoAdvance, setAutoAdvance] = useState(true);
+  const [showCalc, setShowCalc] = useState(false);
 
   const drawNext = useCallback(() => {
     setQuestion(generateValueBluffQuestion());
     setFeedback(null);
+    setShowCalc(false);
   }, []);
 
   useEffect(() => {
-    if (!autoAdvance || !feedback) return;
+    if (!autoAdvance || !feedback || showCalc) return;
     const id = setTimeout(drawNext, AUTO_ADVANCE_MS);
     return () => clearTimeout(id);
-  }, [autoAdvance, feedback, drawNext]);
+  }, [autoAdvance, feedback, showCalc, drawNext]);
 
   const answer = useCallback(
     (picked: number) => {
@@ -120,7 +123,14 @@ export function ValueBluffDrill() {
           {feedback ? (
             <>
               <FeedbackPanel question={question} wasCorrect={feedback.wasCorrect} />
-              {autoAdvance && (
+              <CalcReveal open={showCalc} onToggle={() => setShowCalc((v) => !v)}>
+                <ValueBluffCalc
+                  initialPot={String(question.sizing.pot)}
+                  initialBet={String(question.sizing.bet)}
+                  initialValueCombos={String(question.valueCombos)}
+                />
+              </CalcReveal>
+              {autoAdvance && !showCalc && (
                 <CountdownBar key={score.total} durationMs={AUTO_ADVANCE_MS} />
               )}
             </>

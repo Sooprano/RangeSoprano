@@ -8,18 +8,20 @@
 import { valueBluffCombos } from '@/utils/ev';
 import { shuffle } from '@/utils/comboMath';
 
-export type Sizing = { label: string; frac: number };
+// `pot`/`bet` are a canonical integer pair with bet/pot === frac, used to seed
+// the Value/Bluff calculator exactly (the absolute chips don't matter for the
+// balance — only the ratio).
+export type Sizing = { label: string; frac: number; pot: number; bet: number };
 
-// Bet as a fraction of the pot. Labels stay sizing-focused (the absolute chips
-// don't matter for balance — only bet/pot).
+// Bet as a fraction of the pot. Labels stay sizing-focused.
 const SIZINGS: readonly Sizing[] = [
-  { label: 'un tercio del bote (33%)', frac: 1 / 3 },
-  { label: 'medio bote (50%)', frac: 0.5 },
-  { label: 'dos tercios del bote (67%)', frac: 2 / 3 },
-  { label: '75% del bote', frac: 0.75 },
-  { label: 'el bote entero (pot-size)', frac: 1 },
-  { label: '1.5× el bote (overbet)', frac: 1.5 },
-  { label: '2× el bote (overbet)', frac: 2 },
+  { label: 'un tercio del bote (33%)', frac: 1 / 3, pot: 300, bet: 100 },
+  { label: 'medio bote (50%)', frac: 0.5, pot: 200, bet: 100 },
+  { label: 'dos tercios del bote (67%)', frac: 2 / 3, pot: 300, bet: 200 },
+  { label: '75% del bote', frac: 0.75, pot: 400, bet: 300 },
+  { label: 'el bote entero (pot-size)', frac: 1, pot: 100, bet: 100 },
+  { label: '1.5× el bote (overbet)', frac: 1.5, pot: 200, bet: 300 },
+  { label: '2× el bote (overbet)', frac: 2, pot: 100, bet: 200 },
 ];
 
 const VALUE_COMBOS: readonly number[] = [6, 8, 9, 10, 12, 15, 16, 18, 20, 24];

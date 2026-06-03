@@ -16,10 +16,18 @@ function formatCombos(n: number): string {
   return rounded.toFixed(2).replace(/\.?0+$/, '') || '0';
 }
 
-export function ValueBluffCalc() {
-  const [pot, setPot] = useState('100');
-  const [bet, setBet] = useState('64');
-  const [valueCombos, setValueCombos] = useState('40');
+export function ValueBluffCalc({
+  initialPot,
+  initialBet,
+  initialValueCombos,
+}: {
+  initialPot?: string | undefined;
+  initialBet?: string | undefined;
+  initialValueCombos?: string | undefined;
+} = {}) {
+  const [pot, setPot] = useState(initialPot ?? '100');
+  const [bet, setBet] = useState(initialBet ?? '64');
+  const [valueCombos, setValueCombos] = useState(initialValueCombos ?? '40');
   const [actualBluffs, setActualBluffs] = useState('');
 
   const potNum = parseField(pot, { min: 0 });

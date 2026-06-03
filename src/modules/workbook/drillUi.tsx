@@ -4,7 +4,7 @@
 // constants live in `drillScore.ts` (no JSX) so this file only exports
 // components.
 
-import { Trophy } from 'lucide-react';
+import { Calculator, ChevronDown, Trophy } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { AUTO_ADVANCE_MS, STREAK_BONUS_THRESHOLD, type Score } from './drillScore';
 
@@ -62,6 +62,51 @@ function Stat({
         {icon && <span aria-hidden>{icon}</span>}
         <span>{value}</span>
       </p>
+    </div>
+  );
+}
+
+/**
+ * Collapsible "see the math" panel shared by the drills: a toggle button plus
+ * the seeded calculator (passed as children, only mounted when open so the seed
+ * re-applies each time). Drills render this AFTER answering so it doesn't spoil
+ * the answer, and pause auto-advance while it's open.
+ */
+export function CalcReveal({
+  open,
+  onToggle,
+  children,
+}: {
+  open: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className={cn(
+          'inline-flex items-center justify-center gap-1.5 self-center rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors',
+          'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light',
+          open
+            ? 'border-accent/60 bg-accent/10 text-content'
+            : 'border-border bg-surface/40 text-content-muted hover:bg-surface-hover hover:text-content',
+        )}
+      >
+        <Calculator className="h-3.5 w-3.5" strokeWidth={2.25} />
+        {open ? 'Ocultar calculadora' : 'Ver el cálculo en la calculadora'}
+        <ChevronDown
+          className={cn('h-3.5 w-3.5 transition-transform', open && 'rotate-180')}
+          strokeWidth={2.25}
+        />
+      </button>
+      {open && (
+        <div className="rounded-lg border border-border bg-bg-subtle/60 p-4">
+          {children}
+        </div>
+      )}
     </div>
   );
 }
