@@ -184,7 +184,8 @@ Live en https://rangesoprano.com/ (custom domain Cloudflare → GitHub Pages). I
 
 ## Roadmap pendiente
 
-(sin items confirmados para próxima sesión — el roadmap concreto se levanta cuando aparece el siguiente pedido del usuario)
+- **Análisis de manos · fase 2 — Modo Workbook con drills** (confirmado por el usuario): ejercicios con puntaje estilo trainer (config/corriendo/resultado + leaderboard + panel de errores), **empezando por "¿Qué calculadora?"** que reusa `src/utils/spotCalc.ts`. Después: conteo de combos (combinatoria pura con bloqueadores), fold equity / auto-profit, textura de board, value/bluff balance, SPR.
+- **Análisis de manos — parsear `.txt` de OTRAS salas** (pedido explícito del usuario como trabajo futuro): hoy `src/utils/handHistory.ts` solo lee el formato iPoker/PokerTracker. Generalizar a otros formatos (PokerStars, GG, etc.) — detección de formato + variantes de las líneas de seat/post/acción/board/cartas. El resto del módulo (`spotCalc`, worksheet) es agnóstico al formato si el parser devuelve el mismo `ParsedHand`.
 
 ## Feature deferred
 
