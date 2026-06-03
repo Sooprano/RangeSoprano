@@ -10,12 +10,24 @@ import {
   parseField,
 } from './CalcShared';
 
-export function FloatEvCalc() {
-  const [potOnFlop, setPotOnFlop] = useState('100');
-  const [callOnFlop, setCallOnFlop] = useState('25');
-  const [barrelPct, setBarrelPct] = useState('55');
-  const [xfPct, setXfPct] = useState('50');
-  const [turnBet, setTurnBet] = useState('75');
+export function FloatEvCalc({
+  initialPot,
+  initialCall,
+  initialBarrelPct,
+  initialXfPct,
+  initialTurnBet,
+}: {
+  initialPot?: string | undefined;
+  initialCall?: string | undefined;
+  initialBarrelPct?: string | undefined;
+  initialXfPct?: string | undefined;
+  initialTurnBet?: string | undefined;
+} = {}) {
+  const [potOnFlop, setPotOnFlop] = useState(initialPot ?? '100');
+  const [callOnFlop, setCallOnFlop] = useState(initialCall ?? '25');
+  const [barrelPct, setBarrelPct] = useState(initialBarrelPct ?? '55');
+  const [xfPct, setXfPct] = useState(initialXfPct ?? '50');
+  const [turnBet, setTurnBet] = useState(initialTurnBet ?? '75');
 
   const potNum = parseField(potOnFlop, { min: 0 });
   const callNum = parseField(callOnFlop, { min: 0 });

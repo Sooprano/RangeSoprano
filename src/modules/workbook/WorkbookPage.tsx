@@ -5,6 +5,7 @@ import {
   Gauge,
   Layers,
   Percent,
+  Sailboat,
   Scale,
   Shield,
   Shuffle,
@@ -18,6 +19,7 @@ import { ValueBluffDrill } from './ValueBluffDrill';
 import { FoldEquityDrill } from './FoldEquityDrill';
 import { SprDrill } from './SprDrill';
 import { RunoutsDrill } from './RunoutsDrill';
+import { FloatDrill } from './FloatDrill';
 import { OddsTrainer } from '@/modules/trainer/OddsTrainer';
 import { PushFoldTrainer } from '@/modules/trainer/pushfold/PushFoldTrainer';
 
@@ -28,6 +30,7 @@ type Drill =
   | 'fold-equity'
   | 'spr'
   | 'runouts'
+  | 'floating'
   | 'pot-odds'
   | 'push-fold';
 
@@ -45,6 +48,7 @@ const CONCEPT_DRILLS: readonly DrillDef[] = [
   { id: 'fold-equity', icon: Shield, label: 'Fold equity' },
   { id: 'spr', icon: Gauge, label: 'SPR' },
   { id: 'runouts', icon: Shuffle, label: 'Runouts' },
+  { id: 'floating', icon: Sailboat, label: 'Floating' },
 ];
 
 // Tablas: entrenadores con sub-modo Estudio/Velocidad y leaderboard propio.
@@ -71,7 +75,7 @@ export default function WorkbookPage() {
       <PageHeader
         eyebrow="Entrenamiento"
         title="Ejercicios"
-        description="Drills de active recall para internalizar el postflop. Conceptos: elige qué calculadora usar, cuenta combos tras los bloqueadores, balancea tu rango de apuesta, calcula la fold equity mínima de un bluff, decide si comprometerte a cada SPR o estima la probabilidad de un runout en turn, river y completo. Tablas: entrena pot odds (fold equity al apostar y equity al pagar) y las tablas de Nash de push/fold heads-up. Cada respuesta viene con su explicación."
+        description="Drills de active recall para internalizar el postflop. Conceptos: elige qué calculadora usar, cuenta combos tras los bloqueadores, balancea tu rango de apuesta, calcula la fold equity mínima de un bluff, decide si comprometerte a cada SPR, estima la probabilidad de un runout en turn/river/completo o evalúa la EV de flotar. Tablas: entrena pot odds (fold equity al apostar y equity al pagar) y las tablas de Nash de push/fold heads-up. Cada respuesta viene con su explicación."
       />
 
       <div
@@ -89,6 +93,7 @@ export default function WorkbookPage() {
         {drill === 'fold-equity' && <FoldEquityDrill />}
         {drill === 'spr' && <SprDrill />}
         {drill === 'runouts' && <RunoutsDrill />}
+        {drill === 'floating' && <FloatDrill />}
         {drill === 'pot-odds' && <OddsTrainer />}
         {drill === 'push-fold' && <PushFoldTrainer />}
       </div>
