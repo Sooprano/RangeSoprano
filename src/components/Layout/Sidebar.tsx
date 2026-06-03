@@ -22,14 +22,33 @@ type NavItem = {
   end?: boolean;
 };
 
-const NAV_ITEMS: readonly NavItem[] = [
-  { to: '/', label: 'Inicio', icon: Home, end: true },
-  { to: '/viewer', label: 'Visualizador', icon: Eye },
-  { to: '/trainer', label: 'Entrenador', icon: Target },
-  { to: '/editor', label: 'Editor', icon: Pencil },
-  { to: '/calculadoras', label: 'Calculadoras', icon: Calculator },
-  { to: '/analisis', label: 'Análisis', icon: FileSearch },
-  { to: '/ejercicios', label: 'Ejercicios', icon: Dumbbell },
+type NavSection = {
+  label?: string;
+  items: readonly NavItem[];
+};
+
+// Dos bloques conceptuales: "Rangos" (crear/ver/entrenar rangos) y
+// "Matemáticas" (calculadoras, análisis y ejercicios). Inicio queda suelto arriba.
+const NAV_SECTIONS: readonly NavSection[] = [
+  {
+    items: [{ to: '/', label: 'Inicio', icon: Home, end: true }],
+  },
+  {
+    label: 'Rangos',
+    items: [
+      { to: '/viewer', label: 'Visualizador', icon: Eye },
+      { to: '/trainer', label: 'Entrenador', icon: Target },
+      { to: '/editor', label: 'Editor', icon: Pencil },
+    ],
+  },
+  {
+    label: 'Matemáticas',
+    items: [
+      { to: '/calculadoras', label: 'Calculadoras', icon: Calculator },
+      { to: '/analisis', label: 'Análisis', icon: FileSearch },
+      { to: '/ejercicios', label: 'Ejercicios', icon: Dumbbell },
+    ],
+  },
 ];
 
 type SidebarProps = {
@@ -126,37 +145,55 @@ export function Sidebar({
           </button>
         </div>
 
-        <nav className={cn('flex flex-col gap-1', collapsed ? 'lg:px-2' : 'px-3')}>
-          {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end ?? false}
-              onClick={onCloseMobile}
-              title={collapsed ? label : undefined}
-              className={({ isActive }) =>
-                cn(
-                  'group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-200 ease-out-soft',
-                  collapsed && 'lg:justify-center lg:px-2',
-                  isActive
-                    ? 'bg-accent/15 text-content shadow-[inset_0_0_0_1px_rgb(var(--color-accent)/0.35)]'
-                    : 'text-content-muted hover:bg-surface-hover hover:text-content',
-                )
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <Icon
-                    className={cn(
-                      'h-[18px] w-[18px] shrink-0 transition-colors',
-                      isActive ? 'text-accent-light' : 'text-content-muted group-hover:text-content',
-                    )}
-                    strokeWidth={2}
-                  />
-                  <span className={cn(collapsed && 'lg:hidden')}>{label}</span>
-                </>
+        <nav className={cn('flex flex-col gap-3', collapsed ? 'lg:px-2' : 'px-3')}>
+          {NAV_SECTIONS.map((section, sectionIdx) => (
+            <div key={section.label ?? `section-${sectionIdx}`} className="flex flex-col gap-1">
+              {section.label && (
+                <span
+                  className={cn(
+                    'px-3 pb-0.5 pt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-content-muted',
+                    collapsed && 'lg:hidden',
+                  )}
+                >
+                  {section.label}
+                </span>
               )}
-            </NavLink>
+              {/* En modo colapsado, separa las secciones con etiqueta mediante un divisor. */}
+              {section.label && collapsed && (
+                <div aria-hidden className="mx-2 hidden h-px bg-border/60 lg:block" />
+              )}
+              {section.items.map(({ to, label, icon: Icon, end }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  end={end ?? false}
+                  onClick={onCloseMobile}
+                  title={collapsed ? label : undefined}
+                  className={({ isActive }) =>
+                    cn(
+                      'group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-200 ease-out-soft',
+                      collapsed && 'lg:justify-center lg:px-2',
+                      isActive
+                        ? 'bg-accent/15 text-content shadow-[inset_0_0_0_1px_rgb(var(--color-accent)/0.35)]'
+                        : 'text-content-muted hover:bg-surface-hover hover:text-content',
+                    )
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <Icon
+                        className={cn(
+                          'h-[18px] w-[18px] shrink-0 transition-colors',
+                          isActive ? 'text-accent-light' : 'text-content-muted group-hover:text-content',
+                        )}
+                        strokeWidth={2}
+                      />
+                      <span className={cn(collapsed && 'lg:hidden')}>{label}</span>
+                    </>
+                  )}
+                </NavLink>
+              ))}
+            </div>
           ))}
         </nav>
 

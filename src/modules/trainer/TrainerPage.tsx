@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Brush, Crosshair, Dices, Percent, Zap } from 'lucide-react';
+import { Brush, Dices, Zap } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -18,11 +18,9 @@ import { TrainerEmptyState } from './TrainerEmptyState';
 import { ClassicTrainer } from './ClassicTrainer';
 import { DrawingTrainer } from './DrawingTrainer';
 import { SpeedTrainer } from './SpeedTrainer';
-import { OddsTrainer } from './OddsTrainer';
-import { PushFoldTrainer } from './pushfold/PushFoldTrainer';
 import { SITUATION_LABELS } from '@/data/positions';
 
-type TrainerMode = 'classic' | 'drawing' | 'speed' | 'odds' | 'pushfold';
+type TrainerMode = 'classic' | 'drawing' | 'speed';
 
 export default function TrainerPage() {
   useDocumentTitle('Entrenador de rangos · Range Soprano', {
@@ -60,8 +58,7 @@ export default function TrainerPage() {
     }
   }, [ranges, trainerRangeId, setTrainerRangeId]);
 
-  // Odds and Push/Fold modes are range-independent — show them even with zero ranges saved.
-  if (ranges.length === 0 && mode !== 'odds' && mode !== 'pushfold') {
+  if (ranges.length === 0) {
     return (
       <>
         <PageHeader
@@ -72,42 +69,6 @@ export default function TrainerPage() {
           <ModeToggle value={mode} onChange={setMode} />
         </div>
         <TrainerEmptyState />
-      </>
-    );
-  }
-
-  if (mode === 'odds') {
-    return (
-      <>
-        <PageHeader
-          eyebrow="Matemática · pot odds"
-          title="Pot Odds"
-          description="Aprende las dos tablas clásicas: fold equity al apostar y equity necesaria al pagar."
-        />
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-wrap items-start justify-end gap-3">
-            <ModeToggle value={mode} onChange={setMode} />
-          </div>
-          <OddsTrainer />
-        </div>
-      </>
-    );
-  }
-
-  if (mode === 'pushfold') {
-    return (
-      <>
-        <PageHeader
-          eyebrow="Matemática · ICM short stack"
-          title="Push/Fold"
-          description="Aprende las tablas de Nash de empuje/pago heads-up para stacks cortos."
-        />
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-wrap items-start justify-end gap-3">
-            <ModeToggle value={mode} onChange={setMode} />
-          </div>
-          <PushFoldTrainer />
-        </div>
       </>
     );
   }
@@ -189,18 +150,6 @@ function ModeToggle({ value, onChange }: ModeToggleProps) {
         onClick={() => onChange('speed')}
         icon={<Zap className="h-3.5 w-3.5" strokeWidth={2.25} />}
         label="Velocidad"
-      />
-      <ModeButton
-        active={value === 'odds'}
-        onClick={() => onChange('odds')}
-        icon={<Percent className="h-3.5 w-3.5" strokeWidth={2.25} />}
-        label="Pot Odds"
-      />
-      <ModeButton
-        active={value === 'pushfold'}
-        onClick={() => onChange('pushfold')}
-        icon={<Crosshair className="h-3.5 w-3.5" strokeWidth={2.25} />}
-        label="Push/Fold"
       />
     </div>
   );

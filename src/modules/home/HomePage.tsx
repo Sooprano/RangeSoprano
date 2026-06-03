@@ -61,7 +61,7 @@ const MODULES: readonly ModuleCard[] = [
     label: 'Entrenador',
     icon: Target,
     description:
-      'Entrena manos en mesa 6-max o Heads-Up. Modos Clásico (auto-avance 1.5 s), Velocidad (contrarreloj con tabla de líderes local), Dibujo (pintar el rango de memoria) y Pot Odds (fold equity al apostar y equity al pagar, con MC y fórmula explicada). Filtros por posición, situación y villano.',
+      'Entrena manos en mesa 6-max o Heads-Up contra tus rangos guardados. Modos Clásico (auto-avance 1.5 s), Velocidad (contrarreloj con tabla de líderes local) y Dibujo (pintar el rango de memoria). Filtros por posición, situación y villano.',
   },
   {
     to: '/editor',
@@ -93,7 +93,7 @@ const MODULES: readonly ModuleCard[] = [
     label: 'Ejercicios',
     icon: Dumbbell,
     description:
-      'Drills de active recall para el postflop. "¿Qué calculadora?": te mostramos un spot real y eliges qué herramienta de EV usarías. "Conteo de combos": cuántos combos de una mano quedan tras los bloqueadores. "Value / Bluff": cuántos faroles para balancear tu rango de apuesta. "Fold equity": el % de fold mínimo para que un bluff sea rentable. "SPR": si comprometerte (pagar o hacer el all-in) es +EV a cada SPR. Con puntaje, racha y atajos de teclado.',
+      'Drills de active recall para el postflop. Conceptos: "¿Qué calculadora?" (eliges la herramienta de EV para un spot real), "Conteo de combos" (cuántos quedan tras los bloqueadores), "Value / Bluff" (faroles para balancear), "Fold equity" (% de fold mínimo de un bluff) y "SPR" (si comprometerte es +EV). Tablas: "Pot Odds" (fold equity al apostar y equity al pagar, con MC y fórmula) y "Push/Fold" (las tablas de Nash de empuje/pago heads-up para stacks cortos). Con puntaje, racha y atajos de teclado.',
   },
 ];
 
@@ -235,17 +235,23 @@ const FAQS: readonly Faq[] = [
     q: '¿Sirve para aprender pot odds?',
     a: (
       <>
-        Sí. El <span className="font-medium text-content">Entrenador</span> tiene una pestaña{' '}
-        <span className="font-medium text-content">Pot Odds</span> con cuatro tipos de pregunta sobre pot odds:
+        Sí. En{' '}
+        <Link to="/ejercicios" className="font-medium text-accent-light hover:underline">
+          Ejercicios
+        </Link>{' '}
+        (grupo <span className="font-medium text-content">Tablas</span>) la pestaña{' '}
+        <span className="font-medium text-content">Pot Odds</span> tiene cuatro tipos de pregunta:
         cuánta fold equity necesitas cuando bluffeas, qué equity necesitas para
         pagar, y las dos inversas (qué tamaño apostar dado un % de fold equity y
         hasta qué tamaño puedes pagar dado un % de equity). Multiple choice de 4
-        opciones con feedback que muestra la fórmula resuelta. No depende de
-        tener rangos cargados, puedes practicar incluso desde un perfil vacío.
+        opciones con feedback que muestra la fórmula resuelta. Al lado, la pestaña{' '}
+        <span className="font-medium text-content">Push/Fold</span> entrena las tablas de
+        Nash de empuje/pago heads-up para stacks cortos. Ninguna depende de tener
+        rangos cargados: puedes practicar incluso desde un perfil vacío.
       </>
     ),
     aPlain:
-      'Sí. El Entrenador tiene una pestaña Pot Odds con cuatro tipos de pregunta sobre pot odds: cuánta fold equity necesitas cuando bluffeas, qué equity necesitas para pagar, y las dos inversas (qué tamaño apostar dado un % de fold equity y hasta qué tamaño puedes pagar dado un % de equity). Multiple choice de 4 opciones con feedback que muestra la fórmula resuelta. No depende de tener rangos cargados, puedes practicar incluso desde un perfil vacío.',
+      'Sí. En Ejercicios (grupo Tablas) la pestaña Pot Odds tiene cuatro tipos de pregunta: cuánta fold equity necesitas cuando bluffeas, qué equity necesitas para pagar, y las dos inversas (qué tamaño apostar dado un % de fold equity y hasta qué tamaño puedes pagar dado un % de equity). Multiple choice de 4 opciones con feedback que muestra la fórmula resuelta. Al lado, la pestaña Push/Fold entrena las tablas de Nash de empuje/pago heads-up para stacks cortos. Ninguna depende de tener rangos cargados: puedes practicar incluso desde un perfil vacío.',
   },
   {
     q: '¿Cómo uso las calculadoras de EV?',
@@ -341,7 +347,8 @@ const FAQS: readonly Faq[] = [
         <Link to="/ejercicios" className="font-medium text-accent-light hover:underline">
           Ejercicios
         </Link>{' '}
-        hay dos drills de active recall. <span className="font-medium text-content">¿Qué calculadora?</span>:
+        hay dos grupos. <span className="font-medium text-content">Conceptos</span> reúne cinco
+        drills de active recall. <span className="font-medium text-content">¿Qué calculadora?</span>:
         te mostramos un spot real —tu mano, el board y la apuesta de la decisión— y eliges
         entre cuatro calculadoras cuál usarías; al responder ves por qué es esa herramienta y
         qué datos traerías de Flopzilla (es el mismo razonamiento de{' '}
@@ -361,11 +368,17 @@ const FAQS: readonly Faq[] = [
         complemento de la MDF.{' '}
         <span className="font-medium text-content">SPR</span>: con tu equity (de Flopzilla) y
         el SPR, decides si comprometerte —pagar un all-in o hacerlo tú— es +EV o mejor fold,
-        o calculas el EV exacto. Los cinco llevan puntaje, racha y atajos de teclado.
+        o calculas el EV exacto. El otro grupo,{' '}
+        <span className="font-medium text-content">Tablas</span>, son dos entrenadores con modo
+        Estudio y Velocidad (con tabla de líderes local):{' '}
+        <span className="font-medium text-content">Pot Odds</span> (fold equity al apostar y
+        equity al pagar) y <span className="font-medium text-content">Push/Fold</span> (las
+        tablas de Nash de empuje/pago heads-up para stacks cortos). Todos llevan puntaje, racha
+        y atajos de teclado.
       </>
     ),
     aPlain:
-      'En Ejercicios hay cinco drills de active recall. "¿Qué calculadora?": te mostramos un spot real (tu mano, el board y la apuesta de la decisión) y eliges entre cuatro calculadoras cuál usarías; al responder ves por qué es esa herramienta y qué datos traerías de Flopzilla (es el mismo razonamiento de Análisis de manos pero como entrenamiento). "Conteo de combos": te damos una mano (por ejemplo AK), un board y tus cartas, y cuentas cuántos combos quedan tras los bloqueadores; el feedback descompone base − bloqueados = quedan. "Value / Bluff": dado el tamaño de tu apuesta y tus combos de valor, eliges cuántos faroles para balancear el rango (medio bote ≈ 3:1 valor:farol, pot-size ≈ 2:1, overbet ≈ 1.5:1). "Fold equity": dado un bote y tu apuesta, el % de fold mínimo para que el bluff sea break-even (auto-profit), el alpha complemento de la MDF. "SPR": con tu equity (de Flopzilla) y el SPR, decides si comprometerte (pagar o hacer el all-in) es +EV o mejor fold, o calculas el EV exacto. Los cinco llevan puntaje, racha y atajos de teclado.',
+      'En Ejercicios hay dos grupos. Conceptos reúne cinco drills de active recall. "¿Qué calculadora?": te mostramos un spot real (tu mano, el board y la apuesta de la decisión) y eliges entre cuatro calculadoras cuál usarías; al responder ves por qué es esa herramienta y qué datos traerías de Flopzilla (es el mismo razonamiento de Análisis de manos pero como entrenamiento). "Conteo de combos": te damos una mano (por ejemplo AK), un board y tus cartas, y cuentas cuántos combos quedan tras los bloqueadores; el feedback descompone base − bloqueados = quedan. "Value / Bluff": dado el tamaño de tu apuesta y tus combos de valor, eliges cuántos faroles para balancear el rango (medio bote ≈ 3:1 valor:farol, pot-size ≈ 2:1, overbet ≈ 1.5:1). "Fold equity": dado un bote y tu apuesta, el % de fold mínimo para que el bluff sea break-even (auto-profit), el alpha complemento de la MDF. "SPR": con tu equity (de Flopzilla) y el SPR, decides si comprometerte (pagar o hacer el all-in) es +EV o mejor fold, o calculas el EV exacto. El otro grupo, Tablas, son dos entrenadores con modo Estudio y Velocidad (con tabla de líderes local): Pot Odds (fold equity al apostar y equity al pagar) y Push/Fold (las tablas de Nash de empuje/pago heads-up para stacks cortos). Todos llevan puntaje, racha y atajos de teclado.',
   },
   {
     q: '¿Puedo contribuir al proyecto?',
@@ -649,8 +662,8 @@ export default function HomePage() {
 
           <p>
             Range Soprano incluye un trainer de pot odds en{' '}
-            <Link to="/trainer" className="font-medium text-accent-light hover:underline">
-              Trainer → tab Odds
+            <Link to="/ejercicios" className="font-medium text-accent-light hover:underline">
+              Ejercicios → grupo Tablas → Pot Odds
             </Link>
             : cuatro tipos de pregunta (fold equity al apostar, equity al pagar, y
             las inversas — qué tamaño apostar / hasta qué bet puedes pagar) con

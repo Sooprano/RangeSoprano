@@ -1,5 +1,13 @@
 import { useState } from 'react';
-import { Calculator, Gauge, Layers, Scale, Shield } from 'lucide-react';
+import {
+  Calculator,
+  Crosshair,
+  Gauge,
+  Layers,
+  Percent,
+  Scale,
+  Shield,
+} from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -8,27 +16,66 @@ import { ComboCountDrill } from './ComboCountDrill';
 import { ValueBluffDrill } from './ValueBluffDrill';
 import { FoldEquityDrill } from './FoldEquityDrill';
 import { SprDrill } from './SprDrill';
+import { OddsTrainer } from '@/modules/trainer/OddsTrainer';
+import { PushFoldTrainer } from '@/modules/trainer/pushfold/PushFoldTrainer';
 
-type Drill = 'which-calc' | 'combos' | 'value-bluff' | 'fold-equity' | 'spr';
+type Drill =
+  | 'which-calc'
+  | 'combos'
+  | 'value-bluff'
+  | 'fold-equity'
+  | 'spr'
+  | 'pot-odds'
+  | 'push-fold';
+
+type DrillDef = {
+  id: Drill;
+  icon: typeof Calculator;
+  label: string;
+};
+
+// Conceptos: los 5 drills de active recall (MC rápido, sin leaderboard).
+const CONCEPT_DRILLS: readonly DrillDef[] = [
+  { id: 'which-calc', icon: Calculator, label: '¿Qué calculadora?' },
+  { id: 'combos', icon: Layers, label: 'Conteo de combos' },
+  { id: 'value-bluff', icon: Scale, label: 'Value / Bluff' },
+  { id: 'fold-equity', icon: Shield, label: 'Fold equity' },
+  { id: 'spr', icon: Gauge, label: 'SPR' },
+];
+
+// Tablas: entrenadores con sub-modo Estudio/Velocidad y leaderboard propio.
+const TABLE_DRILLS: readonly DrillDef[] = [
+  { id: 'pot-odds', icon: Percent, label: 'Pot Odds' },
+  { id: 'push-fold', icon: Crosshair, label: 'Push/Fold' },
+];
+
+// Las tablas (Pot Odds / Push-Fold) necesitan más ancho que los drills MC.
+const WIDE_DRILLS: ReadonlySet<Drill> = new Set(['pot-odds', 'push-fold']);
 
 export default function WorkbookPage() {
   useDocumentTitle('Ejercicios de poker · Range Soprano', {
     description:
-      'Drills de poker: practica elegir la calculadora de EV correcta para cada spot y cuenta combos con bloqueadores. Mano, board y explicación. Sin login, sin tracking.',
+      'Drills de poker: elige la calculadora de EV correcta, cuenta combos con bloqueadores, balancea value/bluff, calcula fold equity y SPR, y practica pot odds y push/fold de Nash. Sin login, sin tracking.',
     canonical: 'https://rangesoprano.com/ejercicios/',
   });
 
   const [drill, setDrill] = useState<Drill>('which-calc');
+  const isWide = WIDE_DRILLS.has(drill);
 
   return (
     <>
       <PageHeader
         eyebrow="Entrenamiento"
         title="Ejercicios"
-        description="Drills de active recall para internalizar el postflop: elige qué calculadora usar en un spot real, cuenta combos tras los bloqueadores, balancea tu rango de apuesta con faroles, calcula la fold equity mínima de un bluff, o decide si comprometerte a cada SPR. Cada respuesta viene con su explicación."
+        description="Drills de active recall para internalizar el postflop. Conceptos: elige qué calculadora usar, cuenta combos tras los bloqueadores, balancea tu rango de apuesta, calcula la fold equity mínima de un bluff o decide si comprometerte a cada SPR. Tablas: entrena pot odds (fold equity al apostar y equity al pagar) y las tablas de Nash de push/fold heads-up. Cada respuesta viene con su explicación."
       />
 
-      <div className="mx-auto w-full max-w-3xl">
+      <div
+        className={cn(
+          'mx-auto w-full',
+          isWide ? 'max-w-5xl' : 'max-w-3xl',
+        )}
+      >
         <div className="mb-4 flex justify-center">
           <DrillToggle value={drill} onChange={setDrill} />
         </div>
@@ -37,6 +84,8 @@ export default function WorkbookPage() {
         {drill === 'value-bluff' && <ValueBluffDrill />}
         {drill === 'fold-equity' && <FoldEquityDrill />}
         {drill === 'spr' && <SprDrill />}
+        {drill === 'pot-odds' && <OddsTrainer />}
+        {drill === 'push-fold' && <PushFoldTrainer />}
       </div>
     </>
   );
@@ -53,38 +102,50 @@ function DrillToggle({
     <div
       role="tablist"
       aria-label="Ejercicio"
-      className="flex flex-wrap items-center justify-center gap-1 rounded-xl border border-border bg-surface/60 p-1"
+      className="flex flex-col gap-2 rounded-xl border border-border bg-surface/60 p-2"
     >
-      <DrillButton
-        active={value === 'which-calc'}
-        onClick={() => onChange('which-calc')}
-        icon={<Calculator className="h-3.5 w-3.5" strokeWidth={2.25} />}
-        label="¿Qué calculadora?"
+      <DrillGroup
+        label="Conceptos"
+        drills={CONCEPT_DRILLS}
+        value={value}
+        onChange={onChange}
       />
-      <DrillButton
-        active={value === 'combos'}
-        onClick={() => onChange('combos')}
-        icon={<Layers className="h-3.5 w-3.5" strokeWidth={2.25} />}
-        label="Conteo de combos"
+      <div className="h-px bg-border/60" aria-hidden />
+      <DrillGroup
+        label="Tablas"
+        drills={TABLE_DRILLS}
+        value={value}
+        onChange={onChange}
       />
-      <DrillButton
-        active={value === 'value-bluff'}
-        onClick={() => onChange('value-bluff')}
-        icon={<Scale className="h-3.5 w-3.5" strokeWidth={2.25} />}
-        label="Value / Bluff"
-      />
-      <DrillButton
-        active={value === 'fold-equity'}
-        onClick={() => onChange('fold-equity')}
-        icon={<Shield className="h-3.5 w-3.5" strokeWidth={2.25} />}
-        label="Fold equity"
-      />
-      <DrillButton
-        active={value === 'spr'}
-        onClick={() => onChange('spr')}
-        icon={<Gauge className="h-3.5 w-3.5" strokeWidth={2.25} />}
-        label="SPR"
-      />
+    </div>
+  );
+}
+
+function DrillGroup({
+  label,
+  drills,
+  value,
+  onChange,
+}: {
+  label: string;
+  drills: readonly DrillDef[];
+  value: Drill;
+  onChange: (next: Drill) => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-1">
+      <span className="mr-1 text-[10px] font-semibold uppercase tracking-wider text-content-muted">
+        {label}
+      </span>
+      {drills.map(({ id, icon: Icon, label: drillLabel }) => (
+        <DrillButton
+          key={id}
+          active={value === id}
+          onClick={() => onChange(id)}
+          icon={<Icon className="h-3.5 w-3.5" strokeWidth={2.25} />}
+          label={drillLabel}
+        />
+      ))}
     </div>
   );
 }
