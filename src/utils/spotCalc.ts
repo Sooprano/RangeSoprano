@@ -125,7 +125,7 @@ export function flopzillaInputsFor(mode: CalcMode): string[] {
       return ['Tu equity (% de completar el draw)'];
     case 'check-vs-bet':
       return [
-        'Win% al showdown si checkeás',
+        'Win% al showdown si checkeas',
         'Win% si te pagan la apuesta',
         'F% — fold del villano',
         'R% — frecuencia de raise',
@@ -133,13 +133,13 @@ export function flopzillaInputsFor(mode: CalcMode): string[] {
     case 'check-ev':
       return [
         'Prob. de que el villano apueste',
-        'Tu equity si pagás',
+        'Tu equity si pagas',
         'Tu equity si va check-check',
       ];
     case 'fold-equity-required':
       return ['Tu equity cuando te pagan'];
     case 'ev-basic':
-      return ['% que esperás ganar'];
+      return ['% que esperas ganar'];
     default:
       return [];
   }
@@ -188,7 +188,7 @@ export function suggestCalcForDecision(
       alternatives,
       rationale: isFirstBarrel
         ? 'Apostaste esta calle y volviste a apostar la siguiente: la línea completa de dos barriles puede ser +EV aunque un barril suelto no lo sea.'
-        : 'Una apuesta como bluff: cuánta fold equity necesitás para que sea rentable. Si tenés equity de respaldo, mirá también EV con fold equity.',
+        : 'Una apuesta como bluff: cuánta fold equity necesitas para que sea rentable. Si tienes equity de respaldo, mira también EV con fold equity.',
     };
   }
 
@@ -206,7 +206,7 @@ export function suggestCalcForDecision(
       },
       alternatives: ['call-vs-raise', 'fold-equity-required'],
       rationale:
-        'Un all-in combina fold equity y la equity cuando te pagan. El breakeven de fold te dice cuánto necesitás que se tiren.',
+        'Un all-in combina fold equity y la equity cuando te pagan. El breakeven de fold te dice cuánto necesitas que se tiren.',
     };
   }
 
@@ -221,7 +221,7 @@ export function suggestCalcForDecision(
       },
       alternatives: ['implied-odds', 'ev-basic'],
       rationale:
-        'Pagar una apuesta: compará el EV de pagar con tu equity contra el de restear. Implied odds si esperás cobrar más en calles futuras.',
+        'Pagar una apuesta: compara el EV de pagar con tu equity contra el de restear. Implied odds si esperas cobrar más en calles futuras.',
     };
   }
 
@@ -232,7 +232,7 @@ export function suggestCalcForDecision(
       seed: { pot: decision.potBefore, currentPot: decision.potBefore },
       alternatives: ['check-ev'],
       rationale:
-        'Checkeaste el river. Compará el EV de check behind contra apostar fino: ¿valuebet o checkear atrás? Ingresá un tamaño de apuesta hipotético y tus equities de Flopzilla.',
+        'Checkeaste el river. Compara el EV de check behind contra apostar fino: ¿valuebet o checkear atrás? Ingresa un tamaño de apuesta hipotético y tus equities de Flopzilla.',
     };
   }
 

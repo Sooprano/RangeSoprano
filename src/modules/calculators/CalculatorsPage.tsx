@@ -35,7 +35,7 @@ export default function CalculatorsPage() {
       <PageHeader
         eyebrow="Matemática · análisis de manos"
         title="Calculadoras"
-        description="Herramientas matemáticas para analizar decisiones. Ingresá los valores y obtené el resultado al instante."
+        description="Herramientas matemáticas para analizar decisiones. Ingresa los valores y obtén el resultado al instante."
       />
 
       <div className="mb-6">

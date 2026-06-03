@@ -247,7 +247,7 @@ export function OddsStudy() {
             <p className="text-center text-xs text-content-muted">
               {expertMode && isDirectKind(question.kind)
                 ? `Tipea el % · Enter para enviar · tolerancia ±${FREESTYLE_TOLERANCE}%`
-                : 'Elegí una respuesta · teclas 1-4 · N para avanzar después de responder'}
+                : 'Elige una respuesta · teclas 1-4 · N para avanzar después de responder'}
             </p>
           )}
         </div>

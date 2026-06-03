@@ -59,7 +59,7 @@ export function FoldEquityRequiredCalc() {
     if (result.breakevenFoldPct === null) {
       return {
         tone: 'positive' as const,
-        text: `Sin equity necesitarías ${formatPct(f0)} de folds. Con tu ${equityPct}% de equity ya no necesitás ningún fold: el shove es +EV por tu sola equity. Eso es lo que pasa cuando vas all-in en el flop o el turn con outs — tu equity de respaldo te deja shovear más liviano.`,
+        text: `Sin equity necesitarías ${formatPct(f0)} de folds. Con tu ${equityPct}% de equity ya no necesitas ningún fold: el shove es +EV por tu sola equity. Eso es lo que pasa cuando vas all-in en el flop o el turn con outs — tu equity de respaldo te deja shovear más liviano.`,
       };
     }
     const f = result.breakevenFoldPct;
@@ -91,10 +91,10 @@ export function FoldEquityRequiredCalc() {
           Fold equity requerida (con tu equity)
         </h2>
         <p className="mb-4 text-sm text-content-muted">
-          Cuando vas all-in, ¿qué tan seguido necesitás que el villano foldee para
-          que el shove sea +EV? La clave: si tenés equity cuando te pagan (un draw
+          Cuando vas all-in, ¿qué tan seguido necesitas que el villano foldee para
+          que el shove sea +EV? La clave: si tienes equity cuando te pagan (un draw
           en el flop o turn, por ejemplo), el breakeven{' '}
-          <span className="font-medium text-content">baja</span> — necesitás menos
+          <span className="font-medium text-content">baja</span> — necesitas menos
           folds que con un bluff puro. Mostramos las dos cifras lado a lado para que
           veas cuánto te ayuda tu equity.
         </p>
@@ -132,7 +132,7 @@ export function FoldEquityRequiredCalc() {
             max={100}
             step={1}
             invalid={equityPct.trim() !== '' && equityNum === null}
-            hint="Qué tan seguido ganás si el villano paga (0% = bluff puro)"
+            hint="Qué tan seguido ganas si el villano paga (0% = bluff puro)"
           />
         </div>
       </section>
@@ -173,7 +173,7 @@ function InsightCard({
   if (insight === null) {
     return (
       <div className="rounded-xl border border-border bg-surface/30 px-4 py-3 text-sm text-content-disabled">
-        Completá los campos para ver cuánto baja el breakeven con tu equity.
+        Completa los campos para ver cuánto baja el breakeven con tu equity.
       </div>
     );
   }

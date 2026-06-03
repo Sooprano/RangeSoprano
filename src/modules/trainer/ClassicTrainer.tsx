@@ -193,7 +193,7 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
             </>
           ) : (
             <p className="text-center text-xs text-content-muted">
-              Elegí una acción · teclas 1-5 · S para omitir
+              Elige una acción · teclas 1-5 · S para omitir
             </p>
           )}
         </div>

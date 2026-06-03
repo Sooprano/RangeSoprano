@@ -77,8 +77,8 @@ export function CheckCompoundEvCalc({
         </h2>
         <p className="mb-4 text-sm text-content-muted">
           Cuánto rinde checkear en total, juntando las dos cosas que pueden pasar:
-          a veces el villano apuesta y vos pagás (check-call), a veces hace check
-          behind y van a showdown gratis (check-check). Compará este número con el
+          a veces el villano apuesta y tú pagas (check-call), a veces hace check
+          behind y van a showdown gratis (check-check). Compara este número con el
           EV de apostar para decidir.
         </p>
 
@@ -92,7 +92,7 @@ export function CheckCompoundEvCalc({
             min={0}
             step={1}
             invalid={pot.trim() !== '' && potNum === null}
-            hint="Lo que hay en el centro cuando checkeás"
+            hint="Lo que hay en el centro cuando checkeas"
           />
           <NumberField
             id="cc-bets"
@@ -122,7 +122,7 @@ export function CheckCompoundEvCalc({
               min={0}
               step={1}
               invalid={villainBet.trim() !== '' && vbetNum === null}
-              hint="Cuánto apuesta (y vos pagás)"
+              hint="Cuánto apuesta (y tú pagas)"
             />
             <NumberField
               id="cc-call-eq"
@@ -170,7 +170,7 @@ export function CheckCompoundEvCalc({
           label="EV check-call ="
           display={callDisplay}
           tone={toneOf(result?.evCheckCall)}
-          caption="Cuando apuesta y pagás."
+          caption="Cuando apuesta y pagas."
         />
         <ResultCard
           label="EV check-check ="

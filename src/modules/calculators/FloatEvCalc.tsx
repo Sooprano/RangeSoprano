@@ -112,7 +112,7 @@ export function FloatEvCalc() {
             max={100}
             step={1}
             invalid={barrelPct.trim() !== '' && barrelNum === null}
-            hint="Cuando barrelea, tirás tu mano y perdés el call"
+            hint="Cuando barrelea, tiras tu mano y pierdes el call"
           />
           <NumberField
             id="float-xf"
@@ -124,7 +124,7 @@ export function FloatEvCalc() {
             max={100}
             step={1}
             invalid={xfPct.trim() !== '' && xfNum === null}
-            hint="Cuando checkea y se tira, te llevás el pot del flop"
+            hint="Cuando checkea y se tira, te llevas el pot del flop"
           />
           <NumberField
             id="float-turn-bet"
@@ -135,7 +135,7 @@ export function FloatEvCalc() {
             min={0}
             step={1}
             invalid={turnBet.trim() !== '' && turnBetNum === null}
-            hint={`Disparás dentro de ${potAfterCallDisplay} (pot tras tu call)`}
+            hint={`Disparas dentro de ${potAfterCallDisplay} (pot tras tu call)`}
           />
           <ReadOnlyField
             label="Resto% — Checkea y te paga el turn"

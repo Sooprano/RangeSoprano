@@ -146,7 +146,7 @@ export function DrawingTrainer({ range }: DrawingTrainerProps) {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs text-content-muted">
-          Pintá las manos que creas que pertenecen a <span className="text-content">{range.name}</span>{' '}
+          Pinta las manos que creas que pertenecen a <span className="text-content">{range.name}</span>{' '}
           · clic o arrastre para agregar · clic derecho para quitar · Ctrl+clic derecho para mano+ (ej. 88+) · luego revelar para comparar.
         </p>
         <div className="flex items-center gap-2">
@@ -364,7 +364,7 @@ function DiffLegend() {
     <ul className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-content-muted">
       <Legend dot="bg-emerald-500/70" label="Acierto (acción correcta)" />
       <Legend dot="bg-rose-500/70" label="Falso positivo (acción incorrecta o fuera del rango)" />
-      <Legend dot="bg-amber-500/70" label="Falso negativo (el rango la tenía, vos no)" />
+      <Legend dot="bg-amber-500/70" label="Falso negativo (el rango la tenía, tú no)" />
     </ul>
   );
 }

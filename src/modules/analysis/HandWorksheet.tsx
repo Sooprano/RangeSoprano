@@ -399,7 +399,7 @@ function DataSourceLegend({ mode }: { mode: CalcMode }) {
       <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
         <p className="flex items-center gap-1.5 text-xs font-semibold text-amber-300">
           <Pencil className="h-3.5 w-3.5" strokeWidth={2.5} />
-          Ingresá de Flopzilla
+          Ingresa de Flopzilla
         </p>
         {flopzilla.length > 0 ? (
           <ul className="mt-1 list-disc pl-4 text-xs text-content-muted">
@@ -409,7 +409,7 @@ function DataSourceLegend({ mode }: { mode: CalcMode }) {
           </ul>
         ) : (
           <p className="mt-1 text-xs text-content-muted">
-            Completá las equities / frecuencias según tu lectura en Flopzilla.
+            Completa las equities / frecuencias según tu lectura en Flopzilla.
           </p>
         )}
       </div>

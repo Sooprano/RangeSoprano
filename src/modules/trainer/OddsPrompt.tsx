@@ -77,7 +77,7 @@ export function MiniPot({ size, kind }: { size: Sizing; kind: QuestionKind }) {
           heroBets ? 'text-accent-light' : 'text-rose-300',
         )}
       >
-        {heroBets ? 'Vos apostás' : 'Villano apuesta'}
+        {heroBets ? 'Tú apuestas' : 'Villano apuesta'}
       </span>
       <ChipStack
         label="Bet"

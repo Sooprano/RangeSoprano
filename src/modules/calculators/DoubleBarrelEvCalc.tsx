@@ -100,13 +100,13 @@ export function DoubleBarrelEvCalc({
     if (evCombined > 0 && evTurnOnly >= 0) {
       return {
         tone: 'positive' as const,
-        text: `Ambas son +EV: el bet del turn ya gana ${formatCurrency(evTurnOnly)} y la línea completa ${formatCurrency(evCombined)}. Apostá con confianza.`,
+        text: `Ambas son +EV: el bet del turn ya gana ${formatCurrency(evTurnOnly)} y la línea completa ${formatCurrency(evCombined)}. Apuesta con confianza.`,
       };
     }
     if (evCombined <= 0 && evTurnOnly < 0) {
       return {
         tone: 'negative' as const,
-        text: `La línea completa sigue siendo −EV (${formatCurrency(evCombined)}). Ni con el barrel del river se rescata: necesitás más fold equity (en el turn o el river) o mejor equity de respaldo.`,
+        text: `La línea completa sigue siendo −EV (${formatCurrency(evCombined)}). Ni con el barrel del river se rescata: necesitas más fold equity (en el turn o el river) o mejor equity de respaldo.`,
       };
     }
     return {
@@ -137,7 +137,7 @@ export function DoubleBarrelEvCalc({
           Doble barrel (turn + river)
         </h2>
         <p className="mb-4 text-sm text-content-muted">
-          Mirás si la jugada completa de apostar el turn y volver a barrelear el
+          Miras si la jugada completa de apostar el turn y volver a barrelear el
           river como bluff es +EV en conjunto, aunque el bet del turn por sí solo
           sea −EV. La fold equity acumulada de las dos calles suele rescatar la
           línea. Asume 0 equity en showdown (bluff puro).
@@ -229,7 +229,7 @@ export function DoubleBarrelEvCalc({
           label="EV bet turn (solo) ="
           display={turnDisplay}
           tone={turnTone}
-          caption="Si apostás el turn y te rendís en el river."
+          caption="Si apuestas el turn y te rindes en el river."
         />
         <ResultCard
           label="EV combinado (turn + barrel) ="
@@ -268,7 +268,7 @@ function InsightCard({
   if (insight === null) {
     return (
       <div className="rounded-xl border border-border bg-surface/30 px-4 py-3 text-sm text-content-disabled">
-        Completá los campos para ver el análisis de la línea.
+        Completa los campos para ver el análisis de la línea.
       </div>
     );
   }

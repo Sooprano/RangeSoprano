@@ -38,7 +38,7 @@ Balans3: wins €350.00`;
 export default function AnalysisPage() {
   useDocumentTitle('Análisis de manos · Range Soprano', {
     description:
-      'Pegá el historial de mano (.txt) de tu sala y la web extrae el spot y te abre la calculadora de EV correcta pre-llenada. La equity la traés de Flopzilla. Sin login, sin tracking.',
+      'Pega el historial de mano (.txt) de tu sala y la web extrae el spot y te abre la calculadora de EV correcta pre-llenada. La equity la traes de Flopzilla. Sin login, sin tracking.',
     canonical: 'https://rangesoprano.com/analisis/',
   });
 
@@ -55,7 +55,7 @@ export default function AnalysisPage() {
       <PageHeader
         eyebrow="Análisis · workbook"
         title="Análisis de manos"
-        description="Pegá el historial .txt de una mano jugada. La web extrae el spot (board, pot y apuesta de cada decisión) y por cada jugada del héroe te abre la calculadora de EV adecuada, ya cargada con los números. La equity la traés de Flopzilla y la tipeás."
+        description="Pega el historial .txt de una mano jugada. La web extrae el spot (board, pot y apuesta de cada decisión) y por cada jugada del héroe te abre la calculadora de EV adecuada, ya cargada con los números. La equity la traes de Flopzilla y la tipeas."
       />
 
       <div className="flex flex-col gap-5">
@@ -78,7 +78,7 @@ export default function AnalysisPage() {
             onChange={(e) => setText(e.target.value)}
             rows={8}
             spellCheck={false}
-            placeholder="Pegá acá el texto exportado de la mano…"
+            placeholder="Pega acá el texto exportado de la mano…"
             className="w-full resize-y rounded-lg border border-border bg-surface/60 px-3 py-2 font-mono text-xs text-content placeholder:text-content-disabled focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
           />
           <div className="mt-3 flex items-center gap-3">
@@ -129,7 +129,7 @@ export default function AnalysisPage() {
             role="alert"
             className="rounded-lg border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200"
           >
-            No reconocí ninguna mano en el texto. Verificá que pegaste el historial
+            No reconocí ninguna mano en el texto. Verifica que pegaste el historial
             completo.
           </div>
         )}

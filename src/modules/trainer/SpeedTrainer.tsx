@@ -225,7 +225,7 @@ function ConfigScreen({
           Modo velocidad
         </div>
         <p className="mt-1 text-xs text-content-muted">
-          Corré contra el reloj con tu rango. Los 5 mejores resultados por modo se guardan localmente.
+          Corre contra el reloj con tu rango. Los 5 mejores resultados por modo se guardan localmente.
         </p>
 
         <div className="mt-4 flex flex-col gap-3">
@@ -471,7 +471,7 @@ function SpeedClassicRun({
         </div>
 
         <p className="text-center text-xs text-content-muted">
-          Elegí rápido · teclas 1-{orderedActions.length} · {formatDurationLabel(duration)} total
+          Elige rápido · teclas 1-{orderedActions.length} · {formatDurationLabel(duration)} total
         </p>
       </div>
     </div>

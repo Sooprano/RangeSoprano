@@ -53,27 +53,27 @@ export function EvBasicCalc() {
       <section className="rounded-xl border border-border bg-surface/40 p-5">
         <h2 className="mb-1 text-base font-semibold text-content">EV básico</h2>
         <p className="mb-4 text-sm text-content-muted">
-          EV de una jugada con dos finales: ganás y te llevás el pot, o perdés tu
-          apuesta. Ingresá el tamaño del pot en juego, cada cuánto esperás ganar y
-          lo que arriesgás — sirve para ver si pagar o apostar es rentable a la
+          EV de una jugada con dos finales: ganas y te llevas el pot, o pierdes tu
+          apuesta. Ingresa el tamaño del pot en juego, cada cuánto esperas ganar y
+          lo que arriesgas — sirve para ver si pagar o apostar es rentable a la
           larga.
         </p>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <NumberField
             id="evb-win-amount"
-            label="Pot — lo que te llevás si ganás"
+            label="Pot — lo que te llevas si ganas"
             value={winAmount}
             onChange={setWinAmount}
             prefix="$"
             min={0}
             step={1}
             invalid={winAmount.trim() !== '' && wNum === null}
-            hint="Lo que está en juego y ganás al sacar la mejor mano"
+            hint="Lo que está en juego y ganas al sacar la mejor mano"
           />
           <NumberField
             id="evb-win-pct"
-            label="% que esperás ganar"
+            label="% que esperas ganar"
             value={winPct}
             onChange={setWinPct}
             suffix="%"
@@ -81,34 +81,34 @@ export function EvBasicCalc() {
             max={100}
             step={1}
             invalid={winPct.trim() !== '' && wpNum === null}
-            hint="Cada cuánto creés que te llevás el pot"
+            hint="Cada cuánto crees que te llevas el pot"
           />
           <NumberField
             id="evb-lose-amount"
-            label="Tu apuesta — lo que arriesgás si perdés"
+            label="Tu apuesta — lo que arriesgas si pierdes"
             value={loseAmount}
             onChange={setLoseAmount}
             prefix="$"
             min={0}
             step={1}
             invalid={loseAmount.trim() !== '' && lNum === null}
-            hint="Tu call o tu bet — lo que ponés en riesgo"
+            hint="Tu call o tu bet — lo que pones en riesgo"
           />
           <ReadOnlyField
-            label="% que esperás perder"
+            label="% que esperas perder"
             display={losePctDisplay}
             suffix="%"
-            hint="Se calcula como 100% − % que ganás"
+            hint="Se calcula como 100% − % que ganas"
           />
           <ReadOnlyField
             label="Breakeven — equity para EV 0"
             display={breakevenWDisplay}
-            hint="Apuesta / (Pot + Apuesta) · necesitás ganar al menos esto para no perder"
+            hint="Apuesta / (Pot + Apuesta) · necesitas ganar al menos esto para no perder"
           />
           <ReadOnlyField
             label="Tu apuesta como % del pot"
             display={betPctDisplay}
-            hint="Apuesta / Pot · qué tan grande es lo que arriesgás vs el pot"
+            hint="Apuesta / Pot · qué tan grande es lo que arriesgas vs el pot"
           />
         </div>
       </section>

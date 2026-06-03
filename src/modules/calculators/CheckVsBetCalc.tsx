@@ -123,8 +123,8 @@ export function CheckVsBetCalc({
         <h2 className="mb-1 text-base font-semibold text-content">Check vs Bet (ríver)</h2>
         <p className="mb-4 text-sm text-content-muted">
           Comparación de EV entre checkear (ir a showdown) y apostar. El villano
-          puede tirarse (te llevás el pot), pagar (vas a showdown con tu equity) o
-          subir (foldeás perdiendo tu apuesta). Útil en el ríver cuando dudás si
+          puede tirarse (te llevas el pot), pagar (vas a showdown con tu equity) o
+          subir (foldeas perdiendo tu apuesta). Útil en el ríver cuando dudas si
           apostar valor fino, blockear o controlar el bote checkeando.
         </p>
 
@@ -155,7 +155,7 @@ export function CheckVsBetCalc({
               max={100}
               step={1}
               invalid={checkWinPct.trim() !== '' && checkWinNum === null}
-              hint="Si vas a showdown sin apostar, qué tan seguido ganás"
+              hint="Si vas a showdown sin apostar, qué tan seguido ganas"
             />
             <ReadOnlyField
               label="Lose%"
@@ -187,7 +187,7 @@ export function CheckVsBetCalc({
               max={100}
               step={1}
               invalid={winWhenCalledPct.trim() !== '' && wcNum === null}
-              hint="Equity vs el rango que te paga (0% si bluffeás sin outs)"
+              hint="Equity vs el rango que te paga (0% si bluffeas sin outs)"
             />
             <NumberField
               id="cvb-fold"
@@ -199,7 +199,7 @@ export function CheckVsBetCalc({
               max={100}
               step={1}
               invalid={foldPct.trim() !== '' && fNum === null}
-              hint="Se tira y te llevás el pot"
+              hint="Se tira y te llevas el pot"
             />
             <NumberField
               id="cvb-raise"
@@ -211,7 +211,7 @@ export function CheckVsBetCalc({
               max={100}
               step={1}
               invalid={raisePct.trim() !== '' && rNum === null}
-              hint="Te sube y foldeás perdiendo tu apuesta (0% si no te suben)"
+              hint="Te sube y foldeas perdiendo tu apuesta (0% si no te suben)"
             />
             <ReadOnlyField
               label="C% — Te paga (call)"
@@ -224,7 +224,7 @@ export function CheckVsBetCalc({
               }
             />
             <ReadOnlyField
-              label="PME — pot odds que ofrecés"
+              label="PME — pot odds que ofreces"
               display={pmeBetDisplay}
               hint="Bet/(Pot+Bet) · equity que el villano necesita para pagar"
             />
@@ -266,7 +266,7 @@ function RecommendationCard({
   if (rec === null) {
     return (
       <div className="rounded-xl border border-border bg-surface/30 px-4 py-3 text-sm text-content-disabled">
-        Completá los campos para ver la recomendación.
+        Completa los campos para ver la recomendación.
       </div>
     );
   }

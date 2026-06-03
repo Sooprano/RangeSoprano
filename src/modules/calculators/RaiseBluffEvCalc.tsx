@@ -79,9 +79,9 @@ export function RaiseBluffEvCalc() {
           EV del raise (bluff)
         </h2>
         <p className="mb-4 text-sm text-content-muted">
-          Subís como bluff sobre la apuesta del villano. Si se tira, te llevás el
-          pot más su apuesta; si paga, perdés el coste de tu raise (asume 0 equity
-          si te paga). Podés poner el fold% a mano o derivarlo de los combos que el
+          Subes como bluff sobre la apuesta del villano. Si se tira, te llevas el
+          pot más su apuesta; si paga, pierdes el coste de tu raise (asume 0 equity
+          si te paga). Puedes poner el fold% a mano o derivarlo de los combos que el
           villano apuesta y los que te pagan.
         </p>
 
@@ -117,7 +117,7 @@ export function RaiseBluffEvCalc() {
             min={0}
             step={1}
             invalid={raiseCost.trim() !== '' && costNum === null}
-            hint="Lo que ponés de tu stack al subir"
+            hint="Lo que pones de tu stack al subir"
           />
         </div>
 

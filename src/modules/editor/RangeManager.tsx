@@ -175,7 +175,7 @@ export function RangeManager({
 
   const handleDelete = (id: string, name: string) => {
     setOpenMenuId(null);
-    if (window.confirm(`¿Eliminar el rango "${name}"? Podés deshacer con Ctrl+Z.`)) {
+    if (window.confirm(`¿Eliminar el rango "${name}"? Puedes deshacer con Ctrl+Z.`)) {
       pushHistory();
       deleteRange(id);
       pushToast({ kind: 'info', message: `Se eliminó "${name}" — Ctrl+Z para deshacer` });

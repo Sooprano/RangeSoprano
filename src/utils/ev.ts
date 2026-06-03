@@ -127,10 +127,10 @@ export function combinedFoldEquity(
 
 export type CheckRiverEvInput = {
   pot: number;
-  winPct: number;  // 0-100, frecuencia con que ganás al showdown si checkeás detrás
+  winPct: number;  // 0-100, frecuencia con que ganas al showdown si checkeas detrás
 };
 
-// EV = pot · win%  (cuando perdés simplemente no ganás nada extra; no hay bet en riesgo)
+// EV = pot · win%  (cuando pierdes simplemente no ganas nada extra; no hay bet en riesgo)
 // Excel: =(D5*D6)
 export function checkRiverEv(input: CheckRiverEvInput): number {
   return input.pot * (input.winPct / 100);
@@ -141,12 +141,12 @@ export type BetRiverEvInput = {
   bet: number;
   winWhenCalledPct: number;  // 0-100, equity contra el rango que te paga (0% para bluff puro)
   foldPct: number;            // 0-100
-  raisePct?: number;          // 0-100, frecuencia de raise del villano (foldeás perdiendo tu bet)
+  raisePct?: number;          // 0-100, frecuencia de raise del villano (foldeas perdiendo tu bet)
 };
 
 // EV = F·Pot + C·(W·(Pot+Bet) − (1−W)·Bet) − R·Bet   con C = 1 − F − R (call)
 // Con R=0 colapsa al modelo fold/call simple.
-// Excel (Bet vs Check IP): el villano puede fold / call / raise; al raise foldeás.
+// Excel (Bet vs Check IP): el villano puede fold / call / raise; al raise foldeas.
 export function betRiverEv(input: BetRiverEvInput): number {
   const f = input.foldPct / 100;
   const r = (input.raisePct ?? 0) / 100;
@@ -161,8 +161,8 @@ export function betRiverEv(input: BetRiverEvInput): number {
 
 export type CallRiverBetEvInput = {
   pot: number;        // pot del río incluyendo la apuesta del villano
-  call: number;       // monto que pagás
-  equityPct: number;  // 0-100, equity cuando pagás (qué tan seguido ganás el pot)
+  call: number;       // monto que pagas
+  equityPct: number;  // 0-100, equity cuando pagas (qué tan seguido ganas el pot)
 };
 
 // EV = Pot · eq − Call · (1−eq)   (pagar una apuesta de río; sin acción futura)
@@ -180,8 +180,8 @@ export type BluffEvInput = {
 
 export type BluffEvResult = {
   ev: number;
-  pickupAmount: number;     // foldPct · pot — lo que te llevás cuando se tira
-  lossAmount: number;       // (1−foldPct) · bet — lo que perdés cuando paga
+  pickupAmount: number;     // foldPct · pot — lo que te llevas cuando se tira
+  lossAmount: number;       // (1−foldPct) · bet — lo que pierdes cuando paga
   // Breakeven bluff frequency: F* = bet / (bet + pot). Siempre en [0,100] si pot,bet ≥ 0.
   // null si pot + bet = 0 (sin solución).
   breakevenFoldPct: number | null;
@@ -275,7 +275,7 @@ export type DoubleBarrelEvResult = {
 //   EV turn solo = fold_t·Pot_t − (1−fold_t)·Bet_t                         (Excel: =E93*E90-(1-E93)*E91)
 //   EV combinado = fold_t·Pot_t                                            ← villano foldea el turn
 //                + (1−fold_t)·fold_r·(Pot_t + Bet_t)                       ← paga turn, foldea river
-//                − (1−fold_t)·(1−fold_r)·(Bet_t + Bet_r)                   ← paga ambas, perdés en showdown
+//                − (1−fold_t)·(1−fold_r)·(Bet_t + Bet_r)                   ← paga ambas, pierdes en showdown
 //   (Excel descompuesto: =F90+H99-H100). riverPot = Pot_t + 2·Bet_t.
 export function doubleBarrelEv(input: DoubleBarrelEvInput): DoubleBarrelEvResult {
   const ft = input.foldTurnPct / 100;
@@ -306,7 +306,7 @@ export type ValueBluffResult = {
   oddsRatio: number;       // precio del call = (pot+bet)/bet
 };
 
-// Cuántos combos de farol podés tener respecto a tus combos de valor para que el
+// Cuántos combos de farol puedes tener respecto a tus combos de valor para que el
 // rango de apuesta quede balanceado (no explotable).
 //   bluff combos = value · bet/(pot+bet)                    (Excel: =E116*E113/F116 simplificado)
 //   frecuencia bluff = bet/(pot+2·bet)                       (Excel: =E112/(E111+2*E112))
@@ -325,7 +325,7 @@ export function valueBluffCombos(input: ValueBluffInput): ValueBluffResult {
 
 export type FoldEquityRequiredInput = {
   pot: number;         // bote antes del shove
-  shove: number;       // lo que shoveás (bet del hero); x = shove/pot
+  shove: number;       // lo que shoveas (bet del hero); x = shove/pot
   equityPct: number;   // 0-100, tu equity cuando te pagan
 };
 
@@ -341,7 +341,7 @@ export type FoldEquityRequiredResult = {
 // Fold equity requerida cuando el raise es all-in, teniendo en cuenta tu equity.
 // EV = −x + F·(x+1) + (1−F)·E·(1+2x), con EV=0 en el break-point:
 //   F = [x − E·(1+2x)] / [1 + x − E·(1+2x)]
-// donde x = fracción del pot que shoveás y E = tu equity cuando te pagan (0-1).
+// donde x = fracción del pot que shoveas y E = tu equity cuando te pagan (0-1).
 // Con E=0 colapsa a x/(1+x) = bet/(pot+bet) (breakeven de bluff puro).
 export function foldEquityRequired(
   input: FoldEquityRequiredInput,
@@ -372,10 +372,10 @@ export function foldEquityRequired(
 
 // ── C · EV de checkear (compuesto: check-call vs check-check) ─────────────────
 export type CheckCompoundEvInput = {
-  pot: number;                  // pot cuando checkeás
+  pot: number;                  // pot cuando checkeas
   villainBetsPct: number;       // 0-100, prob de que el villano apueste
   villainBet: number;           // tamaño de la apuesta del villano si apuesta
-  callEquityPct: number;        // 0-100, tu equity si pagás su apuesta
+  callEquityPct: number;        // 0-100, tu equity si pagas su apuesta
   checkCheckEquityPct: number;  // 0-100, tu equity si va a showdown sin apostar
 };
 
@@ -385,7 +385,7 @@ export type CheckCompoundEvResult = {
   evTotal: number;       // pBet·checkCall + (1−pBet)·checkCheck
 };
 
-// Checkeás: a veces el villano apuesta y pagás (check-call), a veces checkea
+// Checkeas: a veces el villano apuesta y pagas (check-call), a veces checkea
 // atrás y vas a showdown (check-check). Combina las dos ramas ponderadas.
 export function checkCompoundEv(input: CheckCompoundEvInput): CheckCompoundEvResult {
   const pBet = input.villainBetsPct / 100;
@@ -402,7 +402,7 @@ export function checkCompoundEv(input: CheckCompoundEvInput): CheckCompoundEvRes
 export type RaiseBluffEvInput = {
   pot: number;         // bote antes del raise
   villainBet: number;  // apuesta del villano que vas a subir
-  raiseCost: number;   // coste total de tu raise (lo que ponés de tu stack)
+  raiseCost: number;   // coste total de tu raise (lo que pones de tu stack)
   foldPct: number;     // 0-100, fold del villano frente a tu raise
 };
 
@@ -411,8 +411,8 @@ export type RaiseBluffEvResult = {
   breakevenFoldPct: number;  // raiseCost / (raiseCost + pot + villainBet)
 };
 
-// Raise como bluff puro (0 equity si te pagan): si foldea te llevás pot+apuesta,
-// si paga perdés el coste de tu raise. EV = F·(pot+vbet) − (1−F)·raiseCost.
+// Raise como bluff puro (0 equity si te pagan): si foldea te llevas pot+apuesta,
+// si paga pierdes el coste de tu raise. EV = F·(pot+vbet) − (1−F)·raiseCost.
 export function raiseBluffEv(input: RaiseBluffEvInput): RaiseBluffEvResult {
   const f = input.foldPct / 100;
   const win = input.pot + input.villainBet;

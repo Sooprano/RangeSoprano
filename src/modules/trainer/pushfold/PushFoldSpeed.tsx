@@ -196,7 +196,7 @@ function ConfigScreen({
           Push/Fold · Velocidad
         </div>
         <p className="mt-1 text-xs text-content-muted">
-          Corré contra el reloj con las tablas de Nash HU. Los 5 mejores por
+          Corre contra el reloj con las tablas de Nash HU. Los 5 mejores por
           duración se guardan localmente.
         </p>
 

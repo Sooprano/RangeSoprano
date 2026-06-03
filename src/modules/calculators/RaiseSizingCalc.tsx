@@ -83,9 +83,9 @@ export function RaiseSizingCalc() {
           Raise sizing &amp; pot odds (flop)
         </h2>
         <p className="mb-4 text-sm text-content-muted">
-          Enfrentás un raise en el flop. Dimensioná el raise como porcentaje del
-          pot, hacé la conversión inversa (cuántas fichas es un raise de X%) y
-          calculá la equity que necesitás para pagarlo. Todo a partir del bote, la
+          Enfrentas un raise en el flop. Dimensioná el raise como porcentaje del
+          pot, haz la conversión inversa (cuántas fichas es un raise de X%) y
+          calcula la equity que necesitas para pagarlo. Todo a partir del bote, la
           apuesta y el tamaño del raise.
         </p>
 
@@ -143,8 +143,8 @@ export function RaiseSizingCalc() {
           Conversor inverso — ¿cuántas fichas para raisear X%?
         </h3>
         <p className="mb-4 text-sm text-content-muted">
-          Usa el mismo bote y apuesta de arriba. Ingresá el % del pot al que querés
-          raisear y obtené el tamaño en fichas. El % es relativo a un raise
+          Usa el mismo bote y apuesta de arriba. Ingresa el % del pot al que quieres
+          raisear y obtén el tamaño en fichas. El % es relativo a un raise
           pot-completo: 100% = un raise del tamaño del pot (3·Bet + Bote).
         </p>
         <div className="grid items-start gap-4 sm:grid-cols-2">

@@ -44,7 +44,7 @@ export function ImpliedOddsCalc({
     if (result.isAlreadyProfitable) {
       tone = 'positive';
       display = 'Ya es +EV';
-      caption = `Tu equity (${formatPct(eqNum ?? 0)}) supera las pot odds requeridas (${formatPct(result.potOddsNeededPct)}). No necesitás ganancias futuras.`;
+      caption = `Tu equity (${formatPct(eqNum ?? 0)}) supera las pot odds requeridas (${formatPct(result.potOddsNeededPct)}). No necesitas ganancias futuras.`;
     } else {
       const exceedsStack =
         stackNum !== null && result.impliedNeeded > stackNum;
@@ -52,7 +52,7 @@ export function ImpliedOddsCalc({
       display = formatCurrency(result.impliedNeeded);
       caption = exceedsStack
         ? `Imposible: el villano sólo tiene ${formatCurrency(stackNum ?? 0)} de stack restante. Tirar.`
-        : `Pot odds requeridas: ${formatPct(result.potOddsNeededPct)}. Tu equity (${formatPct(eqNum ?? 0)}) no alcanza directo — necesitás sacarle al menos esta cantidad más en futuras calles cuando pegues.`;
+        : `Pot odds requeridas: ${formatPct(result.potOddsNeededPct)}. Tu equity (${formatPct(eqNum ?? 0)}) no alcanza directo — necesitas sacarle al menos esta cantidad más en futuras calles cuando pegues.`;
     }
   }
 
@@ -70,8 +70,8 @@ export function ImpliedOddsCalc({
           Implied Odds
         </h2>
         <p className="mb-4 text-sm text-content-muted">
-          Tenés un draw, el villano apuesta, y tu equity directa no alcanza las
-          pot odds. ¿Cuánto más necesitás ganar en promedio en futuras calles
+          Tienes un draw, el villano apuesta, y tu equity directa no alcanza las
+          pot odds. ¿Cuánto más necesitas ganar en promedio en futuras calles
           cuando pegues para que el call sea +EV?
         </p>
 
@@ -99,7 +99,7 @@ export function ImpliedOddsCalc({
           />
           <NumberField
             id="io-equity"
-            label="Equity — ¿Con qué frecuencia pegás el draw?"
+            label="Equity — ¿Con qué frecuencia pegas el draw?"
             value={equityPct}
             onChange={setEquityPct}
             suffix="%"
@@ -118,13 +118,13 @@ export function ImpliedOddsCalc({
             min={0}
             step={1}
             invalid={remainingStack.trim() !== '' && stackNum === null}
-            hint="Para chequear si lo que necesitás ganar es posible"
+            hint="Para chequear si lo que necesitas ganar es posible"
           />
         </div>
       </section>
 
       <ResultCard
-        label="Necesitás ganar"
+        label="Necesitas ganar"
         display={display}
         tone={tone}
         caption={

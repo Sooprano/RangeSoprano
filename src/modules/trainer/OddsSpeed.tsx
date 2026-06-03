@@ -193,7 +193,7 @@ function ConfigScreen({
           Pot Odds · Velocidad
         </div>
         <p className="mt-1 text-xs text-content-muted">
-          Corré contra el reloj con las dos tablas de pot odds. Los 5 mejores por duración se guardan localmente.
+          Corre contra el reloj con las dos tablas de pot odds. Los 5 mejores por duración se guardan localmente.
         </p>
 
         <div className="mt-4 flex flex-col gap-4">

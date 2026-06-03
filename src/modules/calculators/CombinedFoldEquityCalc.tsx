@@ -42,7 +42,7 @@ export function CombinedFoldEquityCalc() {
         <p className="mb-4 text-sm text-content-muted">
           Probabilidad de que <span className="font-medium text-content">todos</span> los
           villanos se tiren. Útil para evaluar si un bluff o shove pasa cuando hay
-          varios jugadores por hablar. Ingresá el fold% de cada uno — los que dejes
+          varios jugadores por hablar. Ingresa el fold% de cada uno — los que dejes
           vacíos se ignoran.
         </p>
 
@@ -65,7 +65,7 @@ export function CombinedFoldEquityCalc() {
 
         <p className="mt-3 text-[11px] text-content-disabled">
           {activeCount === 0
-            ? 'Cargá al menos un jugador para ver el resultado.'
+            ? 'Carga al menos un jugador para ver el resultado.'
             : `${activeCount} jugador${activeCount === 1 ? '' : 'es'} con dato — el resto se ignora.`}
         </p>
       </section>

@@ -109,7 +109,7 @@ export function AllInEvCalc({
           Breakeven F% = {be.toFixed(1)}%
         </span>
         {' — '}
-        necesitás que el villano se tire al menos ese porcentaje para shove ≥ fold.
+        necesitas que el villano se tire al menos ese porcentaje para shove ≥ fold.
       </>
     );
   })();
@@ -127,8 +127,8 @@ export function AllInEvCalc({
         <h2 className="mb-1 text-base font-semibold text-content">All-in EV</h2>
         <p className="mb-4 text-sm text-content-muted">
           EV de un shove preflop por encima de la apuesta del villano. Combina
-          fold equity (te llevás el pot muerto) con showdown equity cuando te
-          paga (ganás pot + lo que el villano agrega · perdés tu shove
+          fold equity (te llevas el pot muerto) con showdown equity cuando te
+          paga (ganas pot + lo que el villano agrega · pierdes tu shove
           completo).
         </p>
 
@@ -142,7 +142,7 @@ export function AllInEvCalc({
             min={0}
             step={1}
             invalid={pot.trim() !== '' && potNum === null}
-            hint="Tamaño del bote antes de que vos resteés"
+            hint="Tamaño del bote antes de que tú restees"
           />
           <NumberField
             id="aiev-call"
@@ -153,11 +153,11 @@ export function AllInEvCalc({
             min={0}
             step={1}
             invalid={call.trim() !== '' && callNum === null}
-            hint="Lo que arriesgás si pagás en vez de shovear"
+            hint="Lo que arriesgas si pagas en vez de shovear"
           />
           <NumberField
             id="aiev-shove"
-            label="Cuánto shoveás"
+            label="Cuánto shoveas"
             value={shove}
             onChange={setShove}
             prefix="$"
@@ -177,7 +177,7 @@ export function AllInEvCalc({
             max={100}
             step={1}
             invalid={equityPct.trim() !== '' && eqNum === null}
-            hint="Qué tan seguido ganás al showdown si te paga"
+            hint="Qué tan seguido ganas al showdown si te paga"
           />
           <NumberField
             id="aiev-fold"
@@ -263,7 +263,7 @@ function SensitivityTable({
 
       {cells === null ? (
         <p className="text-xs text-content-disabled">
-          Completá los cinco campos para ver la sensibilidad.
+          Completa los cinco campos para ver la sensibilidad.
         </p>
       ) : (
         <div className="overflow-x-auto">

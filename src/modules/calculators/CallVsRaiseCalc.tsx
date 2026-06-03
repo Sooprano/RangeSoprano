@@ -140,7 +140,7 @@ export function CallVsRaiseCalc({
           Call vs Raise (ríver)
         </h2>
         <p className="mb-4 text-sm text-content-muted">
-          Enfrentás una apuesta en el ríver: ¿pagás o raiseas all-in? Compara
+          Enfrentas una apuesta en el ríver: ¿pagas o raiseas all-in? Compara
           el EV de pagar (vas a showdown con tu equity) contra el de restarse All-in
           o raisear (fold equity + showdown si te pagan). Si ambas opciones son
           negativas, lo mejor es Foldear.
@@ -184,7 +184,7 @@ export function CallVsRaiseCalc({
               max={100}
               step={1}
               invalid={callEquityPct.trim() !== '' && callEqNum === null}
-              hint="Si pagás y vas a showdown, qué tan seguido ganás el pot"
+              hint="Si pagas y vas a showdown, qué tan seguido ganas el pot"
             />
             <ReadOnlyField
               label="Lose%"
@@ -279,7 +279,7 @@ function RecommendationCard({
   if (rec === null) {
     return (
       <div className="rounded-xl border border-border bg-surface/30 px-4 py-3 text-sm text-content-disabled">
-        Completá los campos para ver la recomendación.
+        Completa los campos para ver la recomendación.
       </div>
     );
   }

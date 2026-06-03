@@ -67,14 +67,14 @@ export function ValueBluffCalc() {
       const overflowCost = diff * betNum;
       return {
         tone: 'negative' as const,
-        text: `Te estás pasando de faroles: tenés ${formatCombos(actualNum)} pero el máximo balanceado es ${formatCombos(max)} (${formatCombos(diff)} de más). Si el villano paga seguido (lo correcto contra tu exceso de bluffs), cada farol de más se estrella perdiendo la apuesta: estás regalando hasta ${formatCurrency(overflowCost)} cuando te pagan. Sacá ~${formatCombos(diff)} combos.`,
+        text: `Te estás pasando de faroles: tienes ${formatCombos(actualNum)} pero el máximo balanceado es ${formatCombos(max)} (${formatCombos(diff)} de más). Si el villano paga seguido (lo correcto contra tu exceso de bluffs), cada farol de más se estrella perdiendo la apuesta: estás regalando hasta ${formatCurrency(overflowCost)} cuando te pagan. Saca ~${formatCombos(diff)} combos.`,
       };
     }
     const missing = -diff;
     const foldEquityLeft = missing * potNum;
     return {
       tone: 'neutral' as const,
-      text: `Estás bluffeando de menos: tenés ${formatCombos(actualNum)} y podés meter hasta ${formatCombos(max)} (${formatCombos(missing)} disponibles). Si el villano foldea sus bluff-catchers (lo correcto contra tu rango cargado de valor), cada farol que falta gana el bote: estás dejando hasta ${formatCurrency(foldEquityLeft)} de fold equity sobre la mesa. Agregá ~${formatCombos(missing)} faroles más.`,
+      text: `Estás bluffeando de menos: tienes ${formatCombos(actualNum)} y puedes meter hasta ${formatCombos(max)} (${formatCombos(missing)} disponibles). Si el villano foldea sus bluff-catchers (lo correcto contra tu rango cargado de valor), cada farol que falta gana el bote: estás dejando hasta ${formatCurrency(foldEquityLeft)} de fold equity sobre la mesa. Agrega ~${formatCombos(missing)} faroles más.`,
     };
   })();
 
@@ -92,10 +92,10 @@ export function ValueBluffCalc() {
           Combos de farol máx (Value / Bluff)
         </h2>
         <p className="mb-4 text-sm text-content-muted">
-          Cuántos combos de farol podés tener respecto a tus combos de valor para
+          Cuántos combos de farol puedes tener respecto a tus combos de valor para
           que tu rango de apuesta quede balanceado — ni explotable por exceso de
           bluffs, ni dejando valor por bluffear de menos. A mayor tamaño de
-          apuesta, más faroles podés permitirte.
+          apuesta, más faroles puedes permitirte.
         </p>
 
         <div className="grid gap-4 sm:grid-cols-3">
@@ -142,10 +142,10 @@ export function ValueBluffCalc() {
 
       <section className="rounded-xl border border-border bg-surface/40 p-5">
         <h3 className="mb-1 text-sm font-semibold text-content">
-          ¿Cuántos faroles pensás meter? (opcional)
+          ¿Cuántos faroles piensas meter? (opcional)
         </h3>
         <p className="mb-4 text-sm text-content-muted">
-          Ingresá tus combos de farol actuales y te digo si te estás pasando o
+          Ingresa tus combos de farol actuales y te digo si te estás pasando o
           quedando corto respecto al máximo óptimo.
         </p>
         <div className="grid items-start gap-4 sm:grid-cols-2">
@@ -157,18 +157,18 @@ export function ValueBluffCalc() {
             min={0}
             step={1}
             invalid={actualBluffs.trim() !== '' && actualNum === null}
-            hint="Dejalo vacío si solo querés ver el máximo"
+            hint="Déjalo vacío si solo quieres ver el máximo"
           />
           <InsightCard insight={insight} />
         </div>
         <p className="mt-4 rounded-lg border border-border bg-surface/30 px-3 py-2.5 text-[12px] leading-relaxed text-content-muted">
           <span className="font-semibold text-content">Ojo con el matiz GTO:</span> en
           equilibrio un farol es break-even (0 EV). Cuando el villano paga a la
-          frecuencia correcta (MDF), bluffear y rendirse rinden lo mismo. Balanceás para
-          no darle una explotación, no por EV directo del farol. Si bluffeás{' '}
+          frecuencia correcta (MDF), bluffear y rendirse rinden lo mismo. Balanceas para
+          no darle una explotación, no por EV directo del farol. Si bluffeas{' '}
           <span className="font-semibold text-content">de menos</span>, el villano puede
-          sobre-foldear sus bluff-catchers y tus apuestas de valor dejan de cobrar (perdés
-          fold equity). Si bluffeás{' '}
+          sobre-foldear sus bluff-catchers y tus apuestas de valor dejan de cobrar (pierdes
+          fold equity). Si bluffeas{' '}
           <span className="font-semibold text-content">de más</span>, puede sobre-pagar y
           tus faroles de más se estrellan perdiendo la apuesta. Los costos de arriba se
           realizan solo cuando el villano se desvía para explotarte.
@@ -218,7 +218,7 @@ function InsightCard({
   if (insight === null) {
     return (
       <div className="flex items-center rounded-xl border border-border bg-surface/30 px-4 py-3 text-sm text-content-disabled">
-        Ingresá tus faroles actuales para comparar.
+        Ingresa tus faroles actuales para comparar.
       </div>
     );
   }

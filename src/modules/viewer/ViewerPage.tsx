@@ -34,7 +34,7 @@ type ViewMode = 'single' | 'compare' | 'overview';
 export default function ViewerPage() {
   useDocumentTitle('Visualizador de rangos · Range Soprano', {
     description:
-      'Visualizá rangos preflop con filtros por posición, situación y villano. Compará dos rangos, exportá PNG o imprimí PDF.',
+      'Visualiza rangos preflop con filtros por posición, situación y villano. Compara dos rangos, exportá PNG o imprime PDF.',
     canonical: 'https://rangesoprano.com/viewer/',
   });
   const ranges = useRangeStore((s) => s.ranges);
@@ -230,7 +230,7 @@ export default function ViewerPage() {
             emptyMessage={
               hasAnyFilter(filters)
                 ? 'Ningún rango coincide con los filtros actuales.'
-                : 'Sin rangos todavía. Creá uno en el Editor.'
+                : 'Sin rangos todavía. Crea uno en el Editor.'
             }
           />
         )}
@@ -306,12 +306,12 @@ export default function ViewerPage() {
                 {range ? (
                   <RangePanel range={range} badge="A" />
                 ) : (
-                  <CompareSlot label="Elegí un rango de la lista" />
+                  <CompareSlot label="Elige un rango de la lista" />
                 )}
                 {compareRange ? (
                   <RangePanel range={compareRange} badge="B" />
                 ) : (
-                  <CompareSlot label="Elegí un rango para comparar" />
+                  <CompareSlot label="Elige un rango para comparar" />
                 )}
               </div>
             </div>
@@ -334,12 +334,12 @@ export default function ViewerPage() {
               </div>
               {filteredSummaries.length > 1 && (
                 <p className="text-xs text-content-muted">
-                  Usá ← / → para navegar por la lista filtrada.
+                  Usa ← / → para navegar por la lista filtrada.
                 </p>
               )}
             </>
           ) : (
-            <CompareSlot label="Seleccioná un rango de la lista para verlo." />
+            <CompareSlot label="Selecciona un rango de la lista para verlo." />
           )}
         </div>
 

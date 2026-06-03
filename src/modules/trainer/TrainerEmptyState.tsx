@@ -15,7 +15,7 @@ export function TrainerEmptyState() {
           Sin rangos para entrenar
         </h2>
         <p className="mt-2 text-sm text-content-muted">
-          Creá al menos un rango en el Editor antes de iniciar una sesión de
+          Crea al menos un rango en el Editor antes de iniciar una sesión de
           entrenamiento.
         </p>
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">

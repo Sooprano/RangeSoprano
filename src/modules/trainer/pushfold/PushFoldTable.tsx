@@ -83,7 +83,7 @@ export function PushFoldTable() {
         <PushFoldGrid table={table} bb={bb} color={meta.color} showBB={showBB} />
 
         <p className="text-center text-xs text-content-muted">
-          Movés el slider y vés cómo cambia el rango. Las celdas pintadas son las
+          Mueves el slider y ves cómo cambia el rango. Las celdas pintadas son las
           manos donde es correcto {meta.verb} con stack ≤ <span className="font-medium text-content tabular-nums">{bb}</span> BB.
         </p>
       </div>

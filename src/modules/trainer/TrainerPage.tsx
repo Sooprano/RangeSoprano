@@ -27,7 +27,7 @@ type TrainerMode = 'classic' | 'drawing' | 'speed' | 'odds' | 'pushfold';
 export default function TrainerPage() {
   useDocumentTitle('Entrenador de rangos · Range Soprano', {
     description:
-      'Entrená manos preflop en mesa 6-max o HU. Modo Clásico, Speed contrarreloj o Drawing.',
+      'Entrena manos preflop en mesa 6-max o HU. Modo Clásico, Speed contrarreloj o Drawing.',
     canonical: 'https://rangesoprano.com/trainer/',
   });
   const ranges = useRangeStore((s) => s.ranges);
@@ -82,7 +82,7 @@ export default function TrainerPage() {
         <PageHeader
           eyebrow="Matemática · pot odds"
           title="Pot Odds"
-          description="Aprendé las dos tablas clásicas: fold equity al apostar y equity necesaria al pagar."
+          description="Aprende las dos tablas clásicas: fold equity al apostar y equity necesaria al pagar."
         />
         <div className="flex flex-col gap-4">
           <div className="flex flex-wrap items-start justify-end gap-3">
@@ -100,7 +100,7 @@ export default function TrainerPage() {
         <PageHeader
           eyebrow="Matemática · ICM short stack"
           title="Push/Fold"
-          description="Aprendé las tablas de Nash de empuje/pago heads-up para stacks cortos."
+          description="Aprende las tablas de Nash de empuje/pago heads-up para stacks cortos."
         />
         <div className="flex flex-col gap-4">
           <div className="flex flex-wrap items-start justify-end gap-3">
@@ -132,7 +132,7 @@ export default function TrainerPage() {
           emptyMessage={
             hasAnyFilter(filters)
               ? 'Ningún rango coincide con los filtros actuales.'
-              : 'Sin rangos todavía. Creá uno en el Editor.'
+              : 'Sin rangos todavía. Crea uno en el Editor.'
           }
         />
 
@@ -151,7 +151,7 @@ export default function TrainerPage() {
             )
           ) : (
             <div className="flex min-h-[40vh] items-center justify-center rounded-xl border border-dashed border-border p-6 text-center text-sm text-content-muted">
-              Elegí un rango de la lista para empezar.
+              Elige un rango de la lista para empezar.
             </div>
           )}
         </div>

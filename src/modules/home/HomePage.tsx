@@ -52,7 +52,7 @@ const MODULES: readonly ModuleCard[] = [
     label: 'Visualizador',
     icon: Eye,
     description:
-      'Tres vistas: Individual, Comparar (dos rangos en paralelo) y Resumen (mosaico de carpetas). Filtrá por posición, situación, villano y acción. Exportá a PNG o imprimí varias hojas a PDF con leyenda y etiquetas de stack/sizing.',
+      'Tres vistas: Individual, Comparar (dos rangos en paralelo) y Resumen (mosaico de carpetas). Filtrá por posición, situación, villano y acción. Exportá a PNG o imprime varias hojas a PDF con leyenda y etiquetas de stack/sizing.',
   },
   {
     to: '/trainer',
@@ -60,7 +60,7 @@ const MODULES: readonly ModuleCard[] = [
     label: 'Entrenador',
     icon: Target,
     description:
-      'Entrená manos en mesa 6-max o Heads-Up. Modos Clásico (auto-avance 1.5 s), Velocidad (contrarreloj con tabla de líderes local), Dibujo (pintar el rango de memoria) y Pot Odds (fold equity al apostar y equity al pagar, con MC y fórmula explicada). Filtros por posición, situación y villano.',
+      'Entrena manos en mesa 6-max o Heads-Up. Modos Clásico (auto-avance 1.5 s), Velocidad (contrarreloj con tabla de líderes local), Dibujo (pintar el rango de memoria) y Pot Odds (fold equity al apostar y equity al pagar, con MC y fórmula explicada). Filtros por posición, situación y villano.',
   },
   {
     to: '/editor',
@@ -68,7 +68,7 @@ const MODULES: readonly ModuleCard[] = [
     label: 'Editor',
     icon: Pencil,
     description:
-      'Creá y editá rangos con paleta de acciones por rango, pesos mixtos, notas, deshacer/rehacer, carpetas y sub-carpetas. Importá/exportá rangos individuales o el perfil completo.',
+      'Crea y edita rangos con paleta de acciones por rango, pesos mixtos, notas, deshacer/rehacer, carpetas y sub-carpetas. Importá/exportá rangos individuales o el perfil completo.',
   },
   {
     to: '/calculadoras',
@@ -84,7 +84,7 @@ const MODULES: readonly ModuleCard[] = [
     label: 'Análisis de manos',
     icon: FileSearch,
     description:
-      'Pegá el historial .txt de una mano real y la web extrae el spot (board, pot y apuesta de cada decisión) y por cada jugada del héroe te abre la calculadora de EV adecuada, ya cargada con los números. La equity la traés de Flopzilla y la tipeás: la web hace el razonamiento de EV y te enseña qué herramienta usar.',
+      'Pega el historial .txt de una mano real y la web extrae el spot (board, pot y apuesta de cada decisión) y por cada jugada del héroe te abre la calculadora de EV adecuada, ya cargada con los números. La equity la traes de Flopzilla y la tipeas: la web hace el razonamiento de EV y te enseña qué herramienta usar.',
   },
 ];
 
@@ -97,29 +97,29 @@ const FAQS: readonly Faq[] = [
   },
   {
     q: '¿Por qué no hay login ni cuenta?',
-    a: 'Tus datos viven sólo en tu navegador (localStorage). No subimos nada a ningún servidor → cero cuentas, cero contraseñas, cero tracking. Si querés mover los rangos a otro dispositivo usás export/import .json.',
+    a: 'Tus datos viven sólo en tu navegador (localStorage). No subimos nada a ningún servidor → cero cuentas, cero contraseñas, cero tracking. Si quieres mover los rangos a otro dispositivo usas export/import .json.',
   },
   {
     q: '¿Qué es un archivo .json y para qué lo uso?',
     a: (
       <>
-        Es un archivo de texto con todos tus rangos serializados. Lo descargás
+        Es un archivo de texto con todos tus rangos serializados. Lo descargas
         desde <span className="font-medium text-content">Editor → Export → Download all ranges JSON</span>{' '}
-        y lo guardás donde quieras (Drive, Dropbox, pendrive). En otra PC o en
-        el celular lo importás desde <span className="font-medium text-content">Home → Importar perfil completo</span>{' '}
-        y recuperás todo. El archivo también incluye los colores de tus carpetas
+        y lo guardas donde quieras (Drive, Dropbox, pendrive). En otra PC o en
+        el celular lo importas desde <span className="font-medium text-content">Home → Importar perfil completo</span>{' '}
+        y recuperas todo. El archivo también incluye los colores de tus carpetas
         y la configuración del randomizador (presets, sets, frecuencia), así
         que el perfil viaja completo.
       </>
     ),
     aPlain:
-      'Es un archivo de texto con todos tus rangos serializados. Lo descargás desde Editor → Export → Download all ranges JSON y lo guardás donde quieras (Drive, Dropbox, pendrive). En otra PC o en el celular lo importás desde Home → Importar perfil completo y recuperás todo. El archivo también incluye los colores de tus carpetas y la configuración del randomizador (presets, sets, frecuencia), así que el perfil viaja completo.',
+      'Es un archivo de texto con todos tus rangos serializados. Lo descargas desde Editor → Export → Download all ranges JSON y lo guardas donde quieras (Drive, Dropbox, pendrive). En otra PC o en el celular lo importas desde Home → Importar perfil completo y recuperas todo. El archivo también incluye los colores de tus carpetas y la configuración del randomizador (presets, sets, frecuencia), así que el perfil viaja completo.',
   },
   {
     q: '¿Cómo funciona el randomizador?',
     a: (
       <>
-        Vivís en el <span className="font-medium text-content">Visualizador → Resumen</span>{' '}
+        Vives en el <span className="font-medium text-content">Visualizador → Resumen</span>{' '}
         como una tarjeta fija arriba a la derecha. Clic en{' '}
         <span className="font-medium text-content">Tirar</span> (o tecla{' '}
         <kbd className="rounded border border-border bg-bg px-1 py-0.5 font-mono text-[10px] text-content">
@@ -134,11 +134,11 @@ const FAQS: readonly Faq[] = [
           50/50
         </code>
         , …) se iluminan en verde si el roll cae dentro de su threshold, así
-        leés la decisión de un vistazo: si tu rango dice "AKo 50/50" y el preset{' '}
+        lees la decisión de un vistazo: si tu rango dice "AKo 50/50" y el preset{' '}
         <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">
           50/50
         </code>{' '}
-        está iluminado, hacés la acción de la izquierda; si no, la de la derecha.
+        está iluminado, haces la acción de la izquierda; si no, la de la derecha.
         Modo automático con{' '}
         <kbd className="rounded border border-border bg-bg px-1 py-0.5 font-mono text-[10px] text-content">
           A
@@ -147,13 +147,13 @@ const FAQS: readonly Faq[] = [
       </>
     ),
     aPlain:
-      'Vive en el Visualizador → Resumen como una tarjeta fija arriba a la derecha. Clic en Tirar (o tecla Espacio) tira un número del 1 al 100. Los 4 presets editables (60/40, 50/50, ...) se iluminan en verde si el roll cae dentro de su threshold, así leés la decisión de un vistazo: si tu rango dice "AKo 50/50" y el preset 50/50 está iluminado, hacés la acción de la izquierda; si no, la de la derecha. Modo automático con A y tres sets guardables para alternar configuraciones por formato.',
+      'Vive en el Visualizador → Resumen como una tarjeta fija arriba a la derecha. Clic en Tirar (o tecla Espacio) tira un número del 1 al 100. Los 4 presets editables (60/40, 50/50, ...) se iluminan en verde si el roll cae dentro de su threshold, así lees la decisión de un vistazo: si tu rango dice "AKo 50/50" y el preset 50/50 está iluminado, haces la acción de la izquierda; si no, la de la derecha. Modo automático con A y tres sets guardables para alternar configuraciones por formato.',
   },
   {
     q: '¿Cómo funciona el cronómetro de sesión?',
     a: (
       <>
-        Vivís en el{' '}
+        Vives en el{' '}
         <span className="font-medium text-content">Visualizador → Resumen</span>{' '}
         como una tarjeta junto al randomizador. Play/pausa el timer, la
         bandera (🚩) marca el fin de una sesión y guarda su duración como{' '}
@@ -161,12 +161,12 @@ const FAQS: readonly Faq[] = [
         limpia todo. La clave: el cronómetro solo cuenta tiempo mientras está
         corriendo, así que pausando durante los descansos las vueltas reflejan{' '}
         <span className="font-medium text-content">solo tu tiempo real de juego</span>{' '}
-        — el descanso queda excluido. El estado persiste si recargás la página
+        — el descanso queda excluido. El estado persiste si recargas la página
         (si lo dejaste corriendo, retoma con el offset correcto).
       </>
     ),
     aPlain:
-      'Vive en el Visualizador → Resumen como una tarjeta junto al randomizador. Play/pausa el timer, la bandera marca el fin de una sesión y guarda su duración como vuelta, y el reset limpia todo. La clave: el cronómetro solo cuenta tiempo mientras está corriendo, así que pausando durante los descansos las vueltas reflejan solo tu tiempo real de juego — el descanso queda excluido. El estado persiste si recargás la página (si lo dejaste corriendo, retoma con el offset correcto).',
+      'Vive en el Visualizador → Resumen como una tarjeta junto al randomizador. Play/pausa el timer, la bandera marca el fin de una sesión y guarda su duración como vuelta, y el reset limpia todo. La clave: el cronómetro solo cuenta tiempo mientras está corriendo, así que pausando durante los descansos las vueltas reflejan solo tu tiempo real de juego — el descanso queda excluido. El estado persiste si recargas la página (si lo dejaste corriendo, retoma con el offset correcto).',
   },
   {
     q: '¿Qué es la ventana flotante y para qué sirve?',
@@ -175,7 +175,7 @@ const FAQS: readonly Faq[] = [
         Es una ventana del sistema operativo que abre el cronómetro y el
         randomizador{' '}
         <span className="font-medium text-content">siempre encima</span> del
-        cliente de poker. Útil para verlos sin hacer Alt+Tab mientras jugás en
+        cliente de poker. Útil para verlos sin hacer Alt+Tab mientras juegas en
         PokerStars, GG, WPT Global u otra mesa real. Click en el icono⊡{' '}
         arriba a la derecha del cluster de tools en{' '}
         <span className="font-medium text-content">Visualizador → Resumen</span>.
@@ -190,11 +190,11 @@ const FAQS: readonly Faq[] = [
       </>
     ),
     aPlain:
-      'Es una ventana del sistema operativo que abre el cronómetro y el randomizador siempre encima del cliente de poker. Útil para verlos sin hacer Alt+Tab mientras jugás en PokerStars, GG, WPT Global u otra mesa real. Click en el icono arriba a la derecha del cluster de tools en Visualizador → Resumen. Es redimensionable arrastrando los bordes y comparte estado con la pestaña — tirar en la flotante también se ve en la pestaña, play/pausa del cronómetro idem. Funciona nativo en Chrome 116+, Edge, Brave y Opera (Document Picture-in-Picture API); en Firefox y Safari abre una ventana normal del navegador, redimensionable pero no siempre-encima.',
+      'Es una ventana del sistema operativo que abre el cronómetro y el randomizador siempre encima del cliente de poker. Útil para verlos sin hacer Alt+Tab mientras juegas en PokerStars, GG, WPT Global u otra mesa real. Click en el icono arriba a la derecha del cluster de tools en Visualizador → Resumen. Es redimensionable arrastrando los bordes y comparte estado con la pestaña — tirar en la flotante también se ve en la pestaña, play/pausa del cronómetro idem. Funciona nativo en Chrome 116+, Edge, Brave y Opera (Document Picture-in-Picture API); en Firefox y Safari abre una ventana normal del navegador, redimensionable pero no siempre-encima.',
   },
   {
     q: '¿Mis rangos se borran si limpio el navegador?',
-    a: 'Sí. localStorage muere si limpiás caché/datos del sitio o usás navegación privada. Hacé backup periódico exportando el .json — es la única copia que tenés.',
+    a: 'Sí. localStorage muere si limpias caché/datos del sitio o usas navegación privada. Haz backup periódico exportando el .json — es la única copia que tienes.',
   },
   {
     q: '¿Cuántos rangos puedo guardar?',
@@ -211,12 +211,12 @@ const FAQS: readonly Faq[] = [
         En el <span className="font-medium text-content">Visualizador</span>, pestaña{' '}
         <span className="font-medium text-content">Resumen</span>, botón{' '}
         <span className="font-medium text-content">Imprimir PDF</span>. Configurá rangos por
-        página, etiquetas (stack/sizing), leyenda y badge de formato. Después usá
+        página, etiquetas (stack/sizing), leyenda y badge de formato. Después usa
         <span className="font-medium text-content"> Print / Save as PDF</span> del navegador.
       </>
     ),
     aPlain:
-      'En el Visualizador, pestaña Resumen, botón Imprimir PDF. Configurá rangos por página, etiquetas (stack/sizing), leyenda y badge de formato. Después usá Print / Save as PDF del navegador.',
+      'En el Visualizador, pestaña Resumen, botón Imprimir PDF. Configurá rangos por página, etiquetas (stack/sizing), leyenda y badge de formato. Después usa Print / Save as PDF del navegador.',
   },
   {
     q: '¿Funciona offline?',
@@ -228,15 +228,15 @@ const FAQS: readonly Faq[] = [
       <>
         Sí. El <span className="font-medium text-content">Entrenador</span> tiene una pestaña{' '}
         <span className="font-medium text-content">Pot Odds</span> con cuatro tipos de pregunta sobre pot odds:
-        cuánta fold equity necesitás cuando bluffeás, qué equity necesitás para
+        cuánta fold equity necesitas cuando bluffeas, qué equity necesitas para
         pagar, y las dos inversas (qué tamaño apostar dado un % de fold equity y
-        hasta qué tamaño podés pagar dado un % de equity). Multiple choice de 4
+        hasta qué tamaño puedes pagar dado un % de equity). Multiple choice de 4
         opciones con feedback que muestra la fórmula resuelta. No depende de
-        tener rangos cargados, podés practicar incluso desde un perfil vacío.
+        tener rangos cargados, puedes practicar incluso desde un perfil vacío.
       </>
     ),
     aPlain:
-      'Sí. El Entrenador tiene una pestaña Pot Odds con cuatro tipos de pregunta sobre pot odds: cuánta fold equity necesitás cuando bluffeás, qué equity necesitás para pagar, y las dos inversas (qué tamaño apostar dado un % de fold equity y hasta qué tamaño podés pagar dado un % de equity). Multiple choice de 4 opciones con feedback que muestra la fórmula resuelta. No depende de tener rangos cargados, podés practicar incluso desde un perfil vacío.',
+      'Sí. El Entrenador tiene una pestaña Pot Odds con cuatro tipos de pregunta sobre pot odds: cuánta fold equity necesitas cuando bluffeas, qué equity necesitas para pagar, y las dos inversas (qué tamaño apostar dado un % de fold equity y hasta qué tamaño puedes pagar dado un % de equity). Multiple choice de 4 opciones con feedback que muestra la fórmula resuelta. No depende de tener rangos cargados, puedes practicar incluso desde un perfil vacío.',
   },
   {
     q: '¿Cómo uso las calculadoras de EV?',
@@ -246,9 +246,9 @@ const FAQS: readonly Faq[] = [
         <Link to="/calculadoras" className="font-medium text-accent-light hover:underline">
           Calculadoras
         </Link>
-        . Tenés diecisiete herramientas:{' '}
+        . Tienes diecisiete herramientas:{' '}
         <span className="font-medium text-content">EV básico</span> (EV de una jugada con
-        dos finales: pot, % que esperás ganar y lo que arriesgás),{' '}
+        dos finales: pot, % que esperas ganar y lo que arriesgas),{' '}
         <span className="font-medium text-content">EV con fold equity</span> (semi-bluffs
         y shoves: F% de fold + showdown EV cuando te pagan),{' '}
         <span className="font-medium text-content">EV de bluff</span> (bluff puro sin
@@ -259,7 +259,7 @@ const FAQS: readonly Faq[] = [
         <span className="font-medium text-content">EV multi-calle</span> (encadena el EV
         de dos calles —turn + river— ponderando cada cuánto se ve el river),{' '}
         <span className="font-medium text-content">Value / Bluff</span> (cuántos combos
-        de farol podés tener respecto a tus combos de valor para no desbalancear el
+        de farol puedes tener respecto a tus combos de valor para no desbalancear el
         rango de apuesta),{' '}
         <span className="font-medium text-content">Check vs Bet</span> (comparación lado a
         lado de check behind vs apostar el ríver con recomendación y delta de EV),{' '}
@@ -270,33 +270,33 @@ const FAQS: readonly Faq[] = [
         la apuesta del villano: pot + call + shove + equity + fold, con tabla de
         sensibilidad ±5/±10% y breakeven F% automático),{' '}
         <span className="font-medium text-content">FE requerida</span> (fold equity que
-        necesitás para shovear all-in teniendo en cuenta tu equity: muestra cómo el
+        necesitas para shovear all-in teniendo en cuenta tu equity: muestra cómo el
         breakeven baja cuando vas con outs en flop o turn),{' '}
-        <span className="font-medium text-content">Call vs Raise</span> (enfrentás una
-        apuesta en el ríver y comparás pagar vs restear all-in encima, con fold como
+        <span className="font-medium text-content">Call vs Raise</span> (enfrentas una
+        apuesta en el ríver y comparas pagar vs restear all-in encima, con fold como
         tercera opción si ambas son negativas),{' '}
         <span className="font-medium text-content">Raise sizing</span> (en el flop:
         dimensioná tu raise como % del pot, la conversión inversa a fichas y la equity
-        que necesitás para pagar un raise),{' '}
+        que necesitas para pagar un raise),{' '}
         <span className="font-medium text-content">EV del raise</span> (EV de subir como
         bluff sobre la apuesta del villano, con fold% directo o derivado de combos),{' '}
-        <span className="font-medium text-content">Implied Odds</span> (tenés un draw,
-        ¿cuánto más necesitás ganarle en futuras calles cuando pegues para que el call sea
+        <span className="font-medium text-content">Implied Odds</span> (tienes un draw,
+        ¿cuánto más necesitas ganarle en futuras calles cuando pegues para que el call sea
         rentable?),{' '}
         <span className="font-medium text-content">EV de flotar</span> (pagar el flop
         para robar el turn dadas las frecuencias de barrel y check-fold del villano),{' '}
         <span className="font-medium text-content">Fold equity combinada</span>{' '}
         (probabilidad de que todos los villanos foldeen en un shove multi-way — útil en
         BTN / SB cuando hay varios por hablar) y{' '}
-        <span className="font-medium text-content">Call multi-way</span> (cuando pagás un
+        <span className="font-medium text-content">Call multi-way</span> (cuando pagas un
         shove preflop y hay jugadores por hablar que pueden coldcallar: modela el split HU
         vs MW con dos equities distintas y muestra tres escenarios HU only / actual / MW
         only). Cada calculadora muestra la fórmula y los valores sustituidos en un bloque
-        colapsable, así seguís el cálculo paso a paso.
+        colapsable, así sigues el cálculo paso a paso.
       </>
     ),
     aPlain:
-      'Desde la barra lateral entrá a Calculadoras. Tenés diecisiete herramientas: EV básico (EV de una jugada con dos finales: pot, % que esperás ganar y lo que arriesgás), EV con fold equity (semi-bluffs y shoves: F% de fold + showdown EV cuando te pagan), EV de bluff (bluff puro sin equity en showdown — river bluffs y blocker bets — con breakeven F% automático), Doble barrel (EV de la línea completa turn + barrel river: muestra si el conjunto es +EV aunque el bet del turn solo sea −EV), EV multi-calle (encadena el EV de dos calles turn + river ponderando cada cuánto se ve el river), Value / Bluff (cuántos combos de farol podés tener respecto a tus combos de valor para no desbalancear el rango de apuesta), Check vs Bet (comparación lado a lado de check behind vs apostar el ríver con recomendación y delta de EV), EV de checkear (cuánto rinde checkear juntando check-call si el villano apuesta y check-check si hace check behind), All-in EV (shove preflop sobre la apuesta del villano: pot + call + shove + equity + fold, con tabla de sensibilidad ±5/±10% y breakeven F% automático), FE requerida (fold equity para shovear all-in teniendo en cuenta tu equity: el breakeven baja cuando vas con outs en flop o turn), Call vs Raise (enfrentando una apuesta en el ríver: pagar vs restear all-in encima, con fold como tercera opción), Raise sizing (en el flop: raise como % del pot, conversión inversa a fichas y equity para pagar un raise), EV del raise (EV de subir como bluff sobre la apuesta del villano, con fold% directo o derivado de combos), Implied Odds (tenés un draw, ¿cuánto más necesitás ganarle en futuras calles cuando pegues para que el call sea rentable?), EV de flotar (pagar el flop para robar el turn dadas las frecuencias de barrel y check-fold del villano), Fold equity combinada (probabilidad de que todos los villanos foldeen en un shove multi-way) y Call multi-way (pagar un shove preflop con potenciales overcallers detrás: modela HU vs MW con dos equities distintas y tres escenarios). Cada calculadora muestra la fórmula y los valores sustituidos en un bloque colapsable.',
+      'Desde la barra lateral entrá a Calculadoras. Tienes diecisiete herramientas: EV básico (EV de una jugada con dos finales: pot, % que esperas ganar y lo que arriesgas), EV con fold equity (semi-bluffs y shoves: F% de fold + showdown EV cuando te pagan), EV de bluff (bluff puro sin equity en showdown — river bluffs y blocker bets — con breakeven F% automático), Doble barrel (EV de la línea completa turn + barrel river: muestra si el conjunto es +EV aunque el bet del turn solo sea −EV), EV multi-calle (encadena el EV de dos calles turn + river ponderando cada cuánto se ve el river), Value / Bluff (cuántos combos de farol puedes tener respecto a tus combos de valor para no desbalancear el rango de apuesta), Check vs Bet (comparación lado a lado de check behind vs apostar el ríver con recomendación y delta de EV), EV de checkear (cuánto rinde checkear juntando check-call si el villano apuesta y check-check si hace check behind), All-in EV (shove preflop sobre la apuesta del villano: pot + call + shove + equity + fold, con tabla de sensibilidad ±5/±10% y breakeven F% automático), FE requerida (fold equity para shovear all-in teniendo en cuenta tu equity: el breakeven baja cuando vas con outs en flop o turn), Call vs Raise (enfrentando una apuesta en el ríver: pagar vs restear all-in encima, con fold como tercera opción), Raise sizing (en el flop: raise como % del pot, conversión inversa a fichas y equity para pagar un raise), EV del raise (EV de subir como bluff sobre la apuesta del villano, con fold% directo o derivado de combos), Implied Odds (tienes un draw, ¿cuánto más necesitas ganarle en futuras calles cuando pegues para que el call sea rentable?), EV de flotar (pagar el flop para robar el turn dadas las frecuencias de barrel y check-fold del villano), Fold equity combinada (probabilidad de que todos los villanos foldeen en un shove multi-way) y Call multi-way (pagar un shove preflop con potenciales overcallers detrás: modela HU vs MW con dos equities distintas y tres escenarios). Cada calculadora muestra la fórmula y los valores sustituidos en un bloque colapsable.',
   },
   {
     q: '¿Cómo analizo una mano que jugué?',
@@ -306,27 +306,27 @@ const FAQS: readonly Faq[] = [
         <Link to="/analisis" className="font-medium text-accent-light hover:underline">
           Análisis de manos
         </Link>{' '}
-        y pegá el historial{' '}
+        y pega el historial{' '}
         <span className="font-medium text-content">.txt</span> que exporta tu sala. La web
         lo lee y arma una hoja de estudio: posiciones, stacks, board calle por calle y{' '}
         <span className="font-medium text-content">el pot y la apuesta de cada decisión</span>
         . Por cada jugada agresiva del héroe te ofrece un botón{' '}
         <span className="font-medium text-content">Analizar</span> que abre la calculadora
         de EV adecuada —EV de bluff, doble barrel, all-in, call vs raise— ya pre-llenada con
-        esos números. Vos solo tipeás la{' '}
+        esos números. Tú solo tipeas la{' '}
         <span className="font-medium text-content">equity o el fold% que sacaste de Flopzilla</span>{' '}
-        y la web hace el razonamiento de EV. No reproduce la mano (para eso ya tenés tu
+        y la web hace el razonamiento de EV. No reproduce la mano (para eso ya tienes tu
         replayer) ni calcula equity (eso lo hace Flopzilla): lo que aporta es enseñarte qué
-        herramienta usar y automatizar el cálculo. Podés alternar entre fichas y BB y dejar
+        herramienta usar y automatizar el cálculo. Puedes alternar entre fichas y BB y dejar
         tu conclusión escrita.
       </>
     ),
     aPlain:
-      'Entrá a Análisis de manos y pegá el historial .txt que exporta tu sala. La web lo lee y arma una hoja de estudio: posiciones, stacks, board calle por calle y el pot y la apuesta de cada decisión. Por cada jugada agresiva del héroe te ofrece un botón Analizar que abre la calculadora de EV adecuada (EV de bluff, doble barrel, all-in, call vs raise) ya pre-llenada con esos números. Vos solo tipeás la equity o el fold% que sacaste de Flopzilla y la web hace el razonamiento de EV. No reproduce la mano (para eso ya tenés tu replayer) ni calcula equity (eso lo hace Flopzilla): lo que aporta es enseñarte qué herramienta usar y automatizar el cálculo. Podés alternar entre fichas y BB y dejar tu conclusión escrita.',
+      'Entrá a Análisis de manos y pega el historial .txt que exporta tu sala. La web lo lee y arma una hoja de estudio: posiciones, stacks, board calle por calle y el pot y la apuesta de cada decisión. Por cada jugada agresiva del héroe te ofrece un botón Analizar que abre la calculadora de EV adecuada (EV de bluff, doble barrel, all-in, call vs raise) ya pre-llenada con esos números. Tú solo tipeas la equity o el fold% que sacaste de Flopzilla y la web hace el razonamiento de EV. No reproduce la mano (para eso ya tienes tu replayer) ni calcula equity (eso lo hace Flopzilla): lo que aporta es enseñarte qué herramienta usar y automatizar el cálculo. Puedes alternar entre fichas y BB y dejar tu conclusión escrita.',
   },
   {
     q: '¿Puedo contribuir al proyecto?',
-    a: 'Si te resulta útil podés dejar una propina en BTC desde la sección de abajo — cualquier monto suma y ayuda a mantener el proyecto vivo. Reportes de bugs y sugerencias también son bienvenidos.',
+    a: 'Si te resulta útil puedes dejar una propina en BTC desde la sección de abajo — cualquier monto suma y ayuda a mantener el proyecto vivo. Reportes de bugs y sugerencias también son bienvenidos.',
   },
 ];
 
@@ -417,9 +417,9 @@ export default function HomePage() {
         <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-5 text-sm text-content-muted">
           <p>
             Un <span className="font-medium text-content">rango de poker preflop</span> es
-            el conjunto de manos que decidís jugar desde una posición
-            específica antes del flop. En lugar de decidir mano a mano, definís un rango
-            y lo aplicás de forma consistente: por ejemplo, abrir desde el botón con un
+            el conjunto de manos que decides jugar desde una posición
+            específica antes del flop. En lugar de decidir mano a mano, defines un rango
+            y lo aplicas de forma consistente: por ejemplo, abrir desde el botón con un
             rango más amplio que desde UTG, o defender la BB contra un raise con una mezcla
             de calls y 3-bets.
           </p>
@@ -454,7 +454,7 @@ export default function HomePage() {
                 Editor
               </Link>
               {' '}pintando celdas con la paleta de acciones y ajustando pesos con el
-              slider. También podés{' '}
+              slider. También puedes{' '}
               <span className="font-medium text-content">pegar texto desde GTOWizard, Flopzilla, GTObase</span>
               {' '}u otras tools de poker: Range Soprano entiende el formato estándar
               (ej.{' '}
@@ -483,7 +483,7 @@ export default function HomePage() {
             </span>
             <div className="text-content-muted">
               <span className="font-medium text-content">2. Repasar en el Visualizador</span>
-              {' — '}usá la vista{' '}
+              {' — '}usa la vista{' '}
               <span className="font-medium text-content">Individual</span> para revisar un rango,{' '}
               <span className="font-medium text-content">Comparar</span> para comparar dos
               en paralelo (ej. abrir vs defender) o{' '}
@@ -497,12 +497,12 @@ export default function HomePage() {
             </span>
             <div className="text-content-muted">
               <span className="font-medium text-content">3. Memorizar con el Entrenador</span>
-              {' — '}entrená la decisión preflop con el modo{' '}
+              {' — '}entrena la decisión preflop con el modo{' '}
               <span className="font-medium text-content">Clásico</span> (precisión),{' '}
               <span className="font-medium text-content">Velocidad</span> (contrarreloj
               con tabla de líderes local) o{' '}
-              <span className="font-medium text-content">Dibujo</span> (pintá el rango de
-              memoria y compará con la verdad). Las tres modalidades sobre mesa 6-max o HU.
+              <span className="font-medium text-content">Dibujo</span> (pinta el rango de
+              memoria y compara con la verdad). Las tres modalidades sobre mesa 6-max o HU.
             </div>
           </li>
           <li className="flex items-start gap-3">
@@ -574,8 +574,8 @@ export default function HomePage() {
             </span>
             <p>
               Saber qué manos van en cada rango no es suficiente: en mesa también
-              necesitás saber <span className="font-medium text-content">cuándo apostar es rentable</span> y{' '}
-              <span className="font-medium text-content">hasta qué tamaño podés pagar</span> con tu equity.
+              necesitas saber <span className="font-medium text-content">cuándo apostar es rentable</span> y{' '}
+              <span className="font-medium text-content">hasta qué tamaño puedes pagar</span> con tu equity.
               Esa matemática se llama <span className="font-medium text-content">pot odds</span> y se resume en dos tablas
               clásicas que conviene tener internalizadas.
             </p>
@@ -583,7 +583,7 @@ export default function HomePage() {
 
           <ul className="grid gap-2 sm:grid-cols-2">
             <li className="rounded-md border border-border bg-bg p-3">
-              <p className="font-medium text-content">Cuando vos apostás (bluff)</p>
+              <p className="font-medium text-content">Cuando tú apuestas (bluff)</p>
               <p className="text-xs">
                 Tu apuesta necesita éxito X% del tiempo:{' '}
                 <code className="font-mono text-content">bet / (pot + bet)</code>.
@@ -610,7 +610,7 @@ export default function HomePage() {
               Trainer → tab Odds
             </Link>
             : cuatro tipos de pregunta (fold equity al apostar, equity al pagar, y
-            las inversas — qué tamaño apostar / hasta qué bet podés pagar) con
+            las inversas — qué tamaño apostar / hasta qué bet puedes pagar) con
             multiple choice de 4 opciones, atajos{' '}
             <kbd className="rounded border border-border bg-bg px-1 py-0.5 font-mono text-[10px] text-content">
               1
@@ -640,16 +640,16 @@ export default function HomePage() {
               <Dices className="h-5 w-5" strokeWidth={2.25} />
             </span>
             <p>
-              Cuando jugás con frecuencias mixtas (ej. AKo va{' '}
+              Cuando juegas con frecuencias mixtas (ej. AKo va{' '}
               <span className="font-medium text-content">50% raise / 50% call</span>), la
-              ejecución correcta requiere un dado: tirás un número del 1 al 100 y
-              decidís según ese valor. Range Soprano trae un{' '}
+              ejecución correcta requiere un dado: tiras un número del 1 al 100 y
+              decides según ese valor. Range Soprano trae un{' '}
               <span className="font-medium text-content">randomizador integrado</span>{' '}
               en el{' '}
               <Link to="/viewer" className="font-medium text-accent-light hover:underline">
                 Visualizador → Resumen
               </Link>
-              {' '}para que tomes la decisión sin salir de la app mientras estudiás.
+              {' '}para que tomes la decisión sin salir de la app mientras estudias.
             </p>
           </div>
 
@@ -664,7 +664,7 @@ export default function HomePage() {
               autogenera al cambiar el valor (valor 25 → "25/75").
             </li>
             <li>
-              <span className="font-medium text-content">2. Tirá.</span> Botón{' '}
+              <span className="font-medium text-content">2. Tira.</span> Botón{' '}
               <span className="font-medium text-content">Tirar</span> o tecla{' '}
               <kbd className="rounded border border-border bg-bg px-1 py-0.5 font-mono text-[10px] text-content">
                 Espacio
@@ -674,11 +674,11 @@ export default function HomePage() {
               <kbd className="rounded border border-border bg-bg px-1 py-0.5 font-mono text-[10px] text-content">
                 👁
               </kbd>{' '}
-              alterna ese resaltado si solo querés ver el número).
+              alterna ese resaltado si solo quieres ver el número).
             </li>
             <li>
               <span className="font-medium text-content">3. Auto opcional.</span>{' '}
-              Activá el modo automático con{' '}
+              Activa el modo automático con{' '}
               <kbd className="rounded border border-border bg-bg px-1 py-0.5 font-mono text-[10px] text-content">
                 A
               </kbd>{' '}
@@ -700,8 +700,8 @@ export default function HomePage() {
             <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">
               .json
             </code>{' '}
-            cuando exportás tu perfil completo: al importarlo en otro dispositivo
-            recuperás tus presets, sets y frecuencia tal como los dejaste.
+            cuando exportas tu perfil completo: al importarlo en otro dispositivo
+            recuperas tus presets, sets y frecuencia tal como los dejaste.
           </p>
         </div>
       </section>
@@ -723,7 +723,7 @@ export default function HomePage() {
             </span>
             <p>
               Profesionalizar el estudio y el juego de poker arranca por saber
-              cuánto tiempo realmente pasás en mesa. Range Soprano incluye un{' '}
+              cuánto tiempo realmente pasas en mesa. Range Soprano incluye un{' '}
               <span className="font-medium text-content">
                 cronómetro de sesión integrado
               </span>{' '}
@@ -731,8 +731,8 @@ export default function HomePage() {
               <Link to="/viewer" className="font-medium text-accent-light hover:underline">
                 Visualizador → Resumen
               </Link>{' '}
-              con horas, minutos, segundos y centisegundos. Empezás con Play,
-              marcás cada sesión con la bandera, y al final tenés la lista
+              con horas, minutos, segundos y centisegundos. Empiezas con Play,
+              marcas cada sesión con la bandera, y al final tienes la lista
               completa de cuánto duró cada una.
             </p>
           </div>
@@ -741,8 +741,8 @@ export default function HomePage() {
             <span className="font-medium text-content">
               Pausa-aware: el descanso entre sesiones no cuenta.
             </span>{' '}
-            Si jugás una hora, te tomás 15 minutos de descanso (y pausás el
-            cronómetro), después jugás otra hora, la siguiente vuelta solo
+            Si juegas una hora, te tomas 15 minutos de descanso (y pausas el
+            cronómetro), después juegas otra hora, la siguiente vuelta solo
             cuenta los 60 minutos de juego — el descanso queda excluido
             automáticamente. Esto te da la duración{' '}
             <span className="font-medium text-content">efectiva</span> de cada
@@ -761,7 +761,7 @@ export default function HomePage() {
             </li>
             <li>
               <span className="font-medium text-content">3. Pausa durante el descanso.</span>{' '}
-              Apretá ⏸ cuando te levantás de la mesa. Al volver, ▶ retoma
+              Apretá ⏸ cuando te levantas de la mesa. Al volver, ▶ retoma
               donde quedaste.
             </li>
             <li>
@@ -771,12 +771,12 @@ export default function HomePage() {
             </li>
             <li>
               <span className="font-medium text-content">5. Reset al final del día.</span>{' '}
-              ↺ limpia todo y empezás de cero la próxima jornada.
+              ↺ limpia todo y empiezas de cero la próxima jornada.
             </li>
           </ol>
 
           <p className="text-xs">
-            El estado persiste en localStorage: si recargás la página o cerrás
+            El estado persiste en localStorage: si recargas la página o cierras
             el navegador con el cronómetro corriendo, al volver retoma con el
             offset correcto basado en{' '}
             <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">
@@ -803,7 +803,7 @@ export default function HomePage() {
               <PictureInPicture2 className="h-5 w-5" strokeWidth={2.25} />
             </span>
             <p>
-              Cuando jugás en{' '}
+              Cuando juegas en{' '}
               <span className="font-medium text-content">
                 PokerStars, GG, WPT Global, ACR, PartyPoker
               </span>{' '}
@@ -906,7 +906,7 @@ export default function HomePage() {
               <kbd className="rounded border border-border bg-bg px-1.5 py-0.5 font-mono text-[10px] text-content">
                 ···
               </kbd>{' '}
-              junto al rango → <span className="font-medium text-content">Mover a grupo…</span> → escribí el
+              junto al rango → <span className="font-medium text-content">Mover a grupo…</span> → escribe el
               nombre de la carpeta (ej.{' '}
               <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">Opening</code>) y Enter.
               Ojo: el campo <span className="font-medium text-content">Nombre</span> al crear un rango es el nombre del rango, no
@@ -919,7 +919,7 @@ export default function HomePage() {
             </span>
             <div className="text-content-muted">
               <span className="font-medium text-content">Sub-carpetas</span>
-              {' — '}usá{' '}
+              {' — '}usa{' '}
               <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">/</code>{' '}
               en el mismo campo de grupo. Ej.{' '}
               <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">
@@ -929,7 +929,7 @@ export default function HomePage() {
               <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">Preflop</code> y dentro la
               sub-carpeta{' '}
               <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">Opening</code>.{' '}
-              También podés mover una carpeta ya existente dentro de otra desde el panel
+              También puedes mover una carpeta ya existente dentro de otra desde el panel
               de doble click (ver abajo).
             </div>
           </li>
@@ -943,8 +943,8 @@ export default function HomePage() {
               <kbd className="rounded border border-border bg-bg px-1.5 py-0.5 font-mono text-[10px] text-content">
                 ···
               </kbd>{' '}
-              → <span className="font-medium text-content">Mover a grupo…</span> → escribí otro nombre (con autocompletado) o
-              dejá vacío para sacarlo de toda carpeta.
+              → <span className="font-medium text-content">Mover a grupo…</span> → escribe otro nombre (con autocompletado) o
+              deja vacío para sacarlo de toda carpeta.
             </div>
           </li>
           <li className="flex items-start gap-3">
@@ -956,7 +956,7 @@ export default function HomePage() {
               {' — '}
               <span className="font-medium text-content">doble click</span> sobre el nombre
               de la carpeta en la barra lateral. Se abre un panel con dos campos:{' '}
-              <span className="font-medium text-content">Carpeta padre</span> (elegí del
+              <span className="font-medium text-content">Carpeta padre</span> (elige del
               dropdown para moverla dentro de otra, o{' '}
               <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">
                 — Sin padre (raíz) —
@@ -982,7 +982,7 @@ export default function HomePage() {
             Tus rangos se guardan automáticamente en{' '}
             <span className="font-mono text-content">localStorage</span> (cap 3.8 MB, suficiente
             para ~100 rangos completos).
-            Si querés moverlos a otro dispositivo, exportá un archivo JSON y volvé a
+            Si quieres moverlos a otro dispositivo, exportá un archivo JSON y volvé a
             importarlo desde acá.
           </p>
 
@@ -997,17 +997,17 @@ export default function HomePage() {
               title="Exportar perfil completo"
               body={
                 <>
-                  Descargá un .json con todos tus rangos para hacer backup o moverlos
+                  Descarga un .json con todos tus rangos para hacer backup o moverlos
                   de dispositivo:
                   <ol className="mt-1 list-decimal pl-5 text-content-muted">
                     <li>
-                      Andá al <Link to="/editor" className="font-medium text-accent-light hover:underline">Editor</Link>.
+                      Ve al <Link to="/editor" className="font-medium text-accent-light hover:underline">Editor</Link>.
                     </li>
                     <li>
-                      Abrí el menú <span className="font-medium text-content">Export</span> en la barra superior.
+                      Abre el menú <span className="font-medium text-content">Export</span> en la barra superior.
                     </li>
                     <li>
-                      Elegí <span className="font-medium text-content">Download all ranges JSON</span> y guardá el
+                      Elige <span className="font-medium text-content">Download all ranges JSON</span> y guarda el
                       archivo donde quieras (Dropbox, Google Drive, pendrive).
                     </li>
                   </ol>
@@ -1019,17 +1019,17 @@ export default function HomePage() {
               title="Importar perfil completo"
               body={
                 <>
-                  Subí el mismo .json en cualquier dispositivo y recuperás todos tus
+                  Sube el mismo .json en cualquier dispositivo y recuperas todos tus
                   rangos:
                   <ol className="mt-1 list-decimal pl-5 text-content-muted">
                     <li>
-                      Tocá el botón{' '}
+                      Toca el botón{' '}
                       <span className="font-medium text-content">
                         Importar perfil completo
                       </span>{' '}
                       acá abajo.
                     </li>
-                    <li>Elegí el archivo .json que exportaste antes.</li>
+                    <li>Elige el archivo .json que exportaste antes.</li>
                     <li>
                       Los rangos se suman a los actuales (no se pisa nada). Cap 3.8 MB
                       por archivo (~100 rangos).
@@ -1101,7 +1101,7 @@ export default function HomePage() {
               <Bitcoin className="h-5 w-5" strokeWidth={2.25} />
             </span>
             <p className="text-sm text-content-muted">
-              Range Soprano es gratis. Si te resulta útil podés dejar una propina en
+              Range Soprano es gratis. Si te resulta útil puedes dejar una propina en
               BTC — cualquier monto suma.
             </p>
           </div>

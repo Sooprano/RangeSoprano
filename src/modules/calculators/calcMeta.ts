@@ -47,7 +47,7 @@ export type CalcMode =
 export type CalcItem = { mode: CalcMode; Icon: LucideIcon; label: string };
 export type CalcGroup = { label: string; items: readonly CalcItem[] };
 
-// Orden pedagógico: agrupado por la acción que tenés enfrente, de fundamentos
+// Orden pedagógico: agrupado por la acción que tienes enfrente, de fundamentos
 // a situaciones específicas. Editar este array reordena el selector.
 export const CALC_GROUPS: readonly CalcGroup[] = [
   {
@@ -59,7 +59,7 @@ export const CALC_GROUPS: readonly CalcGroup[] = [
     ],
   },
   {
-    label: 'Cuando apostás vos',
+    label: 'Cuando apuestas tú',
     items: [
       { mode: 'check-vs-bet', Icon: Scale, label: 'Check vs Bet' },
       { mode: 'check-ev', Icon: Hand, label: 'EV de checkear' },
@@ -69,7 +69,7 @@ export const CALC_GROUPS: readonly CalcGroup[] = [
     ],
   },
   {
-    label: 'Cuando enfrentás una apuesta',
+    label: 'Cuando enfrentas una apuesta',
     items: [
       { mode: 'implied-odds', Icon: TrendingUp, label: 'Implied Odds' },
       { mode: 'float-ev', Icon: Waves, label: 'EV de flotar' },

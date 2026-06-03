@@ -80,7 +80,7 @@ export function MultiWayCallEv() {
 
   const mwPotHint =
     potNum !== null && callNum !== null && mwPotNum !== null && mwPotNum < potNum + callNum
-      ? `Cuando va MW el pot efectivo es al menos $${(potNum + callNum).toFixed(0)} (lo que hay + tu call). Verificá el valor.`
+      ? `Cuando va MW el pot efectivo es al menos $${(potNum + callNum).toFixed(0)} (lo que hay + tu call). Verifica el valor.`
       : 'Pot final si todos los relevantes pagan (incluye tu call)';
 
   const formula =
@@ -122,7 +122,7 @@ export function MultiWayCallEv() {
             min={0}
             step={1}
             invalid={call.trim() !== '' && callNum === null}
-            hint="Lo que tenés que pagar para seguir en la mano"
+            hint="Lo que tienes que pagar para seguir en la mano"
           />
           <NumberField
             id="mwc-hueq"
@@ -134,7 +134,7 @@ export function MultiWayCallEv() {
             max={100}
             step={1}
             invalid={huEquityPct.trim() !== '' && huEqNum === null}
-            hint="Si el pot queda HU, qué tan seguido ganás"
+            hint="Si el pot queda HU, qué tan seguido ganas"
           />
           <NumberField
             id="mwc-oc"
@@ -169,7 +169,7 @@ export function MultiWayCallEv() {
             max={100}
             step={1}
             invalid={mwEquityPct.trim() !== '' && mwEqNum === null}
-            hint="Si el pot se va MW, qué tan seguido ganás contra todos"
+            hint="Si el pot se va MW, qué tan seguido ganas contra todos"
           />
         </div>
       </section>
@@ -244,7 +244,7 @@ function ScenarioCards({
 
       {cells === null ? (
         <p className="text-xs text-content-disabled">
-          Completá los seis campos para ver los escenarios.
+          Completa los seis campos para ver los escenarios.
         </p>
       ) : (
         <div className="grid gap-3 sm:grid-cols-3">

@@ -61,7 +61,7 @@ export function BluffEvCalc({
           Breakeven F% = {be.toFixed(1)}%
         </span>
         {' — '}
-        necesitás que el villano se tire al menos ese porcentaje para que el
+        necesitas que el villano se tire al menos ese porcentaje para que el
         bluff sea ≥ EV 0.
       </>
     );
@@ -79,8 +79,8 @@ export function BluffEvCalc({
         <h2 className="mb-1 text-base font-semibold text-content">EV de bluff</h2>
         <p className="mb-4 text-sm text-content-muted">
           EV de un bluff puro sin equity en showdown. Cuando el villano se tira
-          te llevás el pot; cuando paga perdés tu apuesta completa. Útil para
-          river bluffs o blocker bets donde ya no podés mejorar.
+          te llevas el pot; cuando paga pierdes tu apuesta completa. Útil para
+          river bluffs o blocker bets donde ya no puedes mejorar.
         </p>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -175,7 +175,7 @@ function Breakdown({
             <span className="font-mono tabular-nums text-content">
               {foldPct.toFixed(1)}%
             </span>{' '}
-            del tiempo se tira → te llevás el pot de{' '}
+            del tiempo se tira → te llevas el pot de{' '}
             <span className="font-mono tabular-nums text-content">
               {formatCurrency(pot)}
             </span>
@@ -189,7 +189,7 @@ function Breakdown({
             <span className="font-mono tabular-nums text-content">
               {continuePct.toFixed(1)}%
             </span>{' '}
-            del tiempo paga → perdés tu bet de{' '}
+            del tiempo paga → pierdes tu bet de{' '}
             <span className="font-mono tabular-nums text-content">
               {formatCurrency(bet)}
             </span>

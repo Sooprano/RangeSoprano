@@ -70,7 +70,7 @@ export function EvComplexCalc({
         </h2>
         <p className="mb-4 text-sm text-content-muted">
           EV de una apuesta o all-in que combina fold equity (F% — frecuencia
-          con que el villano se tira y te llevás el pot muerto) con showdown
+          con que el villano se tira y te llevas el pot muerto) con showdown
           equity cuando te paga (W% / L%). Útil para semi-bluffs y shoves.
         </p>
 
@@ -106,14 +106,14 @@ export function EvComplexCalc({
           <div />
           <NumberField
             id="evc-win-amount"
-            label="$W — Cuando te pagan y ganás"
+            label="$W — Cuando te pagan y ganas"
             value={winAmount}
             onChange={setWinAmount}
             prefix="$"
             min={0}
             step={1}
             invalid={winAmount.trim() !== '' && wNum === null}
-            hint="Pot + call del villano (no contás tu propia apuesta)"
+            hint="Pot + call del villano (no cuentas tu propia apuesta)"
           />
           <NumberField
             id="evc-win-pct"
@@ -128,7 +128,7 @@ export function EvComplexCalc({
           />
           <NumberField
             id="evc-lose-amount"
-            label="$L — Cuando te pagan y perdés"
+            label="$L — Cuando te pagan y pierdes"
             value={loseAmount}
             onChange={setLoseAmount}
             prefix="$"

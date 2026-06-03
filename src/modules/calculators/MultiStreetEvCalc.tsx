@@ -52,17 +52,17 @@ export function MultiStreetEvCalc() {
           EV conjunto multi-calle
         </h2>
         <p className="mb-4 text-sm text-content-muted">
-          Combinador genérico de dos calles: traés el EV ya calculado del turn y
+          Combinador genérico de dos calles: traes el EV ya calculado del turn y
           del river (con cualquier otra herramienta) y los encadena según cada
-          cuánto llegás al river.{' '}
+          cuánto llegas al river.{' '}
           <span className="font-medium text-content">
             A diferencia de Doble barrel
           </span>{' '}
           —que calcula una línea fija de bluff + bluff desde los tamaños de
-          apuesta— acá vos traés los dos EV ya hechos, así sirve para cualquier
+          apuesta— acá tú traes los dos EV ya hechos, así sirve para cualquier
           combinación: value bet + check, semi-bluff + give-up, o dos calles
           calculadas con tools distintas. Los valores de ejemplo son los del
-          default de Doble barrel: un bet de turn de −$12.5 que, sumándole el
+          default de Doble barrel: un bet de turn de −$12.5 que, sumandole el
           barrel del river, termina en +EV.
         </p>
 
