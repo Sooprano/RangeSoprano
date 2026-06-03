@@ -11,11 +11,19 @@ import {
   parseField,
 } from './CalcShared';
 
-export function CallVsRaiseCalc() {
-  const [pot, setPot] = useState('150');
-  const [call, setCall] = useState('50');
+export function CallVsRaiseCalc({
+  initialPot,
+  initialCall,
+  initialShove,
+}: {
+  initialPot?: string | undefined;
+  initialCall?: string | undefined;
+  initialShove?: string | undefined;
+} = {}) {
+  const [pot, setPot] = useState(initialPot ?? '150');
+  const [call, setCall] = useState(initialCall ?? '50');
   const [callEquityPct, setCallEquityPct] = useState('25');
-  const [shove, setShove] = useState('200');
+  const [shove, setShove] = useState(initialShove ?? '200');
   const [winWhenCalledPct, setWinWhenCalledPct] = useState('25');
   const [foldPct, setFoldPct] = useState('50');
 

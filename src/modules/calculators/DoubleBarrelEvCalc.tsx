@@ -11,11 +11,19 @@ import {
   parseField,
 } from './CalcShared';
 
-export function DoubleBarrelEvCalc() {
-  const [potTurn, setPotTurn] = useState('100');
-  const [betTurn, setBetTurn] = useState('50');
+export function DoubleBarrelEvCalc({
+  initialPotTurn,
+  initialBetTurn,
+  initialBetRiver,
+}: {
+  initialPotTurn?: string | undefined;
+  initialBetTurn?: string | undefined;
+  initialBetRiver?: string | undefined;
+} = {}) {
+  const [potTurn, setPotTurn] = useState(initialPotTurn ?? '100');
+  const [betTurn, setBetTurn] = useState(initialBetTurn ?? '50');
   const [foldTurn, setFoldTurn] = useState('25');
-  const [betRiver, setBetRiver] = useState('150');
+  const [betRiver, setBetRiver] = useState(initialBetRiver ?? '150');
   const [foldRiver, setFoldRiver] = useState('50');
 
   const potTurnNum = parseField(potTurn, { min: 0 });

@@ -11,10 +11,16 @@ import {
   parseField,
 } from './CalcShared';
 
-export function CheckVsBetCalc() {
-  const [pot, setPot] = useState('100');
+export function CheckVsBetCalc({
+  initialPot,
+  initialBet,
+}: {
+  initialPot?: string | undefined;
+  initialBet?: string | undefined;
+} = {}) {
+  const [pot, setPot] = useState(initialPot ?? '100');
   const [checkWinPct, setCheckWinPct] = useState('25');
-  const [bet, setBet] = useState('50');
+  const [bet, setBet] = useState(initialBet ?? '50');
   const [winWhenCalledPct, setWinWhenCalledPct] = useState('0');
   const [foldPct, setFoldPct] = useState('20');
   const [raisePct, setRaisePct] = useState('0');

@@ -34,10 +34,18 @@ const SCENARIOS: readonly Scenario[] = [
 
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
 
-export function AllInEvCalc() {
-  const [pot, setPot] = useState('100');
-  const [call, setCall] = useState('75');
-  const [shove, setShove] = useState('400');
+export function AllInEvCalc({
+  initialPot,
+  initialCall,
+  initialShove,
+}: {
+  initialPot?: string | undefined;
+  initialCall?: string | undefined;
+  initialShove?: string | undefined;
+} = {}) {
+  const [pot, setPot] = useState(initialPot ?? '100');
+  const [call, setCall] = useState(initialCall ?? '75');
+  const [shove, setShove] = useState(initialShove ?? '400');
   const [equityPct, setEquityPct] = useState('33');
   const [foldPct, setFoldPct] = useState('66');
 

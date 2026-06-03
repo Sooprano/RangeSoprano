@@ -9,10 +9,18 @@ import {
   parseField,
 } from './CalcShared';
 
-export function BluffEvCalc() {
-  const [pot, setPot] = useState('100');
-  const [bet, setBet] = useState('75');
-  const [foldPct, setFoldPct] = useState('45');
+export function BluffEvCalc({
+  initialPot,
+  initialBet,
+  initialFoldPct,
+}: {
+  initialPot?: string | undefined;
+  initialBet?: string | undefined;
+  initialFoldPct?: string | undefined;
+} = {}) {
+  const [pot, setPot] = useState(initialPot ?? '100');
+  const [bet, setBet] = useState(initialBet ?? '75');
+  const [foldPct, setFoldPct] = useState(initialFoldPct ?? '45');
 
   const potNum = parseField(pot, { min: 0 });
   const betNum = parseField(bet, { min: 0 });

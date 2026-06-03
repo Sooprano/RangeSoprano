@@ -10,12 +10,18 @@ import {
   parseField,
 } from './CalcShared';
 
-export function EvComplexCalc() {
+export function EvComplexCalc({
+  initialCurrentPot,
+  initialLoseAmount,
+}: {
+  initialCurrentPot?: string | undefined;
+  initialLoseAmount?: string | undefined;
+} = {}) {
   const [foldPct, setFoldPct] = useState('60');
-  const [currentPot, setCurrentPot] = useState('100');
+  const [currentPot, setCurrentPot] = useState(initialCurrentPot ?? '100');
   const [winAmount, setWinAmount] = useState('150');
   const [winPct, setWinPct] = useState('40');
-  const [loseAmount, setLoseAmount] = useState('100');
+  const [loseAmount, setLoseAmount] = useState(initialLoseAmount ?? '100');
 
   const fNum = parseField(foldPct, { min: 0, max: 100 });
   const potNum = parseField(currentPot, { min: 0 });

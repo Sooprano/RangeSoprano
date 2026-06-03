@@ -10,9 +10,15 @@ import {
   parseField,
 } from './CalcShared';
 
-export function ImpliedOddsCalc() {
-  const [callAmount, setCallAmount] = useState('50');
-  const [currentPot, setCurrentPot] = useState('100');
+export function ImpliedOddsCalc({
+  initialCall,
+  initialCurrentPot,
+}: {
+  initialCall?: string | undefined;
+  initialCurrentPot?: string | undefined;
+} = {}) {
+  const [callAmount, setCallAmount] = useState(initialCall ?? '50');
+  const [currentPot, setCurrentPot] = useState(initialCurrentPot ?? '100');
   const [equityPct, setEquityPct] = useState('20');
   const [remainingStack, setRemainingStack] = useState('200');
 

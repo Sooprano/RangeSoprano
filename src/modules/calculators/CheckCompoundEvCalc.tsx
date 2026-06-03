@@ -9,8 +9,12 @@ import {
   parseField,
 } from './CalcShared';
 
-export function CheckCompoundEvCalc() {
-  const [pot, setPot] = useState('100');
+export function CheckCompoundEvCalc({
+  initialPot,
+}: {
+  initialPot?: string | undefined;
+} = {}) {
+  const [pot, setPot] = useState(initialPot ?? '100');
   const [villainBetsPct, setVillainBetsPct] = useState('50');
   const [villainBet, setVillainBet] = useState('60');
   const [callEquityPct, setCallEquityPct] = useState('45');
