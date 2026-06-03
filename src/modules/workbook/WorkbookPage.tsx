@@ -1,25 +1,97 @@
+import { useState } from 'react';
+import { Calculator, Layers } from 'lucide-react';
+import { cn } from '@/lib/cn';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { WhichCalcDrill } from './WhichCalcDrill';
+import { ComboCountDrill } from './ComboCountDrill';
+
+type Drill = 'which-calc' | 'combos';
 
 export default function WorkbookPage() {
   useDocumentTitle('Ejercicios de poker · Range Soprano', {
     description:
-      'Practica elegir la calculadora de EV correcta para cada spot postflop. Te mostramos una mano real (board, bote y apuesta) y eliges la herramienta adecuada, con explicación. Sin login, sin tracking.',
+      'Drills de poker: practica elegir la calculadora de EV correcta para cada spot y cuenta combos con bloqueadores. Mano, board y explicación. Sin login, sin tracking.',
     canonical: 'https://rangesoprano.com/ejercicios/',
   });
+
+  const [drill, setDrill] = useState<Drill>('which-calc');
 
   return (
     <>
       <PageHeader
         eyebrow="Entrenamiento"
         title="Ejercicios"
-        description="Entrena el reflejo de elegir la calculadora correcta. Te mostramos un spot real de una mano jugada y tú eliges qué herramienta de EV usarías para analizarlo. Después ves por qué y qué datos traerías de Flopzilla."
+        description="Drills de active recall para internalizar el postflop. Elige qué calculadora usar en un spot real, o cuenta cuántos combos de una mano quedan tras los bloqueadores del board y tus cartas. Cada respuesta viene con su explicación."
       />
 
       <div className="mx-auto w-full max-w-3xl">
-        <WhichCalcDrill />
+        <div className="mb-4 flex justify-center">
+          <DrillToggle value={drill} onChange={setDrill} />
+        </div>
+        {drill === 'which-calc' ? <WhichCalcDrill /> : <ComboCountDrill />}
       </div>
     </>
+  );
+}
+
+function DrillToggle({
+  value,
+  onChange,
+}: {
+  value: Drill;
+  onChange: (next: Drill) => void;
+}) {
+  return (
+    <div
+      role="tablist"
+      aria-label="Ejercicio"
+      className="inline-flex w-fit items-center gap-1 rounded-xl border border-border bg-surface/60 p-1"
+    >
+      <DrillButton
+        active={value === 'which-calc'}
+        onClick={() => onChange('which-calc')}
+        icon={<Calculator className="h-3.5 w-3.5" strokeWidth={2.25} />}
+        label="¿Qué calculadora?"
+      />
+      <DrillButton
+        active={value === 'combos'}
+        onClick={() => onChange('combos')}
+        icon={<Layers className="h-3.5 w-3.5" strokeWidth={2.25} />}
+        label="Conteo de combos"
+      />
+    </div>
+  );
+}
+
+function DrillButton({
+  active,
+  onClick,
+  icon,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={active}
+      onClick={onClick}
+      className={cn(
+        'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium',
+        'transition-colors duration-150 ease-out-soft',
+        'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light',
+        active
+          ? 'bg-surface text-content shadow-[inset_0_0_0_1px_rgb(var(--color-accent)/0.6)]'
+          : 'text-content-muted hover:bg-surface-hover hover:text-content',
+      )}
+    >
+      {icon}
+      {label}
+    </button>
   );
 }

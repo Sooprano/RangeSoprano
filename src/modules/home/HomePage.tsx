@@ -93,7 +93,7 @@ const MODULES: readonly ModuleCard[] = [
     label: 'Ejercicios',
     icon: Dumbbell,
     description:
-      'Entrena el reflejo de elegir la calculadora correcta. Te mostramos un spot real (tu mano, el board y la apuesta) y eliges qué herramienta de EV usarías para analizarlo. Después ves por qué es esa y qué datos traerías de Flopzilla. Con puntaje, racha y atajos de teclado.',
+      'Drills de active recall para el postflop. "¿Qué calculadora?": te mostramos un spot real y eliges qué herramienta de EV usarías, con explicación y qué traer de Flopzilla. "Conteo de combos": cuenta cuántos combos de una mano quedan tras los bloqueadores del board y tus cartas. Con puntaje, racha y atajos de teclado.',
   },
 ];
 
@@ -334,27 +334,30 @@ const FAQS: readonly Faq[] = [
       'Entra a Análisis de manos y pega el historial .txt que exporta PokerTracker 4. La web lo lee y arma una hoja de estudio: posiciones, stacks, board calle por calle y el pot y la apuesta de cada decisión. Por cada jugada agresiva de hero te ofrece un botón Analizar que abre la calculadora de EV adecuada (EV de bluff, doble barrel, all-in, call vs raise) ya pre-llenada con esos números. Tú solo ingresas la equity o el fold% que sacaste de Flopzilla y la web hace el razonamiento de EV. No reproduce la mano (para eso ya tienes tu replayer) ni calcula equity (eso lo hace Flopzilla): lo que aporta es enseñarte qué herramienta usar y automatizar el cálculo. Puedes alternar entre fichas y BB y dejar tu conclusión escrita.',
   },
   {
-    q: '¿Cómo practico elegir la calculadora correcta?',
+    q: '¿Qué ejercicios de práctica hay?',
     a: (
       <>
-        Entra a{' '}
+        En{' '}
         <Link to="/ejercicios" className="font-medium text-accent-light hover:underline">
           Ejercicios
-        </Link>
-        . Te mostramos un spot real de una mano jugada —tu mano, el board y la{' '}
-        <span className="font-medium text-content">apuesta de la decisión</span>— y eliges
-        entre cuatro calculadoras cuál usarías para analizarlo. Al responder ves si
-        acertaste, <span className="font-medium text-content">por qué es esa herramienta</span>{' '}
-        y qué datos traerías de Flopzilla. Es el mismo razonamiento de{' '}
+        </Link>{' '}
+        hay dos drills de active recall. <span className="font-medium text-content">¿Qué calculadora?</span>:
+        te mostramos un spot real —tu mano, el board y la apuesta de la decisión— y eliges
+        entre cuatro calculadoras cuál usarías; al responder ves por qué es esa herramienta y
+        qué datos traerías de Flopzilla (es el mismo razonamiento de{' '}
         <Link to="/analisis" className="font-medium text-accent-light hover:underline">
           Análisis de manos
         </Link>{' '}
-        pero como entrenamiento: internalizas qué herramienta corresponde a cada spot. Lleva
-        puntaje, racha y atajos de teclado (1-4 para responder, N para avanzar).
+        pero como entrenamiento). <span className="font-medium text-content">Conteo de combos</span>:
+        te damos una mano (por ejemplo{' '}
+        <span className="font-mono text-content">AK</span>), un board y tus cartas, y cuentas{' '}
+        <span className="font-medium text-content">cuántos combos quedan tras los bloqueadores</span>
+        ; el feedback descompone base − bloqueados = quedan. Ambos llevan puntaje, racha y
+        atajos de teclado (1-4 para responder, N para avanzar).
       </>
     ),
     aPlain:
-      'Entra a Ejercicios. Te mostramos un spot real de una mano jugada (tu mano, el board y la apuesta de la decisión) y eliges entre cuatro calculadoras cuál usarías para analizarlo. Al responder ves si acertaste, por qué es esa herramienta y qué datos traerías de Flopzilla. Es el mismo razonamiento de Análisis de manos pero como entrenamiento: internalizas qué herramienta corresponde a cada spot. Lleva puntaje, racha y atajos de teclado (1-4 para responder, N para avanzar).',
+      'En Ejercicios hay dos drills de active recall. "¿Qué calculadora?": te mostramos un spot real (tu mano, el board y la apuesta de la decisión) y eliges entre cuatro calculadoras cuál usarías; al responder ves por qué es esa herramienta y qué datos traerías de Flopzilla (es el mismo razonamiento de Análisis de manos pero como entrenamiento). "Conteo de combos": te damos una mano (por ejemplo AK), un board y tus cartas, y cuentas cuántos combos quedan tras los bloqueadores; el feedback descompone base − bloqueados = quedan. Ambos llevan puntaje, racha y atajos de teclado (1-4 para responder, N para avanzar).',
   },
   {
     q: '¿Puedo contribuir al proyecto?',
