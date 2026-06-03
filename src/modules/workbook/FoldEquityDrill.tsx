@@ -127,6 +127,14 @@ export function FoldEquityDrill() {
                 <BluffEvCalc
                   initialPot={String(question.pot)}
                   initialBet={String(question.bet)}
+                  // Seed F% with the exact break-even fold so the calc shows
+                  // EV ≈ $0 — that's the answer to "¿qué % de fold para
+                  // break-even?". (The drill's `correct` is the rounded version.)
+                  initialFoldPct={String(
+                    Math.round(
+                      (question.bet / (question.pot + question.bet)) * 10000,
+                    ) / 100,
+                  )}
                 />
               </CalcReveal>
               {autoAdvance && !showCalc && (
