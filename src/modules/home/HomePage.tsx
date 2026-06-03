@@ -383,8 +383,14 @@ export default function HomePage() {
       <PageHeader
         eyebrow="Range Soprano"
         title="Herramienta de estudio de rangos preflop"
-        description="Visualizá, entrená y editá tus rangos en mesa 6-max o Heads-Up con paletas personalizables, comparación, exportación a PNG/PDF y entrenador con leaderboard local. Cronómetro de sesión con vueltas, randomizador para frecuencias mixtas y ventana flotante siempre-encima para usar las tools mientras jugás. Todo corre en tu navegador y vos sos dueño de los datos."
+        description="Visualiza, entrena y edita tus rangos en mesa 6-max o Heads-Up con paletas personalizables, comparación, exportación a PNG/PDF y entrenador con leaderboard local. Incluye calculadoras de EV y un módulo para analizar las manos que jugaste, importando el historial .txt de tu sala (iPoker, GGPoker, PokerStars o Winamax). Cronómetro de sesión, randomizador para frecuencias mixtas y ventana flotante siempre-encima. Todo corre en tu navegador y los datos son tuyos."
         descriptionClassName="text-justify"
+        actions={
+          <ImportProfileButton
+            className="inline-flex items-center gap-2 rounded-md border border-border bg-surface/60 px-3 py-1.5 text-sm font-medium text-content-muted shadow-sm transition-colors hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
+            label="Importar perfil (.json)"
+          />
+        }
       />
 
       <section aria-labelledby="modules-heading" className="flex flex-col gap-4">
@@ -511,6 +517,44 @@ export default function HomePage() {
             </div>
           </li>
         </ol>
+      </section>
+
+      <section aria-labelledby="analysis-heading" className="flex flex-col gap-3">
+        <h2
+          id="analysis-heading"
+          className="text-[11px] font-semibold uppercase tracking-[0.18em] text-content-muted"
+        >
+          Análisis de manos jugadas
+        </h2>
+        <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-5 text-sm text-content-muted">
+          <p>
+            Pega el <span className="font-medium text-content">historial .txt</span> de
+            una mano que jugaste —la herramienta lee los formatos de{' '}
+            <span className="font-medium text-content">
+              iPoker, GGPoker, PokerStars y Winamax
+            </span>
+            — y Range Soprano extrae el spot (board, bote y apuesta de cada calle) y abre la{' '}
+            <Link to="/calculadoras" className="font-medium text-accent-light hover:underline">
+              calculadora de EV
+            </Link>{' '}
+            adecuada, ya cargada con los números. Solo agregas la equity que obtienes en
+            Flopzilla.
+          </p>
+          <p>
+            Es ideal para revisar si un bluff, un barrel o un call fue rentable a largo
+            plazo, sin volver a escribir los datos a mano. No reemplaza tu replayer ni a
+            Flopzilla: automatiza el cálculo y te enseña qué herramienta usar en cada spot.
+          </p>
+          <div>
+            <Link
+              to="/analisis"
+              className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-accent-light hover:bg-surface-hover hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
+            >
+              Abrir Análisis de manos
+              <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.25} />
+            </Link>
+          </div>
+        </div>
       </section>
 
       <section aria-labelledby="potodds-heading" className="flex flex-col gap-3">

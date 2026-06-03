@@ -7,7 +7,13 @@ import { pushToast } from '@/store/toastStore';
 import { MAX_IMPORT_BYTES } from '@/store/persist';
 import { zExportPayload } from '@/store/schemas';
 
-export function ImportProfileButton() {
+export function ImportProfileButton({
+  className,
+  label = 'Importar perfil completo',
+}: {
+  className?: string | undefined;
+  label?: string | undefined;
+} = {}) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const importRanges = useRangeStore((s) => s.importRanges);
   const mergeGroupMeta = useUiStore((s) => s.mergeGroupMeta);
@@ -91,10 +97,13 @@ export function ImportProfileButton() {
       <button
         type="button"
         onClick={onPick}
-        className="inline-flex items-center gap-2 rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-accent-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
+        className={
+          className ??
+          'inline-flex items-center gap-2 rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-accent-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light'
+        }
       >
         <Upload className="h-3.5 w-3.5" strokeWidth={2.25} />
-        Importar perfil completo
+        {label}
       </button>
     </>
   );
