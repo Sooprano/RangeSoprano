@@ -11,11 +11,21 @@ import {
   parseField,
 } from './CalcShared';
 
-export function RaiseBluffEvCalc() {
-  const [pot, setPot] = useState('100');
-  const [villainBet, setVillainBet] = useState('50');
-  const [raiseCost, setRaiseCost] = useState('150');
-  const [foldPct, setFoldPct] = useState('55');
+export function RaiseBluffEvCalc({
+  initialPot,
+  initialVillainBet,
+  initialRaiseCost,
+  initialFoldPct,
+}: {
+  initialPot?: string | undefined;
+  initialVillainBet?: string | undefined;
+  initialRaiseCost?: string | undefined;
+  initialFoldPct?: string | undefined;
+} = {}) {
+  const [pot, setPot] = useState(initialPot ?? '100');
+  const [villainBet, setVillainBet] = useState(initialVillainBet ?? '50');
+  const [raiseCost, setRaiseCost] = useState(initialRaiseCost ?? '150');
+  const [foldPct, setFoldPct] = useState(initialFoldPct ?? '55');
   const [useCombos, setUseCombos] = useState(false);
   const [combosBet, setCombosBet] = useState('10');
   const [combosCall, setCombosCall] = useState('5.8');

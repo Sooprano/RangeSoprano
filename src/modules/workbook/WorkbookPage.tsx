@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import {
+  BadgePercent,
   Calculator,
   Crosshair,
   Gauge,
@@ -20,6 +21,7 @@ import { FoldEquityDrill } from './FoldEquityDrill';
 import { SprDrill } from './SprDrill';
 import { RunoutsDrill } from './RunoutsDrill';
 import { FloatDrill } from './FloatDrill';
+import { AutoProfitDrill } from './AutoProfitDrill';
 import { OddsTrainer } from '@/modules/trainer/OddsTrainer';
 import { PushFoldTrainer } from '@/modules/trainer/pushfold/PushFoldTrainer';
 
@@ -31,6 +33,7 @@ type Drill =
   | 'spr'
   | 'runouts'
   | 'floating'
+  | 'auto-profit'
   | 'pot-odds'
   | 'push-fold';
 
@@ -49,6 +52,7 @@ const CONCEPT_DRILLS: readonly DrillDef[] = [
   { id: 'spr', icon: Gauge, label: 'SPR' },
   { id: 'runouts', icon: Shuffle, label: 'Runouts' },
   { id: 'floating', icon: Sailboat, label: 'Floating' },
+  { id: 'auto-profit', icon: BadgePercent, label: 'Auto-profit raise' },
 ];
 
 // Tablas: entrenadores con sub-modo Estudio/Velocidad y leaderboard propio.
@@ -75,7 +79,7 @@ export default function WorkbookPage() {
       <PageHeader
         eyebrow="Entrenamiento"
         title="Ejercicios"
-        description="Drills de active recall para internalizar el postflop. Conceptos: elige qué calculadora usar, cuenta combos tras los bloqueadores, balancea tu rango de apuesta, calcula la fold equity mínima de un bluff, decide si comprometerte a cada SPR, estima la probabilidad de un runout en turn/river/completo o evalúa la EV de flotar. Tablas: entrena pot odds (fold equity al apostar y equity al pagar) y las tablas de Nash de push/fold heads-up. Cada respuesta viene con su explicación."
+        description="Drills de active recall para internalizar el postflop. Conceptos: elige qué calculadora usar, cuenta combos tras los bloqueadores, balancea tu rango de apuesta, calcula la fold equity mínima de un bluff, decide si comprometerte a cada SPR, estima la probabilidad de un runout en turn/river/completo, evalúa la EV de flotar o decide si un raise es auto-profit por su fold equity. Tablas: entrena pot odds (fold equity al apostar y equity al pagar) y las tablas de Nash de push/fold heads-up. Cada respuesta viene con su explicación."
       />
 
       <div
@@ -94,6 +98,7 @@ export default function WorkbookPage() {
         {drill === 'spr' && <SprDrill />}
         {drill === 'runouts' && <RunoutsDrill />}
         {drill === 'floating' && <FloatDrill />}
+        {drill === 'auto-profit' && <AutoProfitDrill />}
         {drill === 'pot-odds' && <OddsTrainer />}
         {drill === 'push-fold' && <PushFoldTrainer />}
       </div>
