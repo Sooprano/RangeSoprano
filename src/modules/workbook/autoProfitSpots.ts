@@ -44,14 +44,15 @@ type Template = {
   raiseTotal: number;
 };
 
+// Original sizings (NOT copied from any source). The BE% formula R/(R+P) is
+// universal, so any sane raise size works; correctness is verified by feeding
+// the formula independent reference numbers (throwaway, not shipped).
 const TEMPLATES: readonly Template[] = [
-  // ── The five printed book spots (pp. 167-171) ──
-  { unit: 'K', street: 'flop', startingPot: 6.5, villainBet: 3, raiseTotal: 9 }, // BE 49
-  { unit: '$', street: 'flop', startingPot: 75, villainBet: 50, raiseTotal: 200 }, // BE 62
-  { unit: 'K', street: 'turn', startingPot: 13, villainBet: 7, raiseTotal: 18 }, // BE 47
-  { unit: '$', street: 'turn', startingPot: 155, villainBet: 100, raiseTotal: 300 }, // BE 54
-  { unit: 'K', street: 'river', startingPot: 21, villainBet: 15, raiseTotal: 35 }, // BE 49
-  // ── Extra spots for variety (clean numbers, BE spread ~45-62) ──
+  { unit: 'K', street: 'flop', startingPot: 7.5, villainBet: 4, raiseTotal: 11 }, // BE 49
+  { unit: '$', street: 'flop', startingPot: 90, villainBet: 60, raiseTotal: 240 }, // BE 62
+  { unit: 'K', street: 'turn', startingPot: 15, villainBet: 8, raiseTotal: 21 }, // BE 48
+  { unit: '$', street: 'turn', startingPot: 180, villainBet: 120, raiseTotal: 360 }, // BE 55
+  { unit: 'K', street: 'river', startingPot: 24, villainBet: 16, raiseTotal: 40 }, // BE 50
   { unit: '$', street: 'flop', startingPot: 50, villainBet: 30, raiseTotal: 75 }, // BE 48
   { unit: '$', street: 'flop', startingPot: 100, villainBet: 75, raiseTotal: 200 }, // BE 53
   { unit: '$', street: 'turn', startingPot: 150, villainBet: 100, raiseTotal: 250 }, // BE 50

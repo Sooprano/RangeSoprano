@@ -15,17 +15,25 @@ export function CallVsRaiseCalc({
   initialPot,
   initialCall,
   initialShove,
+  initialCallEquityPct,
+  initialWinWhenCalledPct,
+  initialFoldPct,
 }: {
   initialPot?: string | undefined;
   initialCall?: string | undefined;
   initialShove?: string | undefined;
+  initialCallEquityPct?: string | undefined;
+  initialWinWhenCalledPct?: string | undefined;
+  initialFoldPct?: string | undefined;
 } = {}) {
   const [pot, setPot] = useState(initialPot ?? '150');
   const [call, setCall] = useState(initialCall ?? '50');
-  const [callEquityPct, setCallEquityPct] = useState('25');
+  const [callEquityPct, setCallEquityPct] = useState(initialCallEquityPct ?? '25');
   const [shove, setShove] = useState(initialShove ?? '200');
-  const [winWhenCalledPct, setWinWhenCalledPct] = useState('25');
-  const [foldPct, setFoldPct] = useState('50');
+  const [winWhenCalledPct, setWinWhenCalledPct] = useState(
+    initialWinWhenCalledPct ?? '25',
+  );
+  const [foldPct, setFoldPct] = useState(initialFoldPct ?? '50');
 
   const potNum = parseField(pot, { min: 0 });
   const callNum = parseField(call, { min: 0 });
