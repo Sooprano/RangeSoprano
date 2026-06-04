@@ -37,8 +37,28 @@ function streetIndex(street: Street): number {
   return STREET_ORDER.indexOf(street);
 }
 
+/**
+ * True if the villain checked before the hero on the decision's street — i.e.
+ * the hero acts last and is in position. Lets us frame a river check as a true
+ * "check behind" (IP) vs a first-to-act check (OOP), where check-behind can't
+ * happen. Single source of truth for both the worksheet rationale and the drill
+ * prompt.
+ */
+export function villainCheckedBeforeHero(
+  hand: ParsedHand,
+  decision: Decision,
+): boolean {
+  const sd = hand.streets.find((s) => s.street === decision.street);
+  if (!sd) return false;
+  const idx = sd.decisions.indexOf(decision);
+  if (idx <= 0) return false;
+  return sd.decisions
+    .slice(0, idx)
+    .some((d) => !d.isHero && d.type === 'check');
+}
+
 /** Hero's first bet/raise decision on a given street, if any. */
-function heroAggressionOnStreet(
+export function heroAggressionOnStreet(
   hand: ParsedHand,
   street: Street,
 ): Decision | null {
@@ -225,14 +245,36 @@ export function suggestCalcForDecision(
     };
   }
 
-  // ── Hero checks the river (check behind vs value bet) ────────────────────
+  // ── Hero checks the river ────────────────────────────────────────────────
+  // The right tool depends on position. In position (the villain checked to
+  // hero) the choice is "check behind vs value bet" → check-vs-bet. Out of
+  // position (hero acts first) you can't check behind, and betting thin only
+  // folds out the villain's bluffs and gets called by better; the real question
+  // is the EV of checking — villain checks back (no value) vs villain bluffs and
+  // you call → check-ev (EV de checkear).
   if (decision.type === 'check' && decision.street === 'river') {
+    const inPosition = villainCheckedBeforeHero(hand, decision);
+    const seed: CalcSeedNumbers = {
+      pot: decision.potBefore,
+      currentPot: decision.potBefore,
+    };
+    if (inPosition) {
+      return {
+        primary: 'check-vs-bet',
+        seed,
+        alternatives: ['check-ev'],
+        rationale:
+          'El rival checkeó y estás en posición: compara el EV de checkear atrás (check behind) contra apostar, sea por valor fino o de farol (la calc maneja Win% = 0 cuando bluffeas). Ingresa un tamaño de apuesta hipotético y tus equities de Flopzilla.',
+      };
+    }
     return {
-      primary: 'check-vs-bet',
-      seed: { pot: decision.potBefore, currentPot: decision.potBefore },
-      alternatives: ['check-ev'],
+      primary: 'check-ev',
+      seed,
+      // check-vs-bet NO aplica fuera de posición: lo dejamos fuera de las
+      // alternativas para que pueda aparecer como distractor incorrecto.
+      alternatives: [],
       rationale:
-        'Checkeaste el river. Compara el EV de check behind contra apostar fino: ¿valuebet o checkear atrás? Ingresa un tamaño de apuesta hipotético y tus equities de Flopzilla.',
+        'Estás fuera de posición y hablas primero: no puedes check behind, y apostar fino tus manos de valor solo hace que el villano tire sus faroles y te pague con algo mejor. La herramienta es "EV de checkear": compara las veces que el villano checkea atrás (no sacas valor) contra las que apuesta de farol y le pagas. Trae de Flopzilla la prob. de que el villano apueste y tus equities.',
     };
   }
 

@@ -5,12 +5,7 @@ import { CALC_META, type CalcMode } from '@/modules/calculators/calcMeta';
 import { BoardCards } from '@/modules/analysis/BoardCards';
 import { flopzillaInputsFor } from '@/utils/spotCalc';
 import { CountdownBar } from '@/modules/trainer/CountdownBar';
-import {
-  boardForDecision,
-  describeSpot,
-  generateQuizQuestion,
-  type QuizQuestion,
-} from './quizSpots';
+import { generateQuizQuestion, type QuizQuestion } from './quizSpots';
 import { AutoAdvanceToggle, ScoreBar } from './drillUi';
 import {
   AUTO_ADVANCE_MS,
@@ -18,12 +13,6 @@ import {
   tallyScore,
   type Score,
 } from './drillScore';
-
-const STREET_LABEL: Record<string, string> = {
-  flop: 'Flop',
-  turn: 'Turn',
-  river: 'River',
-};
 
 type Feedback = { picked: CalcMode; wasCorrect: boolean };
 
@@ -33,7 +22,7 @@ export function WhichCalcDrill() {
   );
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [score, setScore] = useState<Score>(INITIAL_SCORE);
-  const [autoAdvance, setAutoAdvance] = useState(true);
+  const [autoAdvance, setAutoAdvance] = useState(false);
 
   const drawNext = useCallback(() => {
     setQuestion(generateQuizQuestion());
@@ -191,32 +180,65 @@ export function WhichCalcDrill() {
 }
 
 function SpotCard({ question }: { question: QuizQuestion }) {
-  const { hand, decision } = question.spot;
-  const board = boardForDecision(decision, hand);
+  const { spot } = question;
+  const hasCards = spot.hero.length > 0 || spot.board.length > 0;
   return (
     <div className="flex flex-col items-center gap-3 rounded-lg border border-border bg-bg-subtle/60 p-4">
       <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-content-muted">
-        Spot · {STREET_LABEL[decision.street] ?? decision.street}
+        {spot.context}
       </span>
-      <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-3">
-        <div className="flex flex-col items-center gap-1">
-          <span className="text-[10px] uppercase tracking-wider text-content-muted">
-            Tu mano
-          </span>
-          <BoardCards cards={hand.heroCards} />
+
+      {hasCards && (
+        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-3">
+          {spot.hero.length > 0 && (
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-[10px] uppercase tracking-wider text-content-muted">
+                Tu mano
+              </span>
+              <BoardCards cards={spot.hero} />
+            </div>
+          )}
+          {spot.board.length > 0 && (
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-[10px] uppercase tracking-wider text-content-muted">
+                Board
+              </span>
+              <BoardCards cards={spot.board} />
+            </div>
+          )}
         </div>
-        {board.length > 0 && (
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-[10px] uppercase tracking-wider text-content-muted">
-              Board
-            </span>
-            <BoardCards cards={board} />
-          </div>
+      )}
+
+      {spot.chips.length > 0 && (
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          {spot.chips.map((c) => (
+            <Chip key={c.label} label={c.label} value={c.value} accent={c.accent ?? false} />
+          ))}
+        </div>
+      )}
+
+      <p className="max-w-md text-center text-sm text-content">{spot.prompt}</p>
+    </div>
+  );
+}
+
+function Chip({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div
+      className={cn(
+        'flex flex-col items-center gap-0.5 rounded-lg border px-3 py-1.5',
+        accent ? 'border-accent/40 bg-accent/5' : 'border-border bg-surface/60',
+      )}
+    >
+      <span className="text-[10px] uppercase tracking-wider text-content-muted">{label}</span>
+      <span
+        className={cn(
+          'text-sm font-semibold tabular-nums',
+          accent ? 'text-accent-light' : 'text-content',
         )}
-      </div>
-      <p className="max-w-md text-center text-sm text-content">
-        {describeSpot(decision, hand)}
-      </p>
+      >
+        {value}
+      </span>
     </div>
   );
 }

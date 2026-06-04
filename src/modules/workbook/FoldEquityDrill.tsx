@@ -23,7 +23,7 @@ export function FoldEquityDrill() {
   );
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [score, setScore] = useState<Score>(INITIAL_SCORE);
-  const [autoAdvance, setAutoAdvance] = useState(true);
+  const [autoAdvance, setAutoAdvance] = useState(false);
   const [showCalc, setShowCalc] = useState(false);
 
   const drawNext = useCallback(() => {
