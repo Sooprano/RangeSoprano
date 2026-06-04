@@ -1,0 +1,351 @@
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Check, RotateCcw, X } from 'lucide-react';
+import { cn } from '@/lib/cn';
+import { RangeGrid } from '@/components/RangeGrid';
+import { CountdownBar } from '@/modules/trainer/CountdownBar';
+import {
+  MORPHOLOGY_DEF,
+  MORPHOLOGY_LABEL,
+  RANGE_ACTIONS_MAP,
+  actionPhrase,
+  handsToCells,
+  type Morphology,
+} from './rangeBank';
+import {
+  generateCompositionQuestion,
+  type CompositionQuestion,
+} from './rangeCompositionSpots';
+import { AutoAdvanceToggle, ScoreBar } from './drillUi';
+import {
+  AUTO_ADVANCE_MS,
+  INITIAL_SCORE,
+  tallyScore,
+  type Score,
+} from './drillScore';
+
+type Feedback = { wasCorrect: boolean; picked: string };
+
+export function RangeCompositionDrill() {
+  const [question, setQuestion] = useState<CompositionQuestion>(() =>
+    generateCompositionQuestion(),
+  );
+  const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [score, setScore] = useState<Score>(INITIAL_SCORE);
+  const [autoAdvance, setAutoAdvance] = useState(false);
+
+  const options: string[] = useMemo(
+    () =>
+      question.kind === 'compose'
+        ? question.notationOptions
+        : [...question.morphOptions],
+    [question],
+  );
+  const correct =
+    question.kind === 'compose' ? question.spot.notation : question.spot.morphology;
+
+  const drawNext = useCallback(() => {
+    setQuestion(generateCompositionQuestion());
+    setFeedback(null);
+  }, []);
+
+  useEffect(() => {
+    if (!autoAdvance || !feedback) return;
+    const id = setTimeout(drawNext, AUTO_ADVANCE_MS);
+    return () => clearTimeout(id);
+  }, [autoAdvance, feedback, drawNext]);
+
+  const answer = useCallback(
+    (picked: string) => {
+      if (feedback) return;
+      setFeedback({ wasCorrect: picked === correct, picked });
+      setScore((s) => tallyScore(s, picked === correct));
+    },
+    [feedback, correct],
+  );
+
+  const reset = useCallback(() => {
+    setScore(INITIAL_SCORE);
+    drawNext();
+  }, [drawNext]);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const target = e.target as HTMLElement | null;
+      if (target?.closest('input, textarea, select, [contenteditable="true"]')) return;
+      if (!feedback) {
+        const idx = '1234'.indexOf(e.key);
+        if (idx >= 0 && idx < options.length) {
+          e.preventDefault();
+          answer(options[idx]!);
+          return;
+        }
+      }
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'n' || e.key === 'N') {
+        e.preventDefault();
+        if (feedback) drawNext();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [feedback, options, answer, drawNext]);
+
+  const accuracy = useMemo(
+    () => (score.total === 0 ? 0 : (score.correct / score.total) * 100),
+    [score],
+  );
+
+  const cells = useMemo(() => handsToCells(question.hands), [question.hands]);
+  const { position, vs } = question.spot;
+  const spotLabel = vs ? `${position} ${vs}` : position;
+
+  return (
+    <div className="flex flex-col gap-4">
+      <ScoreBar score={score} accuracy={accuracy} />
+
+      <div className="flex flex-col items-stretch gap-4 rounded-xl border border-border bg-surface/60 p-4 shadow-surface sm:p-5">
+        <div className="flex flex-col items-center gap-3 rounded-lg border border-border bg-bg-subtle/60 p-4">
+          {question.kind === 'compose' ? (
+            <>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-content-muted">
+                Composición · ¿qué manos forman el %?
+              </span>
+              <p className="max-w-md text-center text-sm text-content">
+                El villano{' '}
+                <span className="font-semibold">{actionPhrase(question.spot.action)}</span>{' '}
+                <span className="font-semibold tabular-nums text-accent-light">
+                  {question.pct}%
+                </span>{' '}
+                desde <span className="font-semibold">{spotLabel}</span>. ¿Con qué rango lo hace?
+              </p>
+            </>
+          ) : (
+            <>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-content-muted">
+                {spotLabel} · {actionPhrase(question.spot.action)} · {question.pct}%
+              </span>
+              <div className="mx-auto w-full max-w-[360px] sm:max-w-[400px]">
+                <RangeGrid cells={cells} actionsMap={RANGE_ACTIONS_MAP} />
+              </div>
+              <p className="max-w-md text-center text-sm font-medium text-content">
+                ¿Qué estructura (morfología) tiene este rango?
+              </p>
+            </>
+          )}
+        </div>
+
+        {question.kind === 'compose' ? (
+          <NotationOptions
+            options={options}
+            feedback={feedback}
+            correct={correct}
+            onAnswer={answer}
+          />
+        ) : (
+          <MorphOptions
+            options={question.morphOptions}
+            feedback={feedback}
+            correct={question.spot.morphology}
+            onAnswer={answer}
+          />
+        )}
+
+        <div className="flex min-h-[3.5rem] w-full flex-col gap-2">
+          {feedback ? (
+            <>
+              <FeedbackPanel question={question} feedback={feedback} cells={cells} />
+              {autoAdvance && (
+                <CountdownBar key={score.total} durationMs={AUTO_ADVANCE_MS} />
+              )}
+            </>
+          ) : (
+            <p className="text-center text-xs text-content-muted">
+              {question.kind === 'compose'
+                ? '¿Qué rango? · teclas 1-4 · N para avanzar después de responder'
+                : '¿Qué estructura? · teclas 1-4 · N para avanzar después de responder'}
+            </p>
+          )}
+        </div>
+
+        <div className="flex items-center justify-center gap-2">
+          <button
+            type="button"
+            onClick={drawNext}
+            disabled={!feedback}
+            className={cn(
+              'inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-colors',
+              'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light',
+              feedback
+                ? 'bg-accent text-white hover:bg-accent-deep'
+                : 'cursor-not-allowed bg-surface text-content-disabled',
+            )}
+          >
+            Siguiente
+            <span className="text-[10px] uppercase tracking-wider text-white/70">↵</span>
+          </button>
+          <button
+            type="button"
+            onClick={reset}
+            className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-content-muted hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
+          >
+            <RotateCcw className="h-3.5 w-3.5" strokeWidth={2.25} />
+            Reiniciar puntaje
+          </button>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-center">
+        <AutoAdvanceToggle value={autoAdvance} onChange={setAutoAdvance} />
+      </div>
+    </div>
+  );
+}
+
+function NotationOptions({
+  options,
+  feedback,
+  correct,
+  onAnswer,
+}: {
+  options: string[];
+  feedback: Feedback | null;
+  correct: string;
+  onAnswer: (picked: string) => void;
+}) {
+  return (
+    <div className="mx-auto grid w-full max-w-xl grid-cols-1 gap-1.5">
+      {options.map((opt, i) => {
+        const isCorrect = feedback && opt === correct;
+        const pickedThis = feedback?.picked === opt;
+        return (
+          <button
+            key={`${opt}-${i}`}
+            type="button"
+            disabled={feedback !== null}
+            onClick={() => onAnswer(opt)}
+            className={cn(
+              'flex flex-row items-center gap-2 rounded-lg border px-3 py-2 text-left font-mono text-xs leading-relaxed',
+              'transition-colors duration-150 ease-out-soft',
+              'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light',
+              feedback
+                ? isCorrect
+                  ? 'border-emerald-500/60 bg-emerald-500/10 text-content'
+                  : pickedThis
+                    ? 'border-rose-500/60 bg-rose-500/10 text-content'
+                    : 'border-border bg-surface/40 text-content-muted opacity-60'
+                : 'border-border bg-surface/40 text-content hover:bg-surface-hover',
+            )}
+          >
+            <span className="shrink-0 rounded bg-surface px-1 py-px text-[10px] font-sans font-medium tabular-nums tracking-wider text-content-muted">
+              {i + 1}
+            </span>
+            <span className="flex-1">{opt}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function MorphOptions({
+  options,
+  feedback,
+  correct,
+  onAnswer,
+}: {
+  options: readonly Morphology[];
+  feedback: Feedback | null;
+  correct: Morphology;
+  onAnswer: (picked: string) => void;
+}) {
+  return (
+    <div className="mx-auto grid w-full max-w-md grid-cols-2 gap-1.5">
+      {options.map((opt, i) => {
+        const isCorrect = feedback && opt === correct;
+        const pickedThis = feedback?.picked === opt;
+        return (
+          <button
+            key={opt}
+            type="button"
+            disabled={feedback !== null}
+            onClick={() => onAnswer(opt)}
+            className={cn(
+              'flex flex-row items-center justify-between gap-2 rounded-lg border px-3 py-2.5 text-sm font-semibold',
+              'transition-colors duration-150 ease-out-soft',
+              'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light',
+              feedback
+                ? isCorrect
+                  ? 'border-emerald-500/60 bg-emerald-500/10 text-content'
+                  : pickedThis
+                    ? 'border-rose-500/60 bg-rose-500/10 text-content'
+                    : 'border-border bg-surface/40 text-content-muted opacity-60'
+                : 'border-border bg-surface/40 text-content hover:bg-surface-hover',
+            )}
+          >
+            <span className="flex-1 text-center">{MORPHOLOGY_LABEL[opt]}</span>
+            <span className="shrink-0 rounded bg-surface px-1 py-px text-[10px] font-medium tabular-nums tracking-wider text-content-muted">
+              {i + 1}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function FeedbackPanel({
+  question,
+  feedback,
+  cells,
+}: {
+  question: CompositionQuestion;
+  feedback: Feedback;
+  cells: ReturnType<typeof handsToCells>;
+}) {
+  const { spot, pct, combos } = question;
+  return (
+    <div
+      className={cn(
+        'flex flex-col gap-2 rounded-lg border px-3 py-2.5 text-sm',
+        feedback.wasCorrect
+          ? 'border-emerald-500/40 bg-emerald-500/5 text-content'
+          : 'border-rose-500/40 bg-rose-500/5 text-content',
+      )}
+    >
+      <div className="flex flex-wrap items-center gap-2">
+        {feedback.wasCorrect ? (
+          <Check className="h-4 w-4 text-emerald-400" strokeWidth={2.5} />
+        ) : (
+          <X className="h-4 w-4 text-rose-400" strokeWidth={2.5} />
+        )}
+        <span className="font-semibold">{feedback.wasCorrect ? 'Correcto' : 'Incorrecto'}</span>
+        <span className="text-content-muted">·</span>
+        <span className="text-content-muted">
+          {MORPHOLOGY_LABEL[spot.morphology]} ·{' '}
+          <span className="tabular-nums">{pct}%</span> ·{' '}
+          <span className="tabular-nums">{combos}</span> combos
+        </span>
+      </div>
+
+      {question.kind === 'compose' && (
+        <div className="mx-auto w-full max-w-[320px] py-1">
+          <RangeGrid cells={cells} actionsMap={RANGE_ACTIONS_MAP} variant="compact" />
+        </div>
+      )}
+
+      <p className="text-xs text-content-muted">
+        {question.kind === 'compose' ? (
+          <>
+            Ese {pct}% se compone de{' '}
+            <span className="font-mono text-content">{spot.notation}</span>.{' '}
+          </>
+        ) : (
+          <>
+            <span className="text-content">{MORPHOLOGY_DEF[spot.morphology]}</span>{' '}
+          </>
+        )}
+        {spot.rationale}
+      </p>
+    </div>
+  );
+}

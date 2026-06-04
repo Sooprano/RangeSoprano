@@ -5,10 +5,12 @@ import {
   Coins,
   Crosshair,
   Gauge,
+  Grid3x3,
   Layers,
   Percent,
   Sailboat,
   Scale,
+  Shapes,
   Shield,
   Shuffle,
   Swords,
@@ -26,6 +28,8 @@ import { FloatDrill } from './FloatDrill';
 import { AutoProfitDrill } from './AutoProfitDrill';
 import { RiverCallShoveDrill } from './RiverCallShoveDrill';
 import { RiverCheckBetDrill } from './RiverCheckBetDrill';
+import { RangeStatsDrill } from './RangeStatsDrill';
+import { RangeCompositionDrill } from './RangeCompositionDrill';
 import { OddsTrainer } from '@/modules/trainer/OddsTrainer';
 import { PushFoldTrainer } from '@/modules/trainer/pushfold/PushFoldTrainer';
 
@@ -40,6 +44,8 @@ type Drill =
   | 'auto-profit'
   | 'river-call-shove'
   | 'river-check-bet'
+  | 'range-stats'
+  | 'range-composition'
   | 'pot-odds'
   | 'push-fold';
 
@@ -49,7 +55,7 @@ type DrillDef = {
   label: string;
 };
 
-// Conceptos: los 5 drills de active recall (MC rápido, sin leaderboard).
+// Conceptos: drills cortos de opción múltiple (sin leaderboard).
 const CONCEPT_DRILLS: readonly DrillDef[] = [
   { id: 'which-calc', icon: Calculator, label: '¿Qué calculadora?' },
   { id: 'combos', icon: Layers, label: 'Conteo de combos' },
@@ -61,6 +67,12 @@ const CONCEPT_DRILLS: readonly DrillDef[] = [
   { id: 'auto-profit', icon: BadgePercent, label: 'Auto-profit raise' },
   { id: 'river-call-shove', icon: Swords, label: 'River: call o shove' },
   { id: 'river-check-bet', icon: Coins, label: 'River: check o bet' },
+];
+
+// Rangos: lectura y construcción de rangos (range-independent, banco curado).
+const RANGE_DRILLS: readonly DrillDef[] = [
+  { id: 'range-stats', icon: Grid3x3, label: '% y combos' },
+  { id: 'range-composition', icon: Shapes, label: 'Composición + tipo' },
 ];
 
 // Tablas: entrenadores con sub-modo Estudio/Velocidad y leaderboard propio.
@@ -87,7 +99,8 @@ export default function WorkbookPage() {
       <PageHeader
         eyebrow="Entrenamiento"
         title="Ejercicios"
-        description="Drills de active recall para internalizar el postflop. Conceptos: elige qué calculadora usar, cuenta combos tras los bloqueadores, balancea tu rango de apuesta, calcula la fold equity mínima de un bluff, decide si comprometerte a cada SPR, estima la probabilidad de un runout en turn/river/completo, evalúa la EV de flotar, decide si un raise es auto-profit por su fold equity, compara el EV de pagar vs ir all-in cuando te apuestan el river, o elige entre checkear behind y dos tamaños de apuesta cuando te checkean. Tablas: entrena pot odds (fold equity al apostar y equity al pagar) y las tablas de Nash de push/fold heads-up. Cada respuesta viene con su explicación."
+        description="Practica el postflop con una explicación en cada respuesta. Conceptos: elige la calculadora correcta, cuenta combos tras los bloqueadores, balancea value/bluff, calcula la fold equity mínima de un bluff, decide si comprometerte según el SPR, estima la probabilidad de un runout, evalúa la EV de flotar, reconoce un raise auto-profit y resuelve el river (pagar vs all-in, o checkear vs apostar). Rangos: lee un rango en el grid y di qué porcentaje del total y cuántos combos representa, y aprende cómo se compone un porcentaje según la posición y qué forma tiene (lineal, polarizado, mergeado o condensado). Tablas: pot odds y las tablas de Nash de push/fold heads-up."
+        descriptionClassName="text-justify"
       />
 
       <div
@@ -109,6 +122,8 @@ export default function WorkbookPage() {
         {drill === 'auto-profit' && <AutoProfitDrill />}
         {drill === 'river-call-shove' && <RiverCallShoveDrill />}
         {drill === 'river-check-bet' && <RiverCheckBetDrill />}
+        {drill === 'range-stats' && <RangeStatsDrill />}
+        {drill === 'range-composition' && <RangeCompositionDrill />}
         {drill === 'pot-odds' && <OddsTrainer />}
         {drill === 'push-fold' && <PushFoldTrainer />}
       </div>
@@ -132,6 +147,13 @@ function DrillToggle({
       <DrillGroup
         label="Conceptos"
         drills={CONCEPT_DRILLS}
+        value={value}
+        onChange={onChange}
+      />
+      <div className="h-px bg-border/60" aria-hidden />
+      <DrillGroup
+        label="Rangos"
+        drills={RANGE_DRILLS}
         value={value}
         onChange={onChange}
       />
