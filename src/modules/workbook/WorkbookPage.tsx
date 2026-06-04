@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   BadgePercent,
   Calculator,
+  Coins,
   Crosshair,
   Gauge,
   Layers,
@@ -24,6 +25,7 @@ import { RunoutsDrill } from './RunoutsDrill';
 import { FloatDrill } from './FloatDrill';
 import { AutoProfitDrill } from './AutoProfitDrill';
 import { RiverCallShoveDrill } from './RiverCallShoveDrill';
+import { RiverCheckBetDrill } from './RiverCheckBetDrill';
 import { OddsTrainer } from '@/modules/trainer/OddsTrainer';
 import { PushFoldTrainer } from '@/modules/trainer/pushfold/PushFoldTrainer';
 
@@ -37,6 +39,7 @@ type Drill =
   | 'floating'
   | 'auto-profit'
   | 'river-call-shove'
+  | 'river-check-bet'
   | 'pot-odds'
   | 'push-fold';
 
@@ -57,6 +60,7 @@ const CONCEPT_DRILLS: readonly DrillDef[] = [
   { id: 'floating', icon: Sailboat, label: 'Floating' },
   { id: 'auto-profit', icon: BadgePercent, label: 'Auto-profit raise' },
   { id: 'river-call-shove', icon: Swords, label: 'River: call o shove' },
+  { id: 'river-check-bet', icon: Coins, label: 'River: check o bet' },
 ];
 
 // Tablas: entrenadores con sub-modo Estudio/Velocidad y leaderboard propio.
@@ -83,7 +87,7 @@ export default function WorkbookPage() {
       <PageHeader
         eyebrow="Entrenamiento"
         title="Ejercicios"
-        description="Drills de active recall para internalizar el postflop. Conceptos: elige qué calculadora usar, cuenta combos tras los bloqueadores, balancea tu rango de apuesta, calcula la fold equity mínima de un bluff, decide si comprometerte a cada SPR, estima la probabilidad de un runout en turn/river/completo, evalúa la EV de flotar, decide si un raise es auto-profit por su fold equity o compara el EV de pagar vs ir all-in en el river. Tablas: entrena pot odds (fold equity al apostar y equity al pagar) y las tablas de Nash de push/fold heads-up. Cada respuesta viene con su explicación."
+        description="Drills de active recall para internalizar el postflop. Conceptos: elige qué calculadora usar, cuenta combos tras los bloqueadores, balancea tu rango de apuesta, calcula la fold equity mínima de un bluff, decide si comprometerte a cada SPR, estima la probabilidad de un runout en turn/river/completo, evalúa la EV de flotar, decide si un raise es auto-profit por su fold equity, compara el EV de pagar vs ir all-in cuando te apuestan el river, o elige entre checkear behind y dos tamaños de apuesta cuando te checkean. Tablas: entrena pot odds (fold equity al apostar y equity al pagar) y las tablas de Nash de push/fold heads-up. Cada respuesta viene con su explicación."
       />
 
       <div
@@ -104,6 +108,7 @@ export default function WorkbookPage() {
         {drill === 'floating' && <FloatDrill />}
         {drill === 'auto-profit' && <AutoProfitDrill />}
         {drill === 'river-call-shove' && <RiverCallShoveDrill />}
+        {drill === 'river-check-bet' && <RiverCheckBetDrill />}
         {drill === 'pot-odds' && <OddsTrainer />}
         {drill === 'push-fold' && <PushFoldTrainer />}
       </div>

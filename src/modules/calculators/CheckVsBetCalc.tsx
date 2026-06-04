@@ -14,15 +14,21 @@ import {
 export function CheckVsBetCalc({
   initialPot,
   initialBet,
+  initialCheckWinPct,
+  initialWinWhenCalledPct,
+  initialFoldPct,
 }: {
   initialPot?: string | undefined;
   initialBet?: string | undefined;
+  initialCheckWinPct?: string | undefined;
+  initialWinWhenCalledPct?: string | undefined;
+  initialFoldPct?: string | undefined;
 } = {}) {
   const [pot, setPot] = useState(initialPot ?? '100');
-  const [checkWinPct, setCheckWinPct] = useState('25');
+  const [checkWinPct, setCheckWinPct] = useState(initialCheckWinPct ?? '25');
   const [bet, setBet] = useState(initialBet ?? '50');
-  const [winWhenCalledPct, setWinWhenCalledPct] = useState('0');
-  const [foldPct, setFoldPct] = useState('20');
+  const [winWhenCalledPct, setWinWhenCalledPct] = useState(initialWinWhenCalledPct ?? '0');
+  const [foldPct, setFoldPct] = useState(initialFoldPct ?? '20');
   const [raisePct, setRaisePct] = useState('0');
 
   const potNum = parseField(pot, { min: 0 });
