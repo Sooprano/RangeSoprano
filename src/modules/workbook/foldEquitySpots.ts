@@ -9,7 +9,11 @@ import { bluffEv } from '@/utils/ev';
 import { shuffle } from '@/utils/comboMath';
 
 const POTS: readonly number[] = [40, 50, 60, 75, 80, 100, 120, 150, 200];
-const FRACS: readonly number[] = [1 / 3, 1 / 2, 2 / 3, 3 / 4, 1, 1.5, 2];
+// Bet sizings as a fraction of the pot (10%–200%, small to overbet).
+const FRACS: readonly number[] = [
+  0.1, 0.2, 0.3, 1 / 3, 0.37, 0.4, 0.5, 0.55, 0.6, 2 / 3, 0.75, 0.8, 1, 1.25,
+  1.5, 1.75, 2,
+];
 
 const roundInt = (n: number) => Math.round(n);
 

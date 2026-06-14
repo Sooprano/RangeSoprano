@@ -142,7 +142,7 @@ function DrillToggle({
     <div
       role="tablist"
       aria-label="Ejercicio"
-      className="flex flex-col gap-2 rounded-xl border border-border bg-surface/60 p-2"
+      className="flex flex-col gap-3 rounded-xl border border-border bg-surface/60 p-2.5"
     >
       <DrillGroup
         label="Conceptos"
@@ -150,14 +150,14 @@ function DrillToggle({
         value={value}
         onChange={onChange}
       />
-      <div className="h-px bg-border/60" aria-hidden />
+      <div className="h-px bg-border" aria-hidden />
       <DrillGroup
         label="Rangos"
         drills={RANGE_DRILLS}
         value={value}
         onChange={onChange}
       />
-      <div className="h-px bg-border/60" aria-hidden />
+      <div className="h-px bg-border" aria-hidden />
       <DrillGroup
         label="Tablas"
         drills={TABLE_DRILLS}
@@ -180,19 +180,21 @@ function DrillGroup({
   onChange: (next: Drill) => void;
 }) {
   return (
-    <div className="flex flex-wrap items-center justify-center gap-1">
-      <span className="mr-1 text-[10px] font-semibold uppercase tracking-wider text-content-muted">
+    <div className="flex flex-col gap-1.5">
+      <span className="text-center text-[11px] font-bold uppercase tracking-[0.14em] text-content-muted">
         {label}
       </span>
-      {drills.map(({ id, icon: Icon, label: drillLabel }) => (
-        <DrillButton
-          key={id}
-          active={value === id}
-          onClick={() => onChange(id)}
-          icon={<Icon className="h-3.5 w-3.5" strokeWidth={2.25} />}
-          label={drillLabel}
-        />
-      ))}
+      <div className="flex flex-wrap items-center justify-center gap-1">
+        {drills.map(({ id, icon: Icon, label: drillLabel }) => (
+          <DrillButton
+            key={id}
+            active={value === id}
+            onClick={() => onChange(id)}
+            icon={<Icon className="h-3.5 w-3.5" strokeWidth={2.25} />}
+            label={drillLabel}
+          />
+        ))}
+      </div>
     </div>
   );
 }

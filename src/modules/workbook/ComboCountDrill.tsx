@@ -3,7 +3,11 @@ import { Check, RotateCcw, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { BoardCards } from '@/modules/analysis/BoardCards';
 import { CountdownBar } from '@/modules/trainer/CountdownBar';
-import { generateComboQuestion, type ComboQuestion } from './comboSpots';
+import {
+  generateComboQuestion,
+  type ComboQuestion,
+  type ComboTarget,
+} from './comboSpots';
 import { AutoAdvanceToggle, ScoreBar } from './drillUi';
 import {
   AUTO_ADVANCE_MS,
@@ -241,6 +245,23 @@ function FeedbackPanel({
         {' · quedan '}
         <span className="font-medium text-content tabular-nums">{correct}</span>.
       </p>
+      <p className="text-xs text-content-muted">{baseDerivation(question.target)}</p>
     </div>
   );
+}
+
+/** How the base combo count comes out of the combinatorics, per hand kind. */
+function baseDerivation(target: ComboTarget): string {
+  const a = target.label[0]!;
+  const b = target.label[1]!;
+  switch (target.kind) {
+    case 'pair':
+      return `Combinatoria: un par tiene 6 combos base — regla 6/3/1: con 0 ${a} bloqueadas son 6, con 1 son 3, con 2 son 1.`;
+    case 'suited':
+      return `Combinatoria: suited = 4 combos base, uno por palo (${a}${b} del mismo palo).`;
+    case 'offsuit':
+      return `Combinatoria: 4 ${a} × 4 ${b} = 16 combinaciones, menos los 4 suited = 12 combos offsuit base.`;
+    case 'both':
+      return `Combinatoria: 4 ${a} × 4 ${b} = 16 combos base (12 offsuit + 4 suited).`;
+  }
 }
