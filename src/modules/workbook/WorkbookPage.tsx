@@ -14,6 +14,7 @@ import {
   Shield,
   Shuffle,
   Swords,
+  Target,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
@@ -53,36 +54,116 @@ type DrillDef = {
   id: Drill;
   icon: typeof Calculator;
   label: string;
+  /** Objetivo breve del ejercicio, mostrado al activarlo. */
+  objective: string;
 };
 
 // Conceptos: drills cortos de opción múltiple (sin leaderboard).
 const CONCEPT_DRILLS: readonly DrillDef[] = [
-  { id: 'which-calc', icon: Calculator, label: '¿Qué calculadora?' },
-  { id: 'combos', icon: Layers, label: 'Conteo de combos' },
-  { id: 'value-bluff', icon: Scale, label: 'Value / Bluff' },
-  { id: 'fold-equity', icon: Shield, label: 'Fold equity' },
-  { id: 'spr', icon: Gauge, label: 'SPR' },
-  { id: 'runouts', icon: Shuffle, label: 'Runouts' },
-  { id: 'floating', icon: Sailboat, label: 'Floating' },
-  { id: 'auto-profit', icon: BadgePercent, label: 'Auto-profit raise' },
-  { id: 'river-call-shove', icon: Swords, label: 'River: call o shove' },
-  { id: 'river-check-bet', icon: Coins, label: 'River: check o bet' },
+  {
+    id: 'which-calc',
+    icon: Calculator,
+    label: '¿Qué calculadora?',
+    objective: 'Reconocer qué calculadora de EV usar en cada situación postflop.',
+  },
+  {
+    id: 'combos',
+    icon: Layers,
+    label: 'Conteo de combos',
+    objective: 'Contar cuántos combos de una mano quedan después de los blockers.',
+  },
+  {
+    id: 'value-bluff',
+    icon: Scale,
+    label: 'Value / Bluff',
+    objective: 'Balancear el rango de apuesta: cuántos bluffs por cada combo de value.',
+  },
+  {
+    id: 'fold-equity',
+    icon: Shield,
+    label: 'Fold equity',
+    objective: 'Calcular el % de folds que hace rentable un bluff (break-even).',
+  },
+  {
+    id: 'spr',
+    icon: Gauge,
+    label: 'SPR',
+    objective: 'Decidir si comprometerte según el SPR y la EV de hacerlo.',
+  },
+  {
+    id: 'runouts',
+    icon: Shuffle,
+    label: 'Runouts',
+    objective: 'Estimar la probabilidad de un runout en el turn, el river o completo.',
+  },
+  {
+    id: 'floating',
+    icon: Sailboat,
+    label: 'Floating',
+    objective: 'Evaluar la EV de flotar un cbet con aire para apostar la siguiente calle.',
+  },
+  {
+    id: 'auto-profit',
+    icon: BadgePercent,
+    label: 'Auto-profit raise',
+    objective: 'Reconocer cuándo un raise gana solo por su fold equity (auto-profit).',
+  },
+  {
+    id: 'river-call-shove',
+    icon: Swords,
+    label: 'River: call o shove',
+    objective: 'Frente a un bet en el river, elegir entre call, fold o shove (all-in).',
+  },
+  {
+    id: 'river-check-bet',
+    icon: Coins,
+    label: 'River: check o bet',
+    objective: 'Cuando te checkean el river, elegir entre check o bet (y a qué sizing).',
+  },
 ];
 
 // Rangos: lectura y construcción de rangos (range-independent, banco curado).
 const RANGE_DRILLS: readonly DrillDef[] = [
-  { id: 'range-stats', icon: Grid3x3, label: '% y combos' },
-  { id: 'range-composition', icon: Shapes, label: 'Composición + tipo' },
+  {
+    id: 'range-stats',
+    icon: Grid3x3,
+    label: '% y combos',
+    objective: 'Leer un rango en el grid y decir qué % del total y cuántos combos representa.',
+  },
+  {
+    id: 'range-composition',
+    icon: Shapes,
+    label: 'Composición + tipo',
+    objective: 'Saber qué manos forman un % por posición y qué forma tiene el rango.',
+  },
 ];
 
 // Tablas: entrenadores con sub-modo Estudio/Velocidad y leaderboard propio.
 const TABLE_DRILLS: readonly DrillDef[] = [
-  { id: 'pot-odds', icon: Percent, label: 'Pot Odds' },
-  { id: 'push-fold', icon: Crosshair, label: 'Push/Fold' },
+  {
+    id: 'pot-odds',
+    icon: Percent,
+    label: 'Pot Odds',
+    objective: 'Entrenar pot odds: la equity necesaria para pagar y los sizings de bluff/value.',
+  },
+  {
+    id: 'push-fold',
+    icon: Crosshair,
+    label: 'Push/Fold',
+    objective: 'Memorizar las tablas de Nash de push/fold heads-up según el stack efectivo.',
+  },
 ];
 
 // Las tablas (Pot Odds / Push-Fold) necesitan más ancho que los drills MC.
 const WIDE_DRILLS: ReadonlySet<Drill> = new Set(['pot-odds', 'push-fold']);
+
+// Objetivo por drill, derivado de las definiciones (single source of truth).
+const OBJECTIVES: Record<Drill, string> = Object.fromEntries(
+  [...CONCEPT_DRILLS, ...RANGE_DRILLS, ...TABLE_DRILLS].map((d) => [
+    d.id,
+    d.objective,
+  ]),
+) as Record<Drill, string>;
 
 export default function WorkbookPage() {
   useDocumentTitle('Ejercicios de poker · Range Soprano', {
@@ -112,6 +193,7 @@ export default function WorkbookPage() {
         <div className="mb-4 flex justify-center">
           <DrillToggle value={drill} onChange={setDrill} />
         </div>
+        <ObjectiveBanner objective={OBJECTIVES[drill]} />
         {drill === 'which-calc' && <WhichCalcDrill />}
         {drill === 'combos' && <ComboCountDrill />}
         {drill === 'value-bluff' && <ValueBluffDrill />}
@@ -128,6 +210,22 @@ export default function WorkbookPage() {
         {drill === 'push-fold' && <PushFoldTrainer />}
       </div>
     </>
+  );
+}
+
+function ObjectiveBanner({ objective }: { objective: string }) {
+  return (
+    <div className="mx-auto mb-4 flex max-w-2xl items-start justify-center gap-2 px-2">
+      <Target
+        className="mt-0.5 h-4 w-4 shrink-0 text-accent-light"
+        strokeWidth={2.25}
+        aria-hidden
+      />
+      <p className="text-center text-sm leading-relaxed text-content-muted">
+        <span className="font-medium text-content">Objetivo: </span>
+        {objective}
+      </p>
+    </div>
   );
 }
 
