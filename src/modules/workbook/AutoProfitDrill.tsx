@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Check, RotateCcw, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { raisePctOfPot } from '@/utils/ev';
 import { CountdownBar } from '@/modules/trainer/CountdownBar';
 import { RaiseBluffEvCalc } from '@/modules/calculators/RaiseBluffEvCalc';
 import {
@@ -196,7 +197,7 @@ export function AutoProfitDrill() {
 }
 
 function SpotCard({ question }: { question: AutoProfitQuestion }) {
-  const { street, unit, startingPot, villainBet, raiseTotal, potRaisedInto } = question;
+  const { street, unit, villainBet, raiseTotal } = question;
   const streetWord = STREET_LABEL[street] ?? street;
   return (
     <div className="flex flex-col items-center gap-3 rounded-lg border border-border bg-bg-subtle/60 p-4">
@@ -204,7 +205,7 @@ function SpotCard({ question }: { question: AutoProfitQuestion }) {
         Auto-profit raise · {streetWord}
       </span>
 
-      {/* Action recap: villain bet, you raise into pot P. */}
+      {/* Action recap: villain bet, you raise. */}
       <p className="max-w-md text-center text-sm text-content-muted">
         El rival apuesta{' '}
         <span className="font-semibold text-content tabular-nums">
@@ -213,19 +214,11 @@ function SpotCard({ question }: { question: AutoProfitQuestion }) {
         en el {streetWord} y subís a{' '}
         <span className="font-semibold text-content tabular-nums">
           {formatAmount(raiseTotal, unit)}
-        </span>{' '}
-        en un bote de{' '}
-        <span className="font-semibold text-content tabular-nums">
-          {formatAmount(potRaisedInto, unit)}
         </span>
         .
       </p>
 
-      <div className="flex flex-wrap items-center justify-center gap-2">
-        <Chip label="Bote" value={formatAmount(startingPot, unit)} />
-        <Chip label="Apuesta del villano" value={formatAmount(villainBet, unit)} />
-        <Chip label="Tu raise" value={formatAmount(raiseTotal, unit)} accent />
-      </div>
+      <RaisePot question={question} />
 
       {question.kind === 'decision' && (
         <div className="flex flex-col items-center gap-1.5">
@@ -250,31 +243,116 @@ function SpotCard({ question }: { question: AutoProfitQuestion }) {
   );
 }
 
-function Chip({
-  label,
-  value,
-  accent = false,
-}: {
-  label: string;
-  value: string;
-  accent?: boolean;
-}) {
+// Mini-table like the Pot Odds drill: pot stack centered, villain's bet to the
+// LEFT and your raise to the RIGHT. Chip heights scale to the pot so the raise
+// reads as "bigger than the pot" at a glance. Sizing % under each bet.
+function RaisePot({ question }: { question: AutoProfitQuestion }) {
+  const { unit, startingPot, villainBet, raiseTotal } = question;
+  const betPctOfPot = Math.round((villainBet / startingPot) * 100);
+  const raisePct = Math.round(
+    raisePctOfPot({ bote: startingPot, bet: villainBet, raiseSize: raiseTotal }),
+  );
   return (
-    <div
-      className={cn(
-        'flex flex-col items-center gap-0.5 rounded-lg border px-3 py-1.5',
-        accent ? 'border-accent/40 bg-accent/5' : 'border-border bg-surface/60',
-      )}
-    >
-      <span className="text-[10px] uppercase tracking-wider text-content-muted">{label}</span>
-      <span
-        className={cn(
-          'text-sm font-semibold tabular-nums',
-          accent ? 'text-accent-light' : 'text-content',
-        )}
-      >
-        {value}
-      </span>
+    <div className="mx-auto grid w-full max-w-md grid-cols-3 items-end gap-3 px-2">
+      <BetColumn
+        eyebrow="Villano apuesta"
+        tone="rose"
+        amount={villainBet}
+        unit={unit}
+        refAmount={startingPot}
+        sub={`${betPctOfPot}% del bote`}
+      />
+      <BetColumn
+        eyebrow="Bote"
+        tone="muted"
+        amount={startingPot}
+        unit={unit}
+        refAmount={startingPot}
+      />
+      <BetColumn
+        eyebrow="Tu raise"
+        tone="accent"
+        amount={raiseTotal}
+        unit={unit}
+        refAmount={startingPot}
+        sub={`raise al ${raisePct}%`}
+      />
+    </div>
+  );
+}
+
+const CHIP_TONE: Record<
+  'muted' | 'accent' | 'rose',
+  { bar: string; ring: string; label: string; value: string }
+> = {
+  muted: {
+    bar: 'bg-content/30',
+    ring: 'ring-white/10',
+    label: 'text-content-muted',
+    value: 'text-content',
+  },
+  accent: {
+    bar: 'bg-accent',
+    ring: 'ring-accent-light/40',
+    label: 'text-accent-light',
+    value: 'text-accent-light',
+  },
+  rose: {
+    bar: 'bg-rose-400',
+    ring: 'ring-rose-200/40',
+    label: 'text-rose-300',
+    value: 'text-rose-200',
+  },
+};
+
+function BetColumn({
+  eyebrow,
+  tone,
+  amount,
+  unit,
+  refAmount,
+  sub,
+}: {
+  eyebrow: string;
+  tone: 'muted' | 'accent' | 'rose';
+  amount: number;
+  unit: '$' | 'K';
+  refAmount: number;
+  sub?: string;
+}) {
+  const palette = CHIP_TONE[tone];
+  // ~4 chips per pot; the raise (often >1 pot) stacks taller. Capped at 12.
+  const chips = Math.max(
+    1,
+    Math.min(12, Math.round((amount / refAmount) * 4) || 1),
+  );
+  const CHIP_GAP_PX = 4;
+  const CHIP_HEIGHT_PX = 6;
+  const stackHeight = chips * CHIP_GAP_PX + CHIP_HEIGHT_PX;
+  return (
+    <div className="flex flex-col items-center gap-1.5">
+      <div className="relative w-12" style={{ height: `${stackHeight}px` }} aria-hidden>
+        {Array.from({ length: chips }, (_, i) => (
+          <div
+            key={i}
+            className={cn(
+              'absolute left-0 right-0 h-1.5 rounded-full ring-1',
+              palette.bar,
+              palette.ring,
+            )}
+            style={{ bottom: `${i * CHIP_GAP_PX}px` }}
+          />
+        ))}
+      </div>
+      <div className="flex flex-col items-center leading-tight">
+        <span className={cn('text-[9px] font-semibold uppercase tracking-[0.14em]', palette.label)}>
+          {eyebrow}
+        </span>
+        <span className={cn('font-mono text-sm font-bold tabular-nums', palette.value)}>
+          {formatAmount(amount, unit)}
+        </span>
+        <span className="text-[10px] tabular-nums text-content-muted min-h-[0.9rem]">{sub ??' '}</span>
+      </div>
     </div>
   );
 }
@@ -381,10 +459,22 @@ function FeedbackPanel({
   question: AutoProfitQuestion;
   feedback: Feedback;
 }) {
-  const { unit, raiseTotal, potRaisedInto, bePct, kind, foldPct, correctDecision } =
-    question;
+  const {
+    unit,
+    startingPot,
+    villainBet,
+    raiseTotal,
+    potRaisedInto,
+    bePct,
+    kind,
+    foldPct,
+    correctDecision,
+  } = question;
   const R = formatAmount(raiseTotal, unit);
   const P = formatAmount(potRaisedInto, unit);
+  const raisePct = Math.round(
+    raisePctOfPot({ bote: startingPot, bet: villainBet, raiseSize: raiseTotal }),
+  );
   return (
     <div
       className={cn(
@@ -422,6 +512,14 @@ function FeedbackPanel({
         <span className="tabular-nums text-content">{P}</span>) ={' '}
         <span className="font-medium tabular-nums text-content">{bePct}%</span> — el fold
         mínimo que necesitás para que el raise sea break-even como bluff.
+      </p>
+
+      <p className="text-xs text-content-muted">
+        Subís al{' '}
+        <span className="font-medium tabular-nums text-content">{raisePct}%</span> del bote:
+        (3·{formatAmount(villainBet, unit)} + {formatAmount(startingPot, unit)})·{raisePct}% ={' '}
+        <span className="tabular-nums text-content">{R}</span>. El fold% que necesitás lo fija
+        el tamaño del raise respecto al bote: el mismo raise pide siempre el mismo BE%.
       </p>
 
       {kind === 'decision' && (
