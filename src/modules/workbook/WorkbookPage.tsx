@@ -59,6 +59,8 @@ type DrillDef = {
 };
 
 // Conceptos: drills cortos de opción múltiple (sin leaderboard).
+// Ordenados de menor a mayor dificultad para no frustrar al arrancar
+// (combos y value/bluff son avanzados, van más atrás).
 const CONCEPT_DRILLS: readonly DrillDef[] = [
   {
     id: 'which-calc',
@@ -67,28 +69,10 @@ const CONCEPT_DRILLS: readonly DrillDef[] = [
     objective: 'Reconocer qué calculadora de EV usar en cada situación postflop.',
   },
   {
-    id: 'combos',
-    icon: Layers,
-    label: 'Conteo de combos',
-    objective: 'Contar cuántos combos de una mano quedan después de los blockers.',
-  },
-  {
-    id: 'value-bluff',
-    icon: Scale,
-    label: 'Value / Bluff',
-    objective: 'Balancear el rango de apuesta: cuántos bluffs por cada combo de value.',
-  },
-  {
     id: 'fold-equity',
     icon: Shield,
     label: 'Fold equity',
     objective: 'Calcular el % de folds que hace rentable un bluff (break-even).',
-  },
-  {
-    id: 'spr',
-    icon: Gauge,
-    label: 'SPR',
-    objective: 'Decidir si comprometerte según el SPR y la EV de hacerlo.',
   },
   {
     id: 'runouts',
@@ -97,16 +81,34 @@ const CONCEPT_DRILLS: readonly DrillDef[] = [
     objective: 'Estimar la probabilidad de un runout en el turn, el river o completo.',
   },
   {
+    id: 'auto-profit',
+    icon: BadgePercent,
+    label: 'Auto-profit raise',
+    objective: 'Reconocer cuándo un raise gana solo por su fold equity (auto-profit).',
+  },
+  {
+    id: 'spr',
+    icon: Gauge,
+    label: 'SPR',
+    objective: 'Decidir si comprometerte según el SPR y la EV de hacerlo.',
+  },
+  {
     id: 'floating',
     icon: Sailboat,
     label: 'Floating',
     objective: 'Evaluar la EV de flotar un cbet con aire para apostar la siguiente calle.',
   },
   {
-    id: 'auto-profit',
-    icon: BadgePercent,
-    label: 'Auto-profit raise',
-    objective: 'Reconocer cuándo un raise gana solo por su fold equity (auto-profit).',
+    id: 'value-bluff',
+    icon: Scale,
+    label: 'Value / Bluff',
+    objective: 'Balancear el rango de apuesta: cuántos bluffs por cada combo de value.',
+  },
+  {
+    id: 'combos',
+    icon: Layers,
+    label: 'Conteo de combos',
+    objective: 'Contar cuántos combos de una mano quedan después de los blockers.',
   },
   {
     id: 'river-call-shove',
