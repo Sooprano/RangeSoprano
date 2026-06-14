@@ -78,7 +78,7 @@ const CONCEPT_DRILLS: readonly DrillDef[] = [
     id: 'runouts',
     icon: Shuffle,
     label: 'Runouts',
-    objective: 'Estimar la probabilidad de un runout en el turn, el river o completo.',
+    objective: 'Estimar la probabilidad de un runout en el turn, en el river o el runout completo.',
   },
   {
     id: 'auto-profit',

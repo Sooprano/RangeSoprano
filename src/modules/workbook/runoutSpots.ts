@@ -41,6 +41,7 @@ export const PHASE_LABEL: Record<RunoutPhase, string> = {
 export type Breakdown =
   | { mode: 'single'; count: number; denom: number; matchBlockers: number }
   | { mode: 'complement'; k: number; denom: number; hits: number; total: number }
+  | { mode: 'runner-flush'; suitsLeft: number; hits: number; total: number }
   | { mode: 'pairs'; hits: number; total: number };
 
 export type RunoutQuestion = {
@@ -311,6 +312,7 @@ function buildComplete(): RunoutQuestion | null {
   let prompt: string;
   let pred: Parameters<typeof tallyPairs>[2];
   let single: SinglePred | null = null; // base single-pred for the complement/turn-only trap
+  let runnerSuit: Suit | null = null; // set for runner-runner flush (mental-shortcut breakdown)
 
   if (kind === 'flush') {
     const suit = pick(SUITS);
@@ -320,6 +322,7 @@ function buildComplete(): RunoutQuestion | null {
     prompt = `¿Con qué frecuencia completarás tu color para el river?`;
   } else if (kind === 'runner-flush') {
     const suit = pick(SUITS);
+    runnerSuit = suit;
     ({ hero, board } = buildBackdoorFlush(suit));
     pred = runnerFlush(suit);
     prompt = `¿Con qué frecuencia ligarás color runner-runner (${SUIT_NAME[suit]}) para el river?`;
@@ -361,8 +364,18 @@ function buildComplete(): RunoutQuestion | null {
   const traps: number[] = [100 - correct];
   if (single) traps.push(pct(k, unseen.length)); // turn-only: forgot the river
 
-  const breakdown: Breakdown =
-    single && (kind === 'suit' || kind === 'overcard' || kind === 'pair-board' || kind === 'flush')
+  const breakdown: Breakdown = runnerSuit
+    ? {
+        mode: 'runner-flush',
+        suitsLeft: unseen.filter((c) => c.suit === runnerSuit).length,
+        hits,
+        total,
+      }
+    : single &&
+        (kind === 'suit' ||
+          kind === 'overcard' ||
+          kind === 'pair-board' ||
+          kind === 'flush')
       ? { mode: 'complement', k, denom: unseen.length, hits, total }
       : { mode: 'pairs', hits, total };
 

@@ -328,7 +328,11 @@ function FeedbackPanel({
       </div>
       {breakdown.mode === 'single' && (
         <p className="text-xs text-content-muted">
-          Cartas que cumplen ÷ cartas sin ver ={' '}
+          De las{' '}
+          <span className="font-medium text-content tabular-nums">{breakdown.denom}</span>{' '}
+          cartas sin ver,{' '}
+          <span className="font-medium text-content tabular-nums">{breakdown.count}</span>{' '}
+          sirven →{' '}
           <span className="font-medium text-content tabular-nums">{breakdown.count}</span>{' '}
           ÷{' '}
           <span className="font-medium text-content tabular-nums">{breakdown.denom}</span>{' '}
@@ -362,6 +366,29 @@ function FeedbackPanel({
           → sale 100 − {100 - correct} ={' '}
           <span className="font-medium text-content tabular-nums">{correct}%</span>. Atajo
           (regla 4/2): ≈ {breakdown.k}×4 = {breakdown.k * 4}%.
+        </p>
+      )}
+      {breakdown.mode === 'runner-flush' && (
+        <p className="text-xs text-content-muted">
+          Atajo (×2 por carta): turn ≈{' '}
+          <span className="font-medium text-content tabular-nums">{breakdown.suitsLeft}</span>
+          ×2 ={' '}
+          <span className="font-medium text-content tabular-nums">
+            {breakdown.suitsLeft * 2}%
+          </span>
+          , river ≈{' '}
+          <span className="font-medium text-content tabular-nums">
+            {breakdown.suitsLeft - 1}
+          </span>
+          ×2 ={' '}
+          <span className="font-medium text-content tabular-nums">
+            {(breakdown.suitsLeft - 1) * 2}%
+          </span>{' '}
+          → {breakdown.suitsLeft * 2}% × {(breakdown.suitsLeft - 1) * 2}% ≈{' '}
+          <span className="font-medium text-content tabular-nums">{correct}%</span>. Exacto:{' '}
+          <span className="font-medium text-content tabular-nums">{breakdown.hits}</span> ÷{' '}
+          <span className="font-medium text-content tabular-nums">{breakdown.total}</span>{' '}
+          combinaciones.
         </p>
       )}
       {breakdown.mode === 'pairs' && (
