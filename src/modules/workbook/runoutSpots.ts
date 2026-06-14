@@ -41,7 +41,7 @@ export const PHASE_LABEL: Record<RunoutPhase, string> = {
 export type Breakdown =
   | { mode: 'single'; count: number; denom: number; matchBlockers: number }
   | { mode: 'complement'; k: number; denom: number; hits: number; total: number }
-  | { mode: 'runner-flush'; suitsLeft: number; hits: number; total: number }
+  | { mode: 'runner-flush'; suitsLeft: number; unseen: number; hits: number; total: number }
   | { mode: 'pairs'; hits: number; total: number };
 
 export type RunoutQuestion = {
@@ -391,6 +391,7 @@ function buildComplete(): RunoutQuestion | null {
     ? {
         mode: 'runner-flush',
         suitsLeft: unseen.filter((c) => c.suit === runnerSuit).length,
+        unseen: unseen.length,
         hits,
         total,
       }

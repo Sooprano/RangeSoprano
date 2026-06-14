@@ -376,6 +376,22 @@ function FeedbackPanel({
       {breakdown.mode === 'runner-flush' && (
         <>
           <p className="text-xs text-content-muted">
+            Runouts que ligan ÷ runouts posibles ={' '}
+            <span className="font-medium text-content tabular-nums">{breakdown.hits}</span>{' '}
+            ÷{' '}
+            <span className="font-medium text-content tabular-nums">{breakdown.total}</span>{' '}
+            ={' '}
+            <span className="font-medium text-content tabular-nums">{correct}%</span>.
+          </p>
+          <p className="text-xs text-content-muted">
+            <span className="font-medium text-content tabular-nums">{breakdown.hits}</span> ={' '}
+            pares de las {breakdown.suitsLeft} del palo que faltan (
+            {breakdown.suitsLeft}×{breakdown.suitsLeft - 1}/2) ·{' '}
+            <span className="font-medium text-content tabular-nums">{breakdown.total}</span> ={' '}
+            todos los pares de las {breakdown.unseen} cartas sin ver (
+            {breakdown.unseen}×{breakdown.unseen - 1}/2).
+          </p>
+          <p className="text-xs text-content-muted">
             Atajo (×2 por carta): turn ≈{' '}
             <span className="font-medium text-content tabular-nums">{breakdown.suitsLeft}</span>
             ×2 ={' '}
@@ -392,12 +408,6 @@ function FeedbackPanel({
             </span>{' '}
             → {breakdown.suitsLeft * 2}% × {(breakdown.suitsLeft - 1) * 2}% ≈{' '}
             <span className="font-medium text-content tabular-nums">{correct}%</span>.
-          </p>
-          <p className="text-xs text-content-muted">
-            Exacto:{' '}
-            <span className="font-medium text-content tabular-nums">{breakdown.hits}</span> ÷{' '}
-            <span className="font-medium text-content tabular-nums">{breakdown.total}</span>{' '}
-            combinaciones.
           </p>
         </>
       )}
