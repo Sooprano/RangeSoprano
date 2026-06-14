@@ -189,6 +189,29 @@ function randomDeal(boardSize: number): { hero: Card[]; board: Card[] } {
   return { hero: deck.slice(0, 2), board: deck.slice(2, 2 + boardSize) };
 }
 
+/**
+ * Hero (2) + a board with distinct ranks (no pre-existing pair). For
+ * "the board pairs" questions: if the board already held a pair, asking
+ * "¿se emparejará?" is ambiguous (a third card of the paired rank = trips),
+ * so we deal an unpaired board to keep the prompt unequivocal.
+ */
+function dealUnpairedBoard(boardSize: number): { hero: Card[]; board: Card[] } {
+  const deck = shuffle(makeDeck());
+  const used = new Set<string>();
+  const hero = deck.slice(0, 2);
+  for (const c of hero) used.add(token(c));
+  const board: Card[] = [];
+  const ranks = new Set<Rank>();
+  for (const c of deck) {
+    if (board.length === boardSize) break;
+    if (used.has(token(c)) || ranks.has(c.rank as Rank)) continue;
+    used.add(token(c));
+    ranks.add(c.rank as Rank);
+    board.push(c);
+  }
+  return { hero, board };
+}
+
 function singleResult(
   ctx: RunoutCtx,
   unseen: Card[],
@@ -228,7 +251,7 @@ function buildSingle(phase: RunoutPhase): RunoutQuestion | null {
     pred = isSuit(suit);
     prompt = `¿Con qué frecuencia el ${word} será ${SUIT_ARTICLE[suit]}?`;
   } else if (kind === 'pair-board') {
-    ({ hero, board } = randomDeal(boardSize));
+    ({ hero, board } = dealUnpairedBoard(boardSize));
     pred = pairsBoard;
     prompt = `¿Con qué frecuencia el ${word} emparejará el board?`;
   } else if (kind === 'overcard') {
@@ -348,7 +371,7 @@ function buildComplete(): RunoutQuestion | null {
     pred = eitherCard(isOvercard);
     prompt = `¿Con qué frecuencia saldrá un overcard para el river?`;
   } else {
-    ({ hero, board } = randomDeal(FLOP));
+    ({ hero, board } = dealUnpairedBoard(FLOP));
     single = pairsBoard;
     pred = eitherCard(pairsBoard);
     prompt = `¿Con qué frecuencia el board se emparejará para el river?`;
