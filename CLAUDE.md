@@ -90,6 +90,8 @@ Acciones: cada `Range` define su propia paleta (`range.actions: ActionDef[]` con
 - `src/modules/{home,viewer,editor,trainer}/` — una carpeta por módulo, página raíz + componentes locales. `/` monta `home/HomePage.tsx` con onboarding + `ImportProfileButton` (consume `importRanges` del store).
 - `src/utils/handUtils.ts` — `ALL_HANDS`, `categoryOf`, `combosOf`.
 - `src/utils/rangeStats.ts` — `computeRangeStats` (%total, combos, presentActions).
+- `src/components/CopyRangeMenu/CopyRangeMenu.tsx` — dropdown "Copiar" compartido (editor + viewer): copia el rango al portapapeles en **formato Flopzilla** (`[NN]…[/NN]`), Todo o por color/acción. Reusa `serializeWeightedHands(entries, { weightTag: 'flopzilla' })` + `rangeToFlopzilla`/`rangeActionToFlopzilla` (`exportRange.ts`).
+- **SEO pre-render**: `scripts/prerender.mjs` (hook `postbuild` en package.json) escribe `dist/<ruta>/index.html` con title/description/canonical/OG estático **por ruta** + `dist/404.html`. El array `ROUTES` del script es la fuente del meta estático → **mantener en sync con cada `useDocumentTitle(...)`**. Al agregar ruta nueva: sitemap (trailing slash) + `ROUTES` + `useDocumentTitle({ canonical })`.
 
 ## Reglas importantes
 
