@@ -27,17 +27,9 @@ jobs:
 
       - run: npm ci
 
+      # `npm run build` runs scripts/prerender.mjs via the postbuild hook, which
+      # writes dist/<route>/index.html (per-route SEO meta, HTTP 200) and dist/404.html.
       - run: npm run build
-
-      - name: SPA fallback (copy index.html to 404.html)
-        run: cp dist/index.html dist/404.html
-
-      - name: Pre-render SPA routes for SEO (HTTP 200 instead of 404)
-        run: |
-          for route in viewer trainer editor calculadoras analisis ejercicios; do
-            mkdir -p dist/$route
-            cp dist/index.html dist/$route/index.html
-          done
 
       - uses: actions/configure-pages@v5
 
