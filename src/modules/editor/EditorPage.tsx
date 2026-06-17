@@ -19,6 +19,7 @@ import { WeightSlider } from './WeightSlider';
 import { HistoryToolbar } from './HistoryToolbar';
 import { ImportModal, type ImportPlan } from './ImportModal';
 import { ExportMenu } from './ExportMenu';
+import { CopyRangeMenu } from '@/components/CopyRangeMenu/CopyRangeMenu';
 import { EditActionsToolbar } from './EditActionsToolbar';
 import { NotesButton } from './NotesButton';
 import { RangeManager } from './RangeManager';
@@ -254,6 +255,7 @@ export default function EditorPage() {
                   <Upload className="h-3.5 w-3.5" strokeWidth={2.25} />
                   Importar
                 </button>
+                <CopyRangeMenu range={activeRange} />
                 <ExportMenu
                   activeRange={activeRange}
                   allRanges={allRanges}

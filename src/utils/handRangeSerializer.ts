@@ -22,8 +22,14 @@ function formatWeight(w: number): string {
   return w.toFixed(2).replace(/\.?0+$/, '');
 }
 
-function wrap(inner: string, weight: number): string {
+export type WeightTagStyle = 'percent' | 'flopzilla';
+
+function wrap(inner: string, weight: number, style: WeightTagStyle): string {
   if (weight === 100) return inner;
+  if (style === 'flopzilla') {
+    const w = String(Math.round(weight));
+    return `[${w}]${inner}[/${w}]`;
+  }
   const w = formatWeight(weight);
   return `[${w}%]${inner}[/${w}%]`;
 }
@@ -36,7 +42,11 @@ function wrap(inner: string, weight: number): string {
  * Connector/gap sweeps are NOT collapsed and roundtrip as individual
  * hands when re-parsed.
  */
-export function serializeWeightedHands(entries: WeightedHand[]): string {
+export function serializeWeightedHands(
+  entries: WeightedHand[],
+  opts?: { weightTag?: WeightTagStyle },
+): string {
+  const weightTag: WeightTagStyle = opts?.weightTag ?? 'percent';
   const bucket = new Map<string, Grouped[]>();
 
   for (const { hand, weight } of entries) {
@@ -92,7 +102,7 @@ export function serializeWeightedHands(entries: WeightedHand[]): string {
       }
       tokens.push({
         anchorIdx: handOrder.get(runStart.hand) ?? 0,
-        text: wrap(inner, weight),
+        text: wrap(inner, weight, weightTag),
       });
     };
 

@@ -1,5 +1,5 @@
 import { toPng } from 'html-to-image';
-import type { Range } from '@/types/poker';
+import type { ActionId, Range } from '@/types/poker';
 import {
   CURRENT_RANGE_STORE_VERSION,
   type GroupMeta,
@@ -19,6 +19,41 @@ export function rangeToNotation(range: Range): string {
     entries.push({ hand: cell.hand, weight: Math.min(100, rounded) });
   }
   return serializeWeightedHands(entries);
+}
+
+/**
+ * Whole range as a Flopzilla-pasteable string: every hand with any action,
+ * at its total weight, wrapped with Flopzilla's `[NN]…[/NN]` weight tag.
+ */
+export function rangeToFlopzilla(range: Range): string {
+  const entries: WeightedHand[] = [];
+  for (const hand in range.cells) {
+    const cell = range.cells[hand];
+    if (!cell) continue;
+    const sum = cell.actions.reduce((acc, a) => acc + a.weight, 0);
+    if (sum <= 0) continue;
+    const rounded = Math.round(sum * 100) / 100;
+    entries.push({ hand: cell.hand, weight: Math.min(100, rounded) });
+  }
+  return serializeWeightedHands(entries, { weightTag: 'flopzilla' });
+}
+
+/**
+ * Only the hands assigned to a single action, using that action's per-hand
+ * frequency as the weight, in Flopzilla format. Lets the user paste one color
+ * (e.g. just the "Call" hands) into Flopzilla as its own range.
+ */
+export function rangeActionToFlopzilla(range: Range, actionId: ActionId): string {
+  const entries: WeightedHand[] = [];
+  for (const hand in range.cells) {
+    const cell = range.cells[hand];
+    if (!cell) continue;
+    const entry = cell.actions.find((a) => a.action === actionId);
+    if (!entry || entry.weight <= 0) continue;
+    const rounded = Math.round(entry.weight * 100) / 100;
+    entries.push({ hand: cell.hand, weight: Math.min(100, rounded) });
+  }
+  return serializeWeightedHands(entries, { weightTag: 'flopzilla' });
 }
 
 export function rangeToJson(range: Range): string {

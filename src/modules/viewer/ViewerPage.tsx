@@ -6,6 +6,7 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { RangeGrid } from '@/components/RangeGrid';
 import { RangeStats } from '@/components/RangeStats';
 import { ActionLegend } from '@/components/ActionLegend';
+import { CopyRangeMenu } from '@/components/CopyRangeMenu/CopyRangeMenu';
 import { computeRangeStats } from '@/utils/rangeStats';
 import { buildActionDefMap } from '@/utils/actionMeta';
 import { useRangeStore } from '@/store/rangeStore';
@@ -253,6 +254,9 @@ export default function ViewerPage() {
                   compareId={compareRangeId}
                   onChangeCompareId={setCompareRangeId}
                 />
+              )}
+              {viewMode !== 'overview' && range && (
+                <CopyRangeMenu range={range} />
               )}
               {viewMode !== 'overview' && (
                 <button
