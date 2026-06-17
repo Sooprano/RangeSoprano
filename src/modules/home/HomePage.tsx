@@ -69,7 +69,7 @@ const MODULES: readonly ModuleCard[] = [
     label: 'Editor',
     icon: Pencil,
     description:
-      'Crea y edita rangos con paleta de acciones por rango, pesos mixtos, notas, deshacer/rehacer, carpetas y sub-carpetas. Importa/exporta rangos individuales o el perfil completo.',
+      'Crea y edita rangos con paleta de acciones por rango, pesos mixtos, notas, deshacer/rehacer, carpetas y sub-carpetas. Copia cualquier rango (entero o por color) en formato Flopzilla, e importa/exporta rangos individuales o el perfil completo.',
   },
   {
     to: '/calculadoras',
@@ -93,7 +93,7 @@ const MODULES: readonly ModuleCard[] = [
     label: 'Ejercicios',
     icon: Dumbbell,
     description:
-      'Drills cortos para practicar el postflop. Conceptos: "¿Qué calculadora?" (eliges la herramienta de EV para un spot real), "Conteo de combos" (cuántos quedan tras los bloqueadores), "Value / Bluff" (faroles para balancear), "Fold equity" (% de fold mínimo de un bluff), "SPR" (si comprometerte es +EV), "Runouts" (probabilidad de un runout en turn, river y completo), "Floating" (la EV de flotar un cbet), "Auto-profit raise" (si un raise gana solo por su fold equity), "River: call o shove" (EV de pagar vs ir all-in enfrentando una apuesta de river) y "River: check o bet" (EV de checkear behind vs dos tamaños de apuesta cuando te checkean). Rangos: "% y combos" (lee un rango en el grid y di qué % del total y cuántos combos representa) y "Composición + tipo" (cómo un % por posición se compone de manos concretas y qué morfología tiene: lineal, polarizado, mergeado, condensado). Tablas: "Pot Odds" (fold equity al apostar y equity al pagar, con MC y fórmula) y "Push/Fold" (las tablas de Nash de empuje/pago heads-up para stacks cortos). Con puntaje, racha y atajos de teclado.',
+      'Drills cortos de matemática postflop, con puntaje, racha y atajos de teclado. Tres grupos: Conceptos (diez drills de EV: qué calculadora usar, conteo de combos, value/bluff, fold equity, SPR, runouts, floating, auto-profit raise y dos de river), Rangos (% y combos · composición y morfología) y Tablas (Pot Odds y Push/Fold, con modo Estudio y Velocidad).',
   },
 ];
 
@@ -123,6 +123,36 @@ const FAQS: readonly Faq[] = [
     ),
     aPlain:
       'Es un archivo de texto con todos tus rangos serializados. Lo descargas desde Editor → Export → Download all ranges JSON y lo guardas donde quieras (Drive, Dropbox, pendrive). En otra PC o en el celular lo importas desde Home → Importar perfil completo y recuperas todo. El archivo también incluye los colores de tus carpetas y la configuración del randomizador (presets, sets, frecuencia), así que el perfil viaja completo.',
+  },
+  {
+    q: '¿Puedo exportar mis rangos a Flopzilla?',
+    a: (
+      <>
+        Sí. En el{' '}
+        <Link to="/editor" className="font-medium text-accent-light hover:underline">
+          Editor
+        </Link>{' '}
+        o el{' '}
+        <Link to="/viewer" className="font-medium text-accent-light hover:underline">
+          Visualizador
+        </Link>{' '}
+        usa el botón <span className="font-medium text-content">Copiar</span>: copia el
+        rango al portapapeles en{' '}
+        <span className="font-medium text-content">formato Flopzilla</span>, listo para
+        pegar. Puedes copiar el rango entero (<span className="font-medium text-content">Todo</span>)
+        o solo un color/acción —por ejemplo solo las manos de{' '}
+        <span className="font-medium text-content">Call</span> o solo las de{' '}
+        <span className="font-medium text-content">raise</span>— usando la frecuencia real
+        de cada mano (una mano 60% Call sale como{' '}
+        <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">
+          [60]…[/60]
+        </code>
+        ). Ideal para llevar tus rangos a Flopzilla y correr equities, contar combos o
+        estudiar el spot.
+      </>
+    ),
+    aPlain:
+      'Sí. En el Editor o el Visualizador usa el botón Copiar: copia el rango al portapapeles en formato Flopzilla, listo para pegar. Puedes copiar el rango entero (Todo) o solo un color/acción (por ejemplo solo las manos de Call o solo las de raise) usando la frecuencia real de cada mano (una mano 60% Call sale como [60]…[/60]). Ideal para llevar tus rangos a Flopzilla y correr equities, contar combos o estudiar el spot.',
   },
   {
     q: '¿Cómo funciona el randomizador?',
@@ -594,8 +624,10 @@ export default function HomePage() {
             <div className="text-content-muted">
               <span className="font-medium text-content">4. Imprimir o exportar</span>
               {' — '}genera un PDF imprimible con varios rangos por hoja para estudio
-              offline, o exporta una imagen PNG individual para compartir en foros y
-              Discord.
+              offline, exporta una imagen PNG individual para compartir en foros y
+              Discord, o copia cualquier rango en{' '}
+              <span className="font-medium text-content">formato Flopzilla</span>{' '}
+              (entero o por color) para correr equities y análisis.
             </div>
           </li>
         </ol>
