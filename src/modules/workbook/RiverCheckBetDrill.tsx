@@ -12,6 +12,7 @@ import {
   type RiverBetQuestion,
   type RiverLine,
 } from './riverCheckBetSpots';
+import { ChipColumn } from './ChipColumn';
 import { AutoAdvanceToggle, CalcReveal, ScoreBar } from './drillUi';
 import {
   AUTO_ADVANCE_MS,
@@ -218,8 +219,9 @@ export function RiverCheckBetDrill() {
 
 function SpotCard({ question }: { question: RiverBetQuestion }) {
   const { unit, pot, betSmall, betBig, hero, board, kind } = question;
+  const fmt = (n: number) => formatAmount(n, unit);
   return (
-    <div className="flex flex-col items-center gap-3 rounded-lg border border-border bg-bg-subtle/60 p-4">
+    <div className="flex flex-col items-center gap-4 rounded-lg border border-border bg-bg-subtle/60 p-4">
       <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-content-muted">
         River · el rival te checkea
       </span>
@@ -235,26 +237,24 @@ function SpotCard({ question }: { question: RiverBetQuestion }) {
         </div>
       </div>
 
-      <p className="max-w-md text-center text-sm text-content-muted">
-        El rival checkea en un bote de{' '}
-        <span className="font-semibold text-content tabular-nums">{formatAmount(pot, unit)}</span>.
-        Podés checkear behind, apostar{' '}
-        <span className="font-semibold text-content tabular-nums">{formatAmount(betSmall, unit)}</span>{' '}
-        o apostar{' '}
-        <span className="font-semibold text-content tabular-nums">{formatAmount(betBig, unit)}</span>.
-      </p>
-
-      <div className="flex flex-wrap items-center justify-center gap-2">
-        <Chip label="Bote" value={formatAmount(pot, unit)} />
-        <Chip
-          label="Bet chico"
-          value={`${formatAmount(betSmall, unit)} · ${pctOfPot(betSmall, pot)}%`}
-          accent
+      {/* MiniPot escalera: bote (ref) · bet chico · bet grande. Check behind = no apostar (3er botón). */}
+      <div className="mx-auto grid w-full max-w-md grid-cols-3 items-end gap-3 px-2">
+        <ChipColumn eyebrow="Bote" tone="muted" amount={pot} refAmount={pot} format={fmt} />
+        <ChipColumn
+          eyebrow="Bet chico"
+          tone="accent"
+          amount={betSmall}
+          refAmount={pot}
+          format={fmt}
+          sub={`${pctOfPot(betSmall, pot)}% del bote`}
         />
-        <Chip
-          label="Bet grande"
-          value={`${formatAmount(betBig, unit)} · ${pctOfPot(betBig, pot)}%`}
-          accent
+        <ChipColumn
+          eyebrow="Bet grande"
+          tone="amber"
+          amount={betBig}
+          refAmount={pot}
+          format={fmt}
+          sub={`${pctOfPot(betBig, pot)}% del bote`}
         />
       </div>
 
@@ -282,7 +282,7 @@ function SpotCard({ question }: { question: RiverBetQuestion }) {
         </div>
       </div>
 
-      <p className="max-w-md text-center text-sm font-medium text-content">
+      <p className="max-w-md text-center text-base font-semibold text-content">
         {kind === 'ev-check'
           ? '¿Cuál es el EV de checkear behind?'
           : kind === 'ev-small'
@@ -291,35 +291,6 @@ function SpotCard({ question }: { question: RiverBetQuestion }) {
               ? '¿Cuál es el EV de apostar el tamaño grande?'
               : '¿Checkeás, apostás chico o apostás grande?'}
       </p>
-    </div>
-  );
-}
-
-function Chip({
-  label,
-  value,
-  accent = false,
-}: {
-  label: string;
-  value: string;
-  accent?: boolean;
-}) {
-  return (
-    <div
-      className={cn(
-        'flex flex-col items-center gap-0.5 rounded-lg border px-3 py-1.5',
-        accent ? 'border-accent/40 bg-accent/5' : 'border-border bg-surface/60',
-      )}
-    >
-      <span className="text-[10px] uppercase tracking-wider text-content-muted">{label}</span>
-      <span
-        className={cn(
-          'text-sm font-semibold tabular-nums',
-          accent ? 'text-accent-light' : 'text-content',
-        )}
-      >
-        {value}
-      </span>
     </div>
   );
 }
