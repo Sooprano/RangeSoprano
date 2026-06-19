@@ -91,6 +91,7 @@ Acciones: cada `Range` define su propia paleta (`range.actions: ActionDef[]` con
 - `src/utils/handUtils.ts` — `ALL_HANDS`, `categoryOf`, `combosOf`.
 - `src/utils/rangeStats.ts` — `computeRangeStats` (%total, combos, presentActions).
 - `src/components/CopyRangeMenu/CopyRangeMenu.tsx` — dropdown "Copiar" compartido (editor + viewer): copia el rango al portapapeles en **formato Flopzilla** (`[NN]…[/NN]`), Todo o por color/acción. Reusa `serializeWeightedHands(entries, { weightTag: 'flopzilla' })` + `rangeToFlopzilla`/`rangeActionToFlopzilla` (`exportRange.ts`).
+- `src/modules/workbook/ChipColumn.tsx` — "MiniPot" compartido por los drills de `/ejercicios`: stack de fichas **escalado al bote** (`(amount/refAmount)*4`, cap 12) + eyebrow + monto (`format`) + sub. Tonos `muted/accent/rose/amber`. Lo usan SPR, Floating, Value/Bluff, River call/shove, River check/bet y AutoProfit. **Convención visual de drills** (ver [[feedback-drills-ux]]): lo tuyo=accent, villano=rose, bote=muted, sizing/variable=ámbar; pregunta en `text-base font-semibold` arriba de las opciones.
 - **SEO pre-render**: `scripts/prerender.mjs` (hook `postbuild` en package.json) escribe `dist/<ruta>/index.html` con title/description/canonical/OG estático **por ruta** + `dist/404.html`. El array `ROUTES` del script es la fuente del meta estático → **mantener en sync con cada `useDocumentTitle(...)`**. Al agregar ruta nueva: sitemap (trailing slash) + `ROUTES` + `useDocumentTitle({ canonical })`.
 
 ## Reglas importantes
