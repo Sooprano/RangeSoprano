@@ -10,6 +10,7 @@ import {
   type AutoProfitQuestion,
 } from './autoProfitSpots';
 import { AutoAdvanceToggle, CalcReveal, ScoreBar } from './drillUi';
+import { ChipColumn } from './ChipColumn';
 import {
   AUTO_ADVANCE_MS,
   INITIAL_SCORE,
@@ -252,107 +253,32 @@ function RaisePot({ question }: { question: AutoProfitQuestion }) {
   const raisePct = Math.round(
     raisePctOfPot({ bote: startingPot, bet: villainBet, raiseSize: raiseTotal }),
   );
+  const fmt = (n: number) => formatAmount(n, unit);
   return (
     <div className="mx-auto grid w-full max-w-md grid-cols-3 items-end gap-3 px-2">
-      <BetColumn
+      <ChipColumn
         eyebrow="Villano apuesta"
         tone="rose"
         amount={villainBet}
-        unit={unit}
         refAmount={startingPot}
+        format={fmt}
         sub={`${betPctOfPot}% del bote`}
       />
-      <BetColumn
+      <ChipColumn
         eyebrow="Bote"
         tone="muted"
         amount={startingPot}
-        unit={unit}
         refAmount={startingPot}
+        format={fmt}
       />
-      <BetColumn
+      <ChipColumn
         eyebrow="Tu raise"
         tone="accent"
         amount={raiseTotal}
-        unit={unit}
         refAmount={startingPot}
+        format={fmt}
         sub={`raise al ${raisePct}%`}
       />
-    </div>
-  );
-}
-
-const CHIP_TONE: Record<
-  'muted' | 'accent' | 'rose',
-  { bar: string; ring: string; label: string; value: string }
-> = {
-  muted: {
-    bar: 'bg-content/30',
-    ring: 'ring-white/10',
-    label: 'text-content-muted',
-    value: 'text-content',
-  },
-  accent: {
-    bar: 'bg-accent',
-    ring: 'ring-accent-light/40',
-    label: 'text-accent-light',
-    value: 'text-accent-light',
-  },
-  rose: {
-    bar: 'bg-rose-400',
-    ring: 'ring-rose-200/40',
-    label: 'text-rose-300',
-    value: 'text-rose-200',
-  },
-};
-
-function BetColumn({
-  eyebrow,
-  tone,
-  amount,
-  unit,
-  refAmount,
-  sub,
-}: {
-  eyebrow: string;
-  tone: 'muted' | 'accent' | 'rose';
-  amount: number;
-  unit: '$' | 'K';
-  refAmount: number;
-  sub?: string;
-}) {
-  const palette = CHIP_TONE[tone];
-  // ~4 chips per pot; the raise (often >1 pot) stacks taller. Capped at 12.
-  const chips = Math.max(
-    1,
-    Math.min(12, Math.round((amount / refAmount) * 4) || 1),
-  );
-  const CHIP_GAP_PX = 4;
-  const CHIP_HEIGHT_PX = 6;
-  const stackHeight = chips * CHIP_GAP_PX + CHIP_HEIGHT_PX;
-  return (
-    <div className="flex flex-col items-center gap-1.5">
-      <div className="relative w-12" style={{ height: `${stackHeight}px` }} aria-hidden>
-        {Array.from({ length: chips }, (_, i) => (
-          <div
-            key={i}
-            className={cn(
-              'absolute left-0 right-0 h-1.5 rounded-full ring-1',
-              palette.bar,
-              palette.ring,
-            )}
-            style={{ bottom: `${i * CHIP_GAP_PX}px` }}
-          />
-        ))}
-      </div>
-      <div className="flex flex-col items-center leading-tight">
-        <span className={cn('text-[9px] font-semibold uppercase tracking-[0.14em]', palette.label)}>
-          {eyebrow}
-        </span>
-        <span className={cn('font-mono text-sm font-bold tabular-nums', palette.value)}>
-          {formatAmount(amount, unit)}
-        </span>
-        <span className="text-[10px] tabular-nums text-content-muted min-h-[0.9rem]">{sub ??' '}</span>
-      </div>
     </div>
   );
 }

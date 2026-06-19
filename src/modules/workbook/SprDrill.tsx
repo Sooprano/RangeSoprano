@@ -5,6 +5,7 @@ import { CountdownBar } from '@/modules/trainer/CountdownBar';
 import { AllInEvCalc } from '@/modules/calculators/AllInEvCalc';
 import { EvBasicCalc } from '@/modules/calculators/EvBasicCalc';
 import { generateSprQuestion, type SprQuestion } from './sprSpots';
+import { ChipColumn, type ChipTone } from './ChipColumn';
 import { AutoAdvanceToggle, CalcReveal, ScoreBar } from './drillUi';
 import {
   AUTO_ADVANCE_MS,
@@ -189,45 +190,100 @@ export function SprDrill() {
   );
 }
 
+const TASK_EYEBROW: Record<SprQuestion['kind'], string> = {
+  decision: 'Decisión — comprometerte o fold',
+  'ev-value': 'Cálculo — EV de comprometerte',
+};
+
 function SpotCard({ question }: { question: SprQuestion }) {
   const { situation, pot, stack, spr, equityPct, foldPct } = question;
+  const fmt = (n: number) => money(n);
   return (
-    <div className="flex flex-col items-center gap-3 rounded-lg border border-border bg-bg-subtle/60 p-4">
-      <div className="flex flex-wrap items-center justify-center gap-4">
-        <div className="flex flex-col items-center">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-content-muted">
-            SPR
-          </span>
-          <span className="font-mono text-3xl font-bold tabular-nums text-amber-200">
-            {spr}
-          </span>
-        </div>
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          <Chip label="Bote" value={money(pot)} />
-          <Chip label="Stack efectivo" value={money(stack)} />
-          <Chip label="Tu equity" value={`${equityPct}%`} />
-          {foldPct != null && <Chip label="Foldean" value={`${foldPct}%`} />}
-        </div>
+    <div className="flex flex-col items-center gap-4 rounded-lg border border-border bg-bg-subtle/60 p-4">
+      <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-accent-light">
+        {TASK_EYEBROW[question.kind]}
+      </span>
+
+      {/* MiniPot: bote vs all-in, fichas escaladas al bote → el SPR se ve. */}
+      <div className="mx-auto grid w-full max-w-[16rem] grid-cols-2 items-end gap-3 px-2">
+        {situation === 'shove' ? (
+          <>
+            <ChipColumn eyebrow="Bote" tone="muted" amount={pot} refAmount={pot} format={fmt} />
+            <ChipColumn eyebrow="Tu all-in" tone="accent" amount={stack} refAmount={pot} format={fmt} />
+          </>
+        ) : (
+          <>
+            <ChipColumn eyebrow="Villano all-in" tone="rose" amount={stack} refAmount={pot} format={fmt} />
+            <ChipColumn eyebrow="Bote" tone="muted" amount={pot} refAmount={pot} format={fmt} />
+          </>
+        )}
       </div>
-      <p className="max-w-md text-center text-sm font-medium text-content">
-        {situation === 'shove'
-          ? `Haces all-in por ${money(stack)} sobre un bote de ${money(pot)}.`
-          : `El rival hace all-in por ${money(stack)}; te toca pagar ${money(stack)}.`}{' '}
-        {question.kind === 'decision'
-          ? '¿Te comprometes o foldeas?'
-          : '¿Cuál es el EV de comprometerte? (fold = 0)'}
-      </p>
+
+      {/* Stat tiles color-codeados: SPR (ámbar), tu equity (accent), foldean (rose). */}
+      <div className="flex flex-wrap items-stretch justify-center gap-2">
+        <StatTile label="SPR" value={String(spr)} tone="amber" caption="stack ÷ bote" />
+        <StatTile label="Tu equity" value={`${equityPct}%`} tone="accent" />
+        {foldPct != null && <StatTile label="Foldean" value={`${foldPct}%`} tone="rose" />}
+      </div>
+
+      {/* Escenario + la pregunta real en su propia línea. */}
+      <div className="flex max-w-md flex-col items-center gap-1 text-center">
+        <p className="text-sm text-content-muted">
+          {situation === 'shove' ? (
+            <>
+              Haces all-in por{' '}
+              <span className="font-semibold text-content">{money(stack)}</span> sobre un bote de{' '}
+              <span className="font-semibold text-content">{money(pot)}</span>.
+            </>
+          ) : (
+            <>
+              El rival hace all-in por{' '}
+              <span className="font-semibold text-content">{money(stack)}</span>; pagas{' '}
+              <span className="font-semibold text-content">{money(stack)}</span>.
+            </>
+          )}
+        </p>
+        <p className="text-base font-semibold text-content">
+          {question.kind === 'decision'
+            ? '¿Te comprometes o foldeas?'
+            : '¿Cuál es el EV de comprometerte? (fold = $0)'}
+        </p>
+      </div>
     </div>
   );
 }
 
-function Chip({ label, value }: { label: string; value: string }) {
+const STAT_TONE: Record<ChipTone, { border: string; value: string }> = {
+  muted: { border: 'border-border', value: 'text-content' },
+  accent: { border: 'border-accent/40', value: 'text-accent-light' },
+  rose: { border: 'border-rose-500/40', value: 'text-rose-200' },
+  amber: { border: 'border-amber-400/40', value: 'text-amber-200' },
+};
+
+function StatTile({
+  label,
+  value,
+  tone,
+  caption,
+}: {
+  label: string;
+  value: string;
+  tone: ChipTone;
+  caption?: string;
+}) {
+  const t = STAT_TONE[tone];
   return (
-    <div className="flex flex-col items-center gap-0.5 rounded-lg border border-border bg-surface/60 px-3 py-1.5">
-      <span className="text-[10px] uppercase tracking-wider text-content-muted">
-        {label}
-      </span>
-      <span className="text-sm font-semibold tabular-nums text-content">{value}</span>
+    <div
+      className={cn(
+        'flex min-w-[5rem] flex-col items-center justify-center gap-0.5 rounded-lg border bg-surface/60 px-3 py-1.5',
+        t.border,
+      )}
+    >
+      <span className="text-[10px] uppercase tracking-wider text-content-muted">{label}</span>
+      <span className={cn('font-mono text-lg font-bold tabular-nums', t.value)}>{value}</span>
+      {caption && (
+        <span className="text-[9px] tabular-nums text-content-muted">{caption}</span>
+      )}
     </div>
   );
 }
