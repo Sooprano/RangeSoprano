@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Check, RotateCcw, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { raisePctOfPot } from '@/utils/ev';
 import { BoardCards } from '@/modules/analysis/BoardCards';
 import { CountdownBar } from '@/modules/trainer/CountdownBar';
 import { CallVsRaiseCalc } from '@/modules/calculators/CallVsRaiseCalc';
@@ -11,6 +12,7 @@ import {
   type RiverLine,
   type RiverQuestion,
 } from './riverCallShoveSpots';
+import { ChipColumn } from './ChipColumn';
 import { AutoAdvanceToggle, CalcReveal, ScoreBar } from './drillUi';
 import {
   AUTO_ADVANCE_MS,
@@ -201,8 +203,14 @@ export function RiverCallShoveDrill() {
 
 function SpotCard({ question }: { question: RiverQuestion }) {
   const { unit, villainBet, potWon, shove, hero, board, kind } = question;
+  const fmt = (n: number) => formatAmount(n, unit);
+  const heroIsCall = kind === 'ev-call';
+  const betPct = Math.round((villainBet / potWon) * 100);
+  const raisePct = Math.round(
+    raisePctOfPot({ bote: potWon, bet: villainBet, raiseSize: shove }),
+  );
   return (
-    <div className="flex flex-col items-center gap-3 rounded-lg border border-border bg-bg-subtle/60 p-4">
+    <div className="flex flex-col items-center gap-4 rounded-lg border border-border bg-bg-subtle/60 p-4">
       <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-content-muted">
         River · enfrentás una apuesta
       </span>
@@ -218,22 +226,36 @@ function SpotCard({ question }: { question: RiverQuestion }) {
         </div>
       </div>
 
-      <p className="max-w-md text-center text-sm text-content-muted">
-        El rival apuesta{' '}
-        <span className="font-semibold text-content tabular-nums">
-          {formatAmount(villainBet, unit)}
-        </span>{' '}
-        en el river. Podés pagar, foldear o ir all-in por{' '}
-        <span className="font-semibold text-content tabular-nums">
-          {formatAmount(shove, unit)}
-        </span>
-        .
-      </p>
-
-      <div className="flex flex-wrap items-center justify-center gap-2">
-        <Chip label="Bote" value={formatAmount(potWon, unit)} />
-        <Chip label="Apuesta del villano" value={formatAmount(villainBet, unit)} />
-        <Chip label="Tu all-in" value={formatAmount(shove, unit)} accent />
+      {/* MiniPot: villano (izq) · bote (centro) · vos (der). Fichas escaladas al bote. */}
+      <div className="mx-auto grid w-full max-w-md grid-cols-3 items-end gap-3 px-2">
+        <ChipColumn
+          eyebrow="Apuesta del villano"
+          tone="rose"
+          amount={villainBet}
+          refAmount={potWon}
+          format={fmt}
+          sub={`${betPct}% del bote`}
+        />
+        <ChipColumn eyebrow="Bote" tone="muted" amount={potWon} refAmount={potWon} format={fmt} />
+        {heroIsCall ? (
+          <ChipColumn
+            eyebrow="Tu call"
+            tone="accent"
+            amount={villainBet}
+            refAmount={potWon}
+            format={fmt}
+            sub={`${betPct}% del bote`}
+          />
+        ) : (
+          <ChipColumn
+            eyebrow="Tu all-in"
+            tone="accent"
+            amount={shove}
+            refAmount={potWon}
+            format={fmt}
+            sub={`raise al ${raisePct}%`}
+          />
+        )}
       </div>
 
       {/* Villain equities relevant to the question (given data from Flopzilla). */}
@@ -254,42 +276,13 @@ function SpotCard({ question }: { question: RiverQuestion }) {
         </div>
       </div>
 
-      <p className="max-w-md text-center text-sm font-medium text-content">
+      <p className="max-w-md text-center text-base font-semibold text-content">
         {kind === 'ev-call'
           ? '¿Cuál es el EV de pagar?'
           : kind === 'ev-shove'
             ? '¿Cuál es el EV de ir all-in?'
             : '¿Pagás, foldeás o vas all-in?'}
       </p>
-    </div>
-  );
-}
-
-function Chip({
-  label,
-  value,
-  accent = false,
-}: {
-  label: string;
-  value: string;
-  accent?: boolean;
-}) {
-  return (
-    <div
-      className={cn(
-        'flex flex-col items-center gap-0.5 rounded-lg border px-3 py-1.5',
-        accent ? 'border-accent/40 bg-accent/5' : 'border-border bg-surface/60',
-      )}
-    >
-      <span className="text-[10px] uppercase tracking-wider text-content-muted">{label}</span>
-      <span
-        className={cn(
-          'text-sm font-semibold tabular-nums',
-          accent ? 'text-accent-light' : 'text-content',
-        )}
-      >
-        {value}
-      </span>
     </div>
   );
 }
