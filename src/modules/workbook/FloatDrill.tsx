@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Check, RotateCcw, X } from 'lucide-react';
+import { Check, ChevronRight, RotateCcw, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { BoardCards } from '@/modules/analysis/BoardCards';
 import { CardFace } from '@/modules/trainer/HandCards';
 import { CountdownBar } from '@/modules/trainer/CountdownBar';
 import { FloatEvCalc } from '@/modules/calculators/FloatEvCalc';
 import { generateFloatQuestion, type FloatQuestion } from './floatSpots';
+import { ChipColumn } from './ChipColumn';
 import { AutoAdvanceToggle, CalcReveal, ScoreBar } from './drillUi';
 import {
   AUTO_ADVANCE_MS,
@@ -197,8 +198,9 @@ function SpotCard({ question }: { question: FloatQuestion }) {
   const priorStreet = street === 'turn' ? 'flop' : 'turn';
   const potAfterCall = potOnFlop + call;
   const betPct = Math.round((bet / potAfterCall) * 100);
+  const fmt = (n: number) => money(n);
   return (
-    <div className="flex flex-col items-center gap-3 rounded-lg border border-border bg-bg-subtle/60 p-4">
+    <div className="flex flex-col items-center gap-4 rounded-lg border border-border bg-bg-subtle/60 p-4">
       <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-content-muted">
         Floating · {streetWord}
       </span>
@@ -224,14 +226,45 @@ function SpotCard({ question }: { question: FloatQuestion }) {
         El {streetWord} <span className="text-accent-light">{scenarioLabel}</span>
       </p>
 
-      {/* Action recap: what happened on prior streets and what you'd do now. */}
-      <p className="max-w-md text-center text-sm text-content-muted">
-        Flotaste el {priorStreet}: pagaste{' '}
-        <span className="font-semibold text-content tabular-nums">{money(call)}</span> con aire.
-        En el {streetWord}, si el villano checkea apostás{' '}
-        <span className="font-semibold text-content tabular-nums">{money(bet)}</span>; si
-        barrelea, foldeás.
-      </p>
+      {/* Mini hand-history: prior street (left, hecho) → current street (right, tu plan). */}
+      <div className="flex w-full max-w-md flex-col items-stretch gap-2 sm:flex-row sm:items-stretch">
+        <div className="flex flex-1 flex-col items-center gap-0.5 rounded-lg border border-border bg-surface/40 px-3 py-2 text-center">
+          <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-content-muted">
+            {priorStreet}
+          </span>
+          <span className="text-xs text-content-muted">Flotaste con aire</span>
+          <span className="text-sm font-semibold tabular-nums text-content">
+            pagaste {money(call)}
+          </span>
+        </div>
+        <ChevronRight
+          aria-hidden
+          className="mx-auto h-5 w-5 shrink-0 rotate-90 self-center text-content-muted sm:rotate-0"
+          strokeWidth={2.25}
+        />
+        <div className="flex flex-1 flex-col items-center gap-0.5 rounded-lg border border-accent/40 bg-accent/5 px-3 py-2 text-center">
+          <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-accent-light">
+            {streetWord}
+          </span>
+          <span className="text-xs text-content">
+            Checkea → <span className="font-semibold text-accent-light">apostás</span>
+          </span>
+          <span className="text-xs text-content-muted">Barrelea → foldeás</span>
+        </div>
+      </div>
+
+      {/* MiniPot: bote vs tu apuesta, fichas escaladas → el % pegado al monto. */}
+      <div className="mx-auto grid w-full max-w-[16rem] grid-cols-2 items-end gap-3 px-2">
+        <ChipColumn eyebrow="Bote" tone="muted" amount={potAfterCall} refAmount={potAfterCall} format={fmt} />
+        <ChipColumn
+          eyebrow="Tu apuesta"
+          tone="accent"
+          amount={bet}
+          refAmount={potAfterCall}
+          format={fmt}
+          sub={`${betPct}% del bote`}
+        />
+      </div>
 
       {/* Villain stats on this card — made explicit so the student reads them as the villain's tendencies. */}
       <div className="flex flex-col items-center gap-1.5">
@@ -245,13 +278,7 @@ function SpotCard({ question }: { question: FloatQuestion }) {
         </div>
       </div>
 
-      {/* Your sizing — with the bet as a % of the pot you bet into. */}
-      <div className="flex flex-wrap items-center justify-center gap-2">
-        <Chip label="Tu apuesta" value={`${money(bet)} · ${betPct}% del bote`} />
-        <Chip label="Bote (al apostar)" value={money(potAfterCall)} />
-      </div>
-
-      <p className="max-w-md text-center text-sm font-medium text-content">
+      <p className="text-base font-semibold text-content">
         {question.kind === 'decision'
           ? '¿Flotar es +EV?'
           : '¿Cuál es el EV de flotar?'}
