@@ -7,6 +7,7 @@ import {
   generateValueBluffQuestion,
   type ValueBluffQuestion,
 } from './valueBluffSpots';
+import { ChipColumn } from './ChipColumn';
 import { AutoAdvanceToggle, CalcReveal, ScoreBar } from './drillUi';
 import {
   AUTO_ADVANCE_MS,
@@ -176,30 +177,48 @@ export function ValueBluffDrill() {
 }
 
 function SpotCard({ question }: { question: ValueBluffQuestion }) {
+  const { sizing, valueCombos } = question;
+  const betPct = Math.round(sizing.frac * 100);
   return (
-    <div className="flex flex-col items-center gap-3 rounded-lg border border-border bg-bg-subtle/60 p-4">
+    <div className="flex flex-col items-center gap-4 rounded-lg border border-border bg-bg-subtle/60 p-4">
       <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-content-muted">
-        Value / Bluff · river
+        Balance del rango de apuesta · river
       </span>
-      <div className="flex flex-wrap items-center justify-center gap-3">
-        <Chip label="Apuestas" value={question.sizing.label} />
-        <Chip label="Valor" value={`${question.valueCombos} combos`} />
+
+      {/* MiniPot: la apuesta como % del bote → la palanca del balance. */}
+      <div className="mx-auto grid w-full max-w-[16rem] grid-cols-2 items-end gap-3 px-2">
+        <ChipColumn
+          eyebrow="Bote"
+          tone="muted"
+          amount={100}
+          refAmount={100}
+          format={(n) => `${n}%`}
+        />
+        <ChipColumn
+          eyebrow="Tu apuesta"
+          tone="amber"
+          amount={betPct}
+          refAmount={100}
+          format={(n) => `${n}%`}
+          {...(sizing.frac > 1 ? { sub: 'overbet' } : {})}
+        />
       </div>
-      <p className="max-w-md text-center text-sm font-medium text-content">
+
+      {/* Tus combos de value (accent, lo tuyo). */}
+      <div className="flex flex-col items-center gap-0.5 rounded-lg border border-accent/40 bg-surface/60 px-4 py-1.5">
+        <span className="text-[10px] uppercase tracking-wider text-content-muted">
+          Apuestas con valor
+        </span>
+        <span className="font-mono text-lg font-bold tabular-nums text-accent-light">
+          {valueCombos}{' '}
+          <span className="text-sm font-medium text-content-muted">combos</span>
+        </span>
+      </div>
+
+      <p className="max-w-md text-center text-base font-semibold text-content">
         ¿Cuántos combos de farol puedes tener para que el rango de apuesta quede
         balanceado?
       </p>
-    </div>
-  );
-}
-
-function Chip({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex flex-col items-center gap-0.5 rounded-lg border border-border bg-surface/60 px-3 py-1.5">
-      <span className="text-[10px] uppercase tracking-wider text-content-muted">
-        {label}
-      </span>
-      <span className="text-sm font-semibold text-amber-200">{value}</span>
     </div>
   );
 }
