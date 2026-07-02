@@ -86,11 +86,16 @@ function buildOptions(
   return shuffle([...opts]);
 }
 
-export function generateStatsQuestion(): StatsQuestion {
+const ALL_KINDS: readonly StatsKind[] = ['pct', 'combos'];
+
+export function generateStatsQuestion(
+  allowedKinds?: readonly StatsKind[],
+): StatsQuestion {
   const spot = pick(STATS_SPOTS);
   const { hands, combos, pctRounded } = rangeStatsOf(spot.notation);
   const breakdown = comboBreakdown(hands);
-  const kind: StatsKind = Math.random() < 0.5 ? 'pct' : 'combos';
+  const kindPool = allowedKinds && allowedKinds.length > 0 ? allowedKinds : ALL_KINDS;
+  const kind: StatsKind = pick(kindPool);
 
   // "% y combos" enseña la matemática exacta (combos / 1326), así que usa el %
   // DERIVADO y redondeado — no la etiqueta del HUD del spot (esa es para el drill

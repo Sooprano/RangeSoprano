@@ -11,9 +11,15 @@ import {
 import {
   checkExpert,
   generateStatsQuestion,
+  type StatsKind,
   type StatsQuestion,
 } from './rangeStatsSpots';
-import { AutoAdvanceToggle, ScoreBar } from './drillUi';
+import { AutoAdvanceToggle, ChipFilter, ScoreBar } from './drillUi';
+
+const KIND_OPTIONS: readonly { value: StatsKind; label: string }[] = [
+  { value: 'pct', label: '%' },
+  { value: 'combos', label: 'Combos' },
+];
 import {
   AUTO_ADVANCE_MS,
   INITIAL_SCORE,
@@ -40,6 +46,9 @@ function spotEyebrow(q: StatsQuestion): string {
 }
 
 export function RangeStatsDrill() {
+  const [kinds, setKinds] = useState<ReadonlySet<StatsKind>>(
+    () => new Set(KIND_OPTIONS.map((o) => o.value)),
+  );
   const [question, setQuestion] = useState<StatsQuestion>(() => generateStatsQuestion());
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [score, setScore] = useState<Score>(INITIAL_SCORE);
@@ -53,9 +62,22 @@ export function RangeStatsDrill() {
   );
 
   const drawNext = useCallback(() => {
-    setQuestion(generateStatsQuestion());
+    setQuestion(generateStatsQuestion([...kinds]));
     setFeedback(null);
     setExpertInput('');
+  }, [kinds]);
+
+  const toggleKind = useCallback((value: StatsKind) => {
+    setKinds((prev) => {
+      const next = new Set(prev);
+      if (next.has(value)) {
+        if (next.size === 1) return prev; // nunca vacío
+        next.delete(value);
+      } else {
+        next.add(value);
+      }
+      return next;
+    });
   }, []);
 
   useEffect(() => {
@@ -199,16 +221,24 @@ export function RangeStatsDrill() {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-center gap-2">
-        <AutoAdvanceToggle value={autoAdvance} onChange={setAutoAdvance} />
-        <ToggleChip
-          label="Modo experto"
-          value={expert}
-          onChange={(v) => {
-            setExpert(v);
-            setExpertInput('');
-          }}
+      <div className="flex flex-col items-center gap-3">
+        <ChipFilter
+          label="Qué preguntar"
+          options={KIND_OPTIONS}
+          selected={kinds}
+          onToggle={toggleKind}
         />
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <AutoAdvanceToggle value={autoAdvance} onChange={setAutoAdvance} />
+          <ToggleChip
+            label="Modo experto"
+            value={expert}
+            onChange={(v) => {
+              setExpert(v);
+              setExpertInput('');
+            }}
+          />
+        </div>
       </div>
     </div>
   );
