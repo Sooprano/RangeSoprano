@@ -4,18 +4,26 @@ import { cn } from '@/lib/cn';
 import { RangeGrid } from '@/components/RangeGrid';
 import { CountdownBar } from '@/modules/trainer/CountdownBar';
 import {
+  FAMILY_LABEL,
   HAS_TYPE_SPOTS,
   MORPHOLOGY_DEF,
   MORPHOLOGY_LABEL,
   RANGE_ACTIONS_MAP,
+  TYPE_FAMILIES,
   actionPhrase,
   dimensioningTip,
   formatPct,
   handsToCells,
+  spotsIn,
   type Morphology,
+  type RangeFamily,
 } from './rangeBank';
 import { generateTypeQuestion, type TypeQuestion } from './rangeTypeSpots';
-import { AutoAdvanceToggle, ScoreBar } from './drillUi';
+import { AutoAdvanceToggle, ChipFilter, ScoreBar } from './drillUi';
+
+const TYPE_FILTER_OPTIONS = TYPE_FAMILIES.filter(
+  (f) => spotsIn([f]).length > 0,
+).map((f) => ({ value: f, label: FAMILY_LABEL[f] }));
 import {
   AUTO_ADVANCE_MS,
   INITIAL_SCORE,
@@ -49,6 +57,9 @@ function TypePlaceholder() {
 }
 
 function RangeTypeDrillInner() {
+  const [families, setFamilies] = useState<ReadonlySet<RangeFamily>>(
+    () => new Set(TYPE_FILTER_OPTIONS.map((o) => o.value)),
+  );
   const [question, setQuestion] = useState<TypeQuestion>(() => generateTypeQuestion());
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [score, setScore] = useState<Score>(INITIAL_SCORE);
@@ -58,8 +69,21 @@ function RangeTypeDrillInner() {
   const correct = question.spot.morphology;
 
   const drawNext = useCallback(() => {
-    setQuestion(generateTypeQuestion());
+    setQuestion(generateTypeQuestion([...families]));
     setFeedback(null);
+  }, [families]);
+
+  const toggleFamily = useCallback((value: RangeFamily) => {
+    setFamilies((prev) => {
+      const next = new Set(prev);
+      if (next.has(value)) {
+        if (next.size === 1) return prev; // nunca vacío
+        next.delete(value);
+      } else {
+        next.add(value);
+      }
+      return next;
+    });
   }, []);
 
   useEffect(() => {
@@ -180,7 +204,15 @@ function RangeTypeDrillInner() {
         </div>
       </div>
 
-      <div className="flex items-center justify-center">
+      <div className="flex flex-col items-center gap-3">
+        {TYPE_FILTER_OPTIONS.length > 1 && (
+          <ChipFilter
+            label="Rangos a estudiar"
+            options={TYPE_FILTER_OPTIONS}
+            selected={families}
+            onToggle={toggleFamily}
+          />
+        )}
         <AutoAdvanceToggle value={autoAdvance} onChange={setAutoAdvance} />
       </div>
     </div>

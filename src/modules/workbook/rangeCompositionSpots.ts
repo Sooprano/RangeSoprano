@@ -75,13 +75,19 @@ function composeOptions(spot: RangeSpot): string[] {
     : sameFamilyOptions(spot);
 }
 
-function pickFamily(): RangeFamily {
-  const available = COMPOSE_FAMILIES.filter((f) => spotsIn([f]).length > 0);
-  return pick(available);
+/** Familias con spots que además están permitidas por el filtro del usuario. */
+function pickFamily(allowed?: readonly RangeFamily[]): RangeFamily {
+  const allowSet = allowed && allowed.length > 0 ? new Set(allowed) : null;
+  const available = COMPOSE_FAMILIES.filter(
+    (f) => spotsIn([f]).length > 0 && (!allowSet || allowSet.has(f)),
+  );
+  return pick(available.length > 0 ? available : COMPOSE_FAMILIES);
 }
 
-export function generateComposeQuestion(): ComposeQuestion {
-  const spot = pick(spotsIn([pickFamily()]));
+export function generateComposeQuestion(
+  allowed?: readonly RangeFamily[],
+): ComposeQuestion {
+  const spot = pick(spotsIn([pickFamily(allowed)]));
   const { hands, combos } = rangeStatsOf(spot.notation);
   return {
     spot,

@@ -9,6 +9,7 @@ import {
   rangeStatsOf,
   spotsIn,
   type Morphology,
+  type RangeFamily,
   type RangeSpot,
 } from './rangeBank';
 
@@ -33,8 +34,14 @@ function pick<T>(arr: readonly T[]): T {
   return arr[Math.floor(Math.random() * arr.length)]!;
 }
 
-export function generateTypeQuestion(): TypeQuestion {
-  const spot = pick(TYPE_SPOTS);
+export function generateTypeQuestion(
+  allowed?: readonly RangeFamily[],
+): TypeQuestion {
+  const allowSet = allowed && allowed.length > 0 ? new Set(allowed) : null;
+  const pool = allowSet
+    ? TYPE_SPOTS.filter((s) => allowSet.has(s.family))
+    : TYPE_SPOTS;
+  const spot = pick(pool.length > 0 ? pool : TYPE_SPOTS);
   const { hands, combos } = rangeStatsOf(spot.notation);
   return {
     spot,

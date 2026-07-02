@@ -111,6 +111,64 @@ export function CalcReveal({
   );
 }
 
+/**
+ * Fila de chips para filtrar qué tipos de rango entran al drill (multi-select).
+ * Minimalista, mismo lenguaje visual que AutoAdvanceToggle. Siempre queda ≥1
+ * activo: al intentar apagar el último, se ignora (no hay estado vacío).
+ */
+export function ChipFilter<T extends string>({
+  label,
+  options,
+  selected,
+  onToggle,
+}: {
+  label: string;
+  options: readonly { value: T; label: string }[];
+  selected: ReadonlySet<T>;
+  onToggle: (value: T) => void;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-1.5">
+      <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-content-muted">
+        {label}
+      </span>
+      <div className="flex flex-wrap items-center justify-center gap-1.5">
+        {options.map(({ value, label: optLabel }) => {
+          const on = selected.has(value);
+          const isLast = on && selected.size === 1;
+          return (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={on}
+              disabled={isLast}
+              onClick={() => onToggle(value)}
+              className={cn(
+                'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium',
+                'transition-colors duration-150 ease-out-soft',
+                'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light',
+                isLast && 'cursor-not-allowed',
+                on
+                  ? 'border-accent/60 bg-accent/10 text-content'
+                  : 'border-border bg-surface/40 text-content-muted hover:bg-surface-hover hover:text-content',
+              )}
+            >
+              <span
+                aria-hidden
+                className={cn(
+                  'inline-block h-3 w-3 rounded-sm border',
+                  on ? 'border-accent bg-accent' : 'border-border bg-surface',
+                )}
+              />
+              {optLabel}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function AutoAdvanceToggle({
   value,
   onChange,

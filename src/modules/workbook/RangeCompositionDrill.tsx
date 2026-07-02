@@ -4,10 +4,23 @@ import { cn } from '@/lib/cn';
 import { RangeGrid } from '@/components/RangeGrid';
 import { parseHandRange } from '@/utils/handRangeParser';
 import { CountdownBar } from '@/modules/trainer/CountdownBar';
-import { RANGE_ACTIONS_MAP, formatPct, handsToCells, rationaleOf } from './rangeBank';
+import {
+  COMPOSE_FAMILIES,
+  FAMILY_LABEL,
+  RANGE_ACTIONS_MAP,
+  formatPct,
+  handsToCells,
+  rationaleOf,
+  spotsIn,
+  type RangeFamily,
+} from './rangeBank';
 import { generateComposeQuestion, type ComposeQuestion } from './rangeCompositionSpots';
 import { MiniRangeChart } from './MiniRangeChart';
-import { AutoAdvanceToggle, ScoreBar } from './drillUi';
+import { AutoAdvanceToggle, ChipFilter, ScoreBar } from './drillUi';
+
+const COMPOSE_FILTER_OPTIONS = COMPOSE_FAMILIES.filter(
+  (f) => spotsIn([f]).length > 0,
+).map((f) => ({ value: f, label: FAMILY_LABEL[f] }));
 import {
   AUTO_ADVANCE_MS,
   INITIAL_SCORE,
@@ -18,6 +31,9 @@ import {
 type Feedback = { wasCorrect: boolean; picked: string };
 
 export function RangeCompositionDrill() {
+  const [families, setFamilies] = useState<ReadonlySet<RangeFamily>>(
+    () => new Set(COMPOSE_FILTER_OPTIONS.map((o) => o.value)),
+  );
   const [question, setQuestion] = useState<ComposeQuestion>(() =>
     generateComposeQuestion(),
   );
@@ -29,8 +45,21 @@ export function RangeCompositionDrill() {
   const correct = question.spot.notation;
 
   const drawNext = useCallback(() => {
-    setQuestion(generateComposeQuestion());
+    setQuestion(generateComposeQuestion([...families]));
     setFeedback(null);
+  }, [families]);
+
+  const toggleFamily = useCallback((value: RangeFamily) => {
+    setFamilies((prev) => {
+      const next = new Set(prev);
+      if (next.has(value)) {
+        if (next.size === 1) return prev; // nunca vacío
+        next.delete(value);
+      } else {
+        next.add(value);
+      }
+      return next;
+    });
   }, []);
 
   useEffect(() => {
@@ -140,7 +169,15 @@ export function RangeCompositionDrill() {
         </div>
       </div>
 
-      <div className="flex items-center justify-center">
+      <div className="flex flex-col items-center gap-3">
+        {COMPOSE_FILTER_OPTIONS.length > 1 && (
+          <ChipFilter
+            label="Rangos a estudiar"
+            options={COMPOSE_FILTER_OPTIONS}
+            selected={families}
+            onToggle={toggleFamily}
+          />
+        )}
         <AutoAdvanceToggle value={autoAdvance} onChange={setAutoAdvance} />
       </div>
     </div>
@@ -158,6 +195,20 @@ function ComposePrompt({ question }: { question: ComposeQuestion }) {
         <p className="max-w-md text-center text-sm text-content">
           ¿Cómo se compone el rango de <span className="font-semibold">pago (call)</span> de la{' '}
           <span className="font-semibold text-accent-light">BB</span>{' '}
+          <span className="font-semibold">{spot.vs}</span>?
+        </p>
+      </>
+    );
+  }
+  if (spot.family === 'cold-call') {
+    return (
+      <>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-content-muted">
+          Composición · pago en frío (cold-call)
+        </span>
+        <p className="max-w-md text-center text-sm text-content">
+          ¿Cómo se compone el <span className="font-semibold">pago en frío (cold-call)</span> de{' '}
+          <span className="font-semibold text-accent-light">{spot.position}</span>{' '}
           <span className="font-semibold">{spot.vs}</span>?
         </p>
       </>
@@ -297,9 +348,11 @@ function FeedbackPanel({
       ? `Apertura ${spot.position}${sizingSuffix}`
       : spot.family === 'call'
         ? `Call BB ${spot.vs}`
-        : spot.family === 'gto-3bet'
-          ? `3bet ${spot.position} ${spot.vs}${sizingSuffix}`
-          : '3bet lineal';
+        : spot.family === 'cold-call'
+          ? `Cold-call ${spot.position} ${spot.vs}`
+          : spot.family === 'gto-3bet'
+            ? `3bet ${spot.position} ${spot.vs}${sizingSuffix}`
+            : '3bet lineal';
   return (
     <div
       className={cn(

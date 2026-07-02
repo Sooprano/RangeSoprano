@@ -18,12 +18,13 @@ import { buildActionDefMap } from '@/utils/actionMeta';
 import { GTO_3BET_RAW } from './gto3betRanges';
 import { GTO_OPEN_RAW } from './gtoOpenRanges';
 import { GTO_CALL_RAW } from './gtoCallRanges';
+import { GTO_COLD_CALL_RAW } from './gtoColdCallRanges';
 
 export type Morphology = 'lineal' | 'polarizado' | 'mergeado' | 'condensado';
 export type RangeAction = 'open' | '3bet' | '4bet' | 'cold-call' | 'call';
 
 /** Familia del spot: define cómo se redacta el enunciado y qué distractores usar. */
-export type RangeFamily = 'linear-3bet' | 'gto-3bet' | 'open' | 'call';
+export type RangeFamily = 'linear-3bet' | 'gto-3bet' | 'open' | 'call' | 'cold-call';
 
 export type RangeSpot = {
   id: string;
@@ -148,11 +149,24 @@ const CALL_SPOTS: readonly RangeSpot[] = GTO_CALL_RAW.map((r) => ({
   morphology: 'condensado' as const,
 }));
 
+// ── Familia cold-call: pago en frío de BTN/SB vs una apertura — CONDENSADO ────
+const COLD_CALL_SPOTS: readonly RangeSpot[] = GTO_COLD_CALL_RAW.map((r) => ({
+  id: r.id,
+  notation: r.notation,
+  family: 'cold-call' as const,
+  pct: rangeStatsOf(r.notation).pctRounded,
+  position: r.position,
+  vs: r.vs,
+  action: 'cold-call' as const,
+  morphology: 'condensado' as const,
+}));
+
 export const RANGE_BANK: readonly RangeSpot[] = [
   ...LINEAR_3BET_SPOTS,
   ...GTO_3BET_SPOTS,
   ...OPEN_SPOTS,
   ...CALL_SPOTS,
+  ...COLD_CALL_SPOTS,
 ];
 
 // ── Scopes por drill (qué familias alimentan cada ejercicio de "Rangos") ──────
@@ -162,9 +176,10 @@ export const COMPOSE_FAMILIES: readonly RangeFamily[] = [
   'gto-3bet',
   'open',
   'call',
+  'cold-call',
 ];
-/** Morfología real y variada — se llena con opens/calls (y quizá gto) más adelante. */
-export const TYPE_FAMILIES: readonly RangeFamily[] = ['open', 'call'];
+/** Morfología real y variada — opens (lineal) + calls/cold-calls (condensado). */
+export const TYPE_FAMILIES: readonly RangeFamily[] = ['open', 'call', 'cold-call'];
 
 export function spotsIn(families: readonly RangeFamily[]): RangeSpot[] {
   return RANGE_BANK.filter((s) => families.includes(s.family));
@@ -315,5 +330,17 @@ export function rationaleOf(spot: RangeSpot): string {
   if (spot.family === 'call') {
     return `Defensa (call) de la BB ${spot.vs}: rango CONDENSADO (capado). Muy ancho por el descuento de ciega, pero las premium (AA-QQ, AK) se 3-betean → sin lo más nuteado. Banda media de pares, suited y broadways flojos.`;
   }
+  if (spot.family === 'cold-call') {
+    return `Pago en frío (cold-call) de ${spot.position} ${spot.vs}: rango CONDENSADO. Sin descuento de ciega y con jugadores por detrás, se paga apretado con pares medios, suited connectors y broadways suited; las premium se 3-betean y la basura se foldea → sin nuts ni aire.`;
+  }
   return MORPHOLOGY_DEF[spot.morphology];
 }
+
+/** Etiqueta corta de la familia (para chips de filtro y feedback). */
+export const FAMILY_LABEL: Record<RangeFamily, string> = {
+  'linear-3bet': '3bet lineal',
+  'gto-3bet': '3bet vs reg',
+  open: 'Apertura (RFI)',
+  call: 'Defensa BB',
+  'cold-call': 'Cold-call',
+};

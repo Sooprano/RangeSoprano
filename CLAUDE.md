@@ -68,7 +68,7 @@ Fases 1-48 completadas ✅. Detalle completo de cada fase, hashes de rollback y 
 45. Drill "River: call o shove" (reusa callRiverBetEv+allInEv)
 46. Drill "River: check o bet" (reusa checkRiverEv+betRiverEv)
 47. Drill grupo "Rangos": "% y combos" + "Composición + tipo/morfología" (reusa parseHandRange+combosOf/1326)
-48. Rework "Rangos": banco real (29 3bet lineal por % + 15 3bet GTO Wizard con peso, todos los opener→3bettor) · `RangeSpot.family` + scopes por drill · split en 3 tabs ("% y combos" · "Composición" mini-charts · "Tipo de rango" gated) · `MiniRangeChart` (opacidad=peso) · morfología reforzada. PENDIENTE: OR/calls GTO → activan "Tipo" + reemplazan el demo por defecto.
+48. Rework "Rangos": banco real (29 3bet lineal por % + 15 3bet GTO Wizard con peso + 5 open RFI + 5 call BB + 5 cold-call BTN/SB = 59 spots, familias `linear-3bet`/`gto-3bet`/`open`/`call`/`cold-call`) · `RangeSpot.family` + scopes por drill · split en 3 tabs ("% y combos" · "Composición" mini-charts · "Tipo de rango" activo con open lineal + call/cold-call condensado) · `MiniRangeChart` (opacidad=peso) · morfología reforzada (mergeado SUBE / condensado PAGA) · **filtros de familia** `ChipFilter` por drill ("Rangos a estudiar"). PENDIENTE: reemplazar el demo por defecto (`sampleRanges.ts`) por estos rangos GTO.
 
 ## Convenciones
 
