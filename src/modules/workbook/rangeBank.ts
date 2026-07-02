@@ -16,6 +16,8 @@ import { parseHandRange, type WeightedHand } from '@/utils/handRangeParser';
 import { categoryOf, combosOf, TOTAL_COMBOS } from '@/utils/handUtils';
 import { buildActionDefMap } from '@/utils/actionMeta';
 import { GTO_3BET_RAW } from './gto3betRanges';
+import { GTO_OPEN_RAW } from './gtoOpenRanges';
+import { GTO_CALL_RAW } from './gtoCallRanges';
 
 export type Morphology = 'lineal' | 'polarizado' | 'mergeado' | 'condensado';
 export type RangeAction = 'open' | '3bet' | '4bet' | 'cold-call' | 'call';
@@ -121,11 +123,46 @@ const GTO_3BET_SPOTS: readonly RangeSpot[] = GTO_3BET_RAW.map((r) => ({
   sizing: r.sizing,
 }));
 
-export const RANGE_BANK: readonly RangeSpot[] = [...LINEAR_3BET_SPOTS, ...GTO_3BET_SPOTS];
+// ── Familia open: aperturas (RFI) GTO por posición — siempre LINEAL ──────────
+const OPEN_SPOTS: readonly RangeSpot[] = GTO_OPEN_RAW.map((r) => ({
+  id: r.id,
+  notation: r.notation,
+  family: 'open' as const,
+  pct: rangeStatsOf(r.notation).pctRounded,
+  position: r.position,
+  vs: '',
+  action: 'open' as const,
+  morphology: 'lineal' as const,
+  sizing: r.sizing,
+}));
+
+// ── Familia call: pago (call) de la BB vs una apertura — CONDENSADO (capado) ──
+const CALL_SPOTS: readonly RangeSpot[] = GTO_CALL_RAW.map((r) => ({
+  id: r.id,
+  notation: r.notation,
+  family: 'call' as const,
+  pct: rangeStatsOf(r.notation).pctRounded,
+  position: r.position,
+  vs: r.vs,
+  action: 'call' as const,
+  morphology: 'condensado' as const,
+}));
+
+export const RANGE_BANK: readonly RangeSpot[] = [
+  ...LINEAR_3BET_SPOTS,
+  ...GTO_3BET_SPOTS,
+  ...OPEN_SPOTS,
+  ...CALL_SPOTS,
+];
 
 // ── Scopes por drill (qué familias alimentan cada ejercicio de "Rangos") ──────
 export const STATS_FAMILIES: readonly RangeFamily[] = ['linear-3bet'];
-export const COMPOSE_FAMILIES: readonly RangeFamily[] = ['linear-3bet', 'gto-3bet'];
+export const COMPOSE_FAMILIES: readonly RangeFamily[] = [
+  'linear-3bet',
+  'gto-3bet',
+  'open',
+  'call',
+];
 /** Morfología real y variada — se llena con opens/calls (y quizá gto) más adelante. */
 export const TYPE_FAMILIES: readonly RangeFamily[] = ['open', 'call'];
 
@@ -271,6 +308,12 @@ export function rationaleOf(spot: RangeSpot): string {
   }
   if (spot.family === 'gto-3bet') {
     return `3bet de un reg competente (${spot.position} ${spot.vs}${spot.sizing ? `, ${spot.sizing}` : ''}): valor puro a peso completo (QQ+, AK) + manos medias mezcladas (pares medios, AJs/KQs a frecuencia) + faroles suited (ruedas de as, suited connectors) a baja frecuencia. Los pesos parciales son la mezcla del solver.`;
+  }
+  if (spot.family === 'open') {
+    return `Apertura (RFI) de ${spot.position}${spot.sizing ? ` a ${spot.sizing}` : ''}: rango LINEAL — su mejor ${spot.pct}% de manos de arriba hacia abajo (pares, suited de as, broadways, conectores), sin faroles dedicados. Cuanto más tarde la posición, más ancha la apertura.`;
+  }
+  if (spot.family === 'call') {
+    return `Defensa (call) de la BB ${spot.vs}: rango CONDENSADO (capado). Muy ancho por el descuento de ciega, pero las premium (AA-QQ, AK) se 3-betean → sin lo más nuteado. Banda media de pares, suited y broadways flojos.`;
   }
   return MORPHOLOGY_DEF[spot.morphology];
 }

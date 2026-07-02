@@ -149,6 +149,34 @@ export function RangeCompositionDrill() {
 
 function ComposePrompt({ question }: { question: ComposeQuestion }) {
   const { spot } = question;
+  if (spot.family === 'call') {
+    return (
+      <>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-content-muted">
+          Composición · defensa de la BB
+        </span>
+        <p className="max-w-md text-center text-sm text-content">
+          ¿Cómo se compone el rango de <span className="font-semibold">pago (call)</span> de la{' '}
+          <span className="font-semibold text-accent-light">BB</span>{' '}
+          <span className="font-semibold">{spot.vs}</span>?
+        </p>
+      </>
+    );
+  }
+  if (spot.family === 'open') {
+    return (
+      <>
+        <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-content-muted">
+          Composición · apertura (RFI) por posición
+        </span>
+        <p className="max-w-md text-center text-sm text-content">
+          ¿Cómo se compone la <span className="font-semibold">apertura (RFI)</span> de{' '}
+          <span className="font-semibold text-accent-light">{spot.position}</span>
+          {spot.sizing ? <span className="text-content-muted"> ({spot.sizing})</span> : null}?
+        </p>
+      </>
+    );
+  }
   if (spot.family === 'gto-3bet') {
     return (
       <>
@@ -262,7 +290,16 @@ function FeedbackPanel({
   cells: ReturnType<typeof handsToCells>;
 }) {
   const { spot, pct, combos } = question;
-  const isGto = spot.family === 'gto-3bet';
+  const isLinear = spot.family === 'linear-3bet';
+  const sizingSuffix = spot.sizing ? ` (${spot.sizing})` : '';
+  const label =
+    spot.family === 'open'
+      ? `Apertura ${spot.position}${sizingSuffix}`
+      : spot.family === 'call'
+        ? `Call BB ${spot.vs}`
+        : spot.family === 'gto-3bet'
+          ? `3bet ${spot.position} ${spot.vs}${sizingSuffix}`
+          : '3bet lineal';
   return (
     <div
       className={cn(
@@ -281,9 +318,7 @@ function FeedbackPanel({
         <span className="font-semibold">{feedback.wasCorrect ? 'Correcto' : 'Incorrecto'}</span>
         <span className="text-content-muted">·</span>
         <span className="text-content-muted">
-          {isGto
-            ? `3bet ${spot.position} ${spot.vs}${spot.sizing ? ` (${spot.sizing})` : ''}`
-            : '3bet lineal'}{' '}
+          {label}{' '}
           <span className="tabular-nums">{formatPct(pct)}</span> ·{' '}
           <span className="tabular-nums">{combos}</span> combos
         </span>
@@ -294,7 +329,7 @@ function FeedbackPanel({
       </div>
 
       <p className="text-xs text-content-muted">
-        {isGto ? null : (
+        {isLinear && (
           <>
             <span className="font-mono text-content">{spot.notation}</span>.{' '}
           </>

@@ -62,17 +62,17 @@ function linearComposeOptions(spot: RangeSpot): string[] {
   return shuffle([spot.notation, ...chosen.map((s) => s.notation)]);
 }
 
-/** gto-3bet: distractores = otros rangos GTO (otras posiciones/escenarios). */
-function gtoComposeOptions(spot: RangeSpot): string[] {
-  const others = spotsIn(['gto-3bet']).filter((s) => s.id !== spot.id);
+/** gto-3bet / open: distractores = otros rangos de la MISMA familia (otras posiciones). */
+function sameFamilyOptions(spot: RangeSpot): string[] {
+  const others = spotsIn([spot.family]).filter((s) => s.id !== spot.id);
   const chosen = shuffle(others).slice(0, 3);
   return shuffle([spot.notation, ...chosen.map((s) => s.notation)]);
 }
 
 function composeOptions(spot: RangeSpot): string[] {
-  return spot.family === 'gto-3bet'
-    ? gtoComposeOptions(spot)
-    : linearComposeOptions(spot);
+  return spot.family === 'linear-3bet'
+    ? linearComposeOptions(spot)
+    : sameFamilyOptions(spot);
 }
 
 function pickFamily(): RangeFamily {
