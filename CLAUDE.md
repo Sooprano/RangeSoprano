@@ -8,7 +8,7 @@ React 19 + TypeScript estricto (noUncheckedIndexedAccess, exactOptionalPropertyT
 
 ## Estado de fases
 
-Fases 1-47 completadas ✅. Detalle completo de cada fase, hashes de rollback y decisiones de diseño no obvias → `RECOVERY.md`.
+Fases 1-48 completadas ✅. Detalle completo de cada fase, hashes de rollback y decisiones de diseño no obvias → `RECOVERY.md`.
 
 1. Setup y fundamentos
 2. RangeGrid completo (base · stats · a11y)
@@ -68,6 +68,7 @@ Fases 1-47 completadas ✅. Detalle completo de cada fase, hashes de rollback y 
 45. Drill "River: call o shove" (reusa callRiverBetEv+allInEv)
 46. Drill "River: check o bet" (reusa checkRiverEv+betRiverEv)
 47. Drill grupo "Rangos": "% y combos" + "Composición + tipo/morfología" (reusa parseHandRange+combosOf/1326)
+48. Rework "Rangos": banco real (29 3bet lineal por % + 15 3bet GTO Wizard con peso, todos los opener→3bettor) · `RangeSpot.family` + scopes por drill · split en 3 tabs ("% y combos" · "Composición" mini-charts · "Tipo de rango" gated) · `MiniRangeChart` (opacidad=peso) · morfología reforzada. PENDIENTE: OR/calls GTO → activan "Tipo" + reemplazan el demo por defecto.
 
 ## Convenciones
 

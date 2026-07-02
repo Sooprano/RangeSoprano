@@ -5,12 +5,15 @@
 import { categoryOf, combosOf, TOTAL_COMBOS } from '@/utils/handUtils';
 import type { WeightedHand } from '@/utils/handRangeParser';
 import {
-  RANGE_BANK,
+  STATS_FAMILIES,
   comboBreakdown,
   rangeStatsOf,
+  spotsIn,
   type ComboBreakdown,
   type RangeSpot,
 } from './rangeBank';
+
+const STATS_SPOTS = spotsIn(STATS_FAMILIES);
 
 export type StatsKind = 'pct' | 'combos';
 
@@ -84,11 +87,14 @@ function buildOptions(
 }
 
 export function generateStatsQuestion(): StatsQuestion {
-  const spot = pick(RANGE_BANK);
+  const spot = pick(STATS_SPOTS);
   const { hands, combos, pctRounded } = rangeStatsOf(spot.notation);
   const breakdown = comboBreakdown(hands);
   const kind: StatsKind = Math.random() < 0.5 ? 'pct' : 'combos';
 
+  // "% y combos" enseña la matemática exacta (combos / 1326), así que usa el %
+  // DERIVADO y redondeado — no la etiqueta del HUD del spot (esa es para el drill
+  // "Composición"). Ej.: AA-QQ,AKs = 22 combos → 22/1326 = 1.66% → 2%.
   const combosInt = Math.round(combos);
   let options: number[];
   if (kind === 'pct') {

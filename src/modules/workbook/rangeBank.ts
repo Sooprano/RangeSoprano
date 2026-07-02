@@ -1,317 +1,48 @@
-// Shared dataset + helpers for the "Rangos" drills (phase 47).
+// Shared dataset + helpers for the "Rangos" drills (phase 47+).
 //
-// "Range Building: Percentage Form" del workbook: leer un rango y saber su
-// %-form y combos, y entender cómo un % por posición se compone de manos
-// concretas (y qué morfología tiene).
+// Objetivo pedagógico: que el alumno aprenda a DIMENSIONAR una cifra del HUD y a
+// reconocer cómo un reg construye sus rangos.
+//   · familia `linear-3bet` (29): 3bet lineal por %, "si 3-betea X% lineal, qué manos".
+//   · familia `gto-3bet` (GTO Wizard, reg vs reg): 3bet posición-vs-posición.
+//   · (futuro) `open` / `call`: aperturas y rangos de pago (traen morfología variada).
 //
-// El %-form y los combos se DERIVAN de la notación vía parseHandRange + combosOf
-// (single source of truth, en ev/handUtils) — nunca se tipean, no pueden
-// divergir. Las notaciones son originales/estándar (charts canónicos), NO
-// transcritas de las imágenes del libro.
+// El % y los combos se DERIVAN de la notación (rangeStatsOf) como single source of
+// truth. `pct` en linear-3bet es la ETIQUETA del HUD (puede diferir 0.X% del
+// derivado, intencional); en gto-3bet es el % derivado. Las notaciones GTO están
+// en formato combo-por-combo (parseHandRange las autodetecta y agrega a peso/mano).
 
 import type { ActionDef, HandNotation, RangeCellData } from '@/types/poker';
 import { parseHandRange, type WeightedHand } from '@/utils/handRangeParser';
 import { categoryOf, combosOf, TOTAL_COMBOS } from '@/utils/handUtils';
 import { buildActionDefMap } from '@/utils/actionMeta';
+import { GTO_3BET_RAW } from './gto3betRanges';
 
 export type Morphology = 'lineal' | 'polarizado' | 'mergeado' | 'condensado';
 export type RangeAction = 'open' | '3bet' | '4bet' | 'cold-call' | 'call';
 
+/** Familia del spot: define cómo se redacta el enunciado y qué distractores usar. */
+export type RangeFamily = 'linear-3bet' | 'gto-3bet' | 'open' | 'call';
+
 export type RangeSpot = {
   id: string;
-  /** parseHandRange input. */
+  /** parseHandRange input (notación estándar o GTO combo-por-combo). */
   notation: string;
-  /** Posición del héroe que arma el rango (ej. "SB"). */
+  family: RangeFamily;
+  /** % que ve el alumno. linear-3bet: etiqueta del HUD; gto-3bet: derivado. */
+  pct: number;
+  /** Posición del héroe que arma el rango (ej. "HJ"). "" para genéricos. */
   position: string;
-  /** Contexto (ej. "vs open del BTN"). "" para RFI. */
+  /** Contexto (ej. "vs UTG"). "" si no aplica. */
   vs: string;
   action: RangeAction;
   morphology: Morphology;
-  /** Por qué el rango tiene esa forma en este spot (feedback). */
-  rationale: string;
+  /** Sizing informativo (ej. "6.5bb"), opcional. */
+  sizing?: string;
+  /** Por qué el rango tiene esa forma (feedback). Si falta, se deriva por familia. */
+  rationale?: string;
 };
 
-// ── Banco curado (~24 spots, notaciones originales) ──────────────────────────
-export const RANGE_BANK: readonly RangeSpot[] = [
-  // Opens (RFI)
-  {
-    id: 'utg-open',
-    notation: '77+,ATs+,KTs+,QTs+,JTs,AQo+,KQo',
-    position: 'UTG',
-    vs: '',
-    action: 'open',
-    morphology: 'lineal',
-    rationale:
-      'Apertura desde UTG: solo manos fuertes y suited de gama alta, de arriba hacia abajo. Sin faroles ni manos especulativas — rango lineal de valor.',
-  },
-  {
-    id: 'mp-open',
-    notation: '66+,A9s+,KTs+,QTs+,J9s+,T9s,98s,AJo+,KQo',
-    position: 'MP',
-    vs: '',
-    action: 'open',
-    morphology: 'lineal',
-    rationale:
-      'Apertura desde MP: un poco más ancho que UTG pero sigue siendo top-down, manos de valor y suited conectados. Lineal.',
-  },
-  {
-    id: 'co-open',
-    notation: '44+,A2s+,K9s+,Q9s+,J9s+,T8s+,97s+,87s,76s,65s,A9o+,KJo+,QJo',
-    position: 'CO',
-    vs: '',
-    action: 'open',
-    morphology: 'lineal',
-    rationale:
-      'Apertura desde CO: rango lineal (depolarizado). Es tu mejor X% de manos de arriba hacia abajo, sin estructura de valor/farol. Más ancha que en posición temprana, pero igual un bloque contiguo desde el tope. Una apertura RFI es el ejemplo de manual de rango lineal.',
-  },
-  {
-    id: 'btn-open',
-    notation:
-      '22+,A2s+,K6s+,Q8s+,J8s+,T8s+,97s+,86s+,76s,65s,54s,A4o+,K9o+,Q9o+,JTo,T9o',
-    position: 'BTN',
-    vs: '',
-    action: 'open',
-    morphology: 'lineal',
-    rationale:
-      'Apertura desde BTN: rango lineal, muy ancho. Todos los pares, todos los suited de as, broadways y conectores. No tiene estructura de valor/farol: es tu mejor X% de manos top-down. Ancho pero lineal.',
-  },
-  {
-    id: 'sb-open',
-    notation: '22+,A2s+,K9s+,Q9s+,J9s+,T9s,98s,87s,76s,A8o+,KTo+,QTo+,JTo',
-    position: 'SB',
-    vs: '',
-    action: 'open',
-    morphology: 'lineal',
-    rationale:
-      'Apertura (RFI) desde SB: rango lineal. Ancho porque solo queda la BB por actuar, pero es top-down por fuerza, sin faroles dedicados. Una apertura siempre es lineal (depolarizada).',
-  },
-
-  // 3bets lineales (valor, top-down)
-  {
-    id: 'ep-3bet-linear',
-    notation: 'JJ+,AKs,AKo',
-    position: 'MP',
-    vs: 'vs open de UTG',
-    action: '3bet',
-    morphology: 'lineal',
-    rationale:
-      '3bet de valor lineal vs una apertura temprana: solo las manos más fuertes, de arriba hacia abajo, sin faroles. Típico 3bet por valor vs un reg sólido.',
-  },
-  {
-    id: 'sb-3bet-value-vs-utg',
-    notation: 'QQ+,AKs,AKo',
-    position: 'SB',
-    vs: 'vs open de UTG',
-    action: '3bet',
-    morphology: 'lineal',
-    rationale:
-      '3bet por valor muy cerrado fuera de posición vs un rango temprano fuerte: solo lo más nuteado. Lineal/condensado al tope.',
-  },
-  {
-    id: 'co-3bet-linear-vs-mp',
-    notation: 'TT+,AQs+,AKo,KQs',
-    position: 'CO',
-    vs: 'vs open de MP',
-    action: '3bet',
-    morphology: 'lineal',
-    rationale:
-      '3bet lineal vs MP: valor de arriba hacia abajo (TT+, AQ+) con KQs como la peor de valor. Sin faroles dedicados.',
-  },
-
-  // 3bets mergeados
-  {
-    id: 'btn-3bet-merged-vs-co',
-    notation: 'TT+,AJs+,KQs,AKo,AQo,A5s,A4s',
-    position: 'BTN',
-    vs: 'vs open de CO',
-    action: '3bet',
-    morphology: 'mergeado',
-    rationale:
-      '3bet mergeado en posición: valor (TT+, AQ+) + manos medias fuertes (AJs, KQs) + un par de faroles bloqueadores (A5s, A4s). Sin hueco marcado.',
-  },
-  {
-    id: 'btn-3bet-merged-vs-mp',
-    notation: '99+,AJs+,KQs,AKo,AQo,A5s,A4s',
-    position: 'BTN',
-    vs: 'vs open de MP',
-    action: '3bet',
-    morphology: 'mergeado',
-    rationale:
-      '3bet mergeado en posición vs MP: valor (99+, AQ+) + manos medias (AJs, KQs) + faroles bloqueadores (A5s, A4s). Lo que lo distingue de un lineal son esos faroles dedicados; lo que lo distingue de un polarizado es que el medio está lleno (no hay hueco).',
-  },
-
-  // 3bets polarizados (valor tope + faroles, hueco en el medio)
-  {
-    id: 'sb-3bet-polar-vs-btn',
-    notation: 'QQ+,AKs,AKo,A5s,A4s,A3s,A2s,76s,65s,54s',
-    position: 'SB',
-    vs: 'vs open del BTN',
-    action: '3bet',
-    morphology: 'polarizado',
-    rationale:
-      '3bet polarizado vs un robo del BTN: valor tope (QQ+, AK) + faroles (Ax suited bloqueadores y conectores). Las manos medias (JJ, TT, AQ) se flotan, no se 3betean — hueco en el medio.',
-  },
-  {
-    id: 'bb-3bet-polar-vs-btn',
-    notation: 'JJ+,AKs,AKo,A5s,A4s,A3s,A2s,K9s,Q9s,J9s,T8s',
-    position: 'BB',
-    vs: 'vs open del BTN',
-    action: '3bet',
-    morphology: 'polarizado',
-    rationale:
-      '3bet polarizado fuera de posición: valor (JJ+, AK) + faroles suited (ruedas de as, suited de un gap). El medio se paga, no se sube.',
-  },
-
-  // 4bets
-  {
-    id: 'btn-4bet-polar-vs-sb',
-    notation: 'AA,KK,AKs,A5s,A4s',
-    position: 'BTN',
-    vs: 'vs 3bet de la SB',
-    action: '4bet',
-    morphology: 'polarizado',
-    rationale:
-      '4bet polarizado: valor puro (AA, KK, AKs) + un par de faroles con bloqueador de as (A5s, A4s). Nada en el medio.',
-  },
-  {
-    id: 'utg-4bet-value-vs-co',
-    notation: 'AA,KK,AKs',
-    position: 'UTG',
-    vs: 'vs 3bet del CO',
-    action: '4bet',
-    morphology: 'lineal',
-    rationale:
-      '4bet por valor puro desde posición temprana: solo lo más nuteado, sin faroles. Lineal/condensado al tope.',
-  },
-
-  // Flats / cold-calls (medios, capados — condensados)
-  {
-    id: 'bb-call-vs-btn',
-    notation:
-      '99-22,ATs-A2s,KTs-K9s,Q9s,J9s,T9s,98s,87s,76s,65s,KJo,QJo,JTo,ATo,A9o',
-    position: 'BB',
-    vs: 'vs open del BTN',
-    action: 'call',
-    morphology: 'condensado',
-    rationale:
-      'Rango de pago de la BB vs robo del BTN: pares medios-bajos, suited conectados y broadways flojos. Las premium (AA, KK, AK) 3betean, así que el rango de call queda CAPADO — sin lo más nuteado ni puro aire: condensado.',
-  },
-  {
-    id: 'bb-call-vs-co',
-    notation: '88-22,ATs-A4s,KTs-K9s,Q9s,J9s,T9s,98s,87s,76s,KJo,QJo,JTo',
-    position: 'BB',
-    vs: 'vs open del CO',
-    action: 'call',
-    morphology: 'condensado',
-    rationale:
-      'Pago de BB vs CO: banda media de pares y suited. Las fuertes se 3betean — el call es condensado (capado).',
-  },
-  {
-    id: 'btn-coldcall-vs-utg',
-    notation: 'TT-22,AQs-ATs,KJs-KTs,QTs+,JTs,T9s,AQo',
-    position: 'BTN',
-    vs: 'vs open de UTG',
-    action: 'cold-call',
-    morphology: 'condensado',
-    rationale:
-      'Cold-call del BTN vs un open de UTG: pares medios y suited de gama media. Las manos top (QQ+, AK) re-suben; el resto foldea. Queda una banda media — condensado.',
-  },
-  {
-    id: 'co-coldcall-vs-mp',
-    notation: 'TT-22,AJs-ATs,KTs+,QJs,JTs,T9s',
-    position: 'CO',
-    vs: 'vs open de MP',
-    action: 'cold-call',
-    morphology: 'condensado',
-    rationale:
-      'Cold-call del CO vs MP: pares medios y suited de conexión, sin premiums (que 3betean) ni basura. Condensado.',
-  },
-  {
-    id: 'bb-call-vs-sb',
-    notation:
-      '99-22,A9s-A2s,K8s+,Q8s+,J8s+,T8s+,97s+,86s+,76s,65s,54s,A7o-A2o,K9o+,Q9o+,J9o+,T9o',
-    position: 'BB',
-    vs: 'vs open de SB',
-    action: 'call',
-    morphology: 'condensado',
-    rationale:
-      'Defensa de la BB vs robo de SB: muy ancha por el descuento de ciega y la posición, pero las premium se 3betean → capada. Condensado (ancho).',
-  },
-
-  // Extras para enriquecer clusters (mismo %, distinta morfología)
-  {
-    id: 'lj-open',
-    notation: '66+,A8s+,KTs+,QTs+,JTs,T9s,98s,ATo+,KJo+',
-    position: 'LJ',
-    vs: '',
-    action: 'open',
-    morphology: 'lineal',
-    rationale:
-      'Apertura desde LJ (early): manos de valor y suited conectados, top-down. Lineal.',
-  },
-  {
-    id: 'btn-3bet-linear-vs-co',
-    notation: 'TT+,AQs+,AKo,AQo',
-    position: 'BTN',
-    vs: 'vs open de CO',
-    action: '3bet',
-    morphology: 'lineal',
-    rationale:
-      '3bet lineal por valor en posición vs CO: TT+, AQ+ de arriba hacia abajo, sin faroles dedicados. (Compara con la versión mergeada, que suma faroles A5s/A4s.)',
-  },
-  {
-    id: 'mp-3bet-merged-vs-lj',
-    notation: 'TT+,AQs+,KQs,AKo,A5s,A4s',
-    position: 'MP',
-    vs: 'vs open de LJ',
-    action: '3bet',
-    morphology: 'mergeado',
-    rationale:
-      '3bet mergeado: valor (TT+, AQ+) + KQs medio + faroles bloqueadores A5s/A4s.',
-  },
-  {
-    id: 'bb-3bet-polar-wide-vs-co',
-    notation: 'JJ+,AKs,AKo,A5s,A4s,A3s,A2s,K8s,Q8s,J8s,T8s,97s',
-    position: 'BB',
-    vs: 'vs open del CO',
-    action: '3bet',
-    morphology: 'polarizado',
-    rationale:
-      '3bet polarizado más ancho vs un robo de CO: valor (JJ+, AK) + más faroles suited. El medio se paga.',
-  },
-  {
-    id: 'bb-call-vs-mp',
-    notation: '88-22,ATs-A8s,KTs+,QTs+,JTs,T9s,98s,AJo,KQo',
-    position: 'BB',
-    vs: 'vs open de MP',
-    action: 'call',
-    morphology: 'condensado',
-    rationale:
-      'Pago de BB vs un open de MP (rango más fuerte): banda media y suited, premiums fuera (3betean). Condensado.',
-  },
-  {
-    id: 'btn-coldcall-vs-co',
-    notation: '99-22,AJs-ATs,KTs+,QTs+,JTs,T9s,98s,AQo',
-    position: 'BTN',
-    vs: 'vs open de CO',
-    action: 'cold-call',
-    morphology: 'condensado',
-    rationale:
-      'Cold-call del BTN vs CO: pares medios y suited de conexión; las top re-suben. Banda media — condensado.',
-  },
-  {
-    id: 'co-3bet-merged-vs-utg',
-    notation: 'TT+,AJs+,KQs,KJs,AKo,AQo,A5s,A4s',
-    position: 'CO',
-    vs: 'vs open de UTG',
-    action: '3bet',
-    morphology: 'mergeado',
-    rationale:
-      '3bet mergeado en posición vs UTG: valor (TT+, AQ+) + broadways medios (AJs, KQs, KJs) + faroles bloqueadores (A5s, A4s). El medio está lleno (sin hueco) y hay faroles — eso lo separa del lineal y del polarizado.',
-  },
-];
-
-// ── Helpers (single source of truth: % y combos derivados) ───────────────────
+// ── Derivación de stats (single source of truth) ─────────────────────────────
 
 export type RangeStats = {
   hands: WeightedHand[];
@@ -335,6 +66,81 @@ export function rangeStatsOf(notation: string): RangeStats {
   };
 }
 
+// ── Familia linear-3bet: 3bet lineal por % (notaciones de Flopzilla) ──────────
+const LINEAR_3BET: readonly { id: string; pct: number; notation: string }[] = [
+  { id: 'lin3b-1_6', pct: 1.6, notation: 'AA-QQ,AKs' },
+  { id: 'lin3b-3', pct: 3, notation: 'AA-JJ,AKs,AKo' },
+  { id: 'lin3b-5', pct: 5, notation: 'AA-TT,AKs-AJs,AKo-AQo' },
+  { id: 'lin3b-6', pct: 6, notation: 'AA-JJ,AKs-ATs,KQs-KTs,QJs-QTs,JTs,AKo' },
+  { id: 'lin3b-7', pct: 7, notation: 'AA-TT,AKs-ATs,KQs-KTs,QJs-QTs,JTs,AKo-AQo' },
+  { id: 'lin3b-8', pct: 8, notation: 'AA-TT,AKs-ATs,KQs-KTs,QJs-QTs,JTs,AKo-AJo' },
+  { id: 'lin3b-9', pct: 9, notation: 'AA-TT,AKs-ATs,KQs-KTs,QJs-QTs,JTs,AKo-AJo,KQo' },
+  { id: 'lin3b-10', pct: 10, notation: 'AA-99,AKs-A9s,KQs-KTs,QJs-QTs,JTs,AKo-AJo,KQo' },
+  { id: 'lin3b-11a', pct: 11, notation: 'AA-99,AKs-A9s,KQs-K9s,QJs-Q9s,JTs-J9s,T9s,AKo-AJo,KQo' },
+  { id: 'lin3b-11b', pct: 11, notation: 'AA-99,AKs-A8s,KQs-KTs,QJs-QTs,JTs,AKo-ATo,KQo' },
+  { id: 'lin3b-12a', pct: 12, notation: 'AA-99,AKs-A8s,KQs-K9s,QJs-Q9s,JTs-J9s,T9s,AKo-ATo,KQo' },
+  { id: 'lin3b-12b', pct: 12, notation: 'AA-99,AKs-A8s,KQs-KTs,QJs-QTs,JTs,AKo-ATo,KQo-KJo' },
+  { id: 'lin3b-13', pct: 13, notation: 'AA-99,AKs-A8s,KQs-K9s,QJs-Q9s,JTs-J9s,T9s,AKo-ATo,KQo-KJo' },
+  { id: 'lin3b-14', pct: 14, notation: 'AA-99,AKs-A5s,KQs-K9s,QJs-Q9s,JTs-J9s,T9s,AKo-ATo,KQo-KJo' },
+  { id: 'lin3b-15', pct: 15, notation: 'AA-88,AKs-A3s,KQs-K9s,QJs-Q9s,JTs-J9s,T9s,AKo-ATo,KQo-KJo' },
+  { id: 'lin3b-16', pct: 16, notation: 'AA-88,AKs-A3s,KQs-K8s,QJs-Q9s,JTs-J9s,T9s-T8s,98s,AKo-ATo,KQo-KJo' },
+  { id: 'lin3b-17', pct: 17, notation: 'AA-88,AKs-A2s,KQs-K9s,QJs-Q9s,JTs-J9s,T9s,AKo-ATo,KQo-KTo,QJo' },
+  { id: 'lin3b-18', pct: 18, notation: 'AA-88,AKs-A2s,KQs-K8s,QJs-Q9s,JTs-J9s,T9s-T8s,98s,AKo-ATo,KQo-KTo,QJo' },
+  { id: 'lin3b-19', pct: 19, notation: 'AA-88,AKs-A2s,KQs-K6s,QJs-Q9s,JTs-J8s,T9s-T8s,98s,AKo-ATo,KQo-KTo,QJo' },
+  { id: 'lin3b-20', pct: 20, notation: 'AA-77,AKs-A2s,KQs-K5s,QJs-Q8s,JTs-J8s,T9s-T8s,98s,AKo-ATo,KQo-KTo,QJo' },
+  { id: 'lin3b-21', pct: 21, notation: 'AA-66,AKs-A2s,KQs-K5s,QJs-Q8s,JTs-J8s,T9s-T8s,98s,87s,76s,65s,AKo-ATo,KQo-KTo,QJo' },
+  { id: 'lin3b-22', pct: 22, notation: 'AA-66,AKs-A2s,KQs-K6s,QJs-Q8s,JTs-J8s,T9s-T8s,98s,87s,76s,65s,AKo-A9o,KQo-KTo,QJo' },
+  { id: 'lin3b-23', pct: 23, notation: 'AA-66,AKs-A2s,KQs-K5s,QJs-Q8s,JTs-J8s,T9s-T8s,98s,87s,76s,65s,AKo-A9o,KQo-KTo,QJo-QTo' },
+  { id: 'lin3b-24', pct: 24, notation: 'AA-66,AKs-A2s,KQs-K5s,QJs-Q8s,JTs-J8s,T9s-T8s,98s,87s,76s,65s,54s,AKo-A8o,KQo-KTo,QJo-QTo' },
+  { id: 'lin3b-25', pct: 25, notation: 'AA-66,AKs-A2s,KQs-K5s,QJs-Q8s,JTs-J8s,T9s-T8s,98s,87s,76s,65s,54s,AKo-A8o,KQo-KTo,QJo-QTo,JTo' },
+  { id: 'lin3b-26', pct: 26, notation: 'AA-66,AKs-A2s,KQs-K3s,QJs-Q8s,JTs-J8s,T9s-T8s,98s-97s,87s,76s,65s,54s,AKo-A8o,KQo-KTo,QJo-QTo,JTo' },
+  { id: 'lin3b-27', pct: 27, notation: 'AA-55,AKs-A2s,KQs-K2s,QJs-Q8s,JTs-J8s,T9s-T8s,98s-97s,87s,76s,65s,54s,AKo-A8o,KQo-KTo,QJo-QTo,JTo' },
+  { id: 'lin3b-28', pct: 28, notation: 'AA-55,AKs-A2s,KQs-K2s,QJs-Q8s,JTs-J8s,T9s-T7s,98s-97s,87s,76s,65s,54s,AKo-A8o,KQo-K9o,QJo-QTo,JTo' },
+  { id: 'lin3b-32', pct: 32, notation: 'AA-44,AKs-A2s,KQs-K2s,QJs-Q2s,JTs-J7s,T9s-T7s,98s-96s,87s-86s,76s-75s,65s-64s,54s,43s,AKo-A8o,KQo-K9o,QJo-QTo,JTo' },
+];
+
+const LINEAR_3BET_SPOTS: readonly RangeSpot[] = LINEAR_3BET.map((r) => ({
+  ...r,
+  family: 'linear-3bet' as const,
+  position: '',
+  vs: '',
+  action: '3bet' as const,
+  morphology: 'lineal' as const,
+}));
+
+// ── Familia gto-3bet: reg vs reg (peso derivado del rango GTO) ────────────────
+const GTO_3BET_SPOTS: readonly RangeSpot[] = GTO_3BET_RAW.map((r) => ({
+  id: r.id,
+  notation: r.notation,
+  family: 'gto-3bet' as const,
+  pct: rangeStatsOf(r.notation).pctRounded,
+  position: r.position,
+  vs: r.vs,
+  action: '3bet' as const,
+  morphology: 'mergeado' as const, // provisional (reg 3bet vs UTG): valor + medias + faroles
+  sizing: r.sizing,
+}));
+
+export const RANGE_BANK: readonly RangeSpot[] = [...LINEAR_3BET_SPOTS, ...GTO_3BET_SPOTS];
+
+// ── Scopes por drill (qué familias alimentan cada ejercicio de "Rangos") ──────
+export const STATS_FAMILIES: readonly RangeFamily[] = ['linear-3bet'];
+export const COMPOSE_FAMILIES: readonly RangeFamily[] = ['linear-3bet', 'gto-3bet'];
+/** Morfología real y variada — se llena con opens/calls (y quizá gto) más adelante. */
+export const TYPE_FAMILIES: readonly RangeFamily[] = ['open', 'call'];
+
+export function spotsIn(families: readonly RangeFamily[]): RangeSpot[] {
+  return RANGE_BANK.filter((s) => families.includes(s.family));
+}
+
+/** True si el drill "Tipo de rango" tiene datos con ≥2 formas distintas. */
+export const HAS_TYPE_SPOTS = (() => {
+  const spots = spotsIn(TYPE_FAMILIES);
+  return spots.length > 0 && new Set(spots.map((s) => s.morphology)).size > 1;
+})();
+
+// ── Helpers de presentación ──────────────────────────────────────────────────
+
 export type ComboBreakdown = { pairs: number; suited: number; offsuit: number };
 
 export function comboBreakdown(hands: WeightedHand[]): ComboBreakdown {
@@ -353,6 +159,11 @@ export function comboBreakdown(hands: WeightedHand[]): ComboBreakdown {
     suited: Math.round(suited * 100) / 100,
     offsuit: Math.round(offsuit * 100) / 100,
   };
+}
+
+/** Formatea el % etiqueta (entero → "11%", decimal → "1.6%"). */
+export function formatPct(n: number): string {
+  return `${n}%`;
 }
 
 /** Action def + map color para resaltar el rango en el RangeGrid (modo lectura). */
@@ -400,13 +211,66 @@ export const MORPHOLOGY_LABEL: Record<Morphology, string> = {
   condensado: 'Condensado',
 };
 
+/** Glosa corta de cada forma para el enunciado del drill compose. */
+export const MORPHOLOGY_HINT: Record<Morphology, string> = {
+  lineal: 'sus mejores manos, de arriba hacia abajo',
+  polarizado: 'valor arriba + faroles, con hueco en el medio',
+  mergeado: 'sube: valor nuteado + medias + algún farol, sin hueco',
+  condensado: 'paga: solo manos medias, capado (sin nuts ni aire)',
+};
+
+/**
+ * Sujeto del enunciado "compose": quién arma ese rango.
+ * Opens y calls no dependen del arquetipo (una apertura siempre es lineal; un
+ * pago siempre condensado). En 3bet/4bet la FORMA delata el tipo de jugador:
+ * lineal = fish (solo valor, no farolea); polar/mergeado = reg (construcción pensada).
+ */
+export function builderSubject(action: RangeAction, morphology: Morphology): string {
+  if (action === 'open' || action === 'call' || action === 'cold-call') return 'Un jugador';
+  return morphology === 'lineal' ? 'Un fish' : 'Un reg';
+}
+
+/**
+ * Línea de contraste para el feedback: enseña a dimensionar la misma cifra del
+ * HUD según el tipo de jugador (fish lineal vs reg polar), o la regla fija de
+ * opens (siempre lineal) y calls (siempre condensados/capados).
+ */
+export function dimensioningTip(
+  action: RangeAction,
+  morphology: Morphology,
+  pct: number,
+): string {
+  if (action === 'open') {
+    return `Una apertura siempre es lineal: es su mejor ${pct}% de manos, de arriba hacia abajo (no hay faroles dedicados).`;
+  }
+  if (action === 'call' || action === 'cold-call') {
+    return `Un rango de pago es condensado: las premium se 3-betean, así que ese ${pct}% queda capado (sin lo más nuteado ni puro aire).`;
+  }
+  if (morphology === 'lineal') {
+    return `Ojo con el HUD: un fish con ese ${pct}% juega su mejor ${pct}% (lineal). Un reg podría 3-betear la misma cifra polarizada (valor + faroles).`;
+  }
+  return `Esa forma (${MORPHOLOGY_LABEL[morphology].toLowerCase()}) es de un reg. Un fish con ese mismo ${pct}% lo armaría lineal: su mejor ${pct}% de manos.`;
+}
+
 export const MORPHOLOGY_DEF: Record<Morphology, string> = {
   lineal:
     'Lineal (depolarizado): tus mejores manos de arriba hacia abajo por fuerza, SIN faroles dedicados. Es la forma de una apertura (RFI) o un 3bet de puro valor.',
   polarizado:
     'Polarizado: manos nuteadas + faroles, con un HUECO en el medio (las manos medias se pagan, no se suben). Típico de un 3bet desde la ciega.',
   mergeado:
-    'Mergeado: como un polarizado pero con el medio LLENO. Valor + manos medias + algunos faroles, sin hueco. Típico 3bet en posición en cash. La señal vs lineal: tiene faroles dedicados (A5s, A4s).',
+    'Mergeado: valor nuteado + manos medias + algunos faroles, sin hueco (como un polarizado con el medio LLENO). Es un rango que SUBE (3bet/raise) — por eso incluye lo nuteado. Típico 3bet en posición en cash. Ojo: que sea ancho y variado NO lo hace mergeado; lo define tener nuts + faroles.',
   condensado:
-    'Condensado (capado): solo manos de fuerza media, sin lo más nuteado (que sube) ni aire. Típico rango de pago/flat.',
+    'Condensado (capado): solo manos de fuerza media, sin lo más nuteado (que se 3-betea) ni aire (que se foldea). Es un rango que PAGA (call/cold-call, defensa de BB). Aunque sea ancho (pares + suited + algún offsuit), sigue condensado porque capea las premium. Regla corta: mergeado SUBE, condensado PAGA.',
 };
+
+/** Explicación de la composición según la familia (feedback). */
+export function rationaleOf(spot: RangeSpot): string {
+  if (spot.rationale) return spot.rationale;
+  if (spot.family === 'linear-3bet') {
+    return `Un 3bet lineal es tu mejor ${spot.pct}% de manos, de arriba hacia abajo: pares de mayor a menor, los mejores Ax/Kx suited y broadways, más algún offsuit fuerte — sin faroles dedicados ni hueco. Cuanto más alto el %, más abajo baja el bloque.`;
+  }
+  if (spot.family === 'gto-3bet') {
+    return `3bet de un reg competente (${spot.position} ${spot.vs}${spot.sizing ? `, ${spot.sizing}` : ''}): valor puro a peso completo (QQ+, AK) + manos medias mezcladas (pares medios, AJs/KQs a frecuencia) + faroles suited (ruedas de as, suited connectors) a baja frecuencia. Los pesos parciales son la mezcla del solver.`;
+  }
+  return MORPHOLOGY_DEF[spot.morphology];
+}

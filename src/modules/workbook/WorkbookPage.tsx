@@ -31,6 +31,7 @@ import { RiverCallShoveDrill } from './RiverCallShoveDrill';
 import { RiverCheckBetDrill } from './RiverCheckBetDrill';
 import { RangeStatsDrill } from './RangeStatsDrill';
 import { RangeCompositionDrill } from './RangeCompositionDrill';
+import { RangeTypeDrill } from './RangeTypeDrill';
 import { OddsTrainer } from '@/modules/trainer/OddsTrainer';
 import { PushFoldTrainer } from '@/modules/trainer/pushfold/PushFoldTrainer';
 
@@ -47,6 +48,7 @@ type Drill =
   | 'river-check-bet'
   | 'range-stats'
   | 'range-composition'
+  | 'range-type'
   | 'pot-odds'
   | 'push-fold';
 
@@ -135,8 +137,15 @@ const RANGE_DRILLS: readonly DrillDef[] = [
   {
     id: 'range-composition',
     icon: Shapes,
-    label: 'Composición + tipo',
-    objective: 'Saber qué manos forman un % por posición y qué forma tiene el rango.',
+    label: 'Composición',
+    objective:
+      'Dimensionar la cifra del HUD: si un villano 3-betea X% con rango lineal, qué manos son.',
+  },
+  {
+    id: 'range-type',
+    icon: Shapes,
+    label: 'Tipo de rango',
+    objective: 'Identificar la forma de un rango: lineal, polarizado, mergeado o condensado.',
   },
 ];
 
@@ -182,7 +191,7 @@ export default function WorkbookPage() {
       <PageHeader
         eyebrow="Entrenamiento"
         title="Ejercicios"
-        description="Practica el postflop con una explicación en cada respuesta. Conceptos: elige la calculadora correcta, cuenta combos tras los bloqueadores, balancea value/bluff, calcula la fold equity mínima de un bluff, decide si comprometerte según el SPR, estima la probabilidad de un runout, evalúa la EV de flotar, reconoce un raise auto-profit y resuelve el river (pagar vs all-in, o checkear vs apostar). Rangos: lee un rango en el grid y di qué porcentaje del total y cuántos combos representa, y aprende cómo se compone un porcentaje según la posición y qué forma tiene (lineal, polarizado, mergeado o condensado). Tablas: pot odds y las tablas de Nash de push/fold heads-up."
+        description="Practica el postflop con una explicación en cada respuesta. Conceptos: elige la calculadora correcta, cuenta combos tras los bloqueadores, balancea value/bluff, calcula la fold equity mínima de un bluff, decide si comprometerte según el SPR, estima la probabilidad de un runout, evalúa la EV de flotar, reconoce un raise auto-profit y resuelve el river (pagar vs all-in, o checkear vs apostar). Rangos: lee un rango en el grid y di qué porcentaje del total y cuántos combos representa, dimensiona la cifra del HUD (si un villano 3-betea X% con rango lineal, qué manos son) e identifica la forma del rango (lineal, polarizado, mergeado o condensado). Tablas: pot odds y las tablas de Nash de push/fold heads-up."
         descriptionClassName="text-justify"
       />
 
@@ -208,6 +217,7 @@ export default function WorkbookPage() {
         {drill === 'river-check-bet' && <RiverCheckBetDrill />}
         {drill === 'range-stats' && <RangeStatsDrill />}
         {drill === 'range-composition' && <RangeCompositionDrill />}
+        {drill === 'range-type' && <RangeTypeDrill />}
         {drill === 'pot-odds' && <OddsTrainer />}
         {drill === 'push-fold' && <PushFoldTrainer />}
       </div>

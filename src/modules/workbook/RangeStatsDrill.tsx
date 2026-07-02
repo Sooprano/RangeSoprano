@@ -32,8 +32,10 @@ const ACTION_WORD: Record<RangeAction, string> = {
 };
 
 function spotEyebrow(q: StatsQuestion): string {
-  const { position, vs, action } = q.spot;
+  const { position, vs, action, family } = q.spot;
+  if (family === 'linear-3bet') return '3-bet lineal';
   const word = ACTION_WORD[action];
+  if (!position) return word;
   return vs ? `${position} · ${word} ${vs}` : `${position} · ${word}`;
 }
 

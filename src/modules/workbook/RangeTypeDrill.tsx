@@ -1,12 +1,20 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Check, RotateCcw, X } from 'lucide-react';
+import { Check, RotateCcw, Shapes, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { RangeGrid } from '@/components/RangeGrid';
-import { parseHandRange } from '@/utils/handRangeParser';
 import { CountdownBar } from '@/modules/trainer/CountdownBar';
-import { RANGE_ACTIONS_MAP, formatPct, handsToCells, rationaleOf } from './rangeBank';
-import { generateComposeQuestion, type ComposeQuestion } from './rangeCompositionSpots';
-import { MiniRangeChart } from './MiniRangeChart';
+import {
+  HAS_TYPE_SPOTS,
+  MORPHOLOGY_DEF,
+  MORPHOLOGY_LABEL,
+  RANGE_ACTIONS_MAP,
+  actionPhrase,
+  dimensioningTip,
+  formatPct,
+  handsToCells,
+  type Morphology,
+} from './rangeBank';
+import { generateTypeQuestion, type TypeQuestion } from './rangeTypeSpots';
 import { AutoAdvanceToggle, ScoreBar } from './drillUi';
 import {
   AUTO_ADVANCE_MS,
@@ -15,21 +23,42 @@ import {
   type Score,
 } from './drillScore';
 
-type Feedback = { wasCorrect: boolean; picked: string };
+type Feedback = { wasCorrect: boolean; picked: Morphology };
 
-export function RangeCompositionDrill() {
-  const [question, setQuestion] = useState<ComposeQuestion>(() =>
-    generateComposeQuestion(),
+export function RangeTypeDrill() {
+  if (!HAS_TYPE_SPOTS) return <TypePlaceholder />;
+  return <RangeTypeDrillInner />;
+}
+
+/** Mientras el banco sea 100% lineal, el drill de morfología no aporta. */
+function TypePlaceholder() {
+  return (
+    <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-surface/60 p-8 text-center shadow-surface">
+      <Shapes className="h-8 w-8 text-content-muted" strokeWidth={1.75} />
+      <p className="max-w-md text-sm text-content">
+        Este ejercicio distingue la <span className="font-semibold">forma</span> del rango
+        (lineal, polarizado, mergeado, condensado).
+      </p>
+      <p className="max-w-md text-xs text-content-muted">
+        Se activa cuando el banco tenga rangos de distintas formas — al cargar los 3bet de GTO
+        (regs), las aperturas (opens) y los rangos de pago (calls de BB/BTN). Por ahora todos los
+        rangos son lineales, así que no hay nada que distinguir.
+      </p>
+    </div>
   );
+}
+
+function RangeTypeDrillInner() {
+  const [question, setQuestion] = useState<TypeQuestion>(() => generateTypeQuestion());
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [score, setScore] = useState<Score>(INITIAL_SCORE);
   const [autoAdvance, setAutoAdvance] = useState(false);
 
-  const options = question.notationOptions;
-  const correct = question.spot.notation;
+  const options = question.morphOptions;
+  const correct = question.spot.morphology;
 
   const drawNext = useCallback(() => {
-    setQuestion(generateComposeQuestion());
+    setQuestion(generateTypeQuestion());
     setFeedback(null);
   }, []);
 
@@ -40,7 +69,7 @@ export function RangeCompositionDrill() {
   }, [autoAdvance, feedback, drawNext]);
 
   const answer = useCallback(
-    (picked: string) => {
+    (picked: Morphology) => {
       if (feedback) return;
       setFeedback({ wasCorrect: picked === correct, picked });
       setScore((s) => tallyScore(s, picked === correct));
@@ -81,6 +110,8 @@ export function RangeCompositionDrill() {
   );
 
   const cells = useMemo(() => handsToCells(question.hands), [question.hands]);
+  const { position, vs, action } = question.spot;
+  const spotLabel = vs ? `${position} ${vs}` : position;
 
   return (
     <div className="flex flex-col gap-4">
@@ -88,10 +119,19 @@ export function RangeCompositionDrill() {
 
       <div className="flex flex-col items-stretch gap-4 rounded-xl border border-border bg-surface/60 p-4 shadow-surface sm:p-5">
         <div className="flex flex-col items-center gap-3 rounded-lg border border-border bg-bg-subtle/60 p-4">
-          <ComposePrompt question={question} />
+          <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-content-muted">
+            {spotLabel ? `${spotLabel} · ` : ''}
+            {actionPhrase(action)} · {formatPct(question.pct)}
+          </span>
+          <div className="mx-auto w-full max-w-[360px] sm:max-w-[400px]">
+            <RangeGrid cells={cells} actionsMap={RANGE_ACTIONS_MAP} />
+          </div>
+          <p className="max-w-md text-center text-sm font-medium text-content">
+            ¿Qué estructura (morfología) tiene este rango?
+          </p>
         </div>
 
-        <NotationOptions
+        <MorphOptions
           options={options}
           feedback={feedback}
           correct={correct}
@@ -101,14 +141,14 @@ export function RangeCompositionDrill() {
         <div className="flex min-h-[3.5rem] w-full flex-col gap-2">
           {feedback ? (
             <>
-              <FeedbackPanel question={question} feedback={feedback} cells={cells} />
+              <FeedbackPanel question={question} feedback={feedback} />
               {autoAdvance && (
                 <CountdownBar key={score.total} durationMs={AUTO_ADVANCE_MS} />
               )}
             </>
           ) : (
             <p className="text-center text-xs text-content-muted">
-              ¿Qué rango? · teclas 1-4 · N para avanzar después de responder
+              ¿Qué estructura? · teclas 1-4 · N para avanzar después de responder
             </p>
           )}
         </div>
@@ -147,107 +187,48 @@ export function RangeCompositionDrill() {
   );
 }
 
-function ComposePrompt({ question }: { question: ComposeQuestion }) {
-  const { spot } = question;
-  if (spot.family === 'gto-3bet') {
-    return (
-      <>
-        <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-content-muted">
-          Composición · reg vs reg (GTO)
-        </span>
-        <p className="max-w-md text-center text-sm text-content">
-          ¿Cómo se conforma el rango de <span className="font-semibold">3bet</span> de{' '}
-          <span className="font-semibold text-accent-light">{spot.position}</span>{' '}
-          <span className="font-semibold">{spot.vs}</span>
-          {spot.sizing ? <span className="text-content-muted"> ({spot.sizing})</span> : null} de un{' '}
-          <span className="font-semibold">reg competente</span>?
-        </p>
-      </>
-    );
-  }
-  return (
-    <>
-      <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-content-muted">
-        Composición · dimensiona la cifra del HUD
-      </span>
-      <p className="max-w-md text-center text-sm text-content">
-        Un villano <span className="font-semibold">3-betea</span>{' '}
-        <span className="font-semibold tabular-nums text-accent-light">
-          {formatPct(question.pct)}
-        </span>{' '}
-        y arma su rango <span className="font-semibold">lineal</span>{' '}
-        <span className="text-content-muted">(sus mejores manos, de arriba hacia abajo)</span>.
-        ¿Cuál es su rango?
-      </p>
-    </>
-  );
-}
-
-const LEGEND_ITEMS: { label: string; dot: string }[] = [
-  { label: 'Pares', dot: 'bg-amber-400' },
-  { label: 'Suited', dot: 'bg-emerald-400' },
-  { label: 'Offsuit', dot: 'bg-sky-400' },
-];
-
-function MiniChartLegend() {
-  return (
-    <div className="flex items-center justify-center gap-3 text-[11px] text-content-muted">
-      {LEGEND_ITEMS.map(({ label, dot }) => (
-        <span key={label} className="inline-flex items-center gap-1.5">
-          <span className={cn('h-2.5 w-2.5 rounded-[2px]', dot)} />
-          {label}
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function NotationOptions({
+function MorphOptions({
   options,
   feedback,
   correct,
   onAnswer,
 }: {
-  options: string[];
+  options: readonly Morphology[];
   feedback: Feedback | null;
-  correct: string;
-  onAnswer: (picked: string) => void;
+  correct: Morphology;
+  onAnswer: (picked: Morphology) => void;
 }) {
   return (
-    <div className="mx-auto flex w-full max-w-md flex-col gap-2.5">
-      <MiniChartLegend />
-      <div className="grid grid-cols-2 gap-2.5">
-        {options.map((opt, i) => {
-          const isCorrect = feedback && opt === correct;
-          const pickedThis = feedback?.picked === opt;
-          const hands = parseHandRange(opt).hands;
-          return (
-            <button
-              key={`${opt}-${i}`}
-              type="button"
-              disabled={feedback !== null}
-              onClick={() => onAnswer(opt)}
-              className={cn(
-                'group flex flex-col gap-1.5 rounded-lg border p-2',
-                'transition-colors duration-150 ease-out-soft',
-                'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light',
-                feedback
-                  ? isCorrect
-                    ? 'border-emerald-500/70 bg-emerald-500/10'
-                    : pickedThis
-                      ? 'border-rose-500/70 bg-rose-500/10'
-                      : 'border-border bg-surface/40 opacity-50'
-                  : 'border-border bg-surface/40 hover:border-accent-light/60 hover:bg-surface-hover',
-              )}
-            >
-              <span className="flex h-5 w-5 items-center justify-center rounded bg-bg/80 text-[11px] font-semibold tabular-nums tracking-wider text-content-muted">
-                {i + 1}
-              </span>
-              <MiniRangeChart hands={hands} />
-            </button>
-          );
-        })}
-      </div>
+    <div className="mx-auto grid w-full max-w-md grid-cols-2 gap-1.5">
+      {options.map((opt, i) => {
+        const isCorrect = feedback && opt === correct;
+        const pickedThis = feedback?.picked === opt;
+        return (
+          <button
+            key={opt}
+            type="button"
+            disabled={feedback !== null}
+            onClick={() => onAnswer(opt)}
+            className={cn(
+              'flex flex-row items-center justify-between gap-2 rounded-lg border px-3 py-2.5 text-sm font-semibold',
+              'transition-colors duration-150 ease-out-soft',
+              'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light',
+              feedback
+                ? isCorrect
+                  ? 'border-emerald-500/60 bg-emerald-500/10 text-content'
+                  : pickedThis
+                    ? 'border-rose-500/60 bg-rose-500/10 text-content'
+                    : 'border-border bg-surface/40 text-content-muted opacity-60'
+                : 'border-border bg-surface/40 text-content hover:bg-surface-hover',
+            )}
+          >
+            <span className="flex-1 text-center">{MORPHOLOGY_LABEL[opt]}</span>
+            <span className="shrink-0 rounded bg-surface px-1 py-px text-[10px] font-medium tabular-nums tracking-wider text-content-muted">
+              {i + 1}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -255,14 +236,11 @@ function NotationOptions({
 function FeedbackPanel({
   question,
   feedback,
-  cells,
 }: {
-  question: ComposeQuestion;
+  question: TypeQuestion;
   feedback: Feedback;
-  cells: ReturnType<typeof handsToCells>;
 }) {
   const { spot, pct, combos } = question;
-  const isGto = spot.family === 'gto-3bet';
   return (
     <div
       className={cn(
@@ -281,25 +259,17 @@ function FeedbackPanel({
         <span className="font-semibold">{feedback.wasCorrect ? 'Correcto' : 'Incorrecto'}</span>
         <span className="text-content-muted">·</span>
         <span className="text-content-muted">
-          {isGto
-            ? `3bet ${spot.position} ${spot.vs}${spot.sizing ? ` (${spot.sizing})` : ''}`
-            : '3bet lineal'}{' '}
+          {MORPHOLOGY_LABEL[spot.morphology]} ·{' '}
           <span className="tabular-nums">{formatPct(pct)}</span> ·{' '}
           <span className="tabular-nums">{combos}</span> combos
         </span>
       </div>
-
-      <div className="mx-auto w-full max-w-[320px] py-1">
-        <RangeGrid cells={cells} actionsMap={RANGE_ACTIONS_MAP} variant="compact" />
-      </div>
-
       <p className="text-xs text-content-muted">
-        {isGto ? null : (
-          <>
-            <span className="font-mono text-content">{spot.notation}</span>.{' '}
-          </>
-        )}
-        {rationaleOf(spot)}
+        <span className="text-content">{MORPHOLOGY_DEF[spot.morphology]}</span>{' '}
+        {spot.rationale}
+      </p>
+      <p className="rounded-md bg-bg-subtle/60 px-2.5 py-1.5 text-xs text-content-muted">
+        {dimensioningTip(spot.action, spot.morphology, pct)}
       </p>
     </div>
   );

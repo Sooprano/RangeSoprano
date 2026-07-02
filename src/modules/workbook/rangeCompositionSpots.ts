@@ -1,36 +1,26 @@
-// Generator for the "Composición + tipo" drill (drill B of the "Rangos" group).
-// Dos tipos de pregunta:
-//   compose: dado un % + posición, ¿con qué rango (notación) se compone?
-//   type:    dado un rango mostrado, ¿qué morfología tiene?
-// El % del prompt se deriva (rangeStatsOf) y siempre coincide con la notación.
+// Generator for the "Composición" drill (Rangos). Compose: dada una cifra/spot,
+// ¿con qué rango se compone? Muestra 4 mini-charts. Familias:
+//   · linear-3bet → "3-betea X% lineal, ¿cuál es su rango?" (dimensionar el HUD).
+//   · gto-3bet    → "3bet de {pos} {vs} de un reg, ¿cuál es?" (reg vs reg, GTO).
+// Elige familia uniformemente (para exponer ambas por igual) y distractores de la
+// MISMA familia.
 
 import type { WeightedHand } from '@/utils/handRangeParser';
 import {
-  RANGE_BANK,
+  COMPOSE_FAMILIES,
   rangeStatsOf,
-  type Morphology,
+  spotsIn,
+  type RangeFamily,
   type RangeSpot,
 } from './rangeBank';
 
-export type CompositionKind = 'compose' | 'type';
-
-export const ALL_MORPHOLOGIES: readonly Morphology[] = [
-  'lineal',
-  'polarizado',
-  'mergeado',
-  'condensado',
-];
-
-export type CompositionQuestion = {
+export type ComposeQuestion = {
   spot: RangeSpot;
   hands: WeightedHand[];
   combos: number;
   pct: number;
-  kind: CompositionKind;
-  /** compose: 4 notaciones (una es la correcta). */
+  /** 4 notaciones (una es la correcta = spot.notation). */
   notationOptions: string[];
-  /** type: las 4 morfologías (orden fijo). */
-  morphOptions: readonly Morphology[];
 };
 
 function pick<T>(arr: readonly T[]): T {
@@ -45,45 +35,59 @@ function shuffle<T>(arr: readonly T[]): T[] {
   return out;
 }
 
-/** 3 distractores = los rangos del banco con %-form más cercano (≠ notación). */
-function composeOptions(spot: RangeSpot, correctPct: number): string[] {
-  const others = RANGE_BANK.filter(
-    (s) => s.id !== spot.id && s.notation !== spot.notation,
-  ).map((s) => ({ s, pct: rangeStatsOf(s.notation).pctRounded }));
+/**
+ * linear-3bet: distractores = otros lineales de % distinto, cercanos pero con
+ * separación mínima para que los 4 mini-charts se distingan (entrena dimensionar).
+ */
+function linearComposeOptions(spot: RangeSpot): string[] {
+  const others = spotsIn(['linear-3bet'])
+    .filter((s) => s.id !== spot.id && s.pct !== spot.pct)
+    .map((s) => ({ s, d: Math.abs(s.pct - spot.pct) }))
+    .sort((a, b) => a.d - b.d);
 
-  // Más cercano en % primero; a igualdad, preferir otra morfología.
-  others.sort((a, b) => {
-    const da = Math.abs(a.pct - correctPct);
-    const db = Math.abs(b.pct - correctPct);
-    if (da !== db) return da - db;
-    const am = a.s.morphology === spot.morphology ? 1 : 0;
-    const bm = b.s.morphology === spot.morphology ? 1 : 0;
-    return am - bm;
-  });
+  const chosen: RangeSpot[] = [];
+  const usedPct = new Set<number>([spot.pct]);
+  const addWithGap = (minGap: number) => {
+    for (const { s } of others) {
+      if (chosen.length >= 3) break;
+      if (usedPct.has(s.pct)) continue;
+      if ([...usedPct].some((p) => Math.abs(p - s.pct) < minGap)) continue;
+      chosen.push(s);
+      usedPct.add(s.pct);
+    }
+  };
+  addWithGap(2);
+  addWithGap(1); // fallback si el banco no alcanzó
 
-  const chosen: string[] = [];
-  const seen = new Set<string>([spot.notation]);
-  for (const { s } of others) {
-    if (chosen.length >= 3) break;
-    if (seen.has(s.notation)) continue;
-    chosen.push(s.notation);
-    seen.add(s.notation);
-  }
-  return shuffle([spot.notation, ...chosen]);
+  return shuffle([spot.notation, ...chosen.map((s) => s.notation)]);
 }
 
-export function generateCompositionQuestion(): CompositionQuestion {
-  const spot = pick(RANGE_BANK);
-  const { hands, combos, pctRounded } = rangeStatsOf(spot.notation);
-  const kind: CompositionKind = Math.random() < 0.5 ? 'compose' : 'type';
+/** gto-3bet: distractores = otros rangos GTO (otras posiciones/escenarios). */
+function gtoComposeOptions(spot: RangeSpot): string[] {
+  const others = spotsIn(['gto-3bet']).filter((s) => s.id !== spot.id);
+  const chosen = shuffle(others).slice(0, 3);
+  return shuffle([spot.notation, ...chosen.map((s) => s.notation)]);
+}
 
+function composeOptions(spot: RangeSpot): string[] {
+  return spot.family === 'gto-3bet'
+    ? gtoComposeOptions(spot)
+    : linearComposeOptions(spot);
+}
+
+function pickFamily(): RangeFamily {
+  const available = COMPOSE_FAMILIES.filter((f) => spotsIn([f]).length > 0);
+  return pick(available);
+}
+
+export function generateComposeQuestion(): ComposeQuestion {
+  const spot = pick(spotsIn([pickFamily()]));
+  const { hands, combos } = rangeStatsOf(spot.notation);
   return {
     spot,
     hands,
     combos: Math.round(combos),
-    pct: pctRounded,
-    kind,
-    notationOptions: kind === 'compose' ? composeOptions(spot, pctRounded) : [],
-    morphOptions: ALL_MORPHOLOGIES,
+    pct: spot.pct,
+    notationOptions: composeOptions(spot),
   };
 }
