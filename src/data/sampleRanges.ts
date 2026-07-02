@@ -1,153 +1,133 @@
 import type {
-  Action,
-  HandAction,
   HandNotation,
+  Position,
   Range,
   RangeCellData,
+  Situation,
 } from '@/types/poker';
 import { DEFAULT_ACTION_DEFS } from '@/utils/actionMeta';
+import { parseHandRange } from '@/utils/handRangeParser';
+import { GTO_OPEN_RAW } from '@/modules/workbook/gtoOpenRanges';
+import { GTO_3BET_RAW } from '@/modules/workbook/gto3betRanges';
+import { GTO_CALL_RAW } from '@/modules/workbook/gtoCallRanges';
+import { GTO_COLD_CALL_RAW } from '@/modules/workbook/gtoColdCallRanges';
 
-type Entry = [hands: HandNotation[], actions: Array<[Action, number]>];
+// Set de demo por defecto: rangos GTO Wizard reales de cash 6-max, organizados en
+// una carpeta madre "Rangos GTO cash" con 4 subcarpetas (OR · 3bet · BBDefend ·
+// Call cold). Las notaciones combo-por-combo (peso 0-1 por combo) las autodetecta
+// `parseHandRange`, que agrega a peso por mano (0-100). El peso se guarda en la
+// acción coloreada; la frecuencia restante queda como fold implícito (celda a
+// medio pintar), igual que se ve en GTO Wizard.
 
-function toActions(pairs: Array<[Action, number]>): HandAction[] {
-  return pairs.map(([action, weight]) => ({ action, weight }));
+const GROUP_ROOT = 'Rangos GTO cash';
+const ACTIONS = DEFAULT_ACTION_DEFS.map((d) => ({ ...d }));
+const CREATED_AT = '2026-07-02T00:00:00.000Z';
+
+/** "vs UTG" → "UTG" (Position). */
+function villainOf(vs: string): Position {
+  return vs.replace(/^vs\s+/i, '').trim() as Position;
 }
 
-function buildCells(entries: Entry[]): Record<HandNotation, RangeCellData> {
+/** Parsea una notación GTO y pinta cada mano en una sola acción a su frecuencia. */
+function gtoCells(notation: string, action: string): Record<HandNotation, RangeCellData> {
+  const { hands } = parseHandRange(notation);
   const cells: Record<HandNotation, RangeCellData> = {};
-  for (const [hands, actionPairs] of entries) {
-    const actions = toActions(actionPairs);
-    const total = actions.reduce((acc, a) => acc + a.weight, 0);
-    const filled =
-      total < 100
-        ? [...actions, { action: 'FOLD' as const, weight: 100 - total }]
-        : actions;
-    for (const hand of hands) {
-      cells[hand] = { hand, actions: filled };
-    }
+  for (const { hand, weight } of hands) {
+    const w = Math.round(weight);
+    if (w <= 0) continue;
+    cells[hand] = { hand, actions: [{ action, weight: w }] };
   }
   return cells;
 }
 
-const BTN_RFI_ENTRIES: Entry[] = [
-  [['AA', 'KK', 'QQ', 'JJ', 'TT', '99'], [['RAISE', 100]]],
-  [['88', '77'], [['RAISE', 70], ['CALL', 30]]],
-  [['66', '55', '44', '33', '22'], [['RAISE', 50], ['CALL', 50]]],
-  [['AKs', 'AQs', 'AJs', 'ATs'], [['RAISE', 100]]],
-  [
-    ['A9s', 'A8s', 'A7s', 'A6s', 'A5s', 'A4s', 'A3s', 'A2s'],
-    [['RAISE', 80], ['CALL', 20]],
-  ],
-  [['KQs', 'KJs', 'KTs', 'QJs', 'QTs', 'JTs'], [['RAISE', 100]]],
-  [['K9s', 'Q9s', 'J9s', 'T9s'], [['RAISE', 70], ['CALL', 30]]],
-  [['98s', '87s', '76s', '65s'], [['RAISE', 60], ['CALL', 40]]],
-  [['54s'], [['CALL', 50], ['FOLD', 50]]],
-  [['AKo', 'AQo', 'AJo', 'KQo'], [['RAISE', 100]]],
-  [['ATo', 'KJo', 'QJo'], [['RAISE', 80], ['FOLD', 20]]],
-  [['A9o', 'KTo', 'QTo', 'JTo'], [['CALL', 50], ['FOLD', 50]]],
-];
-
-const CO_RFI_ENTRIES: Entry[] = [
-  [['AA', 'KK', 'QQ', 'JJ', 'TT', '99', '88'], [['RAISE', 100]]],
-  [['77', '66', '55'], [['RAISE', 80], ['CALL', 20]]],
-  [['44', '33', '22'], [['RAISE', 60], ['CALL', 40]]],
-  [['AKs', 'AQs', 'AJs', 'ATs', 'A9s', 'A5s', 'A4s'], [['RAISE', 100]]],
-  [['A8s', 'A7s', 'A6s', 'A3s', 'A2s'], [['RAISE', 70], ['CALL', 30]]],
-  [['KQs', 'KJs', 'KTs', 'QJs', 'QTs', 'JTs', 'T9s', '98s'], [['RAISE', 100]]],
-  [['K9s', 'Q9s', 'J9s', '87s', '76s', '65s'], [['RAISE', 80], ['CALL', 20]]],
-  [['54s'], [['RAISE', 50], ['FOLD', 50]]],
-  [['AKo', 'AQo', 'AJo', 'KQo', 'KJo'], [['RAISE', 100]]],
-  [['ATo', 'QJo'], [['RAISE', 80], ['FOLD', 20]]],
-];
-
-const UTG_RFI_ENTRIES: Entry[] = [
-  [['AA', 'KK', 'QQ', 'JJ', 'TT', '99', '88', '77'], [['RAISE', 100]]],
-  [['66', '55'], [['RAISE', 60], ['CALL', 40]]],
-  [['AKs', 'AQs', 'AJs', 'ATs'], [['RAISE', 100]]],
-  [['A5s', 'A4s'], [['RAISE', 70], ['FOLD', 30]]],
-  [['KQs', 'KJs', 'QJs', 'JTs', 'T9s'], [['RAISE', 100]]],
-  [['KTs', '98s', '87s'], [['RAISE', 70], ['CALL', 30]]],
-  [['AKo', 'AQo', 'AJo', 'KQo'], [['RAISE', 100]]],
-];
-
-const BB_VS_BTN_ENTRIES: Entry[] = [
-  [['AA', 'KK', 'QQ', 'JJ', 'AKs', 'AKo'], [['THREEBET', 100]]],
-  [['TT', '99', '88', 'AQs', 'AQo'], [['THREEBET', 60], ['CALL', 40]]],
-  [['77', '66', '55', '44', '33', '22'], [['CALL', 100]]],
-  [['AJs', 'ATs', 'KQs', 'KJs', 'QJs', 'JTs', 'T9s'], [['CALL', 100]]],
-  [
-    ['A9s', 'A8s', 'A7s', 'A6s', 'A5s', 'A4s', 'A3s', 'A2s'],
-    [['CALL', 80], ['THREEBET', 20]],
-  ],
-  [['KTs', 'K9s', 'QTs', 'Q9s', 'J9s', '98s', '87s', '76s', '65s'], [['CALL', 100]]],
-  [['K8s', 'K7s', 'Q8s', 'J8s', 'T8s', '54s'], [['CALL', 70], ['FOLD', 30]]],
-  [['AJo', 'ATo', 'KQo', 'KJo', 'QJo'], [['CALL', 100]]],
-  [['A9o', 'KTo', 'QTo', 'JTo', 'T9o', '98o'], [['CALL', 60], ['FOLD', 40]]],
-];
-
-const ACTIONS = DEFAULT_ACTION_DEFS.map((d) => ({ ...d }));
-
-function sample(
-  id: string,
-  name: string,
-  position: Range['position'],
-  situation: Range['situation'],
-  group: string,
-  entries: Entry[],
-  extra: Partial<Range> = {},
-): Range {
+function gtoRange(args: {
+  id: string;
+  name: string;
+  position: Position;
+  situation: Situation;
+  subfolder: string;
+  notation: string;
+  action: string;
+  villainPosition?: Position;
+}): Range {
   return {
-    id,
-    name,
-    position,
-    situation,
-    group,
-    cells: buildCells(entries),
-    createdAt: '2026-04-20T00:00:00.000Z',
-    updatedAt: '2026-04-20T00:00:00.000Z',
+    id: args.id,
+    name: args.name,
+    position: args.position,
+    situation: args.situation,
+    group: `${GROUP_ROOT}/${args.subfolder}`,
+    cells: gtoCells(args.notation, args.action),
+    createdAt: CREATED_AT,
+    updatedAt: CREATED_AT,
     actions: ACTIONS.map((a) => ({ ...a })),
     tableFormat: '6max',
-    ...extra,
+    ...(args.villainPosition !== undefined && { villainPosition: args.villainPosition }),
   };
 }
 
-/** Single-range demo (kept for backwards-compat callers). */
-export const SAMPLE_BTN_RFI: Range = sample(
-  'sample-btn-rfi',
-  'BTN RFI (demo)',
-  'BTN',
-  'RFI',
-  'Demo/Opens',
-  BTN_RFI_ENTRIES,
+// ── OR (RFI / aperturas) — acción RAISE ───────────────────────────────────────
+const OR_RANGES: Range[] = GTO_OPEN_RAW.map((r) =>
+  gtoRange({
+    id: `demo-${r.id}`,
+    name: `${r.position} RFI ${r.sizing}`,
+    position: r.position as Position,
+    situation: 'RFI',
+    subfolder: 'OR',
+    notation: r.notation,
+    action: 'RAISE',
+  }),
 );
 
-/** Multi-range demo: 1 folder + 1 subfolder + 4 ranges so Overview/RangeManager
- *  show off folder navigation, palette reuse and comparison out of the box. */
+// ── 3bet (reg vs reg) — acción 3BET ───────────────────────────────────────────
+const THREEBET_RANGES: Range[] = GTO_3BET_RAW.map((r) =>
+  gtoRange({
+    id: `demo-${r.id}`,
+    name: `${r.position} 3bet ${r.vs}`,
+    position: r.position as Position,
+    situation: 'vs_RFI',
+    subfolder: '3bet',
+    notation: r.notation,
+    action: '3BET',
+    villainPosition: villainOf(r.vs),
+  }),
+);
+
+// ── BBDefend (defensa de la BB, la parte que paga) — acción CALL ──────────────
+const BBDEFEND_RANGES: Range[] = GTO_CALL_RAW.map((r) =>
+  gtoRange({
+    id: `demo-${r.id}`,
+    name: `BB call ${r.vs}`,
+    position: 'BB',
+    situation: 'DEFEND_BB',
+    subfolder: 'BBDefend',
+    notation: r.notation,
+    action: 'CALL',
+    villainPosition: villainOf(r.vs),
+  }),
+);
+
+// ── Call cold (pago en frío de BTN/SB vs un opener) — acción CALL ─────────────
+const COLDCALL_RANGES: Range[] = GTO_COLD_CALL_RAW.map((r) =>
+  gtoRange({
+    id: `demo-${r.id}`,
+    name: `${r.position} call ${r.vs}`,
+    position: r.position as Position,
+    situation: 'vs_RFI',
+    subfolder: 'Call cold',
+    notation: r.notation,
+    action: 'CALL',
+    villainPosition: villainOf(r.vs),
+  }),
+);
+
+/** Set de demo completo: 1 carpeta madre + 4 subcarpetas (30 rangos GTO). */
 export const SAMPLE_RANGES: readonly Range[] = [
-  SAMPLE_BTN_RFI,
-  sample(
-    'sample-co-rfi',
-    'CO RFI (demo)',
-    'CO',
-    'RFI',
-    'Demo/Opens',
-    CO_RFI_ENTRIES,
-  ),
-  sample(
-    'sample-utg-rfi',
-    'UTG RFI (demo)',
-    'UTG',
-    'RFI',
-    'Demo/Opens',
-    UTG_RFI_ENTRIES,
-  ),
-  sample(
-    'sample-bb-vs-btn',
-    'BB vs BTN (demo)',
-    'BB',
-    'vs_RFI',
-    'Demo/Defense',
-    BB_VS_BTN_ENTRIES,
-    { villainPosition: 'BTN' },
-  ),
+  ...OR_RANGES,
+  ...THREEBET_RANGES,
+  ...BBDEFEND_RANGES,
+  ...COLDCALL_RANGES,
 ];
+
+/** Un rango suelto (compat con llamadas antiguas): la apertura de BTN. */
+export const SAMPLE_BTN_RFI: Range =
+  OR_RANGES.find((r) => r.position === 'BTN') ?? OR_RANGES[0]!;

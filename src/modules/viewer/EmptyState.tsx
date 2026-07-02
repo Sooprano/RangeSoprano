@@ -36,7 +36,7 @@ export function EmptyState() {
         </span>
         <h2 className="text-lg font-semibold tracking-tight">Sin rango activo</h2>
         <p className="mt-2 text-sm text-content-muted">
-          Carga el set de demo ({SAMPLE_RANGES.length} rangos en 1 carpeta + 2 subcarpetas) para
+          Carga el set de demo ({SAMPLE_RANGES.length} rangos GTO en 1 carpeta + 4 subcarpetas) para
           explorar Individual, Comparar, Resumen e Imprimir PDF, o crea el tuyo en el Editor.
         </p>
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
