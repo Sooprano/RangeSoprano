@@ -7,6 +7,8 @@ import type { HandCategory } from '@/types/poker';
 // Mini chart 13×13 presentacional (no interactivo) para previsualizar un rango
 // de un vistazo. Colorea cada celda en rango según su categoría, para que la
 // FORMA del rango (lineal / polarizado / etc.) se distinga sin leer notación.
+// El PESO se ve como en el grid grande: un relleno horizontal (izquierda) de
+// ancho = peso%, además de atenuar el color a menor frecuencia.
 // Reusa ALL_HANDS + handToGridCoords (orden/posición del grid) + categoryOf.
 // Cero matemática: solo pinta las manos que recibe.
 
@@ -50,13 +52,16 @@ export const MiniRangeChart = memo(function MiniRangeChart({
       {ordered.map((hand) => {
         const w = weightByHand.get(hand);
         if (w == null) return <div key={hand} className="h-full w-full bg-bg/70" />;
-        // Peso → opacidad (piso 0.3 para que las frecuencias bajas se vean).
+        // Peso → ancho del relleno (como el grid grande) + atenuación del color
+        // (piso de opacidad para que las frecuencias bajas se vean).
+        const pct = Math.min(100, w);
         return (
-          <div
-            key={hand}
-            className={cn('h-full w-full', CATEGORY_FILL[categoryOf(hand)])}
-            style={{ opacity: 0.3 + 0.7 * Math.min(1, w / 100) }}
-          />
+          <div key={hand} className="relative h-full w-full overflow-hidden bg-bg/70">
+            <div
+              className={cn('absolute inset-y-0 left-0', CATEGORY_FILL[categoryOf(hand)])}
+              style={{ width: `${pct}%`, opacity: 0.35 + 0.65 * (pct / 100) }}
+            />
+          </div>
         );
       })}
     </div>
