@@ -223,7 +223,7 @@ export function RangeStatsDrill() {
 
       <div className="flex flex-col items-center gap-3">
         <ChipFilter
-          label="Qué preguntar"
+          label="Tipos de pregunta"
           options={KIND_OPTIONS}
           selected={kinds}
           onToggle={toggleKind}
