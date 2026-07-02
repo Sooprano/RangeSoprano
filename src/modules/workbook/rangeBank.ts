@@ -112,6 +112,11 @@ const LINEAR_3BET_SPOTS: readonly RangeSpot[] = LINEAR_3BET.map((r) => ({
 }));
 
 // ── Familia gto-3bet: reg vs reg (peso derivado del rango GTO) ────────────────
+// Morfología según posición del 3bettor (verificado con la data + GTO Wizard):
+//  · BB → POLARIZADO: la BB paga barato y cierra la acción, manda las manos medias
+//    al call y reserva el 3bet para valor + faroles → hueco en el medio.
+//  · resto (HJ/CO/BTN/SB) → MERGEADO: sin un buen flat (rivales por detrás / la BB
+//    puede squeezear), las medias se quedan en el 3bet → valor + medias + faroles.
 const GTO_3BET_SPOTS: readonly RangeSpot[] = GTO_3BET_RAW.map((r) => ({
   id: r.id,
   notation: r.notation,
@@ -120,7 +125,7 @@ const GTO_3BET_SPOTS: readonly RangeSpot[] = GTO_3BET_RAW.map((r) => ({
   position: r.position,
   vs: r.vs,
   action: '3bet' as const,
-  morphology: 'mergeado' as const, // provisional (reg 3bet vs UTG): valor + medias + faroles
+  morphology: (r.position === 'BB' ? 'polarizado' : 'mergeado') as Morphology,
   sizing: r.sizing,
 }));
 
@@ -178,8 +183,17 @@ export const COMPOSE_FAMILIES: readonly RangeFamily[] = [
   'call',
   'cold-call',
 ];
-/** Morfología real y variada — opens (lineal) + calls/cold-calls (condensado). */
-export const TYPE_FAMILIES: readonly RangeFamily[] = ['open', 'call', 'cold-call'];
+/**
+ * Morfología real y variada para el drill "Tipo de rango": opens (lineal) +
+ * gto-3bet (mergeado posicional / polarizado BB) + calls/cold-calls (condensado).
+ * Orden = progresión pedagógica de formas.
+ */
+export const TYPE_FAMILIES: readonly RangeFamily[] = [
+  'open',
+  'gto-3bet',
+  'call',
+  'cold-call',
+];
 
 export function spotsIn(families: readonly RangeFamily[]): RangeSpot[] {
   return RANGE_BANK.filter((s) => families.includes(s.family));
@@ -250,7 +264,7 @@ export function actionPhrase(action: RangeAction): string {
     case '4bet':
       return '4-betea';
     case 'cold-call':
-      return 'paga en frío (cold-call)';
+      return 'hace cold call';
     case 'call':
       return 'paga';
   }
@@ -298,6 +312,12 @@ export function dimensioningTip(
   if (action === 'call' || action === 'cold-call') {
     return `Un rango de pago es condensado: las premium se 3-betean, así que ese ${pct}% queda capado (sin lo más nuteado ni puro aire).`;
   }
+  if ((action === '3bet' || action === '4bet') && morphology === 'polarizado') {
+    return `Polarizado = 3bet de la BB: paga barato y cierra la acción, así que manda las manos medias al call y 3-betea valor + faroles → hueco en el medio.`;
+  }
+  if ((action === '3bet' || action === '4bet') && morphology === 'mergeado') {
+    return `Mergeado = 3bet posicional (no-BB): sin un buen flat (rivales por detrás / la BB squeezea), las manos medias se quedan en el 3bet → valor + medias + faroles, sin hueco.`;
+  }
   if (morphology === 'lineal') {
     return `Ojo con el HUD: un fish con ese ${pct}% juega su mejor ${pct}% (lineal). Un reg podría 3-betear la misma cifra polarizada (valor + faroles).`;
   }
@@ -322,7 +342,11 @@ export function rationaleOf(spot: RangeSpot): string {
     return `Un 3bet lineal es tu mejor ${spot.pct}% de manos, de arriba hacia abajo: pares de mayor a menor, los mejores Ax/Kx suited y broadways, más algún offsuit fuerte — sin faroles dedicados ni hueco. Cuanto más alto el %, más abajo baja el bloque.`;
   }
   if (spot.family === 'gto-3bet') {
-    return `3bet de un reg competente (${spot.position} ${spot.vs}${spot.sizing ? `, ${spot.sizing}` : ''}): valor puro a peso completo (QQ+, AK) + manos medias mezcladas (pares medios, AJs/KQs a frecuencia) + faroles suited (ruedas de as, suited connectors) a baja frecuencia. Los pesos parciales son la mezcla del solver.`;
+    const spotTag = `${spot.position} ${spot.vs}${spot.sizing ? `, ${spot.sizing}` : ''}`;
+    if (spot.morphology === 'polarizado') {
+      return `3bet de la BB ${spot.vs}: rango POLARIZADO. La BB paga barato y cierra la acción → sus manos medias (AJ, KQ, pares medios) van al call, y el 3bet queda valor nuteado (QQ+, AK) + faroles suited (ruedas de as, conectores), con hueco en el medio. Los pesos parciales son la mezcla del solver.`;
+    }
+    return `3bet posicional de un reg competente (${spotTag}): rango MERGEADO — valor puro (QQ+, AK) + manos medias mezcladas (pares medios, AJs/KQs a frecuencia) + algunos faroles suited (ruedas de as, suited connectors), SIN hueco. Sin un buen flat (rivales por detrás / la BB puede squeezear), las medias se quedan en el 3bet. Los pesos parciales son la mezcla del solver.`;
   }
   if (spot.family === 'open') {
     return `Apertura (RFI) de ${spot.position}${spot.sizing ? ` a ${spot.sizing}` : ''}: rango LINEAL — su mejor ${spot.pct}% de manos de arriba hacia abajo (pares, suited de as, broadways, conectores), sin faroles dedicados. Cuanto más tarde la posición, más ancha la apertura.`;
@@ -331,7 +355,7 @@ export function rationaleOf(spot: RangeSpot): string {
     return `Defensa (call) de la BB ${spot.vs}: rango CONDENSADO (capado). Muy ancho por el descuento de ciega, pero las premium (AA-QQ, AK) se 3-betean → sin lo más nuteado. Banda media de pares, suited y broadways flojos.`;
   }
   if (spot.family === 'cold-call') {
-    return `Pago en frío (cold-call) de ${spot.position} ${spot.vs}: rango CONDENSADO. Sin descuento de ciega y con jugadores por detrás, se paga apretado con pares medios, suited connectors y broadways suited; las premium se 3-betean y la basura se foldea → sin nuts ni aire.`;
+    return `Cold Call de ${spot.position} ${spot.vs}: rango CONDENSADO. Sin descuento de ciega y con jugadores por detrás, se paga apretado con pares medios, suited connectors y broadways suited; las premium se 3-betean y la basura se foldea → sin nuts ni aire.`;
   }
   return MORPHOLOGY_DEF[spot.morphology];
 }

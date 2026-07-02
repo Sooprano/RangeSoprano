@@ -193,7 +193,7 @@ function ComposePrompt({ question }: { question: ComposeQuestion }) {
           Composición · defensa de la BB
         </span>
         <p className="max-w-md text-center text-sm text-content">
-          ¿Cómo se compone el rango de <span className="font-semibold">pago (call)</span> de la{' '}
+          ¿Cómo se compone el rango de <span className="font-semibold">Call</span> de la{' '}
           <span className="font-semibold text-accent-light">BB</span>{' '}
           <span className="font-semibold">{spot.vs}</span>?
         </p>
@@ -204,10 +204,10 @@ function ComposePrompt({ question }: { question: ComposeQuestion }) {
     return (
       <>
         <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-content-muted">
-          Composición · pago en frío (cold-call)
+          Composición · cold call
         </span>
         <p className="max-w-md text-center text-sm text-content">
-          ¿Cómo se compone el <span className="font-semibold">pago en frío (cold-call)</span> de{' '}
+          ¿Cómo se compone el rango de <span className="font-semibold">Cold Call</span> de{' '}
           <span className="font-semibold text-accent-light">{spot.position}</span>{' '}
           <span className="font-semibold">{spot.vs}</span>?
         </p>
