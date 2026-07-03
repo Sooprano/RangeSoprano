@@ -10,9 +10,13 @@ permissions:
   pages: write
   id-token: write
 
+# Un solo deploy a la vez, pero NO cancelar uno en curso: cancelar un deploy de
+# Pages a mitad provoca "Deployment failed, try again later" en el siguiente
+# (guía oficial de GitHub Pages). Los runs encolados entre el en-curso y el
+# último se saltan solos.
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
