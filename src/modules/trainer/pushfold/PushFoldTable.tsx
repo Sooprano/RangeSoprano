@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ArrowDownToLine, ArrowUpFromLine, Eye, EyeOff } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { ALL_HANDS, categoryOf, combosOf, TOTAL_COMBOS } from '@/utils/handUtils';
@@ -34,6 +34,22 @@ export function PushFoldTable() {
 
   const table = scope === 'push' ? NASH_HU.push : NASH_HU.call;
   const meta = SCOPE_META[scope];
+
+  // Flechas ←/→ cambian el stack (salvo si el foco está en un control de
+  // formulario — ahí el slider nativo ya maneja las flechas, evitamos el doble salto).
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const target = e.target as HTMLElement | null;
+      if (target?.closest('input, textarea, select, [contenteditable="true"]')) return;
+      e.preventDefault();
+      const delta = e.key === 'ArrowRight' ? 1 : -1;
+      setBb((v) => Math.max(NASH_MIN_BB, Math.min(NASH_MAX_BB, v + delta)));
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   const stats = useMemo(() => {
     let activeHands = 0;
@@ -119,16 +135,29 @@ function StackSlider({
         className="h-2 w-full cursor-pointer appearance-none rounded-full bg-surface accent-accent-light focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-light"
         style={{ accentColor }}
       />
-      <div className="flex justify-between font-mono text-[10px] text-content-muted">
-        <span>{NASH_MIN_BB}</span>
-        <span>5</span>
-        <span>10</span>
-        <span>15</span>
-        <span>{NASH_MAX_BB}</span>
+      <div className="relative h-3.5 font-mono text-[10px] text-content-muted">
+        {SLIDER_TICKS.map((t) => {
+          const pct = (t - NASH_MIN_BB) / (NASH_MAX_BB - NASH_MIN_BB);
+          // Compensa el inset del thumb para alinear el número con su centro.
+          const left = `calc(${(pct * 100).toFixed(2)}% + ${((0.5 - pct) * SLIDER_THUMB_PX).toFixed(2)}px)`;
+          return (
+            <span
+              key={t}
+              className="absolute -translate-x-1/2 tabular-nums"
+              style={{ left }}
+            >
+              {t}
+            </span>
+          );
+        })}
       </div>
     </div>
   );
 }
+
+/** Marcas del slider de stack (BB) y ancho aprox. del thumb para centrarlas. */
+const SLIDER_TICKS = [NASH_MIN_BB, 5, 10, 15, NASH_MAX_BB] as const;
+const SLIDER_THUMB_PX = 16;
 
 function ScopeToggle({
   value,
@@ -218,7 +247,7 @@ function PushFoldGrid({
     <div
       role="img"
       aria-label={`Tabla de Nash heads-up para stack de ${bb} BB`}
-      className="relative mx-auto grid aspect-square w-full max-w-[min(640px,92vw)] grid-cols-[repeat(13,minmax(0,1fr))] gap-px overflow-hidden rounded-xl border border-border bg-border/60 shadow-surface"
+      className="relative mx-auto grid aspect-square w-full max-w-[min(640px,92vw)] grid-cols-[repeat(13,minmax(0,1fr))] grid-rows-[repeat(13,minmax(0,1fr))] gap-px overflow-hidden rounded-xl border border-border bg-border/60 shadow-surface"
     >
       {ALL_HANDS.map((hand) => {
         const t = table[hand] ?? 0;
@@ -230,7 +259,7 @@ function PushFoldGrid({
             data-hand={hand}
             data-active={active || undefined}
             className={cn(
-              'flex flex-col items-center justify-center gap-px select-none px-0.5 py-1 text-[10px] leading-none tabular-nums',
+              'flex flex-col items-center justify-center gap-px overflow-hidden select-none px-0.5 py-0.5 text-[10px] leading-none tabular-nums',
               !active &&
                 (cat === 'pair'
                   ? 'bg-cell-empty-pair text-content'
