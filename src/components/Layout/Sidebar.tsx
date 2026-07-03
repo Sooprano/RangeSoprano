@@ -36,17 +36,17 @@ const NAV_SECTIONS: readonly NavSection[] = [
   {
     label: 'Rangos',
     items: [
+      { to: '/editor', label: 'Editor', icon: Pencil },
       { to: '/viewer', label: 'Visualizador', icon: Eye },
       { to: '/trainer', label: 'Entrenador', icon: Target },
-      { to: '/editor', label: 'Editor', icon: Pencil },
     ],
   },
   {
     label: 'Matemáticas',
     items: [
       { to: '/calculadoras', label: 'Calculadoras', icon: Calculator },
-      { to: '/analisis', label: 'Análisis', icon: FileSearch },
       { to: '/ejercicios', label: 'Ejercicios', icon: Dumbbell },
+      { to: '/analisis', label: 'Análisis', icon: FileSearch },
     ],
   },
 ];

@@ -93,7 +93,7 @@ const MODULES: readonly ModuleCard[] = [
     label: 'Ejercicios',
     icon: Dumbbell,
     description:
-      'Drills cortos de matemática postflop, con puntaje, racha y atajos de teclado. Tres grupos: Conceptos (diez drills de EV: qué calculadora usar, conteo de combos, value/bluff, fold equity, SPR, runouts, floating, auto-profit raise y dos de river), Rangos (% y combos · composición y morfología) y Tablas (Pot Odds y Push/Fold, con modo Estudio y Velocidad).',
+      'Drills cortos de matemática postflop, con puntaje, racha y atajos de teclado. Tres grupos: Conceptos (diez drills de EV: qué calculadora usar, conteo de combos, value/bluff, fold equity, SPR, runouts, floating, auto-profit raise y dos de river), Rangos (% y combos · Composición · Tipo de rango, sobre rangos GTO reales) y Tablas (Pot Odds y Push/Fold, con modo Estudio y Velocidad).',
   },
 ];
 
@@ -411,20 +411,23 @@ const FAQS: readonly Faq[] = [
         (breakeven) de un raise —R/(R+P)— y decides si es auto-profit comparándolo con cuánto
         foldea el villano; si fold% &gt; BE%, el raise gana solo por la fold equity.{' '}
         <span className="font-medium text-content">River: call o shove</span>: enfrentando una
-        apuesta de river, comparás el EV de pagar (tu equity vs su rango de apuesta) con el de
-        ir all-in (su fold equity + lo que ganás cuando te paga) y elegís entre call, fold o
+        apuesta de river, comparas el EV de pagar (tu equity vs su rango de apuesta) con el de
+        ir all-in (su fold equity + lo que ganas cuando te paga) y eliges entre call, fold o
         shove — el insight es considerar el all-in, no solo call/fold.{' '}
         <span className="font-medium text-content">River: check o bet</span>: cuando el rival te
-        checkea el river, comparás el EV de checkear behind con el de apostar a dos tamaños y
-        elegís la línea de mayor EV — ves cómo un rango de continuación más ajustado baja el valor
+        checkea el river, comparas el EV de checkear behind con el de apostar a dos tamaños y
+        eliges la línea de mayor EV — ves cómo un rango de continuación más ajustado baja el valor
         de apostar grande y cuándo conviene convertir una mano débil en bluff. El grupo{' '}
-        <span className="font-medium text-content">Rangos</span> entrena la lectura de rangos:{' '}
+        <span className="font-medium text-content">Rangos</span> entrena la lectura de rangos GTO
+        reales con tres drills:{' '}
         <span className="font-medium text-content">% y combos</span> (ves un rango resaltado en el
-        grid y decís qué porcentaje del total y cuántos combos representa, en opción múltiple o
-        modo experto con input numérico) y{' '}
-        <span className="font-medium text-content">Composición + tipo</span> (cómo un dato como
-        &ldquo;3-betea 5% desde la SB vs el BTN&rdquo; se traduce a manos concretas, y qué
-        morfología tiene el rango: lineal, polarizado, mergeado o condensado). El tercer grupo,{' '}
+        grid y dices qué porcentaje del total y cuántos combos representa, en opción múltiple o
+        modo experto con input numérico),{' '}
+        <span className="font-medium text-content">Composición</span> (con qué manos concretas se
+        arma un 3bet, una apertura, una defensa de BB o un cold-call, eligiendo entre mini-grids) y{' '}
+        <span className="font-medium text-content">Tipo de rango</span> (qué morfología tiene:
+        lineal, polarizado, mergeado o condensado), cada uno con filtros para elegir qué familias
+        estudiar. El tercer grupo,{' '}
         <span className="font-medium text-content">Tablas</span>, son dos entrenadores con modo
         Estudio y Velocidad (con tabla de líderes local):{' '}
         <span className="font-medium text-content">Pot Odds</span> (fold equity al apostar y
@@ -434,7 +437,7 @@ const FAQS: readonly Faq[] = [
       </>
     ),
     aPlain:
-      'En Ejercicios hay tres grupos. Conceptos reúne diez drills cortos. "¿Qué calculadora?": te mostramos un spot real (tu mano, el board y la apuesta de la decisión) y eliges entre cuatro calculadoras cuál usarías; al responder ves por qué es esa herramienta y qué datos traerías de Flopzilla (es el mismo razonamiento de Análisis de manos pero como entrenamiento). "Conteo de combos": te damos una mano (por ejemplo AK), un board y tus cartas, y cuentas cuántos combos quedan tras los bloqueadores; el feedback descompone base − bloqueados = quedan. "Value / Bluff": dado el tamaño de tu apuesta y tus combos de valor, eliges cuántos faroles para balancear el rango (medio bote ≈ 3:1 valor:farol, pot-size ≈ 2:1, overbet ≈ 1.5:1). "Fold equity": dado un bote y tu apuesta, el % de fold mínimo para que el bluff sea break-even (auto-profit), el alpha complemento de la MDF. "SPR": con tu equity (de Flopzilla) y el SPR, decides si comprometerte (pagar o hacer el all-in) es +EV o mejor fold, o calculas el EV exacto. "Runouts": estimas con qué frecuencia sale un runout determinado en el turn (1 carta), en el river (1 carta) y completo (las dos cartas, por el método del complemento), contando bloqueadores. "Floating": calculas la EV de flotar (pagar un cbet con aire y apostar la siguiente calle cuando te checkean) según las frecuencias de barrel y check-fold del villano, a veces como valor de EV y a veces decidiendo si flotar es +EV. "Auto-profit raise": calculas el BE% (breakeven) de un raise R/(R+P) y decides si es auto-profit comparándolo con cuánto foldea el villano; si fold% > BE%, el raise gana solo por la fold equity. "River: call o shove": enfrentando una apuesta de river, comparás el EV de pagar (tu equity vs su rango de apuesta) con el de ir all-in (su fold equity + lo que ganás cuando te paga) y elegís entre call, fold o shove — el insight es considerar el all-in, no solo call/fold. "River: check o bet": cuando el rival te checkea el river, comparás el EV de checkear behind con el de apostar a dos tamaños distintos y elegís la línea de mayor EV; ves cómo un rango de continuación más ajustado baja el valor de apostar grande y cuándo conviene convertir una mano débil en bluff. El grupo Rangos entrena la lectura de rangos: "% y combos" (ves un rango resaltado en el grid y decís qué porcentaje del total y cuántos combos representa, en opción múltiple o modo experto con input numérico) y "Composición + tipo" (cómo un dato como "3-betea 5% desde la SB vs el BTN" se traduce a manos concretas, y qué morfología tiene el rango: lineal, polarizado, mergeado o condensado). El tercer grupo, Tablas, son dos entrenadores con modo Estudio y Velocidad (con tabla de líderes local): Pot Odds (fold equity al apostar y equity al pagar) y Push/Fold (las tablas de Nash de empuje/pago heads-up para stacks cortos). Todos llevan puntaje, racha y atajos de teclado.',
+      'En Ejercicios hay tres grupos. Conceptos reúne diez drills cortos. "¿Qué calculadora?": te mostramos un spot real (tu mano, el board y la apuesta de la decisión) y eliges entre cuatro calculadoras cuál usarías; al responder ves por qué es esa herramienta y qué datos traerías de Flopzilla (es el mismo razonamiento de Análisis de manos pero como entrenamiento). "Conteo de combos": te damos una mano (por ejemplo AK), un board y tus cartas, y cuentas cuántos combos quedan tras los bloqueadores; el feedback descompone base − bloqueados = quedan. "Value / Bluff": dado el tamaño de tu apuesta y tus combos de valor, eliges cuántos faroles para balancear el rango (medio bote ≈ 3:1 valor:farol, pot-size ≈ 2:1, overbet ≈ 1.5:1). "Fold equity": dado un bote y tu apuesta, el % de fold mínimo para que el bluff sea break-even (auto-profit), el alpha complemento de la MDF. "SPR": con tu equity (de Flopzilla) y el SPR, decides si comprometerte (pagar o hacer el all-in) es +EV o mejor fold, o calculas el EV exacto. "Runouts": estimas con qué frecuencia sale un runout determinado en el turn (1 carta), en el river (1 carta) y completo (las dos cartas, por el método del complemento), contando bloqueadores. "Floating": calculas la EV de flotar (pagar un cbet con aire y apostar la siguiente calle cuando te checkean) según las frecuencias de barrel y check-fold del villano, a veces como valor de EV y a veces decidiendo si flotar es +EV. "Auto-profit raise": calculas el BE% (breakeven) de un raise R/(R+P) y decides si es auto-profit comparándolo con cuánto foldea el villano; si fold% > BE%, el raise gana solo por la fold equity. "River: call o shove": enfrentando una apuesta de river, comparas el EV de pagar (tu equity vs su rango de apuesta) con el de ir all-in (su fold equity + lo que ganas cuando te paga) y eliges entre call, fold o shove — el insight es considerar el all-in, no solo call/fold. "River: check o bet": cuando el rival te checkea el river, comparas el EV de checkear behind con el de apostar a dos tamaños distintos y eliges la línea de mayor EV; ves cómo un rango de continuación más ajustado baja el valor de apostar grande y cuándo conviene convertir una mano débil en bluff. El grupo Rangos entrena la lectura de rangos GTO reales con tres drills: "% y combos" (ves un rango resaltado en el grid y dices qué porcentaje del total y cuántos combos representa, en opción múltiple o modo experto con input numérico), "Composición" (con qué manos concretas se arma un 3bet, una apertura, una defensa de BB o un cold-call, eligiendo entre mini-grids) y "Tipo de rango" (qué morfología tiene: lineal, polarizado, mergeado o condensado), cada uno con filtros para elegir qué familias estudiar. El tercer grupo, Tablas, son dos entrenadores con modo Estudio y Velocidad (con tabla de líderes local): Pot Odds (fold equity al apostar y equity al pagar) y Push/Fold (las tablas de Nash de empuje/pago heads-up para stacks cortos). Todos llevan puntaje, racha y atajos de teclado.',
   },
   {
     q: '¿Puedo contribuir al proyecto?',
@@ -561,7 +564,7 @@ export default function HomePage() {
             </span>
             <div className="text-content-muted">
               <span className="font-medium text-content">1. Crear o importar tus rangos</span>
-              {' — '}armá tu primer rango desde el{' '}
+              {' — '}arma tu primer rango desde el{' '}
               <Link to="/editor" className="font-medium text-accent-light hover:underline">
                 Editor
               </Link>
@@ -769,7 +772,7 @@ export default function HomePage() {
 
           <ol className="flex flex-col gap-2">
             <li>
-              <span className="font-medium text-content">1. Configurá tus presets.</span>{' '}
+              <span className="font-medium text-content">1. Configura tus presets.</span>{' '}
               Cuatro botones editables (default{' '}
               <code className="rounded bg-bg px-1 py-0.5 font-mono text-[11px] text-content">
                 60/40 · 50/50 · 25/75 · 10/90
@@ -802,7 +805,7 @@ export default function HomePage() {
             </li>
             <li>
               <span className="font-medium text-content">4. Tres sets guardados.</span>{' '}
-              Cambiá entre{' '}
+              Cambia entre{' '}
               <span className="font-medium text-content">Set 1 · Set 2 · Set 3</span>{' '}
               para tener varias configuraciones (ej. uno para SnG con frecuencias
               típicas de push/fold y otro para cash 6-max).
@@ -875,7 +878,7 @@ export default function HomePage() {
             </li>
             <li>
               <span className="font-medium text-content">3. Pausa durante el descanso.</span>{' '}
-              Apretá ⏸ cuando te levantas de la mesa. Al volver, ▶ retoma
+              Aprieta ⏸ cuando te levantas de la mesa. Al volver, ▶ retoma
               donde quedaste.
             </li>
             <li>
@@ -948,7 +951,7 @@ export default function HomePage() {
             <li>
               <span className="font-medium text-content">2. Ventana flotante 460×340.</span>{' '}
               Aparece con el cronómetro arriba y el randomizador abajo,
-              redimensionable arrastrando los bordes. Llevala donde quieras
+              redimensionable arrastrando los bordes. Llévala donde quieras
               en tu monitor.
             </li>
             <li>
@@ -959,7 +962,7 @@ export default function HomePage() {
             </li>
             <li>
               <span className="font-medium text-content">4. Volver a la página.</span>{' '}
-              Cerrá con la X del SO, click en "Volver a la página" dentro de
+              Cierra con la X del SO, click en "Volver a la página" dentro de
               la ventana, o click en el pill "En ventana flotante · Volver"
               del header — los cards vuelven a su sitio en la pestaña.
             </li>
@@ -1236,7 +1239,7 @@ export default function HomePage() {
                 />
               </div>
               <p className="text-[11px] text-content-muted">
-                Escaneá con tu billetera
+                Escanea con tu billetera
               </p>
             </div>
 
