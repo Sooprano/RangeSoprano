@@ -1,4 +1,4 @@
-// Question generator for the "Runouts" drill (SplitSuit workbook, ch. 9).
+// Question generator for the "Runouts" drill (poker math workbook, ch. 9).
 //
 // Three phases: turn (1 card from the flop, /47), river (1 card from the turn,
 // /46) and complete (2 cards from the flop, via the complement method). For each

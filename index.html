@@ -2,6 +2,13 @@
 <html lang="es" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
+    <!--
+      Seguridad: la Content-Security-Policy se inyecta SOLO en el build de
+      producción (ver el plugin en vite.config.ts) para no romper el HMR del
+      dev server. frame-ancestors / HSTS / X-Frame-Options no se pueden fijar
+      por <meta> → configurarlos como headers en Cloudflare (ver SECURITY.md).
+    -->
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Range Soprano · Estudio de rangos preflop de poker</title>

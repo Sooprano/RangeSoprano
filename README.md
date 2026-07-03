@@ -6,7 +6,7 @@
 
 ## Qué hace
 
-Range Soprano es una herramienta para **aprender, memorizar y comparar rangos preflop de poker**. Pensada como alternativa libre y gratis a soluciones como FreeBetRange / Range Trainer pagos, con foco en simplicidad y portabilidad de los datos (export/import `.json`).
+Range Soprano es una herramienta para **aprender, memorizar y comparar rangos preflop de poker**. Pensada como alternativa libre y gratis a las soluciones de pago para el estudio de rangos, con foco en simplicidad y portabilidad de los datos (export/import `.json`).
 
 Tres módulos:
 
@@ -49,4 +49,4 @@ BTC: `bc1qyz4fd8msnedgjj9sv68qlu4theh7mdh57rea8w`
 
 ---
 
-**Keywords:** rangos de poker, rangos preflop, estudio de rangos de poker, creación de rangos de poker, herramientas para aprender rangos de poker, rangos gratis de poker, entrenador de rangos de poker, editor de rangos preflop, visualizador de rangos preflop, alternativa a FreeBetRange, poker range trainer, app de poker gratis, 6-max preflop, Heads-Up preflop.
+**Keywords:** rangos de poker, rangos preflop, estudio de rangos de poker, creación de rangos de poker, herramientas para aprender rangos de poker, rangos gratis de poker, entrenador de rangos de poker, editor de rangos preflop, visualizador de rangos preflop, poker range trainer, app de poker gratis, 6-max preflop, Heads-Up preflop.

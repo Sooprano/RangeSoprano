@@ -1,4 +1,4 @@
-// Question generator for the "Floating" drill (SplitSuit workbook, ch. 10).
+// Question generator for the "Floating" drill (poker math workbook, ch. 10).
 //
 // The EV of floating: you call a cbet with air, then bet the next card when
 // checked to. The model has three branches whose frequencies sum to 100%:

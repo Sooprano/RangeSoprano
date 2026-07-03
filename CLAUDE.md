@@ -1,6 +1,6 @@
 # Range Soprano — Poker Range Study App
 
-App de estudio de rangos preflop inspirada en FreeBetRange. Módulos: Visualizador, Entrenador, Editor (rangos) + Calculadoras, Análisis, Ejercicios (matemática de poker). GTO y MDA están FUERA de alcance.
+App de estudio de rangos preflop de poker. Módulos: Visualizador, Entrenador, Editor (rangos) + Calculadoras, Análisis, Ejercicios (matemática de poker). GTO y MDA están FUERA de alcance.
 
 ## Stack
 

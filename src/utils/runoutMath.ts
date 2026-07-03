@@ -1,6 +1,6 @@
 // Runout probability math — pure card counting, no equity, no Flopzilla.
 //
-// The core of the "Runouts" drill (SplitSuit workbook, ch. 9): given hero's two
+// The core of the "Runouts" drill (poker math workbook, ch. 9): given hero's two
 // cards + a board (flop or turn), count how many of the unseen cards make a
 // condition true, and divide by the remaining-card count (47 on the flop, 46 on
 // the turn). For complete runouts (two cards from the flop) we enumerate the

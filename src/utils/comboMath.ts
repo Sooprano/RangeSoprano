@@ -3,7 +3,7 @@
 // Given a starting-hand notation (or a few summed, e.g. AK = AKs + AKo) and a
 // set of dead cards (board + hero), counts how many combos of that hand remain
 // in the deck. This is the core of the "conteo de combos" drill: the classic
-// SplitSuit workbook skill, 100% independent of Flopzilla (no equity, no board
+// poker math workbook skill, 100% independent of Flopzilla (no equity, no board
 // semantics — just which cards are still available).
 
 import type { HandNotation, Rank } from '@/types/poker';
