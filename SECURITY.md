@@ -1,7 +1,7 @@
 # Seguridad — Range Soprano
 
 Range Soprano es una **SPA 100% estática** (React + Vite) servida desde GitHub
-Pages detrás de Cloudflare. **No hay backend, base de datos, cuentas ni API
+Pages, con el DNS del dominio gestionado por Cloudflare. **No hay backend, base de datos, cuentas ni API
 keys**: todo corre en el navegador y los datos del usuario viven solo en su
 `localStorage`. Esto reduce mucho la superficie de ataque (no hay servidor que
 comprometer ni credenciales que filtrar).
@@ -43,25 +43,25 @@ comprometer ni credenciales que filtrar).
 - **Dependencias**: `npm audit` en verde (0 vulnerabilidades). Correr
   `npm audit` periódicamente y `npm audit fix` ante avisos.
 
-## Pendiente: headers a nivel edge (Cloudflare)
+## Transporte y hosting
 
-Algunas protecciones **no se pueden fijar por `<meta>`** y hay que ponerlas como
-**HTTP response headers**. GitHub Pages no permite headers custom, pero el sitio
-está detrás de **Cloudflare** → configurarlas ahí (Rules → **Transform Rules** →
-*HTTP Response Header Modification*, o el toggle de HSTS en SSL/TLS → Edge
-Certificates):
+El sitio se sirve **directamente desde GitHub Pages** sobre HTTPS. El dominio usa
+Cloudflare **solo para DNS** (registros en modo "Solo DNS" / nube gris): esto es
+un requisito para que GitHub Pages pueda emitir y renovar su certificado
+Let's Encrypt; el proxy de Cloudflare (nube naranja) interfiere con ese proceso.
+GitHub Pages ya envía **HSTS** (`Strict-Transport-Security`) en cada respuesta.
 
-| Header | Valor recomendado | Para qué |
-|---|---|---|
-| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains` | Fuerza HTTPS (anti-downgrade). Activable en SSL/TLS → Edge Certificates → HSTS. |
-| `X-Frame-Options` | `DENY` | Anti-clickjacking (complementa `frame-ancestors`). |
-| `X-Content-Type-Options` | `nosniff` | Evita MIME-sniffing. |
-| `Referrer-Policy` | `strict-origin-when-cross-origin` | Refuerza el `<meta>` a nivel header. |
-| `Permissions-Policy` | `camera=(), microphone=(), geolocation=(), browsing-topics=()` | Desactiva APIs que la web no usa. |
-| `Content-Security-Policy` | igual que la meta **+** `frame-ancestors 'none'` | La CSP por header sí soporta `frame-ancestors` y `report-uri`. |
+Como GitHub Pages no permite headers HTTP personalizados y Cloudflare no está en
+la ruta del tráfico, las cabeceras de seguridad del sitio se entregan por
+**`<meta>` desde el build** (CSP y `Referrer-Policy`, ver arriba). Esta cobertura
+es la adecuada para un SPA estático sin backend, sin cuentas y sin datos de
+usuario en servidor: la superficie que de verdad importa (inyección de scripts /
+estilos, filtrado de referer, forzado de HTTPS) queda cubierta.
 
-Opcional: activar en Cloudflare el **Bot Fight Mode** y reglas de rate-limiting
-básicas, aunque al ser un sitio estático el riesgo es bajo.
+Si en el futuro la app sumara backend, autenticación o pagos, correspondería
+mover las cabeceras al nivel de transporte (por ejemplo migrando el hosting a una
+plataforma que permita headers custom) para poder fijar también las directivas
+que `<meta>` no soporta.
 
 ## Reportar una vulnerabilidad
 
