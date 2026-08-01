@@ -176,6 +176,7 @@ function RangeGridBase({
           hand,
           category: categoryOf(hand),
           tooltipSide: (row === 0 ? 'bottom' : 'top') as 'bottom' | 'top',
+          tooltipAlign: (col >= 7 ? 'left' : 'right') as 'left' | 'right',
           rowIndex: row + 1,
           colIndex: col + 1,
           tabIndex: (isFocused ? 0 : -1) as 0 | -1,

@@ -9,6 +9,7 @@ import {
 } from '@/utils/actionMeta';
 
 type TooltipSide = 'top' | 'bottom';
+type TooltipAlign = 'left' | 'right';
 
 type RangeCellProps = {
   hand: HandNotation;
@@ -17,6 +18,8 @@ type RangeCellProps = {
   /** Per-range action defs lookup (color + label + order). Falls back to the action id when missing. */
   actionsMap?: ActionDefMap;
   tooltipSide?: TooltipSide;
+  /** Horizontal corner the tooltip flies toward. Flips near the grid's right edge. */
+  tooltipAlign?: TooltipAlign;
   className?: string;
   /** 1-based row index for ARIA. */
   rowIndex: number;
@@ -90,6 +93,7 @@ function RangeCellBase({
   actions,
   actionsMap,
   tooltipSide = 'top',
+  tooltipAlign = 'right',
   className,
   rowIndex,
   colIndex,
@@ -162,7 +166,7 @@ function RangeCellBase({
           id={tooltipId}
           role="tooltip"
           className={cn(
-            'pointer-events-none absolute left-1/2 z-20 -translate-x-1/2',
+            'pointer-events-none absolute z-20',
             'min-w-[140px] whitespace-nowrap rounded-lg px-3 py-2',
             'bg-surface/95 backdrop-blur-sm',
             'border border-accent/30 shadow-surface',
@@ -171,9 +175,10 @@ function RangeCellBase({
             'motion-safe:transition motion-safe:duration-150 motion-safe:ease-out-soft',
             'group-hover:opacity-100 group-hover:translate-y-0',
             'group-focus-within:opacity-100 group-focus-within:translate-y-0',
-            tooltipSide === 'top'
-              ? 'bottom-full mb-1.5'
-              : 'top-full mt-1.5',
+            // Vertical corner: above the cell, or below it on the top row.
+            tooltipSide === 'top' ? 'bottom-full' : 'top-full',
+            // Horizontal corner: fly right by default, flip left near the right edge.
+            tooltipAlign === 'right' ? 'left-full ml-1' : 'right-full mr-1',
           )}
         >
           <div className="mb-1.5 flex items-baseline justify-between gap-3 border-b border-border pb-1">
