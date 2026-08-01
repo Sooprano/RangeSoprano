@@ -81,11 +81,12 @@ Fases 1-48 completadas ✅. Detalle completo de cada fase, hashes de rollback y 
 
 Grid 13×13 row-major. Orden: A K Q J T 9 8 7 6 5 4 3 2. Diagonal = pares. Arriba = suited. Abajo = offsuit. Cells con múltiples acciones ponderadas (weight 0-100, suma ≤100).
 
-Acciones: cada `Range` define su propia paleta (`range.actions: ActionDef[]` con `id` opaco, `label`, `color` hex, `order`). Los IDs legacy `RAISE · 3BET · ALL_IN · CALL · FOLD` siguen siendo válidos y se siembran como defaults al hidratar rangos viejos (ver `DEFAULT_ACTION_DEFS` en `src/utils/actionMeta.ts`). Rangos nuevos arrancan con `NEW_RANGE_ACTION_DEFS` (Call + Raise).
+Acciones: cada `Range` define su propia paleta (`range.actions: ActionDef[]` con `id` opaco, `label`, `color` hex, `order`). Los IDs legacy `RAISE · 3BET · ALL_IN · CALL · FOLD` siguen siendo válidos y se siembran como defaults al hidratar rangos viejos (ver `DEFAULT_ACTION_DEFS` en `src/utils/actionMeta.ts`). Rangos nuevos arrancan con `NEW_RANGE_ACTION_DEFS` (Call + Raise). El **Entrenador** siempre ofrece un botón **Fold directo** para las manos fuera del rango: `trainerAnswerActions(range.actions)` = paleta + Fold sintético cuando la paleta no tiene `id:'FOLD'` propio (NO detectar fold por etiqueta — "OR to Fold" = abrir y foldear a un 3bet ≠ fold directo; ver [[reference-range-action-semantics]]).
 
 ## Arquitectura clave
 
-- `src/components/RangeGrid/` — grid reutilizable, modo lectura y `editable` opt-in (props: `editable`, `onCellPaint`, `onCellErase`). Delega eventos por `data-hand` sin tocar la memoización de RangeCell.
+- `src/components/RangeGrid/` — grid reutilizable, modo lectura y `editable` opt-in (props: `editable`, `onCellPaint`, `onCellErase`). Delega eventos por `data-hand` sin tocar la memoización de RangeCell. Borrar: clic derecho **o doble toque/doble clic** (`useRangePainter.onDoubleClick`, para móvil sin clic derecho).
+- `src/components/TruncatedLabel.tsx` — label de 1 línea con ellipsis + tooltip estilizado (border/bg-surface/sombra, sale a la derecha) que aparece **solo si el texto está cortado** (`scrollWidth>clientWidth`, remedido en cada hover). Usado para el nombre del rango en las listas RANGES (`ViewerRangeList`, `RangeManager`).
 - `src/store/rangeStore.ts` — CRUD + persist con Zod al hidratar, cap 100KB, IDs con `crypto.randomUUID()`.
 - `src/store/selectors.ts` — `useActiveRange`, `useRangeSummaries` (useShallow), `useRangesByGroup` (useMemo).
 - `src/modules/{home,viewer,editor,trainer}/` — una carpeta por módulo, página raíz + componentes locales. `/` monta `home/HomePage.tsx` con onboarding + `ImportProfileButton` (consume `importRanges` del store).
