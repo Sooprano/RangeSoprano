@@ -6,6 +6,7 @@ import { useUiStore } from '@/store/uiStore';
 import type { GroupMeta } from '@/store/schemas';
 import { buildGroupTree, flattenVisibleTree, type GroupTreeNode } from '@/utils/groupUtils';
 import { FolderRow } from '@/components/FolderRow';
+import { TruncatedLabel } from '@/components/TruncatedLabel';
 import { SITUATION_LABELS } from '@/data/positions';
 
 export function displayOrderFor(
@@ -65,7 +66,7 @@ export function ViewerRangeList({
               : 'text-content-muted hover:bg-surface-hover hover:text-content',
           )}
         >
-          <span title={s.name} className="w-full truncate font-medium">{s.name}</span>
+          <TruncatedLabel text={s.name} className="font-medium" />
           <span className="text-[10px] uppercase tracking-wider text-content-muted">
             {s.position} · {SITUATION_LABELS[s.situation] ?? s.situation}
           </span>

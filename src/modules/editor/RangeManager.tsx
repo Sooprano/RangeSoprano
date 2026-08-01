@@ -8,6 +8,7 @@ import { useRangeSummaries, type RangeSummary } from '@/store/selectors';
 import { MAX_GROUP_LEN, MAX_NAME_LEN, sanitizeText } from '@/store/schemas';
 import type { Range } from '@/types/poker';
 import { buildGroupTree, type GroupTreeNode } from '@/utils/groupUtils';
+import { TruncatedLabel } from '@/components/TruncatedLabel';
 import { FolderRow } from '@/components/FolderRow';
 import { SortableItem, SortableList } from '@/components/dnd/SortableList';
 import { NewRangeForm, type NewRangePayload } from './NewRangeForm';
@@ -368,9 +369,7 @@ export function RangeManager({
               aria-current={isActive || undefined}
               className="flex min-w-0 flex-1 flex-col items-start gap-0.5 px-2.5 py-2 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
             >
-              <span title={s.name} className="w-full truncate text-sm font-medium">
-                {s.name}
-              </span>
+              <TruncatedLabel text={s.name} className="text-sm font-medium" />
               <span className="text-[10px] uppercase tracking-wider text-content-muted">
                 {subtitle}
               </span>
