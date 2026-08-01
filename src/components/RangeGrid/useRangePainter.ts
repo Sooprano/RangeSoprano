@@ -26,6 +26,7 @@ export type RangePainterHandlers = {
   onMouseDown: (e: ReactMouseEvent<HTMLDivElement>) => void;
   onMouseOver: (e: ReactMouseEvent<HTMLDivElement>) => void;
   onContextMenu: (e: ReactMouseEvent<HTMLDivElement>) => void;
+  onDoubleClick: (e: ReactMouseEvent<HTMLDivElement>) => void;
   onKeyDown: (e: ReactKeyboardEvent<HTMLDivElement>) => void;
 };
 
@@ -37,7 +38,9 @@ function handFromTarget(target: EventTarget | null): HandNotation | null {
   return hand && hand.length > 0 ? hand : null;
 }
 
-// 4A: mouse-only. Touch / pointer support is a 4B follow-up.
+// Painting is mouse-driven (taps synthesize a left-click on touch). Erasing on
+// desktop is right-click; on touch there is no right-click, so a double-tap —
+// which the browser surfaces as `dblclick` — erases the cell instead.
 export function useRangePainter({
   enabled,
   onPaint,
@@ -128,6 +131,23 @@ export function useRangePainter({
     [enabled],
   );
 
+  // Double-tap (mobile) / double-click (desktop) erases the cell. On touch the
+  // two taps also paint the cell first; the erase then clears it — the intended
+  // outcome when a cell was tapped by mistake. A drag never lands here (dblclick
+  // only fires for repeated taps on the same element).
+  const onDoubleClick = useCallback(
+    (e: ReactMouseEvent<HTMLDivElement>) => {
+      if (!enabled) return;
+      const hand = handFromTarget(e.target);
+      if (!hand) return;
+      e.preventDefault();
+      reset();
+      onSessionStartRef.current?.();
+      onEraseRef.current?.(hand);
+    },
+    [enabled, reset],
+  );
+
   const onKeyDown = useCallback(
     (e: ReactKeyboardEvent<HTMLDivElement>) => {
       if (!enabled) return;
@@ -148,7 +168,7 @@ export function useRangePainter({
   );
 
   return useMemo(
-    () => ({ onMouseDown, onMouseOver, onContextMenu, onKeyDown }),
-    [onMouseDown, onMouseOver, onContextMenu, onKeyDown],
+    () => ({ onMouseDown, onMouseOver, onContextMenu, onDoubleClick, onKeyDown }),
+    [onMouseDown, onMouseOver, onContextMenu, onDoubleClick, onKeyDown],
   );
 }

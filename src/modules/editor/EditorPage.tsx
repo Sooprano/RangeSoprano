@@ -278,8 +278,8 @@ export default function EditorPage() {
               />
             </div>
             <p className="text-xs text-content-muted">
-              Clic para pintar · arrastra para pintar varias · clic derecho para
-              borrar · Ctrl+clic derecho rellena mano+ (ej. A5o → A5o..AKo, 44 →
+              Clic para pintar · arrastra para pintar varias · clic derecho o
+              doble toque para borrar · Ctrl+clic derecho rellena mano+ (ej. A5o → A5o..AKo, 44 →
               44..AA) · flechas + Espacio/Enter · 1-9 para cambiar de acción ·
               peso &lt; 100 acumula con acciones existentes · Ctrl+Z deshacer ·
               Ctrl+Shift+Z rehacer.

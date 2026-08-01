@@ -147,7 +147,7 @@ export function DrawingTrainer({ range }: DrawingTrainerProps) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs text-content-muted">
           Pinta las manos que creas que pertenecen a <span className="text-content">{range.name}</span>{' '}
-          · clic o arrastre para agregar · clic derecho para quitar · Ctrl+clic derecho para mano+ (ej. 88+) · luego revelar para comparar.
+          · clic o arrastre para agregar · clic derecho o doble toque para quitar · Ctrl+clic derecho para mano+ (ej. 88+) · luego revelar para comparar.
         </p>
         <div className="flex items-center gap-2">
           <button

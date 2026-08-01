@@ -632,7 +632,7 @@ function SpeedDrawingRun({
       />
 
       <p className="text-center text-xs text-content-muted">
-        Clic o arrastre para pintar · clic derecho para borrar · Ctrl+clic derecho para mano+
+        Clic o arrastre para pintar · clic derecho o doble toque para borrar · Ctrl+clic derecho para mano+
       </p>
     </div>
   );

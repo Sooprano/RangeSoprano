@@ -147,7 +147,7 @@ function RangeGridBase({
       role="grid"
       aria-label={
         editable
-          ? 'Editable poker range grid, 13 by 13. Click or drag to paint, right-click to erase. Use arrow keys to navigate.'
+          ? 'Editable poker range grid, 13 by 13. Click or drag to paint, right-click or double-tap to erase. Use arrow keys to navigate.'
           : 'Poker range grid, 13 by 13. Use arrow keys to navigate.'
       }
       aria-rowcount={SIZE}
@@ -159,6 +159,7 @@ function RangeGridBase({
       onMouseDown={editable ? painter.onMouseDown : undefined}
       onMouseOver={editable ? painter.onMouseOver : undefined}
       onContextMenu={editable ? painter.onContextMenu : undefined}
+      onDoubleClick={editable ? painter.onDoubleClick : undefined}
       className={cn(
         'relative mx-auto grid aspect-square w-full max-w-[min(640px,92vw)]',
         'grid-cols-[repeat(13,minmax(0,1fr))] gap-px',
