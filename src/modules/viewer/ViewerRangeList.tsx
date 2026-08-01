@@ -65,7 +65,7 @@ export function ViewerRangeList({
               : 'text-content-muted hover:bg-surface-hover hover:text-content',
           )}
         >
-          <span className="w-full truncate font-medium">{s.name}</span>
+          <span title={s.name} className="w-full truncate font-medium">{s.name}</span>
           <span className="text-[10px] uppercase tracking-wider text-content-muted">
             {s.position} · {SITUATION_LABELS[s.situation] ?? s.situation}
           </span>

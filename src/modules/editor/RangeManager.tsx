@@ -368,7 +368,7 @@ export function RangeManager({
               aria-current={isActive || undefined}
               className="flex min-w-0 flex-1 flex-col items-start gap-0.5 px-2.5 py-2 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
             >
-              <span className="w-full truncate text-sm font-medium">
+              <span title={s.name} className="w-full truncate text-sm font-medium">
                 {s.name}
               </span>
               <span className="text-[10px] uppercase tracking-wider text-content-muted">
