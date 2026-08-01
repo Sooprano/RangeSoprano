@@ -5,6 +5,7 @@ import { useApplyTheme } from '@/hooks/useApplyTheme';
 import { Toaster } from '@/components/Toaster';
 import { useUiStore } from '@/store/uiStore';
 import { Sidebar } from './Sidebar';
+import { FloatingToolsHost } from './FloatingToolsHost';
 
 export function AppLayout() {
   useApplyTheme();
@@ -47,6 +48,7 @@ export function AppLayout() {
         </div>
       </main>
       <Toaster />
+      <FloatingToolsHost />
     </div>
   );
 }

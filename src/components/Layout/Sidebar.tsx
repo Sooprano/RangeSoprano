@@ -11,9 +11,31 @@ import {
   Pencil,
   Spade,
   Target,
+  Timer,
+  Upload,
   X,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { useFloatingToolsStore } from '@/store/floatingToolsStore';
+import { useImportProfile } from '@/hooks/useImportProfile';
+
+/** Shared item styling so nav links and the "Herramientas" action buttons match. */
+function navItemClass(active: boolean, collapsed: boolean): string {
+  return cn(
+    'group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-200 ease-out-soft',
+    collapsed && 'lg:justify-center lg:px-2',
+    active
+      ? 'bg-accent/15 text-content shadow-[inset_0_0_0_1px_rgb(var(--color-accent)/0.35)]'
+      : 'text-content-muted hover:bg-surface-hover hover:text-content',
+  );
+}
+
+function navIconClass(active: boolean): string {
+  return cn(
+    'h-[18px] w-[18px] shrink-0 transition-colors',
+    active ? 'text-accent-light' : 'text-content-muted group-hover:text-content',
+  );
+}
 
 type NavItem = {
   to: string;
@@ -169,25 +191,11 @@ export function Sidebar({
                   end={end ?? false}
                   onClick={onCloseMobile}
                   title={collapsed ? label : undefined}
-                  className={({ isActive }) =>
-                    cn(
-                      'group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-200 ease-out-soft',
-                      collapsed && 'lg:justify-center lg:px-2',
-                      isActive
-                        ? 'bg-accent/15 text-content shadow-[inset_0_0_0_1px_rgb(var(--color-accent)/0.35)]'
-                        : 'text-content-muted hover:bg-surface-hover hover:text-content',
-                    )
-                  }
+                  className={({ isActive }) => navItemClass(isActive, collapsed)}
                 >
                   {({ isActive }) => (
                     <>
-                      <Icon
-                        className={cn(
-                          'h-[18px] w-[18px] shrink-0 transition-colors',
-                          isActive ? 'text-accent-light' : 'text-content-muted group-hover:text-content',
-                        )}
-                        strokeWidth={2}
-                      />
+                      <Icon className={navIconClass(isActive)} strokeWidth={2} />
                       <span className={cn(collapsed && 'lg:hidden')}>{label}</span>
                     </>
                   )}
@@ -195,6 +203,8 @@ export function Sidebar({
               ))}
             </div>
           ))}
+
+          <ToolsSection collapsed={collapsed} onNavigate={onCloseMobile} />
         </nav>
 
         <div className="mt-auto flex flex-col gap-2 px-3 pb-4 pt-5">
@@ -231,5 +241,74 @@ export function Sidebar({
         </div>
       </aside>
     </>
+  );
+}
+
+/**
+ * "Herramientas" section: action items (not routes) — open the floating session
+ * window (chronometer + randomizer) and import a profile .json. Styled like the
+ * nav items so the sidebar reads as one system.
+ */
+function ToolsSection({
+  collapsed,
+  onNavigate,
+}: {
+  collapsed: boolean;
+  onNavigate: () => void;
+}) {
+  const floatingOpen = useFloatingToolsStore((s) => s.pipWin !== null);
+  const openFloating = useFloatingToolsStore((s) => s.open);
+  const { inputRef, onChange, openPicker } = useImportProfile();
+
+  return (
+    <div className="flex flex-col gap-1">
+      <span
+        className={cn(
+          'px-3 pb-0.5 pt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-content-muted',
+          collapsed && 'lg:hidden',
+        )}
+      >
+        Herramientas
+      </span>
+      {collapsed && (
+        <div aria-hidden className="mx-2 hidden h-px bg-border/60 lg:block" />
+      )}
+
+      <button
+        type="button"
+        onClick={() => {
+          void openFloating();
+          onNavigate();
+        }}
+        aria-pressed={floatingOpen}
+        title={collapsed ? 'Sesión · Cronómetro y randomizador' : 'Cronómetro · Randomizador'}
+        className={navItemClass(floatingOpen, collapsed)}
+      >
+        <Timer className={navIconClass(floatingOpen)} strokeWidth={2} />
+        <span className={cn(collapsed && 'lg:hidden')}>Sesión</span>
+      </button>
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="application/json,.json"
+        onChange={onChange}
+        className="hidden"
+        aria-hidden
+        tabIndex={-1}
+      />
+      <button
+        type="button"
+        onClick={() => {
+          openPicker();
+          onNavigate();
+        }}
+        title="Importar perfil (.json)"
+        className={navItemClass(false, collapsed)}
+      >
+        <Upload className={navIconClass(false)} strokeWidth={2} />
+        <span className={cn(collapsed && 'lg:hidden')}>Importar perfil</span>
+      </button>
+    </div>
   );
 }

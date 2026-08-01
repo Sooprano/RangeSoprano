@@ -1,88 +1,36 @@
-import { useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { ExternalLink, PictureInPicture2, Spade } from 'lucide-react';
+import { ExternalLink, PictureInPicture2 } from 'lucide-react';
 import { ChronometerCard } from '../Chronometer/ChronometerCard';
 import { RandomizerPanel } from '../Randomizer/RandomizerPanel';
-import {
-  isPipSupported,
-  openFloatingWindow,
-} from '@/utils/floatingWindow';
+import { isPipSupported } from '@/utils/floatingWindow';
+import { useFloatingToolsStore } from '@/store/floatingToolsStore';
 
-const FLOATING_WIDTH = 460;
-const FLOATING_HEIGHT = 340;
-const FLOATING_TITLE = 'Range Soprano · Tools';
-
+/**
+ * Viewer "Resumen" tools strip. When the floating window is open (from here or
+ * the sidebar) it shows a "Volver" placeholder; otherwise the inline tools + a
+ * pop-out button. The window itself is owned app-wide by `floatingToolsStore` /
+ * `FloatingToolsHost`, so it survives leaving this page.
+ */
 export function FloatingTools() {
-  const [pipWin, setPipWin] = useState<Window | null>(null);
-  const [container, setContainer] = useState<HTMLDivElement | null>(null);
-  const pipRef = useRef<Window | null>(null);
+  const isOpen = useFloatingToolsStore((s) => s.pipWin !== null);
+  const open = useFloatingToolsStore((s) => s.open);
+  const close = useFloatingToolsStore((s) => s.close);
 
-  // Keep ref in sync for cleanup access
-  useEffect(() => {
-    pipRef.current = pipWin;
-  }, [pipWin]);
-
-  // On unmount (e.g. user leaves overview mode), close any open PiP.
-  useEffect(() => {
-    return () => {
-      pipRef.current?.close();
-    };
-  }, []);
-
-  const handlePopOut = async () => {
-    if (pipWin) return;
-    const win = await openFloatingWindow({
-      width: FLOATING_WIDTH,
-      height: FLOATING_HEIGHT,
-      title: FLOATING_TITLE,
-    });
-    if (!win) return;
-
-    const div = win.document.createElement('div');
-    win.document.body.appendChild(div);
-
-    const onPageHide = () => {
-      setPipWin(null);
-      setContainer(null);
-    };
-    win.addEventListener('pagehide', onPageHide);
-
-    setContainer(div);
-    setPipWin(win);
-  };
-
-  const handleReturn = () => {
-    pipWin?.close();
-  };
-
-  if (pipWin && container) {
-    return (
-      <>
-        <FloatingPlaceholder onReturn={handleReturn} />
-        {createPortal(
-          <FloatingContent onClose={handleReturn} />,
-          container,
-        )}
-      </>
-    );
+  if (isOpen) {
+    return <FloatingPlaceholder onReturn={close} />;
   }
 
   return (
     <div className="relative flex items-start gap-2">
       <ChronometerCard />
       <RandomizerPanel />
-      <PopOutButton onClick={handlePopOut} />
+      <PopOutButton onClick={() => void open()} />
     </div>
   );
 }
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
-interface PopOutButtonProps {
-  onClick: () => void;
-}
-
-function PopOutButton({ onClick }: PopOutButtonProps) {
+function PopOutButton({ onClick }: { onClick: () => void }) {
   const supported = isPipSupported();
   const title = supported
     ? 'Abrir en ventana flotante'
@@ -101,11 +49,7 @@ function PopOutButton({ onClick }: PopOutButtonProps) {
   );
 }
 
-interface FloatingPlaceholderProps {
-  onReturn: () => void;
-}
-
-function FloatingPlaceholder({ onReturn }: FloatingPlaceholderProps) {
+function FloatingPlaceholder({ onReturn }: { onReturn: () => void }) {
   return (
     <button
       type="button"
@@ -117,37 +61,5 @@ function FloatingPlaceholder({ onReturn }: FloatingPlaceholderProps) {
       <span className="text-content-disabled">·</span>
       <span className="font-medium text-accent-light">Volver</span>
     </button>
-  );
-}
-
-interface FloatingContentProps {
-  onClose: () => void;
-}
-
-function FloatingContent({ onClose }: FloatingContentProps) {
-  return (
-    <div className="flex min-h-screen flex-col gap-2 bg-bg p-3">
-      <header className="flex items-center justify-between border-b border-border pb-2">
-        <div className="flex items-center gap-1.5">
-          <Spade className="h-4 w-4 text-accent" strokeWidth={2.25} />
-          <span className="text-sm font-semibold text-content">
-            Range Soprano
-          </span>
-          <span className="text-xs text-content-disabled">· Tools</span>
-        </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-md px-2 py-1 text-xs text-content-muted transition-colors hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
-        >
-          Volver a la página
-        </button>
-      </header>
-
-      <div className="flex flex-col items-stretch gap-2">
-        <ChronometerCard />
-        <RandomizerPanel />
-      </div>
-    </div>
   );
 }
