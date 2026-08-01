@@ -25,6 +25,7 @@ import {
 import { PokerTable } from './PokerTable';
 import { CountdownBar } from './CountdownBar';
 import { AutoAdvanceToggle } from '@/modules/workbook/drillUi';
+import { useActionHotkeys, type ActionHotkeys } from '@/hooks/useActionHotkeys';
 
 type ClassicTrainerProps = {
   range: Range;
@@ -84,6 +85,7 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
     () => trainerAnswerActions(range.actions),
     [range.actions],
   );
+  const hk = useActionHotkeys(orderedActions);
 
   const answer = useCallback(
     (picked: ActionId) => {
@@ -118,7 +120,7 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
     drawNext();
   }, [drawNext]);
 
-  // Keyboard: 1-5 to answer, Enter/Space/N to advance, S to skip.
+  // Keyboard: custom/number keys to answer, Enter/Space/N to advance, S to skip.
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -130,10 +132,10 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
       ) {
         return;
       }
-      const idx = '123456789'.indexOf(e.key);
-      if (idx >= 0 && idx < orderedActions.length) {
+      const actionId = hk.actionForKey(e.key);
+      if (actionId) {
         e.preventDefault();
-        if (!feedback) answer(orderedActions[idx]!.id);
+        if (!feedback) answer(actionId);
         return;
       }
       if (e.key === 'Enter' || e.key === ' ' || e.key === 'n' || e.key === 'N') {
@@ -148,7 +150,7 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [feedback, answer, drawNext, skip, orderedActions]);
+  }, [feedback, answer, drawNext, skip, hk.actionForKey]);
 
   const accuracy = useMemo(
     () => (score.total === 0 ? 0 : (score.correct / score.total) * 100),
@@ -179,6 +181,7 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
           actions={orderedActions}
           feedback={feedback}
           onAnswer={answer}
+          hk={hk}
         />
 
         <div className="min-h-[3.5rem] w-full flex flex-col gap-2">
@@ -191,7 +194,9 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
             </>
           ) : (
             <p className="text-center text-xs text-content-muted">
-              Elige una acción · teclas 1-5 · S para omitir
+              {hk.assigningId
+                ? 'Presioná una tecla para asignarla · Esc cancela · ⌫ borra'
+                : 'Elige una acción · S para omitir · clic derecho en un botón para asignar tu tecla'}
             </p>
           )}
         </div>
@@ -265,31 +270,41 @@ type ActionGridProps = {
   actions: ActionDef[];
   feedback: Feedback | null;
   onAnswer: (action: ActionId) => void;
+  hk: ActionHotkeys;
 };
 
-function ActionGrid({ actions, feedback, onAnswer }: ActionGridProps) {
+function ActionGrid({ actions, feedback, onAnswer, hk }: ActionGridProps) {
   return (
     <div className="grid w-full max-w-md grid-cols-2 gap-1.5 sm:grid-cols-3">
-      {actions.map((def, i) => {
+      {actions.map((def) => {
         const isExpected = feedback?.expected === def.id;
         const isPicked = feedback?.picked === def.id;
+        const isAssigning = hk.assigningId === def.id;
+        const key = hk.effectiveKey(def.id);
         return (
           <button
             key={def.id}
             type="button"
             disabled={feedback !== null}
             onClick={() => onAnswer(def.id)}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              hk.beginAssign(def.id);
+            }}
+            title="Clic derecho para asignar tu tecla"
             className={cn(
               'flex flex-row items-center justify-between gap-2 rounded-lg border px-2.5 py-1.5 text-xs font-medium',
               'transition-colors duration-150 ease-out-soft',
               'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light',
-              feedback
-                ? isExpected
-                  ? 'border-emerald-500/60 bg-emerald-500/10 text-content'
-                  : isPicked
-                    ? 'border-rose-500/60 bg-rose-500/10 text-content'
-                    : 'border-border bg-surface/40 text-content-muted opacity-60'
-                : 'border-border bg-surface/40 text-content hover:bg-surface-hover',
+              isAssigning
+                ? 'border-accent bg-accent/10 text-content ring-1 ring-accent'
+                : feedback
+                  ? isExpected
+                    ? 'border-emerald-500/60 bg-emerald-500/10 text-content'
+                    : isPicked
+                      ? 'border-rose-500/60 bg-rose-500/10 text-content'
+                      : 'border-border bg-surface/40 text-content-muted opacity-60'
+                  : 'border-border bg-surface/40 text-content hover:bg-surface-hover',
             )}
           >
             <span
@@ -298,8 +313,15 @@ function ActionGrid({ actions, feedback, onAnswer }: ActionGridProps) {
               style={{ backgroundColor: def.color }}
             />
             <span className="flex-1 truncate text-left">{def.label}</span>
-            <span className="shrink-0 rounded bg-surface px-1 py-px text-[10px] tabular-nums tracking-wider text-content-muted">
-              {i + 1}
+            <span
+              className={cn(
+                'shrink-0 rounded px-1 py-px text-[10px] font-semibold uppercase tracking-wider tabular-nums',
+                isAssigning
+                  ? 'bg-accent/20 text-accent-light'
+                  : 'bg-surface text-content-muted',
+              )}
+            >
+              {isAssigning ? '…' : key || '·'}
             </span>
           </button>
         );

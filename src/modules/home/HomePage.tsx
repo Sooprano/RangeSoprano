@@ -448,7 +448,8 @@ const FAQS: readonly Faq[] = [
 type Shortcut = { keys: string; desc: string };
 
 const SHORTCUTS: readonly Shortcut[] = [
-  { keys: '1 – 9', desc: 'Entrenador · selecciona acción / Editor · pincel rápido' },
+  { keys: '1 – 9', desc: 'Entrenador · selecciona acción (o tu tecla personalizada) / Editor · pincel rápido' },
+  { keys: 'RightClick (en un botón)', desc: 'Entrenador Clásico / Velocidad · asigná tu propia tecla a esa acción (Esc cancela · ⌫ borra)' },
   { keys: 'Enter / Space / N', desc: 'Entrenador Clásico · siguiente mano (también auto en 1.5 s)' },
   { keys: 'S', desc: 'Entrenador Clásico · saltear mano' },
   { keys: 'Ctrl + Z / Ctrl + Y', desc: 'Editor · Undo / Redo' },

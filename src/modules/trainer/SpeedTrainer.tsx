@@ -35,6 +35,7 @@ import {
 } from '@/utils/actionMeta';
 import { expandPlus } from '@/utils/handRangeParser';
 import { sampleTrainerHand, type TrainerHand } from '@/utils/trainerSampler';
+import { useActionHotkeys } from '@/hooks/useActionHotkeys';
 import { computeRangeDiff, type RangeDiff } from '@/utils/rangeDiff';
 import { DiffGrid } from './DiffGrid';
 import { PokerTable } from './PokerTable';
@@ -347,6 +348,7 @@ function SpeedClassicRun({
     () => trainerAnswerActions(range.actions),
     [range.actions],
   );
+  const hk = useActionHotkeys(orderedActions);
 
   const [hand, setHand] = useState<TrainerHand>(() => sampleTrainerHand(range));
   const [feedback, setFeedback] = useState<{ picked: ActionId; correct: boolean } | null>(null);
@@ -412,15 +414,15 @@ function SpeedClassicRun({
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       const target = e.target as HTMLElement | null;
       if (target?.closest('input, textarea, select, [contenteditable="true"]')) return;
-      const idx = '123456789'.indexOf(e.key);
-      if (idx >= 0 && idx < orderedActions.length) {
+      const actionId = hk.actionForKey(e.key);
+      if (actionId) {
         e.preventDefault();
-        answer(orderedActions[idx]!.id);
+        answer(actionId);
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [answer, orderedActions]);
+  }, [answer, hk.actionForKey]);
 
   const accuracy = score.total === 0 ? 0 : (score.correct / score.total) * 100;
 
@@ -446,37 +448,55 @@ function SpeedClassicRun({
         />
 
         <div className="grid w-full max-w-md grid-cols-2 gap-1.5 sm:grid-cols-3">
-          {orderedActions.map((def, i) => {
+          {orderedActions.map((def) => {
             const isPicked = feedback?.picked === def.id;
             const flashCorrect = feedback && isPicked && feedback.correct;
             const flashWrong = feedback && isPicked && !feedback.correct;
+            const isAssigning = hk.assigningId === def.id;
+            const key = hk.effectiveKey(def.id);
             return (
               <button
                 key={def.id}
                 type="button"
                 disabled={feedback !== null}
                 onClick={() => answer(def.id)}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  hk.beginAssign(def.id);
+                }}
+                title="Clic derecho para asignar tu tecla"
                 className={cn(
                   'flex flex-row items-center justify-between gap-2 rounded-lg border px-2.5 py-1.5 text-xs font-medium',
                   'transition-colors duration-100',
                   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light',
-                  flashCorrect
-                    ? 'border-emerald-500/70 bg-emerald-500/15 text-content'
-                    : flashWrong
-                      ? 'border-rose-500/70 bg-rose-500/15 text-content'
-                      : 'border-border bg-surface/40 text-content hover:bg-surface-hover',
+                  isAssigning
+                    ? 'border-accent bg-accent/10 text-content ring-1 ring-accent'
+                    : flashCorrect
+                      ? 'border-emerald-500/70 bg-emerald-500/15 text-content'
+                      : flashWrong
+                        ? 'border-rose-500/70 bg-rose-500/15 text-content'
+                        : 'border-border bg-surface/40 text-content hover:bg-surface-hover',
                 )}
               >
                 <span aria-hidden className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: def.color }} />
                 <span className="flex-1 truncate text-left">{def.label}</span>
-                <span className="shrink-0 rounded bg-surface px-1 py-px text-[10px] tabular-nums tracking-wider text-content-muted">{i + 1}</span>
+                <span
+                  className={cn(
+                    'shrink-0 rounded px-1 py-px text-[10px] font-semibold uppercase tracking-wider tabular-nums',
+                    isAssigning ? 'bg-accent/20 text-accent-light' : 'bg-surface text-content-muted',
+                  )}
+                >
+                  {isAssigning ? '…' : key || '·'}
+                </span>
               </button>
             );
           })}
         </div>
 
         <p className="text-center text-xs text-content-muted">
-          Elige rápido · teclas 1-{orderedActions.length} · {formatDurationLabel(duration)} total
+          {hk.assigningId
+            ? 'Presioná una tecla para asignarla · Esc cancela · ⌫ borra'
+            : `Elige rápido · ${formatDurationLabel(duration)} total · clic derecho en un botón para asignar tu tecla`}
         </p>
       </div>
     </div>

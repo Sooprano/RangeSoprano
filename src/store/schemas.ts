@@ -6,6 +6,7 @@ import { DEFAULT_ACTION_DEFS } from '@/utils/actionMeta';
 export const CURRENT_RANGE_STORE_VERSION = 1;
 export const CURRENT_UI_STORE_VERSION = 2;
 export const CURRENT_LEADERBOARD_STORE_VERSION = 1;
+export const CURRENT_HOTKEY_STORE_VERSION = 1;
 export const LEADERBOARD_TOP_N = 5;
 export const CURRENT_ODDS_LEADERBOARD_VERSION = 1;
 export const ODDS_LEADERBOARD_TOP_N = 5;
@@ -239,6 +240,19 @@ export type SpeedDrawingEntry = z.infer<typeof zSpeedDrawingEntry>;
 export type SpeedEntry = z.infer<typeof zSpeedEntry>;
 export type RangeLeaderboard = z.infer<typeof zRangeLeaderboard>;
 export type PersistedLeaderboardState = z.infer<typeof zPersistedLeaderboardState>;
+
+/**
+ * Trainer custom hotkeys: normalized action label → single key char. Global by
+ * label so the same key carries across every range that has an action of that
+ * name (and across Classic/Speed).
+ */
+export const zPersistedHotkeyState = z
+  .object({
+    bindings: z.record(z.string(), z.string()).default({}),
+  })
+  .strict();
+
+export type PersistedHotkeyState = z.infer<typeof zPersistedHotkeyState>;
 
 const ODDS_DURATION_VALUES = ODDS_DURATIONS as readonly number[];
 
