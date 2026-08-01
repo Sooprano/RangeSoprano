@@ -1,9 +1,11 @@
 import type { Action, HandNotation, Range, RangeCellData } from '@/types/poker';
 import { ALL_HANDS, combosOf } from './handUtils';
+import { impliedFoldId } from './actionMeta';
 
 export type TrainerHand = {
   hand: HandNotation;
-  /** Sampled expected answer for this draw. FOLD when the cell is missing. */
+  /** Sampled expected answer for this draw. The range's fold action when the cell
+   *  is missing (or the synthetic FOLD id when the range has no fold action). */
   expectedAction: Action;
   /** The range cell, or null if the hand is an implicit FOLD. */
   cell: RangeCellData | null;
@@ -24,22 +26,23 @@ function sampleHandIndex(rng: () => number): number {
 
 function sampleExpectedAction(
   cell: RangeCellData | null,
+  foldId: Action,
   rng: () => number,
 ): Action {
-  if (!cell || cell.actions.length === 0) return 'FOLD';
+  if (!cell || cell.actions.length === 0) return foldId;
   const sum = cell.actions.reduce((s, a) => s + a.weight, 0);
-  // Residual mass below 100 collapses into FOLD so mixed cells still
-  // train the discipline of folding the unassigned slice.
+  // Residual mass below 100 collapses into the fold action so mixed cells
+  // still train the discipline of folding the unassigned slice.
   const residual = Math.max(0, 100 - sum);
   const total = sum + residual;
-  if (total <= 0) return 'FOLD';
+  if (total <= 0) return foldId;
   const target = rng() * total;
   let acc = 0;
   for (const a of cell.actions) {
     acc += a.weight;
     if (target < acc) return a.action;
   }
-  return 'FOLD';
+  return foldId;
 }
 
 /**
@@ -55,6 +58,7 @@ export function sampleTrainerHand(
   const idx = sampleHandIndex(rng);
   const hand = ALL_HANDS[idx]!;
   const cell = range.cells[hand] ?? null;
-  const expectedAction = sampleExpectedAction(cell, rng);
+  const foldId = impliedFoldId(range.actions);
+  const expectedAction = sampleExpectedAction(cell, foldId, rng);
   return { hand, expectedAction, cell };
 }

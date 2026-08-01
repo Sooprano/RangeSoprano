@@ -27,7 +27,12 @@ import type {
   Range,
   RangeCellData,
 } from '@/types/poker';
-import { actionColor, actionLabel, buildActionDefMap } from '@/utils/actionMeta';
+import {
+  actionColor,
+  actionLabel,
+  buildActionDefMap,
+  trainerAnswerActions,
+} from '@/utils/actionMeta';
 import { expandPlus } from '@/utils/handRangeParser';
 import { sampleTrainerHand, type TrainerHand } from '@/utils/trainerSampler';
 import { computeRangeDiff, type RangeDiff } from '@/utils/rangeDiff';
@@ -187,7 +192,7 @@ export function SpeedTrainer({ range }: SpeedTrainerProps) {
       entry={lastEntry}
       madeTop={madeTop}
       board={board}
-      rangeActions={range.actions}
+      rangeActions={trainerAnswerActions(range.actions)}
       sessionMistakes={sessionMistakes}
       sessionDiff={sessionDiff}
       onPlayAgain={start}
@@ -339,7 +344,7 @@ function SpeedClassicRun({
   onCancel: () => void;
 }) {
   const orderedActions = useMemo(
-    () => [...range.actions].sort((a, b) => a.order - b.order),
+    () => trainerAnswerActions(range.actions),
     [range.actions],
   );
 

@@ -27,6 +27,48 @@ export const NEW_RANGE_ACTION_DEFS: ActionDef[] = [
 /** Color used when an action ID isn't found in the range's defs. */
 export const ORPHAN_ACTION_COLOR = '#9ca3af';
 
+/** Action id the trainer sampler emits for hands outside the range (implicit fold). */
+export const FOLD_ID: ActionId = 'FOLD';
+
+/** Synthetic Fold action used when a range's palette has no fold action of its own. */
+export const FOLD_FALLBACK_DEF: ActionDef = {
+  id: FOLD_ID,
+  label: 'Fold',
+  color: LEGACY_COLORS.FOLD,
+  order: Number.POSITIVE_INFINITY,
+};
+
+/**
+ * The palette action that represents folding, if any: an explicit FOLD id or a
+ * label that reads as "fold" (the poker term is kept in English across the UI,
+ * e.g. imported "OR to Fold" ranges whose fold action carries a custom id).
+ */
+export function foldActionDef(actions: ActionDef[]): ActionDef | undefined {
+  return (
+    actions.find((a) => a.id === FOLD_ID) ??
+    actions.find((a) => a.label.trim().toLowerCase().includes('fold'))
+  );
+}
+
+/**
+ * Id the trainer sampler uses for hands outside the range (implicit fold): the
+ * range's own fold action when present, else the synthetic FOLD id.
+ */
+export function impliedFoldId(actions: ActionDef[]): ActionId {
+  return foldActionDef(actions)?.id ?? FOLD_ID;
+}
+
+/**
+ * Answer buttons for the trainer: the range's palette sorted by order, plus a
+ * synthetic Fold only when the palette has no fold action of its own — so hands
+ * outside the range (which the sampler marks as an implicit fold) are always
+ * answerable.
+ */
+export function trainerAnswerActions(actions: ActionDef[]): ActionDef[] {
+  const sorted = [...actions].sort((a, b) => a.order - b.order);
+  return foldActionDef(sorted) ? sorted : [...sorted, FOLD_FALLBACK_DEF];
+}
+
 export type ActionDefMap = ReadonlyMap<ActionId, ActionDef>;
 
 export function buildActionDefMap(defs: ActionDef[]): ActionDefMap {

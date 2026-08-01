@@ -10,26 +10,20 @@ const AUTO_ADVANCE_MS = 1500;
 import { Check, RotateCcw, SkipForward, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import type { ActionDef, ActionId, Range } from '@/types/poker';
-import { actionColor, actionDefOf, actionLabel } from '@/utils/actionMeta';
+import {
+  actionColor,
+  actionDefOf,
+  actionLabel,
+  FOLD_FALLBACK_DEF,
+  foldActionDef,
+  trainerAnswerActions,
+} from '@/utils/actionMeta';
 import {
   sampleTrainerHand,
   type TrainerHand,
 } from '@/utils/trainerSampler';
 import { PokerTable } from './PokerTable';
 import { CountdownBar } from './CountdownBar';
-
-const FOLD_ID: ActionId = 'FOLD';
-
-function foldDefOrFallback(actions: ActionDef[]): ActionDef {
-  return (
-    actions.find((a) => a.id === FOLD_ID) ?? {
-      id: FOLD_ID,
-      label: 'Fold',
-      color: '#3f3a5c',
-      order: Number.POSITIVE_INFINITY,
-    }
-  );
-}
 
 type ClassicTrainerProps = {
   range: Range;
@@ -85,7 +79,7 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
   }, [feedback, drawNext]);
 
   const orderedActions = useMemo(
-    () => [...range.actions].sort((a, b) => a.order - b.order),
+    () => trainerAnswerActions(range.actions),
     [range.actions],
   );
 
@@ -188,7 +182,7 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
         <div className="min-h-[3.5rem] w-full flex flex-col gap-2">
           {feedback ? (
             <>
-              <FeedbackPanel feedback={feedback} actions={range.actions} />
+              <FeedbackPanel feedback={feedback} actions={orderedActions} />
               <CountdownBar key={score.total} durationMs={AUTO_ADVANCE_MS} />
             </>
           ) : (
@@ -309,7 +303,7 @@ function FeedbackPanel({
   feedback: Feedback;
   actions: ActionDef[];
 }) {
-  const fold = foldDefOrFallback(actions);
+  const fold = foldActionDef(actions) ?? FOLD_FALLBACK_DEF;
   const cell = feedback.hand.cell;
   const sumWeights = cell?.actions.reduce((s, a) => s + a.weight, 0) ?? 0;
   const residualFold = cell ? Math.max(0, 100 - sumWeights) : 100;
