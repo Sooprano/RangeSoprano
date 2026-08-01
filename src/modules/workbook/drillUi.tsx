@@ -172,9 +172,12 @@ export function ChipFilter<T extends string>({
 export function AutoAdvanceToggle({
   value,
   onChange,
+  durationMs = AUTO_ADVANCE_MS,
 }: {
   value: boolean;
   onChange: (next: boolean) => void;
+  /** Countdown length shown in the label; defaults to the drills' 2s. */
+  durationMs?: number;
 }) {
   return (
     <label
@@ -200,7 +203,7 @@ export function AutoAdvanceToggle({
           value ? 'border-accent bg-accent' : 'border-border bg-surface',
         )}
       />
-      Auto-avance ({(AUTO_ADVANCE_MS / 1000).toFixed(1)}s)
+      Auto-avance ({(durationMs / 1000).toFixed(1)}s)
     </label>
   );
 }

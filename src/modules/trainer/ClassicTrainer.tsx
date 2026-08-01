@@ -24,6 +24,7 @@ import {
 } from '@/utils/trainerSampler';
 import { PokerTable } from './PokerTable';
 import { CountdownBar } from './CountdownBar';
+import { AutoAdvanceToggle } from '@/modules/workbook/drillUi';
 
 type ClassicTrainerProps = {
   range: Range;
@@ -54,6 +55,7 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
   const [current, setCurrent] = useState<TrainerHand | null>(null);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [score, setScore] = useState<Score>(INITIAL_SCORE);
+  const [autoAdvance, setAutoAdvance] = useState(true);
   const rangeIdRef = useRef(range.id);
 
   const drawNext = useCallback(() => {
@@ -71,12 +73,12 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
     setCurrent(sampleTrainerHand(range));
   }, [range]);
 
-  // Auto-advance to next hand after 1.5s when feedback is shown
+  // Auto-advance to next hand after 1.5s when feedback is shown (if enabled)
   useEffect(() => {
-    if (!feedback) return;
+    if (!feedback || !autoAdvance) return;
     const id = setTimeout(drawNext, AUTO_ADVANCE_MS);
     return () => clearTimeout(id);
-  }, [feedback, drawNext]);
+  }, [feedback, autoAdvance, drawNext]);
 
   const orderedActions = useMemo(
     () => trainerAnswerActions(range.actions),
@@ -183,7 +185,9 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
           {feedback ? (
             <>
               <FeedbackPanel feedback={feedback} actions={orderedActions} />
-              <CountdownBar key={score.total} durationMs={AUTO_ADVANCE_MS} />
+              {autoAdvance && (
+                <CountdownBar key={score.total} durationMs={AUTO_ADVANCE_MS} />
+              )}
             </>
           ) : (
             <p className="text-center text-xs text-content-muted">
@@ -192,7 +196,7 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-center gap-2">
           <button
             type="button"
             onClick={feedback ? drawNext : skip}
@@ -202,7 +206,7 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
               <>
                 Siguiente mano
                 <span className="text-[10px] uppercase tracking-wider text-white/70">
-                  ↵ / auto
+                  {autoAdvance ? '↵ / auto' : '↵'}
                 </span>
               </>
             ) : (
@@ -220,6 +224,11 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
             <RotateCcw className="h-3.5 w-3.5" strokeWidth={2.25} />
             Reiniciar puntaje
           </button>
+          <AutoAdvanceToggle
+            value={autoAdvance}
+            onChange={setAutoAdvance}
+            durationMs={AUTO_ADVANCE_MS}
+          />
         </div>
       </div>
     </div>
