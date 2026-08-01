@@ -196,7 +196,7 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
           )}
         </div>
 
-        <div className="flex flex-wrap items-center justify-center gap-2">
+        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={feedback ? drawNext : skip}
@@ -224,12 +224,15 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
             <RotateCcw className="h-3.5 w-3.5" strokeWidth={2.25} />
             Reiniciar puntaje
           </button>
-          <AutoAdvanceToggle
-            value={autoAdvance}
-            onChange={setAutoAdvance}
-            durationMs={AUTO_ADVANCE_MS}
-          />
         </div>
+      </div>
+
+      <div className="flex justify-center">
+        <AutoAdvanceToggle
+          value={autoAdvance}
+          onChange={setAutoAdvance}
+          durationMs={AUTO_ADVANCE_MS}
+        />
       </div>
     </div>
   );
