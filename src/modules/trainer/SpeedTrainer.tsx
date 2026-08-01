@@ -464,7 +464,7 @@ function SpeedClassicRun({
                   e.preventDefault();
                   hk.beginAssign(def.id);
                 }}
-                title="Clic derecho para asignar tu tecla"
+                title="Clic derecho para asignar tu hotkey"
                 className={cn(
                   'flex flex-row items-center justify-between gap-2 rounded-lg border px-2.5 py-1.5 text-xs font-medium',
                   'transition-colors duration-100',
@@ -495,8 +495,8 @@ function SpeedClassicRun({
 
         <p className="text-center text-xs text-content-muted">
           {hk.assigningId
-            ? 'Presioná una tecla para asignarla · Esc cancela · ⌫ borra'
-            : `Elige rápido · ${formatDurationLabel(duration)} total · clic derecho en un botón para asignar tu tecla`}
+            ? 'Presiona una tecla para asignarla · Esc cancela · ⌫ borra'
+            : `Elige rápido · ${formatDurationLabel(duration)} total · clic derecho en un botón para asignar tu hotkey`}
         </p>
       </div>
     </div>

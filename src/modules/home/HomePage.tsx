@@ -61,7 +61,7 @@ const MODULES: readonly ModuleCard[] = [
     label: 'Entrenador',
     icon: Target,
     description:
-      'Entrena manos en mesa 6-max o Heads-Up contra tus rangos guardados. Modos Clásico (auto-avance 1.5 s), Velocidad (contrarreloj con tabla de líderes local) y Dibujo (pintar el rango de memoria). Filtros por posición, situación y villano.',
+      'Entrena manos en mesa 6-max o Heads-Up contra tus rangos guardados. Modos Clásico (con auto-avance activable), Velocidad (contrarreloj con tabla de líderes local) y Dibujo (pintar el rango de memoria). Asigna tus propias hotkeys a cada acción (las mismas que usas en las salas) con clic derecho en el botón. Filtros por posición, situación y villano.',
   },
   {
     to: '/editor',
@@ -115,14 +115,14 @@ const FAQS: readonly Faq[] = [
         Es un archivo de texto con todos tus rangos serializados. Lo descargas
         desde <span className="font-medium text-content">Editor → Export → Download all ranges JSON</span>{' '}
         y lo guardas donde quieras (Drive, Dropbox, pendrive). En otra PC o en
-        el celular lo importas desde <span className="font-medium text-content">Home → Importar perfil completo</span>{' '}
-        y recuperas todo. El archivo también incluye los colores de tus carpetas
+        el celular lo importas desde <span className="font-medium text-content">la barra lateral → Herramientas → Importar perfil</span>{' '}
+        (o desde Home) y recuperas todo. El archivo también incluye los colores de tus carpetas
         y la configuración del randomizador (presets, sets, frecuencia), así
         que el perfil viaja completo.
       </>
     ),
     aPlain:
-      'Es un archivo de texto con todos tus rangos serializados. Lo descargas desde Editor → Export → Download all ranges JSON y lo guardas donde quieras (Drive, Dropbox, pendrive). En otra PC o en el celular lo importas desde Home → Importar perfil completo y recuperas todo. El archivo también incluye los colores de tus carpetas y la configuración del randomizador (presets, sets, frecuencia), así que el perfil viaja completo.',
+      'Es un archivo de texto con todos tus rangos serializados. Lo descargas desde Editor → Export → Download all ranges JSON y lo guardas donde quieras (Drive, Dropbox, pendrive). En otra PC o en el celular lo importas desde la barra lateral → Herramientas → Importar perfil (o desde Home) y recuperas todo. El archivo también incluye los colores de tus carpetas y la configuración del randomizador (presets, sets, frecuencia), así que el perfil viaja completo.',
   },
   {
     q: '¿Puedo exportar mis rangos a Flopzilla?',
@@ -215,9 +215,12 @@ const FAQS: readonly Faq[] = [
         randomizador{' '}
         <span className="font-medium text-content">siempre encima</span> del
         cliente de poker. Útil para verlos sin hacer Alt+Tab mientras juegas en
-        PokerStars, GG, WPT Global u otra mesa real. Click en el icono⊡{' '}
-        arriba a la derecha del cluster de tools en{' '}
-        <span className="font-medium text-content">Visualizador → Resumen</span>.
+        PokerStars, GG, WPT Global u otra mesa real. La abres desde{' '}
+        <span className="font-medium text-content">
+          la barra lateral → Herramientas → Sesión
+        </span>{' '}
+        (o con el icono ⊡ del cluster de tools en Visualizador → Resumen), y
+        queda abierta aunque cambies de módulo.
         Es redimensionable arrastrando los bordes y comparte estado con la
         pestaña — tirar en la flotante también se ve en la pestaña, play/pausa
         del cronómetro idem. Funciona nativo en{' '}
@@ -229,7 +232,7 @@ const FAQS: readonly Faq[] = [
       </>
     ),
     aPlain:
-      'Es una ventana del sistema operativo que abre el cronómetro y el randomizador siempre encima del cliente de poker. Útil para verlos sin hacer Alt+Tab mientras juegas en PokerStars, GG, WPT Global u otra mesa real. Click en el icono arriba a la derecha del cluster de tools en Visualizador → Resumen. Es redimensionable arrastrando los bordes y comparte estado con la pestaña — tirar en la flotante también se ve en la pestaña, play/pausa del cronómetro idem. Funciona nativo en Chrome 116+, Edge, Brave y Opera (Document Picture-in-Picture API); en Firefox y Safari abre una ventana normal del navegador, redimensionable pero no siempre-encima.',
+      'Es una ventana del sistema operativo que abre el cronómetro y el randomizador siempre encima del cliente de poker. Útil para verlos sin hacer Alt+Tab mientras juegas en PokerStars, GG, WPT Global u otra mesa real. La abres desde la barra lateral → Herramientas → Sesión (o con el icono del cluster de tools en Visualizador → Resumen), y queda abierta aunque cambies de módulo. Es redimensionable arrastrando los bordes y comparte estado con la pestaña — tirar en la flotante también se ve en la pestaña, play/pausa del cronómetro idem. Funciona nativo en Chrome 116+, Edge, Brave y Opera (Document Picture-in-Picture API); en Firefox y Safari abre una ventana normal del navegador, redimensionable pero no siempre-encima.',
   },
   {
     q: '¿Mis rangos se borran si limpio el navegador?',
@@ -242,6 +245,10 @@ const FAQS: readonly Faq[] = [
   {
     q: '¿Sirve para 6-max y Heads-Up?',
     a: 'Sí. Cada rango se crea con un formato (6max o HU). El Entrenador pinta la mesa acorde y el Visualizador filtra por formato.',
+  },
+  {
+    q: '¿Puedo usar mis propias teclas (hotkeys) en el Entrenador?',
+    a: 'Sí. En el Entrenador Clásico y Velocidad, haz clic derecho sobre el botón de una acción y presiona la tecla que quieras (por ejemplo f para Fold, r para Raise, d para Call), las mismas que usas en tu sala. Se guardan por nombre de acción, así que valen para todos los rangos de la misma familia y también en el modo Velocidad. Esc cancela y Backspace borra. Las acciones sin hotkey propia siguen respondiendo con su número (1-9), y todo queda guardado para la próxima sesión.',
   },
   {
     q: '¿Cómo imprimo varios rangos a PDF?',
@@ -448,13 +455,13 @@ const FAQS: readonly Faq[] = [
 type Shortcut = { keys: string; desc: string };
 
 const SHORTCUTS: readonly Shortcut[] = [
-  { keys: '1 – 9', desc: 'Entrenador · selecciona acción (o tu tecla personalizada) / Editor · pincel rápido' },
-  { keys: 'RightClick (en un botón)', desc: 'Entrenador Clásico / Velocidad · asigná tu propia tecla a esa acción (Esc cancela · ⌫ borra)' },
+  { keys: '1 – 9', desc: 'Entrenador · selecciona acción (o tu hotkey personalizada) / Editor · pincel rápido' },
+  { keys: 'RightClick (en un botón)', desc: 'Entrenador Clásico / Velocidad · asigna tu propia hotkey a esa acción (Esc cancela · ⌫ borra)' },
   { keys: 'Enter / Space / N', desc: 'Entrenador Clásico · siguiente mano (también auto en 1.5 s)' },
   { keys: 'S', desc: 'Entrenador Clásico · saltear mano' },
   { keys: 'Ctrl + Z / Ctrl + Y', desc: 'Editor · Undo / Redo' },
   { keys: 'Ctrl + RightClick', desc: 'Editor / Trainer · Hand+ expansion (ej. 88+ pinta 88, 99, TT…)' },
-  { keys: 'RightClick', desc: 'Editor · borra la celda activa' },
+  { keys: 'RightClick / doble toque', desc: 'Editor y Entrenador Dibujo · borra la celda (doble toque en móvil, sin clic derecho)' },
 ];
 
 export default function HomePage() {
@@ -619,6 +626,9 @@ export default function HomePage() {
               con tabla de líderes local) o{' '}
               <span className="font-medium text-content">Dibujo</span> (pinta el rango de
               memoria y compara con la verdad). Las tres modalidades sobre mesa 6-max o HU.
+              Puedes asignar tus propias{' '}
+              <span className="font-medium text-content">hotkeys</span> a cada acción (clic
+              derecho en el botón) para responder con las mismas teclas de tu sala.
             </div>
           </li>
           <li className="flex items-start gap-3">

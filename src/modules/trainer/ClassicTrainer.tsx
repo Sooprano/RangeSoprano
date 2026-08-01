@@ -195,8 +195,8 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
           ) : (
             <p className="text-center text-xs text-content-muted">
               {hk.assigningId
-                ? 'Presioná una tecla para asignarla · Esc cancela · ⌫ borra'
-                : 'Elige una acción · S para omitir · clic derecho en un botón para asignar tu tecla'}
+                ? 'Presiona una tecla para asignarla · Esc cancela · ⌫ borra'
+                : 'Elige una acción · S para omitir · clic derecho en un botón para asignar tu hotkey'}
             </p>
           )}
         </div>
@@ -291,7 +291,7 @@ function ActionGrid({ actions, feedback, onAnswer, hk }: ActionGridProps) {
               e.preventDefault();
               hk.beginAssign(def.id);
             }}
-            title="Clic derecho para asignar tu tecla"
+            title="Clic derecho para asignar tu hotkey"
             className={cn(
               'flex flex-row items-center justify-between gap-2 rounded-lg border px-2.5 py-1.5 text-xs font-medium',
               'transition-colors duration-150 ease-out-soft',
