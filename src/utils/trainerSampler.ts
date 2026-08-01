@@ -1,11 +1,13 @@
 import type { Action, HandNotation, Range, RangeCellData } from '@/types/poker';
 import { ALL_HANDS, combosOf } from './handUtils';
-import { impliedFoldId } from './actionMeta';
+
+/** Hands outside the range (and residual mass) are a direct preflop fold. */
+const FOLD_ID: Action = 'FOLD';
 
 export type TrainerHand = {
   hand: HandNotation;
-  /** Sampled expected answer for this draw. The range's fold action when the cell
-   *  is missing (or the synthetic FOLD id when the range has no fold action). */
+  /** Sampled expected answer for this draw. A direct FOLD when the cell is
+   *  missing (a hand outside the range) or for a mixed cell's residual mass. */
   expectedAction: Action;
   /** The range cell, or null if the hand is an implicit FOLD. */
   cell: RangeCellData | null;
@@ -26,23 +28,22 @@ function sampleHandIndex(rng: () => number): number {
 
 function sampleExpectedAction(
   cell: RangeCellData | null,
-  foldId: Action,
   rng: () => number,
 ): Action {
-  if (!cell || cell.actions.length === 0) return foldId;
+  if (!cell || cell.actions.length === 0) return FOLD_ID;
   const sum = cell.actions.reduce((s, a) => s + a.weight, 0);
-  // Residual mass below 100 collapses into the fold action so mixed cells
-  // still train the discipline of folding the unassigned slice.
+  // Residual mass below 100 collapses into FOLD so mixed cells still
+  // train the discipline of folding the unassigned slice.
   const residual = Math.max(0, 100 - sum);
   const total = sum + residual;
-  if (total <= 0) return foldId;
+  if (total <= 0) return FOLD_ID;
   const target = rng() * total;
   let acc = 0;
   for (const a of cell.actions) {
     acc += a.weight;
     if (target < acc) return a.action;
   }
-  return foldId;
+  return FOLD_ID;
 }
 
 /**
@@ -58,7 +59,6 @@ export function sampleTrainerHand(
   const idx = sampleHandIndex(rng);
   const hand = ALL_HANDS[idx]!;
   const cell = range.cells[hand] ?? null;
-  const foldId = impliedFoldId(range.actions);
-  const expectedAction = sampleExpectedAction(cell, foldId, rng);
+  const expectedAction = sampleExpectedAction(cell, rng);
   return { hand, expectedAction, cell };
 }

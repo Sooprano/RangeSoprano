@@ -39,30 +39,21 @@ export const FOLD_FALLBACK_DEF: ActionDef = {
 };
 
 /**
- * The palette action that represents folding, if any: an explicit FOLD id or a
- * label that reads as "fold" (the poker term is kept in English across the UI,
- * e.g. imported "OR to Fold" ranges whose fold action carries a custom id).
+ * The palette's own generic direct-fold action, if it has one (strict FOLD id).
+ * A custom action such as "OR to Fold" (open-raise, then fold to a 3-bet) is a
+ * DIFFERENT decision from a direct preflop fold, so it deliberately does NOT
+ * count here — otherwise hands outside the range (a direct fold) would be
+ * conflated with a range-specific action.
  */
 export function foldActionDef(actions: ActionDef[]): ActionDef | undefined {
-  return (
-    actions.find((a) => a.id === FOLD_ID) ??
-    actions.find((a) => a.label.trim().toLowerCase().includes('fold'))
-  );
-}
-
-/**
- * Id the trainer sampler uses for hands outside the range (implicit fold): the
- * range's own fold action when present, else the synthetic FOLD id.
- */
-export function impliedFoldId(actions: ActionDef[]): ActionId {
-  return foldActionDef(actions)?.id ?? FOLD_ID;
+  return actions.find((a) => a.id === FOLD_ID);
 }
 
 /**
  * Answer buttons for the trainer: the range's palette sorted by order, plus a
- * synthetic Fold only when the palette has no fold action of its own — so hands
- * outside the range (which the sampler marks as an implicit fold) are always
- * answerable.
+ * generic Fold button when the palette has no direct-fold action of its own —
+ * so hands outside the range (which the sampler marks as a direct FOLD) are
+ * always answerable with a button that means exactly "fold this hand".
  */
 export function trainerAnswerActions(actions: ActionDef[]): ActionDef[] {
   const sorted = [...actions].sort((a, b) => a.order - b.order);
