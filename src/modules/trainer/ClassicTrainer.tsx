@@ -23,6 +23,7 @@ import {
   type TrainerHand,
 } from '@/utils/trainerSampler';
 import { PokerTable } from './PokerTable';
+import { TableSurface } from './TableSurface';
 import { CountdownBar } from './CountdownBar';
 import { AutoAdvanceToggle } from '@/modules/workbook/drillUi';
 import { useActionHotkeys, type ActionHotkeys } from '@/hooks/useActionHotkeys';
@@ -169,7 +170,7 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
     <div className="flex flex-col gap-4">
       <ScoreBar score={score} accuracy={accuracy} />
 
-      <div className="flex flex-col items-center gap-4 rounded-xl border border-border bg-surface/60 p-4 shadow-surface sm:p-5">
+      <TableSurface>
         <PokerTable
             heroPosition={range.position}
             hand={current.hand}
@@ -230,7 +231,7 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
             Reiniciar puntaje
           </button>
         </div>
-      </div>
+      </TableSurface>
 
       <div className="flex justify-center">
         <AutoAdvanceToggle

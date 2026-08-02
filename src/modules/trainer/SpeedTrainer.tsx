@@ -39,6 +39,7 @@ import { useActionHotkeys } from '@/hooks/useActionHotkeys';
 import { computeRangeDiff, type RangeDiff } from '@/utils/rangeDiff';
 import { DiffGrid } from './DiffGrid';
 import { PokerTable } from './PokerTable';
+import { TableSurface } from './TableSurface';
 import {
   useLeaderboardStore,
   useRangeLeaderboard,
@@ -439,7 +440,7 @@ function SpeedClassicRun({
         ]}
       />
 
-      <div className="flex flex-col items-center gap-4 rounded-xl border border-border bg-surface/60 p-4 shadow-surface sm:p-5">
+      <TableSurface>
         <PokerTable
           heroPosition={range.position}
           hand={hand.hand}
@@ -498,7 +499,7 @@ function SpeedClassicRun({
             ? 'Presiona una tecla para asignarla · Esc cancela · ⌫ borra'
             : `Elige rápido · ${formatDurationLabel(duration)} total · clic derecho en un botón para asignar tu hotkey`}
         </p>
-      </div>
+      </TableSurface>
     </div>
   );
 }

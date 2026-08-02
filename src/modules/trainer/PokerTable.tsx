@@ -1,8 +1,11 @@
 import { cn } from '@/lib/cn';
 import { combosOf } from '@/utils/handUtils';
+import { brighten, shade, withAlpha } from '@/utils/color';
 import { POSITIONS, huVillainOf } from '@/types/poker';
 import type { Position, TableFormat } from '@/types/poker';
-import { CardFace, parseHandCards } from './HandCards';
+import { useTableThemeStore } from '@/store/tableThemeStore';
+import type { PlayerBoxStyle, TableShape } from '@/data/tableThemes';
+import { CardBackPair, CardFace, parseHandCards } from './HandCards';
 
 // ── Table layout ─────────────────────────────────────────────────────────────
 
@@ -28,14 +31,56 @@ const VISUAL_SLOTS: Slot[] = [
   { x:  9, y: 78 }, // 5 — lower-left corner   ← mirrors slot 1
 ];
 
+// Long oval: a flatter container (34% vs 42%) makes the felt ≈3.2:1 instead of
+// 2.66:1 — the racetrack proportion used by desktop replayers. The container
+// loses ~36px of height at max-w-md, so the corner seats have to open up
+// (22/78 → 17/83) or the badges collide with the top and bottom rails.
+const OVAL_SLOTS: Slot[] = [
+  { x: 50, y: 97 },
+  { x: 92, y: 83 },
+  { x: 92, y: 17 },
+  { x: 50, y:  1 },
+  { x:  8, y: 17 },
+  { x:  8, y: 83 },
+];
+
+const SLOTS_BY_SHAPE: Record<TableShape, Slot[]> = {
+  stadium: VISUAL_SLOTS,
+  oval: OVAL_SLOTS,
+};
+
+type ShapeGeom = {
+  /** Container aspect ratio driver. */
+  paddingBottom: string;
+  /** Vertical inset of the table body inside the container. */
+  insetY: string;
+  /** Space reserved for the hero stack, which overflows below the felt. */
+  heroSpace: string;
+};
+
+const SHAPE_GEOM: Record<TableShape, ShapeGeom> = {
+  stadium: { paddingBottom: '42%', insetY: '8%', heroSpace: 'mb-12' },
+  oval: { paddingBottom: '34%', insetY: '6%', heroSpace: 'mb-14' },
+};
+
+// The frame band sits *outside* the old felt box and its padding pulls the felt
+// back in, so the `clasico` preset renders pixel-identical to the pre-theming
+// hardcoded table: outer edge = old felt box + 5px (the old `0 0 0 5px` ring),
+// felt surface = old felt box − 3px (the old 3px border).
+const FRAME_OUTSET = 5;
+const FRAME_PAD = 5;
+const FRAME_BORDER = 3;
+
 function getTableLayout(
   heroPosition: Position,
   tableFormat: TableFormat,
+  shape: TableShape,
 ): { position: Position; slot: Slot }[] {
+  const slots = SLOTS_BY_SHAPE[shape];
   if (tableFormat === 'HU') {
     // Heads-up: only hero (slot 0, bottom-center) and villain (slot 3, top-center).
-    const heroSlot = VISUAL_SLOTS[0]!;
-    const villainSlot = VISUAL_SLOTS[3]!;
+    const heroSlot = slots[0]!;
+    const villainSlot = slots[3]!;
     const heroSeat = heroPosition === 'BB' ? 'BB' : 'BTN';
     const villainSeat = huVillainOf(heroSeat);
     return [
@@ -45,10 +90,77 @@ function getTableLayout(
   }
   const heroIdx = POSITIONS.indexOf(heroPosition as (typeof POSITIONS)[number]);
   const base = heroIdx < 0 ? 0 : heroIdx;
-  return VISUAL_SLOTS.map((slot, i) => {
+  return slots.map((slot, i) => {
     const posIdx = (base - i + N) % N;
     return { position: POSITIONS[posIdx]!, slot };
   });
+}
+
+// ── Player box ───────────────────────────────────────────────────────────────
+
+type SeatRole = 'hero' | 'villain' | 'idle';
+
+/**
+ * The hero always keeps `bg-accent`: "this one is you" must never depend on a
+ * cosmetic setting. Only the villain/idle boxes change with the style.
+ */
+function playerBoxStyle(
+  variant: PlayerBoxStyle,
+  role: SeatRole,
+  accent: string,
+): { className: string; style: React.CSSProperties } {
+  const base =
+    'rounded-md px-4 py-2.5 text-sm font-semibold uppercase tracking-wide';
+
+  if (role === 'hero') {
+    return {
+      className: cn(base, 'bg-accent text-white shadow-sm'),
+      style:
+        variant === 'neon'
+          ? { boxShadow: `0 0 14px ${withAlpha(accent, 0.55)}` }
+          : {},
+    };
+  }
+
+  if (variant === 'glass') {
+    return {
+      className: cn(
+        base,
+        'border backdrop-blur-sm',
+        role === 'villain'
+          ? 'border-white/25 bg-white/15 text-white'
+          : 'border-white/10 bg-white/5 text-white/55',
+      ),
+      style: {},
+    };
+  }
+
+  if (variant === 'neon') {
+    return {
+      className: cn(
+        base,
+        'border bg-surface/70',
+        role === 'villain'
+          ? 'border-accent/60 text-content'
+          : 'border-border text-content-disabled',
+      ),
+      style:
+        role === 'villain'
+          ? { boxShadow: `0 0 12px ${withAlpha(accent, 0.45)}` }
+          : {},
+    };
+  }
+
+  // solid — the original look
+  return {
+    className: cn(
+      base,
+      role === 'villain'
+        ? 'border border-accent/50 bg-surface text-content'
+        : 'border border-border bg-surface/80 text-content-disabled',
+    ),
+    style: {},
+  };
 }
 
 // ── PokerTable ───────────────────────────────────────────────────────────────
@@ -66,6 +178,7 @@ export function PokerTable({
   hand,
   tableFormat = '6max',
 }: PokerTableProps) {
+  const theme = useTableThemeStore();
   const [card1, card2] = parseHandCards(hand);
   const combos = combosOf(hand);
   // In HU the villain seat is implicit (BTN↔BB); honor that even if the prop is missing or stale.
@@ -75,28 +188,67 @@ export function PokerTable({
       : heroPosition;
   const effectiveVillain =
     tableFormat === 'HU' ? huVillainOf(effectiveHero) : villainPosition;
-  const layout = getTableLayout(effectiveHero, tableFormat);
+  const layout = getTableLayout(effectiveHero, tableFormat, theme.shape);
+  const geom = SHAPE_GEOM[theme.shape];
+
+  // One stored hex per layer; the felt's three gradient stops are derived.
+  // brighten() (multiplicative) keeps the felt's saturation on the highlight —
+  // mixing toward white would wash a deep blue-green out to grey.
+  const feltGradient = `radial-gradient(ellipse at 50% 35%, ${brighten(
+    theme.felt,
+    1.7,
+  )} 0%, ${theme.felt} 55%, ${shade(theme.felt, -0.28)} 100%)`;
 
   return (
-    // Container 2.38:1 (W × 0.42W). All children absolute.
-    // mb-12 reserves space for the hero seat which overflows below the felt
-    // (cards + combos text + badge stack ~110px tall, anchored at y=96%).
-    <div className="relative mx-auto mb-12 w-full max-w-md" style={{ paddingBottom: '42%' }}>
+    // Container 2.38:1 (W × 0.42W) in stadium. All children absolute.
+    // The bottom margin reserves space for the hero seat, which overflows below
+    // the felt (cards + combos text + badge stack ~110px tall).
+    <div
+      className={cn('relative mx-auto w-full max-w-md', geom.heroSpace)}
+      style={{ paddingBottom: geom.paddingBottom }}
+    >
+      {/* The `background` layer is NOT painted here — it belongs to the whole
+          trainer panel (see TableSurface), otherwise it renders as a second
+          rounded rectangle hugging the felt inside the default surface. */}
 
-      {/* ── Stadium felt: long straight top/bottom, semicircular left/right ends ── */}
+      {/* ── Frame (rim) + outer border, wrapping the felt ── */}
       <div
-        className="absolute inset-x-[3%] inset-y-[8%] rounded-full"
+        className="absolute rounded-full"
         style={{
-          background: 'radial-gradient(ellipse at 50% 35%, #1e3a4a 0%, #112233 55%, #0b1928 100%)',
-          border: '3px solid #2a5070',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 5px #0d2030',
+          left: `calc(3% - ${FRAME_OUTSET}px)`,
+          right: `calc(3% - ${FRAME_OUTSET}px)`,
+          top: `calc(${geom.insetY} - ${FRAME_OUTSET}px)`,
+          bottom: `calc(${geom.insetY} - ${FRAME_OUTSET}px)`,
+          backgroundColor: theme.frame,
+          border: `${FRAME_BORDER}px solid ${theme.outerBorder}`,
+          padding: FRAME_PAD,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.75)',
         }}
-      />
+      >
+        {/* ── Felt ── */}
+        <div
+          className="h-full w-full rounded-full"
+          style={{
+            background: feltGradient,
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
+            ...(theme.innerRail !== null && {
+              border: `2px solid ${theme.innerRail}`,
+            }),
+          }}
+        />
+      </div>
 
       {/* ── Seat tokens ── */}
       {layout.map(({ position, slot }) => {
         const isHero = position === effectiveHero;
         const isVillain = !isHero && position === effectiveVillain;
+        const role: SeatRole = isHero ? 'hero' : isVillain ? 'villain' : 'idle';
+        const box = playerBoxStyle(theme.playerBox, role, theme.outerBorder);
+        // Bottom-half seats stack their cards above the badge; top-half seats
+        // put them below, so nothing is clipped by the container edge (slot 3
+        // sits at y≈4% — cards above it would render off-canvas).
+        const cardsAbove = slot.y > 50;
+
         return (
           <div
             key={position}
@@ -111,19 +263,21 @@ export function PokerTable({
                   <CardFace rank={card2.rank} suit={card2.suit} />
                 </div>
                 <span className="text-[10px] text-white/30">{combos} combos</span>
-                <div className="rounded-md px-4 py-2.5 text-sm font-semibold uppercase tracking-wide bg-accent text-white shadow-sm">
+                <div className={box.className} style={box.style}>
                   {position}
                 </div>
               </div>
+            ) : isVillain ? (
+              // Villain: face-down cards make the matchup readable at a glance.
+              <div className="flex flex-col items-center gap-1">
+                {cardsAbove && <CardBackPair />}
+                <div className={box.className} style={box.style}>
+                  {position}
+                </div>
+                {!cardsAbove && <CardBackPair />}
+              </div>
             ) : (
-              <div
-                className={cn(
-                  'rounded-md px-4 py-2.5 text-sm font-semibold uppercase tracking-wide',
-                  isVillain
-                    ? 'border border-accent/50 bg-surface text-content'
-                    : 'border border-border bg-surface/80 text-content-disabled',
-                )}
-              >
+              <div className={box.className} style={box.style}>
                 {position}
               </div>
             )}
