@@ -34,6 +34,8 @@ import {
   DONATION_RECEIVED_USD,
   DONATION_RECEIVED_BTC,
 } from '@/data/donations';
+import { useFloatingToolsStore } from '@/store/floatingToolsStore';
+import { useImportProfile } from '@/hooks/useImportProfile';
 import { ImportProfileButton } from './ImportProfileButton';
 
 const BTC_ADDRESS = 'bc1qyz4fd8msnedgjj9sv68qlu4theh7mdh57rea8w';
@@ -61,7 +63,7 @@ const MODULES: readonly ModuleCard[] = [
     label: 'Entrenador',
     icon: Target,
     description:
-      'Entrena manos en mesa 6-max o Heads-Up contra tus rangos guardados. Modos Clásico (con auto-avance activable), Velocidad (contrarreloj con tabla de líderes local) y Dibujo (pintar el rango de memoria). Asigna tus propias hotkeys a cada acción (las mismas que usas en las salas) con clic derecho en el botón. Filtros por posición, situación y villano.',
+      'Entrena manos en mesa 6-max o Heads-Up contra tus rangos guardados. Modos Clásico (con auto-avance activable), Velocidad (contrarreloj con tabla de líderes local) y Dibujo (pintar el rango de memoria). El villano se sienta enfrente con sus cartas boca abajo y la mesa es personalizable: colores, forma y reverso de las cartas. Asigna tus propias hotkeys a cada acción (las mismas que usas en las salas) con clic derecho en el botón. Filtros por posición, situación y villano.',
   },
   {
     to: '/editor',
@@ -97,18 +99,34 @@ const MODULES: readonly ModuleCard[] = [
   },
 ];
 
-type Faq = { q: string; a: React.ReactNode; aPlain?: string };
+/**
+ * FAQ groups. The list is kept FLAT (one array) because the FAQPage JSON-LD is
+ * derived from it — grouping is a rendering concern only, so search engines
+ * keep seeing every question.
+ */
+const FAQ_GROUPS = [
+  'Sobre el proyecto',
+  'Tus rangos y tus datos',
+  'Entrenar y estudiar',
+  'Exportar y herramientas',
+] as const;
+type FaqGroup = (typeof FAQ_GROUPS)[number];
+
+type Faq = { q: string; a: React.ReactNode; aPlain?: string; group: FaqGroup };
 
 const FAQS: readonly Faq[] = [
   {
+    group: 'Sobre el proyecto',
     q: '¿Qué es Range Soprano?',
     a: 'Una herramienta web gratis para estudiar poker. Empezó con tres módulos para rangos preflop —Visualizador, Entrenador y Editor— y hoy suma Calculadoras de EV, Análisis de manos desde el historial .txt y Ejercicios para practicar. Pensada para repasar, memorizar y comparar tus propios rangos (o copiados de un libro/solver) en mesa 6-max o Heads-Up, y para estudiar la matemática de tus decisiones.',
   },
   {
+    group: 'Sobre el proyecto',
     q: '¿Por qué no hay login ni cuenta?',
     a: 'Tus datos viven sólo en tu navegador (localStorage). No subimos nada a ningún servidor → cero cuentas, cero contraseñas, cero tracking. Si quieres mover los rangos a otro dispositivo usas export/import .json.',
   },
   {
+    group: 'Tus rangos y tus datos',
     q: '¿Qué es un archivo .json y para qué lo uso?',
     a: (
       <>
@@ -125,6 +143,7 @@ const FAQS: readonly Faq[] = [
       'Es un archivo de texto con todos tus rangos serializados. Lo descargas desde Editor → Export → Download all ranges JSON y lo guardas donde quieras (Drive, Dropbox, pendrive). En otra PC o en el celular lo importas desde la barra lateral → Herramientas → Importar perfil (o desde Home) y recuperas todo. El archivo también incluye los colores de tus carpetas y la configuración del randomizador (presets, sets, frecuencia), así que el perfil viaja completo.',
   },
   {
+    group: 'Exportar y herramientas',
     q: '¿Puedo exportar mis rangos a Flopzilla?',
     a: (
       <>
@@ -155,6 +174,7 @@ const FAQS: readonly Faq[] = [
       'Sí. En el Editor o el Visualizador usa el botón Copiar: copia el rango al portapapeles en formato Flopzilla, listo para pegar. Puedes copiar el rango entero (Todo) o solo un color/acción (por ejemplo solo las manos de Call o solo las de raise) usando la frecuencia real de cada mano (una mano 60% Call sale como [60]…[/60]). Ideal para llevar tus rangos a Flopzilla y correr equities, contar combos o estudiar el spot.',
   },
   {
+    group: 'Exportar y herramientas',
     q: '¿Cómo funciona el randomizador?',
     a: (
       <>
@@ -189,6 +209,7 @@ const FAQS: readonly Faq[] = [
       'Vive en el Visualizador → Resumen como una tarjeta fija arriba a la derecha. Clic en Tirar (o tecla Espacio) tira un número del 1 al 100. Los 4 presets editables (60/40, 50/50, ...) se iluminan en verde si el roll cae dentro de su threshold, así lees la decisión de un vistazo: si tu rango dice "AKo 50/50" y el preset 50/50 está iluminado, haces la acción de la izquierda; si no, la de la derecha. Modo automático con A y tres sets guardables para alternar configuraciones por formato.',
   },
   {
+    group: 'Exportar y herramientas',
     q: '¿Cómo funciona el cronómetro de sesión?',
     a: (
       <>
@@ -208,6 +229,7 @@ const FAQS: readonly Faq[] = [
       'Vive en el Visualizador → Resumen como una tarjeta junto al randomizador. Play/pausa el timer, la bandera marca el fin de una sesión y guarda su duración como vuelta, y el reset limpia todo. La clave: el cronómetro solo cuenta tiempo mientras está corriendo, así que pausando durante los descansos las vueltas reflejan solo tu tiempo real de juego — el descanso queda excluido. El estado persiste si recargas la página (si lo dejaste corriendo, retoma con el offset correcto).',
   },
   {
+    group: 'Exportar y herramientas',
     q: '¿Qué es la ventana flotante y para qué sirve?',
     a: (
       <>
@@ -235,22 +257,27 @@ const FAQS: readonly Faq[] = [
       'Es una ventana del sistema operativo que abre el cronómetro y el randomizador siempre encima del cliente de poker. Útil para verlos sin hacer Alt+Tab mientras juegas en PokerStars, GG, WPT Global u otra mesa real. La abres desde la barra lateral → Herramientas → Sesión (o con el icono del cluster de tools en Visualizador → Resumen), y queda abierta aunque cambies de módulo. Es redimensionable arrastrando los bordes y comparte estado con la pestaña — tirar en la flotante también se ve en la pestaña, play/pausa del cronómetro idem. Funciona nativo en Chrome 116+, Edge, Brave y Opera (Document Picture-in-Picture API); en Firefox y Safari abre una ventana normal del navegador, redimensionable pero no siempre-encima.',
   },
   {
+    group: 'Tus rangos y tus datos',
     q: '¿Mis rangos se borran si limpio el navegador?',
     a: 'Sí. localStorage muere si limpias caché/datos del sitio o usas navegación privada. Haz backup periódico exportando el .json — es la única copia que tienes.',
   },
   {
+    group: 'Tus rangos y tus datos',
     q: '¿Cuántos rangos puedo guardar?',
     a: 'Hasta ~3.8 MB en localStorage (≈100 rangos llenos). Si te queda corto exporta unos a .json y bórralos del store.',
   },
   {
+    group: 'Sobre el proyecto',
     q: '¿Sirve para 6-max y Heads-Up?',
     a: 'Sí. Cada rango se crea con un formato (6max o HU). El Entrenador pinta la mesa acorde y el Visualizador filtra por formato.',
   },
   {
+    group: 'Entrenar y estudiar',
     q: '¿Puedo usar mis propias teclas (hotkeys) en el Entrenador?',
     a: 'Sí. En el Entrenador Clásico y Velocidad, haz clic derecho sobre el botón de una acción y presiona la tecla que quieras (por ejemplo f para Fold, r para Raise, d para Call), las mismas que usas en tu sala. Se guardan por nombre de acción, así que valen para todos los rangos de la misma familia y también en el modo Velocidad. Esc cancela y Backspace borra. Las acciones sin hotkey propia siguen respondiendo con su número (1-9), y todo queda guardado para la próxima sesión.',
   },
   {
+    group: 'Exportar y herramientas',
     q: '¿Cómo imprimo varios rangos a PDF?',
     a: (
       <>
@@ -265,10 +292,41 @@ const FAQS: readonly Faq[] = [
       'En el Visualizador, pestaña Resumen, botón Imprimir PDF. Configura rangos por página, etiquetas (stack/sizing), leyenda y badge de formato. Después usa Print / Save as PDF del navegador.',
   },
   {
+    group: 'Tus rangos y tus datos',
     q: '¿Funciona offline?',
     a: 'Sí, una vez cargada la página. Todo es JS estático servido desde GitHub Pages — no hay backend.',
   },
   {
+    group: 'Entrenar y estudiar',
+    q: '¿Puedo personalizar la mesa del Entrenador?',
+    a: (
+      <>
+        Sí. En el{' '}
+        <Link to="/trainer" className="font-medium text-accent-light hover:underline">
+          Entrenador
+        </Link>{' '}
+        el botón <span className="font-medium text-content">Mesa</span> abre un panel con
+        vista previa en vivo: nueve preajustes de color (Navy, Wine, Emerald, Teal, Amber…)
+        y, si quieres afinar, cada capa por separado —{' '}
+        <span className="font-medium text-content">
+          el fieltro, el borde, el marco, el riel interior y el fondo
+        </span>
+        . También eliges la <span className="font-medium text-content">forma</span> de la
+        mesa (estadio o un oval más largo, como el de los replayers de escritorio), el
+        estilo de las cajas de jugador (sólido, cristal o neón) y el{' '}
+        <span className="font-medium text-content">color del reverso</span> de las cartas.
+        Ese reverso es el de las cartas boca abajo del villano, que se sienta enfrente
+        según la posición del rango: en un{' '}
+        <span className="font-mono text-content">BBvsBTN</span> ves al BTN con sus dos
+        cartas tapadas, así que el matchup se lee de un vistazo. Todo se guarda en tu
+        navegador y el botón Restablecer vuelve al diseño original.
+      </>
+    ),
+    aPlain:
+      'Sí. En el Entrenador el botón Mesa abre un panel con vista previa en vivo: nueve preajustes de color (Navy, Wine, Emerald, Teal, Amber...) y, si quieres afinar, cada capa por separado: el fieltro, el borde, el marco, el riel interior y el fondo. También eliges la forma de la mesa (estadio o un oval más largo, como el de los replayers de escritorio), el estilo de las cajas de jugador (sólido, cristal o neón) y el color del reverso de las cartas. Ese reverso es el de las cartas boca abajo del villano, que se sienta enfrente según la posición del rango: en un BBvsBTN ves al BTN con sus dos cartas tapadas, así que el matchup se lee de un vistazo. Todo se guarda en tu navegador y el botón Restablecer vuelve al diseño original.',
+  },
+  {
+    group: 'Entrenar y estudiar',
     q: '¿Sirve para aprender pot odds?',
     a: (
       <>
@@ -291,6 +349,7 @@ const FAQS: readonly Faq[] = [
       'Sí. En Ejercicios (grupo Tablas) la pestaña Pot Odds tiene cuatro tipos de pregunta: cuánta fold equity necesitas cuando bluffeas, qué equity necesitas para pagar, y las dos inversas (qué tamaño apostar dado un % de fold equity y hasta qué tamaño puedes pagar dado un % de equity). Multiple choice de 4 opciones con feedback que muestra la fórmula resuelta. Al lado, la pestaña Push/Fold entrena las tablas de Nash de empuje/pago heads-up para stacks cortos. Ninguna depende de tener rangos cargados: puedes practicar incluso desde un perfil vacío.',
   },
   {
+    group: 'Entrenar y estudiar',
     q: '¿Cómo uso las calculadoras de EV?',
     a: (
       <>
@@ -351,6 +410,7 @@ const FAQS: readonly Faq[] = [
       'Desde la barra lateral entra a Calculadoras. Tienes diecisiete herramientas: EV básico (EV de una jugada con dos finales: pot, % que esperas ganar y lo que arriesgas), EV con fold equity (semi-bluffs y shoves: F% de fold + showdown EV cuando te pagan), EV de bluff (bluff puro sin equity en showdown — river bluffs y blocker bets — con breakeven F% automático), Doble barrel (EV de la línea completa turn + barrel river: muestra si el conjunto es +EV aunque el bet del turn solo sea −EV), EV multi-calle (encadena el EV de dos calles turn + river ponderando cada cuánto se ve el river), Value / Bluff (cuántos combos de farol puedes tener respecto a tus combos de valor para no desbalancear el rango de apuesta), Check vs Bet (comparación lado a lado de check behind vs apostar el ríver con recomendación y delta de EV), EV de checkear (cuánto rinde checkear juntando check-call si el villano apuesta y check-check si hace check behind), All-in EV (shove preflop sobre la apuesta del villano: pot + call + shove + equity + fold, con tabla de sensibilidad ±5/±10% y breakeven F% automático), FE requerida (fold equity para shovear all-in teniendo en cuenta tu equity: el breakeven baja cuando vas con outs en flop o turn), Call vs Raise (enfrentando una apuesta en el ríver: pagar vs restear all-in encima, con fold como tercera opción), Raise sizing (en el flop: raise como % del pot, conversión inversa a fichas y equity para pagar un raise), EV del raise (EV de subir como bluff sobre la apuesta del villano, con fold% directo o derivado de combos), Implied Odds (tienes un draw, ¿cuánto más necesitas ganarle en futuras calles cuando pegues para que el call sea rentable?), EV de flotar (pagar el flop para robar el turn dadas las frecuencias de barrel y check-fold del villano), Fold equity combinada (probabilidad de que todos los villanos foldeen en un shove multi-way) y Call multi-way (pagar un shove preflop con potenciales overcallers detrás: modela HU vs MW con dos equities distintas y tres escenarios). Cada calculadora muestra la fórmula y los valores sustituidos en un bloque colapsable.',
   },
   {
+    group: 'Entrenar y estudiar',
     q: '¿Cómo analizo una mano que jugué?',
     a: (
       <>
@@ -377,6 +437,7 @@ const FAQS: readonly Faq[] = [
       'Entra a Análisis de manos y pega el historial .txt que exporta PokerTracker 4. La web lo lee y arma una hoja de estudio: posiciones, stacks, board calle por calle y el pot y la apuesta de cada decisión. Por cada jugada agresiva de hero te ofrece un botón Analizar que abre la calculadora de EV adecuada (EV de bluff, doble barrel, all-in, call vs raise) ya pre-llenada con esos números. Tú solo ingresas la equity o el fold% que sacaste de Flopzilla y la web hace el razonamiento de EV. No reproduce la mano (para eso ya tienes tu replayer) ni calcula equity (eso lo hace Flopzilla): lo que aporta es enseñarte qué herramienta usar y automatizar el cálculo. Puedes alternar entre fichas y BB y dejar tu conclusión escrita.',
   },
   {
+    group: 'Entrenar y estudiar',
     q: '¿Qué ejercicios de práctica hay?',
     a: (
       <>
@@ -447,6 +508,7 @@ const FAQS: readonly Faq[] = [
       'En Ejercicios hay tres grupos. Conceptos reúne diez drills cortos. "¿Qué calculadora?": te mostramos un spot real (tu mano, el board y la apuesta de la decisión) y eliges entre cuatro calculadoras cuál usarías; al responder ves por qué es esa herramienta y qué datos traerías de Flopzilla (es el mismo razonamiento de Análisis de manos pero como entrenamiento). "Conteo de combos": te damos una mano (por ejemplo AK), un board y tus cartas, y cuentas cuántos combos quedan tras los bloqueadores; el feedback descompone base − bloqueados = quedan. "Value / Bluff": dado el tamaño de tu apuesta y tus combos de valor, eliges cuántos faroles para balancear el rango (medio bote ≈ 3:1 valor:farol, pot-size ≈ 2:1, overbet ≈ 1.5:1). "Fold equity": dado un bote y tu apuesta, el % de fold mínimo para que el bluff sea break-even (auto-profit), el alpha complemento de la MDF. "SPR": con tu equity (de Flopzilla) y el SPR, decides si comprometerte (pagar o hacer el all-in) es +EV o mejor fold, o calculas el EV exacto. "Runouts": estimas con qué frecuencia sale un runout determinado en el turn (1 carta), en el river (1 carta) y completo (las dos cartas, por el método del complemento), contando bloqueadores. "Floating": calculas la EV de flotar (pagar un cbet con aire y apostar la siguiente calle cuando te checkean) según las frecuencias de barrel y check-fold del villano, a veces como valor de EV y a veces decidiendo si flotar es +EV. "Auto-profit raise": calculas el BE% (breakeven) de un raise R/(R+P) y decides si es auto-profit comparándolo con cuánto foldea el villano; si fold% > BE%, el raise gana solo por la fold equity. "River: call o shove": enfrentando una apuesta de river, comparas el EV de pagar (tu equity vs su rango de apuesta) con el de ir all-in (su fold equity + lo que ganas cuando te paga) y eliges entre call, fold o shove — el insight es considerar el all-in, no solo call/fold. "River: check o bet": cuando el rival te checkea el river, comparas el EV de checkear behind con el de apostar a dos tamaños distintos y eliges la línea de mayor EV; ves cómo un rango de continuación más ajustado baja el valor de apostar grande y cuándo conviene convertir una mano débil en bluff. El grupo Rangos entrena la lectura de rangos GTO reales con tres drills: "% y combos" (ves un rango resaltado en el grid y dices qué porcentaje del total y cuántos combos representa, en opción múltiple o modo experto con input numérico), "Composición" (con qué manos concretas se arma un 3bet, una apertura, una defensa de BB o un cold-call, eligiendo entre mini-grids) y "Tipo de rango" (qué morfología tiene: lineal, polarizado, mergeado o condensado), cada uno con filtros para elegir qué familias estudiar. El tercer grupo, Tablas, son dos entrenadores con modo Estudio y Velocidad (con tabla de líderes local): Pot Odds (fold equity al apostar y equity al pagar) y Push/Fold (las tablas de Nash de empuje/pago heads-up para stacks cortos). Todos llevan puntaje, racha y atajos de teclado.',
   },
   {
+    group: 'Sobre el proyecto',
     q: '¿Puedo contribuir al proyecto?',
     a: 'Si te resulta útil puedes dejar una propina en BTC desde la sección de abajo — cualquier monto suma y ayuda a mantener el proyecto vivo. Reportes de bugs y sugerencias también son bienvenidos.',
   },
@@ -467,6 +529,10 @@ const SHORTCUTS: readonly Shortcut[] = [
 export default function HomePage() {
   useDocumentTitle('Range Soprano · Estudio de rangos preflop de poker');
   const [copied, setCopied] = useState(false);
+  // `open()` must run from the click gesture itself — the PiP requestWindow
+  // call happens synchronously before the first await.
+  const openFloatingTools = useFloatingToolsStore((s) => s.open);
+  const { inputRef, onChange, openPicker: openProfilePicker } = useImportProfile();
 
   useEffect(() => {
     const script = document.createElement('script');
@@ -506,7 +572,7 @@ export default function HomePage() {
       <PageHeader
         eyebrow="Range Soprano"
         title="Herramienta de estudio de rangos preflop"
-        description="Visualiza, entrena y edita tus rangos en mesa 6-max o Heads-Up con paletas personalizables, comparación, exportación a PNG/PDF y entrenador con leaderboard local. Incluye calculadoras de EV, un módulo para analizar las manos que jugaste (importando el historial .txt de tu sala: iPoker, GGPoker, PokerStars o Winamax) y ejercicios para entrenar qué herramienta usar en cada spot. Cronómetro de sesión, randomizador para frecuencias mixtas y ventana flotante siempre-encima. Todo corre en tu navegador y los datos son tuyos."
+        description="Visualiza, entrena y edita tus rangos en mesa 6-max o Heads-Up con paletas personalizables, comparación, exportación a PNG/PDF y entrenador con mesa personalizable y leaderboard local. Incluye calculadoras de EV, un módulo para analizar las manos que jugaste (importando el historial .txt de tu sala: iPoker, GGPoker, PokerStars o Winamax) y ejercicios para entrenar qué herramienta usar en cada spot. Cronómetro de sesión, randomizador para frecuencias mixtas y ventana flotante siempre-encima. Todo corre en tu navegador y los datos son tuyos."
         descriptionClassName="text-justify"
         actions={
           <ImportProfileButton
@@ -527,6 +593,43 @@ export default function HomePage() {
           {MODULES.map((m) => (
             <ModuleCardView key={m.to} card={m} />
           ))}
+        </div>
+      </section>
+
+      {/* Herramientas are ACTIONS, not routes (same split as the sidebar), so
+          they get their own block instead of a seventh module card: a card in
+          the grid above promises a page you can navigate to and bookmark. */}
+      <section aria-labelledby="tools-heading" className="flex flex-col gap-4">
+        <h2
+          id="tools-heading"
+          className="text-[11px] font-semibold uppercase tracking-[0.18em] text-content-muted"
+        >
+          Herramientas
+        </h2>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <ToolCardView
+            icon={Timer}
+            label="Sesión"
+            cta="Abrir ventana"
+            onClick={openFloatingTools}
+            description="Abre el cronómetro de sesión y el randomizador en una ventana flotante siempre encima del cliente de poker: cronometras tu tiempo real de juego (el descanso no cuenta, con vueltas por sesión) y tiras el dado para tus frecuencias mixtas sin hacer Alt+Tab. Queda abierta aunque cambies de módulo."
+          />
+          <ToolCardView
+            icon={FolderInput}
+            label="Importar perfil"
+            cta="Elegir archivo .json"
+            onClick={openProfilePicker}
+            description="Carga un .json exportado desde el Editor y recuperas todo tu perfil: rangos, carpetas con sus colores y la configuración del randomizador. Es la forma de pasar tu estudio a otra computadora o al celular, ya que no hay cuentas ni servidor."
+          />
+          <input
+            ref={inputRef}
+            type="file"
+            accept="application/json,.json"
+            onChange={onChange}
+            className="hidden"
+            aria-hidden
+            tabIndex={-1}
+          />
         </div>
       </section>
 
@@ -625,10 +728,13 @@ export default function HomePage() {
               <span className="font-medium text-content">Velocidad</span> (contrarreloj
               con tabla de líderes local) o{' '}
               <span className="font-medium text-content">Dibujo</span> (pinta el rango de
-              memoria y compara con la verdad). Las tres modalidades sobre mesa 6-max o HU.
-              Puedes asignar tus propias{' '}
+              memoria y compara con la verdad). Las tres modalidades sobre mesa 6-max o HU,
+              con el villano sentado enfrente y sus cartas boca abajo para que veas el
+              matchup de un vistazo. Puedes asignar tus propias{' '}
               <span className="font-medium text-content">hotkeys</span> a cada acción (clic
-              derecho en el botón) para responder con las mismas teclas de tu sala.
+              derecho en el botón) para responder con las mismas teclas de tu sala, y
+              vestir la mesa a tu gusto desde el botón{' '}
+              <span className="font-medium text-content">Mesa</span>.
             </div>
           </li>
           <li className="flex items-start gap-3">
@@ -1188,29 +1294,47 @@ export default function HomePage() {
         >
           Preguntas frecuentes
         </h2>
-        <ul className="flex flex-col gap-2">
-          {FAQS.map((f) => (
-            <li key={f.q}>
-              <details className="group rounded-lg border border-border bg-surface open:bg-surface-hover">
-                <summary className="flex cursor-pointer list-none items-start gap-3 rounded-lg px-4 py-3 text-sm font-medium text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light">
-                  <span aria-hidden className="mt-0.5 shrink-0 text-accent-light">
-                    <HelpCircle className="h-4 w-4" strokeWidth={2.25} />
-                  </span>
-                  <span className="flex-1">{f.q}</span>
-                  <span
-                    aria-hidden
-                    className="mt-0.5 shrink-0 text-content-muted transition-transform group-open:rotate-180"
-                  >
-                    <ChevronDown className="h-4 w-4" strokeWidth={2.25} />
-                  </span>
-                </summary>
-                <div className="px-4 pb-4 pl-11 text-sm text-content-muted">
-                  {f.a}
-                </div>
-              </details>
-            </li>
-          ))}
-        </ul>
+        {/* Grouped for readability: nineteen bordered cards in one flat column
+            read as a wall. One container per theme with hairline dividers turns
+            it into four short lists. The FAQS array stays flat so the FAQPage
+            JSON-LD above still emits every question. */}
+        <div className="flex flex-col gap-5">
+          {FAQ_GROUPS.map((group) => {
+            const items = FAQS.filter((f) => f.group === group);
+            if (items.length === 0) return null;
+            return (
+              <div key={group} className="flex flex-col gap-2">
+                <h3 className="text-xs font-medium text-content-muted">
+                  {group}
+                  <span className="ml-2 text-content-disabled">{items.length}</span>
+                </h3>
+                <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-surface">
+                  {items.map((f) => (
+                    <li key={f.q}>
+                      <details className="group">
+                        <summary className="flex cursor-pointer list-none items-start gap-3 px-4 py-2.5 text-sm text-content transition-colors hover:bg-surface-hover focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-light group-open:font-medium">
+                          <span aria-hidden className="mt-0.5 shrink-0 text-accent-light">
+                            <HelpCircle className="h-4 w-4" strokeWidth={2.25} />
+                          </span>
+                          <span className="flex-1">{f.q}</span>
+                          <span
+                            aria-hidden
+                            className="mt-0.5 shrink-0 text-content-muted transition-transform group-open:rotate-180"
+                          >
+                            <ChevronDown className="h-4 w-4" strokeWidth={2.25} />
+                          </span>
+                        </summary>
+                        <div className="px-4 pb-4 pl-11 text-sm text-content-muted">
+                          {f.a}
+                        </div>
+                      </details>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
+        </div>
       </section>
 
       <section aria-labelledby="donate-heading" className="flex flex-col gap-3">
@@ -1367,6 +1491,51 @@ function ModuleCardView({ card }: { card: ModuleCard }) {
         <ArrowRight className="h-3 w-3" strokeWidth={2.5} />
       </span>
     </Link>
+  );
+}
+
+/**
+ * Same visual language as ModuleCardView, but it is a <button>: these open a
+ * window or a file picker instead of navigating, so the route chip is replaced
+ * by a "herramienta" tag and the hover affordance names the actual action.
+ */
+function ToolCardView({
+  icon: Icon,
+  label,
+  description,
+  cta,
+  onClick,
+}: {
+  icon: LucideIcon;
+  label: string;
+  description: string;
+  cta: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group flex flex-col gap-3 rounded-lg border border-border bg-surface p-5 text-left transition-colors hover:border-accent/40 hover:bg-surface-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
+    >
+      <div className="flex items-center justify-between">
+        <span
+          aria-hidden
+          className="grid h-10 w-10 place-items-center rounded-lg bg-accent/15 text-accent"
+        >
+          <Icon className="h-5 w-5" strokeWidth={2.25} />
+        </span>
+        <code className="font-mono text-[11px] text-content-muted">herramienta</code>
+      </div>
+      <div className="flex flex-col gap-1">
+        <h3 className="text-base font-semibold text-content">{label}</h3>
+        <p className="text-sm text-content-muted">{description}</p>
+      </div>
+      <span className="mt-auto inline-flex items-center gap-1 text-xs font-medium text-accent-light opacity-0 transition-opacity group-hover:opacity-100">
+        {cta}
+        <ArrowRight className="h-3 w-3" strokeWidth={2.5} />
+      </span>
+    </button>
   );
 }
 
