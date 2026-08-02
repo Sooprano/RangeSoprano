@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Brush, Dices, Zap } from 'lucide-react';
+import { Brush, Dices, Palette, Zap } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -18,6 +18,7 @@ import { TrainerEmptyState } from './TrainerEmptyState';
 import { ClassicTrainer } from './ClassicTrainer';
 import { DrawingTrainer } from './DrawingTrainer';
 import { SpeedTrainer } from './SpeedTrainer';
+import { TableThemeModal } from './TableThemeModal';
 import { SITUATION_LABELS } from '@/data/positions';
 
 type TrainerMode = 'classic' | 'drawing' | 'speed';
@@ -36,6 +37,7 @@ export default function TrainerPage() {
 
   const [mode, setMode] = useState<TrainerMode>('classic');
   const [filters, setFilters] = useState<ViewerFilters>(EMPTY_FILTERS);
+  const [themeOpen, setThemeOpen] = useState(false);
 
   const filteredSummaries = useMemo(
     () =>
@@ -100,7 +102,19 @@ export default function TrainerPage() {
         <div className="flex min-w-0 flex-col gap-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <SituationSelector filters={filters} onChange={setFilters} />
-            <ModeToggle value={mode} onChange={setMode} />
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setThemeOpen(true)}
+                title="Apariencia de la mesa"
+                aria-label="Apariencia de la mesa"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface/60 px-3 py-2 text-sm font-medium text-content-muted transition-colors hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
+              >
+                <Palette className="h-3.5 w-3.5" strokeWidth={2.25} />
+                <span className="hidden sm:inline">Mesa</span>
+              </button>
+              <ModeToggle value={mode} onChange={setMode} />
+            </div>
           </div>
           {range ? (
             mode === 'classic' ? (
@@ -117,6 +131,8 @@ export default function TrainerPage() {
           )}
         </div>
       </div>
+
+      {themeOpen && <TableThemeModal onClose={() => setThemeOpen(false)} />}
     </>
   );
 }
