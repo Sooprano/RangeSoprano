@@ -11,6 +11,7 @@ export const PUSHFOLD_LEADERBOARD_STORE_KEY = 'range-soprano/pushfold-leaderboar
 export const RANDOMIZER_STORE_KEY = 'range-soprano/randomizer';
 export const CHRONOMETER_STORE_KEY = 'range-soprano/chronometer';
 export const HOTKEY_STORE_KEY = 'range-soprano/hotkeys';
+export const TABLE_THEME_STORE_KEY = 'range-soprano/table-theme';
 
 /**
  * Tolerant storage wrapper: falls back to an in-memory map if localStorage

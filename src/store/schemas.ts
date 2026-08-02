@@ -2,11 +2,17 @@ import { z } from 'zod';
 import { POSITIONS, SITUATIONS, TABLE_FORMATS } from '@/types/poker';
 import type { Range } from '@/types/poker';
 import { DEFAULT_ACTION_DEFS } from '@/utils/actionMeta';
+import {
+  CARD_BACK_IDS,
+  PLAYER_BOX_STYLES,
+  TABLE_SHAPES,
+} from '@/data/tableThemes';
 
 export const CURRENT_RANGE_STORE_VERSION = 1;
 export const CURRENT_UI_STORE_VERSION = 2;
 export const CURRENT_LEADERBOARD_STORE_VERSION = 1;
 export const CURRENT_HOTKEY_STORE_VERSION = 1;
+export const CURRENT_TABLE_THEME_VERSION = 1;
 export const LEADERBOARD_TOP_N = 5;
 export const CURRENT_ODDS_LEADERBOARD_VERSION = 1;
 export const ODDS_LEADERBOARD_TOP_N = 5;
@@ -253,6 +259,29 @@ export const zPersistedHotkeyState = z
   .strict();
 
 export type PersistedHotkeyState = z.infer<typeof zPersistedHotkeyState>;
+
+/**
+ * Trainer table skin + card back. Every color lands in an inline `style`, so the
+ * value space is closed to `#rrggbb` — a tampered/corrupt localStorage blob can
+ * never inject a CSS declaration.
+ */
+const zHexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/);
+
+export const zPersistedTableTheme = z
+  .object({
+    presetId: z.string().max(40),
+    felt: zHexColor,
+    outerBorder: zHexColor,
+    frame: zHexColor,
+    innerRail: zHexColor.nullable(),
+    background: zHexColor.nullable(),
+    shape: z.enum(TABLE_SHAPES),
+    playerBox: z.enum(PLAYER_BOX_STYLES),
+    cardBack: z.enum(CARD_BACK_IDS),
+  })
+  .strict();
+
+export type PersistedTableTheme = z.infer<typeof zPersistedTableTheme>;
 
 const ODDS_DURATION_VALUES = ODDS_DURATIONS as readonly number[];
 
