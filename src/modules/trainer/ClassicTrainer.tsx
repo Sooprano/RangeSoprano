@@ -24,6 +24,7 @@ import {
 } from '@/utils/trainerSampler';
 import { PokerTable } from './PokerTable';
 import { TableSurface } from './TableSurface';
+import { stackLabelOf } from '@/utils/rangeStack';
 import { CountdownBar } from './CountdownBar';
 import { AutoAdvanceToggle } from '@/modules/workbook/drillUi';
 import { useActionHotkeys, type ActionHotkeys } from '@/hooks/useActionHotkeys';
@@ -158,6 +159,8 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
     [score],
   );
 
+  const stackLabel = stackLabelOf(range);
+
   if (!current) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center rounded-xl border border-dashed border-border p-6 text-center text-sm text-content-muted">
@@ -176,6 +179,7 @@ export function ClassicTrainer({ range }: ClassicTrainerProps) {
             hand={current.hand}
             tableFormat={range.tableFormat}
             {...(range.villainPosition !== undefined && { villainPosition: range.villainPosition })}
+            {...(stackLabel !== null && { stackLabel })}
           />
 
         <ActionGrid

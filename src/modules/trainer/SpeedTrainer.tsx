@@ -40,6 +40,7 @@ import { computeRangeDiff, type RangeDiff } from '@/utils/rangeDiff';
 import { DiffGrid } from './DiffGrid';
 import { PokerTable } from './PokerTable';
 import { TableSurface } from './TableSurface';
+import { stackLabelOf } from '@/utils/rangeStack';
 import {
   useLeaderboardStore,
   useRangeLeaderboard,
@@ -426,6 +427,7 @@ function SpeedClassicRun({
   }, [answer, hk.actionForKey]);
 
   const accuracy = score.total === 0 ? 0 : (score.correct / score.total) * 100;
+  const stackLabel = stackLabelOf(range);
 
   return (
     <div className="flex flex-col gap-4">
@@ -446,6 +448,7 @@ function SpeedClassicRun({
           hand={hand.hand}
           tableFormat={range.tableFormat}
           {...(range.villainPosition !== undefined && { villainPosition: range.villainPosition })}
+          {...(stackLabel !== null && { stackLabel })}
         />
 
         <div className="grid w-full max-w-md grid-cols-2 gap-1.5 sm:grid-cols-3">

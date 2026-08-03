@@ -3,8 +3,14 @@ import { combosOf } from '@/utils/handUtils';
 import { brighten, shade, withAlpha } from '@/utils/color';
 import { POSITIONS, huVillainOf } from '@/types/poker';
 import type { Position, TableFormat } from '@/types/poker';
+import { Spade } from 'lucide-react';
 import { useTableThemeStore } from '@/store/tableThemeStore';
-import type { PlayerBoxStyle, TableShape } from '@/data/tableThemes';
+import {
+  CHIP_STYLES,
+  type ChipStyleDef,
+  type PlayerBoxStyle,
+  type TableShape,
+} from '@/data/tableThemes';
 import { CardBackPair, CardFace, parseHandCards } from './HandCards';
 
 // ── Table layout ─────────────────────────────────────────────────────────────
@@ -165,11 +171,85 @@ function playerBoxStyle(
 
 // ── PokerTable ───────────────────────────────────────────────────────────────
 
+/**
+ * Range Soprano watermark printed on the felt, the way a real table carries the
+ * house logo. Sits inside the felt and before the seats in the DOM so cards and
+ * badges always render on top of it.
+ */
+function FeltLogo() {
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 grid select-none place-items-center"
+    >
+      <div className="flex items-center gap-1.5 text-white/[0.13]">
+        <Spade className="h-4 w-4" strokeWidth={2.25} />
+        <span className="text-[11px] font-semibold uppercase tracking-[0.2em]">
+          Range Soprano
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The hero's stack depth ("12bb") as a small chip stack. Colored by the user's
+ * chosen chip style — chips and number share a palette so they read as one
+ * object instead of a red stack beside an unrelated amber number.
+ */
+function StackChip({ label, chip }: { label: string; chip: ChipStyleDef }) {
+  const CHIP_GAP_PX = 4;
+  const CHIP_COUNT = 5;
+  // Split "12bb" into number + unit so the digits carry the weight. Glued at
+  // one size the whole token reads as a blur you have to squint at.
+  const m = /^(.*?)\s*(bb)\s*$/i.exec(label);
+  const value = m ? m[1]! : label;
+  const unit = m ? m[2]! : '';
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <div
+        aria-hidden="true"
+        className="relative w-7"
+        style={{ height: `${CHIP_COUNT * CHIP_GAP_PX + 6}px` }}
+      >
+        {Array.from({ length: CHIP_COUNT }, (_, i) => (
+          <div
+            key={i}
+            className="absolute left-0 right-0 h-1.5 rounded-full"
+            style={{
+              bottom: `${i * CHIP_GAP_PX}px`,
+              backgroundColor: chip.base,
+              boxShadow: `inset 0 0 0 1px ${chip.edge}, 0 1px 2px rgba(0,0,0,0.45)`,
+            }}
+          />
+        ))}
+      </div>
+      {/* NOT font-mono: Tailwind's default mono stack resolves to Consolas on
+          Windows, whose slashed zero makes "20bb" unreadable at this size. The
+          app font (Inter) has clean digits; tabular-nums keeps the chip from
+          jittering as the value changes between hands. */}
+      <span
+        className="flex items-baseline gap-px leading-none tabular-nums"
+        style={{ color: chip.text, textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}
+      >
+        <span className="text-[15px] font-bold tracking-tight">{value}</span>
+        {unit !== '' && (
+          <span className="text-[10px] font-semibold uppercase opacity-75">
+            {unit}
+          </span>
+        )}
+      </span>
+    </div>
+  );
+}
+
 type PokerTableProps = {
   heroPosition: Position;
   villainPosition?: Position;
   hand: string;
   tableFormat?: TableFormat;
+  /** Already formatted, e.g. "12bb". Omit to draw no chips at all. */
+  stackLabel?: string;
 };
 
 export function PokerTable({
@@ -177,6 +257,7 @@ export function PokerTable({
   villainPosition,
   hand,
   tableFormat = '6max',
+  stackLabel,
 }: PokerTableProps) {
   const theme = useTableThemeStore();
   const [card1, card2] = parseHandCards(hand);
@@ -190,6 +271,7 @@ export function PokerTable({
     tableFormat === 'HU' ? huVillainOf(effectiveHero) : villainPosition;
   const layout = getTableLayout(effectiveHero, tableFormat, theme.shape);
   const geom = SHAPE_GEOM[theme.shape];
+  const chip = CHIP_STYLES[theme.chipStyle];
 
   // One stored hex per layer; the felt's three gradient stops are derived.
   // brighten() (multiplicative) keeps the felt's saturation on the highlight —
@@ -227,7 +309,7 @@ export function PokerTable({
       >
         {/* ── Felt ── */}
         <div
-          className="h-full w-full rounded-full"
+          className="relative h-full w-full rounded-full"
           style={{
             background: feltGradient,
             boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
@@ -235,7 +317,9 @@ export function PokerTable({
               border: `2px solid ${theme.innerRail}`,
             }),
           }}
-        />
+        >
+          {theme.showLogo && <FeltLogo />}
+        </div>
       </div>
 
       {/* ── Seat tokens ── */}
@@ -258,7 +342,21 @@ export function PokerTable({
             {isHero ? (
               // Hero: cards stacked directly above the position badge
               <div className="flex flex-col items-center gap-1.5">
-                <div className="flex items-center gap-2">
+                {/* The stack hangs to the left of the CARDS row, not of the
+                    whole column: the column runs on past the felt (combos +
+                    badge overflow below it, which is what SHAPE_GEOM.heroSpace
+                    compensates for), so centering on it dropped the chips onto
+                    the rail. Absolute, so the column never shifts. */}
+                <div className="relative flex items-center gap-2">
+                  {theme.showStack && stackLabel !== undefined && (
+                    // `bottom-1/2` (not `top-1/2 -translate-y-1/2`): the block
+                    // rests ON the cards' midline instead of straddling it, so
+                    // the "20bb" label clears the inner rail — centered, its
+                    // bottom half landed on the rim and the digits got lost.
+                    <div className="absolute bottom-1/2 right-full mb-1 mr-3">
+                      <StackChip label={stackLabel} chip={chip} />
+                    </div>
+                  )}
                   <CardFace rank={card1.rank} suit={card1.suit} />
                   <CardFace rank={card2.rank} suit={card2.suit} />
                 </div>

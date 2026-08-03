@@ -5,6 +5,7 @@ import { RangeGrid } from '@/components/RangeGrid';
 import { useRangeStore } from '@/store/rangeStore';
 import { buildActionDefMap } from '@/utils/actionMeta';
 import { computeRangeStats } from '@/utils/rangeStats';
+import { deriveStack } from '@/utils/rangeStack';
 import type { Range } from '@/types/poker';
 import { SITUATION_LABELS } from '@/data/positions';
 
@@ -28,14 +29,6 @@ const PER_PAGE_COLS: Record<PrintPerPage, number> = {
   9: 3,
   12: 3,
 };
-
-const STACK_FROM_NAME_RE = /(\d+(?:\.\d+)?)\s*bb/i;
-
-function deriveStack(range: Range): string {
-  if (range.printLabels?.stack) return range.printLabels.stack;
-  const m = range.name.match(STACK_FROM_NAME_RE);
-  return m ? m[1]! : '';
-}
 
 function deriveFormatBadge(ranges: Range[], setting: PrintFormatBadge): string {
   if (setting !== 'auto') return setting;
