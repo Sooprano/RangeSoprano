@@ -63,7 +63,7 @@ const MODULES: readonly ModuleCard[] = [
     label: 'Entrenador',
     icon: Target,
     description:
-      'Entrena manos en mesa 6-max o Heads-Up contra tus rangos guardados. Modos Clásico (con auto-avance activable), Velocidad (contrarreloj con tabla de líderes local) y Dibujo (pintar el rango de memoria). El villano se sienta enfrente con sus cartas boca abajo y la mesa es personalizable: colores, forma y reverso de las cartas. Asigna tus propias hotkeys a cada acción (las mismas que usas en las salas) con clic derecho en el botón. Filtros por posición, situación y villano.',
+      'Entrena manos en mesa 6-max o Heads-Up contra tus rangos guardados. Modos Clásico (con auto-avance activable), Velocidad (contrarreloj con tabla de líderes local) y Dibujo (pintar el rango de memoria). El villano se sienta enfrente con sus cartas boca abajo, ves tu stack en fichas y la mesa es personalizable: colores, forma, reverso de las cartas y color de fichas. Asigna tus propias hotkeys a cada acción (las mismas que usas en las salas) con clic derecho en el botón. Filtros por posición, situación y villano.',
   },
   {
     to: '/editor',
@@ -313,17 +313,22 @@ const FAQS: readonly Faq[] = [
         </span>
         . También eliges la <span className="font-medium text-content">forma</span> de la
         mesa (estadio o un oval más largo, como el de los replayers de escritorio), el
-        estilo de las cajas de jugador (sólido, cristal o neón) y el{' '}
-        <span className="font-medium text-content">color del reverso</span> de las cartas.
+        estilo de las cajas de jugador (sólido, cristal o neón), el{' '}
+        <span className="font-medium text-content">color del reverso</span> de las cartas y
+        el de <span className="font-medium text-content">tus fichas</span> (siete colores de
+        casino).
         Ese reverso es el de las cartas boca abajo del villano, que se sienta enfrente
         según la posición del rango: en un{' '}
         <span className="font-mono text-content">BBvsBTN</span> ves al BTN con sus dos
-        cartas tapadas, así que el matchup se lee de un vistazo. Todo se guarda en tu
-        navegador y el botón Restablecer vuelve al diseño original.
+        cartas tapadas, así que el matchup se lee de un vistazo. Junto a tus cartas ves tu{' '}
+        <span className="font-medium text-content">stack en fichas</span> («12bb»), que sale
+        del campo Stack del Editor o, si lo dejaste vacío, del propio nombre del rango. El
+        logo del paño y las fichas se pueden apagar. Todo se guarda en tu navegador y el
+        botón Restablecer vuelve al diseño original.
       </>
     ),
     aPlain:
-      'Sí. En el Entrenador el botón Mesa abre un panel con vista previa en vivo: nueve preajustes de color (Navy, Wine, Emerald, Teal, Amber...) y, si quieres afinar, cada capa por separado: el fieltro, el borde, el marco, el riel interior y el fondo. También eliges la forma de la mesa (estadio o un oval más largo, como el de los replayers de escritorio), el estilo de las cajas de jugador (sólido, cristal o neón) y el color del reverso de las cartas. Ese reverso es el de las cartas boca abajo del villano, que se sienta enfrente según la posición del rango: en un BBvsBTN ves al BTN con sus dos cartas tapadas, así que el matchup se lee de un vistazo. Todo se guarda en tu navegador y el botón Restablecer vuelve al diseño original.',
+      'Sí. En el Entrenador el botón Mesa abre un panel con vista previa en vivo: nueve preajustes de color (Navy, Wine, Emerald, Teal, Amber...) y, si quieres afinar, cada capa por separado: el fieltro, el borde, el marco, el riel interior y el fondo. También eliges la forma de la mesa (estadio o un oval más largo, como el de los replayers de escritorio), el estilo de las cajas de jugador (sólido, cristal o neón), el color del reverso de las cartas y el de tus fichas (siete colores de casino). Ese reverso es el de las cartas boca abajo del villano, que se sienta enfrente según la posición del rango: en un BBvsBTN ves al BTN con sus dos cartas tapadas, así que el matchup se lee de un vistazo. Junto a tus cartas ves tu stack en fichas ("12bb"), que sale del campo Stack del Editor o, si lo dejaste vacío, del propio nombre del rango. El logo del paño y las fichas se pueden apagar. Todo se guarda en tu navegador y el botón Restablecer vuelve al diseño original.',
   },
   {
     group: 'Entrenar y estudiar',
