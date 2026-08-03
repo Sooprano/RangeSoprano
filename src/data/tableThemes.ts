@@ -208,3 +208,46 @@ export const CARD_BACKS: Record<CardBackId, CardBackDef> = {
 };
 
 export const DEFAULT_CARD_BACK: CardBackId = 'blue';
+
+export const CHIP_STYLE_IDS = [
+  'amber',
+  'red',
+  'blue',
+  'green',
+  'black',
+  'purple',
+  'ivory',
+] as const;
+export type ChipStyleId = (typeof CHIP_STYLE_IDS)[number];
+
+export type ChipStyleDef = {
+  label: string;
+  /** Face of the chip. */
+  base: string;
+  /** Edge stripe — the ring that gives the disc its volume. */
+  edge: string;
+  /** Light tint for the "12bb" label so number and chips read as one object. */
+  text: string;
+};
+
+/**
+ * Casino chip colors for the hero's stack. Three hex each, same idea as
+ * CARD_BACKS (base + accent): pairing the label tone with the chip avoids a red
+ * stack sitting next to an unrelated amber number.
+ *
+ * Every `text` is a light tint that clears the luminance check against the dark
+ * felt swatches — which is why, here too, there is no free color picker.
+ */
+export const CHIP_STYLES: Record<ChipStyleId, ChipStyleDef> = {
+  // Default: matches the established "variable numeric datum" convention
+  // (amber-200) used by the drills and the Push/Fold stack chip.
+  amber: { label: 'Ámbar', base: '#d97706', edge: '#fbbf24', text: '#fde68a' },
+  red: { label: 'Rojo', base: '#b91c1c', edge: '#f87171', text: '#fecaca' },
+  blue: { label: 'Azul', base: '#1d4ed8', edge: '#60a5fa', text: '#bfdbfe' },
+  green: { label: 'Verde', base: '#15803d', edge: '#4ade80', text: '#bbf7d0' },
+  black: { label: 'Negro', base: '#1c1f24', edge: '#6b7280', text: '#e5e7eb' },
+  purple: { label: 'Morado', base: '#6d28d9', edge: '#a78bfa', text: '#ddd6fe' },
+  ivory: { label: 'Marfil', base: '#e7e5e4', edge: '#a8a29e', text: '#f5f5f4' },
+};
+
+export const DEFAULT_CHIP_STYLE: ChipStyleId = 'amber';

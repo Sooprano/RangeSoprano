@@ -4,6 +4,7 @@ import type { Range } from '@/types/poker';
 import { DEFAULT_ACTION_DEFS } from '@/utils/actionMeta';
 import {
   CARD_BACK_IDS,
+  CHIP_STYLE_IDS,
   PLAYER_BOX_STYLES,
   TABLE_SHAPES,
 } from '@/data/tableThemes';
@@ -12,7 +13,7 @@ export const CURRENT_RANGE_STORE_VERSION = 1;
 export const CURRENT_UI_STORE_VERSION = 2;
 export const CURRENT_LEADERBOARD_STORE_VERSION = 1;
 export const CURRENT_HOTKEY_STORE_VERSION = 1;
-export const CURRENT_TABLE_THEME_VERSION = 1;
+export const CURRENT_TABLE_THEME_VERSION = 2;
 export const LEADERBOARD_TOP_N = 5;
 export const CURRENT_ODDS_LEADERBOARD_VERSION = 1;
 export const ODDS_LEADERBOARD_TOP_N = 5;
@@ -278,6 +279,9 @@ export const zPersistedTableTheme = z
     shape: z.enum(TABLE_SHAPES),
     playerBox: z.enum(PLAYER_BOX_STYLES),
     cardBack: z.enum(CARD_BACK_IDS),
+    chipStyle: z.enum(CHIP_STYLE_IDS),
+    showLogo: z.boolean(),
+    showStack: z.boolean(),
   })
   .strict();
 

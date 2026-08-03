@@ -5,6 +5,8 @@ import { useTableThemeStore } from '@/store/tableThemeStore';
 import {
   CARD_BACKS,
   CARD_BACK_IDS,
+  CHIP_STYLES,
+  CHIP_STYLE_IDS,
   LAYER_LABEL,
   LAYER_SWATCHES,
   OPTIONAL_LAYERS,
@@ -118,6 +120,7 @@ export function TableThemeModal({ onClose }: Props) {
             villainPosition="BTN"
             hand="AKs"
             tableFormat="6max"
+            stackLabel="12bb"
           />
         </TableSurface>
 
@@ -249,6 +252,54 @@ export function TableThemeModal({ onClose }: Props) {
                 </button>
               );
             })}
+          </div>
+        </Section>
+
+        <Section title="Fichas">
+          <div className="flex flex-wrap gap-1.5">
+            {CHIP_STYLE_IDS.map((id) => {
+              const chip = CHIP_STYLES[id];
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  aria-pressed={theme.chipStyle === id}
+                  onClick={() => theme.setChipStyle(id)}
+                  className={cn(
+                    'flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors',
+                    'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light',
+                    theme.chipStyle === id
+                      ? 'border-accent/60 bg-surface-hover text-content'
+                      : 'border-border text-content-muted hover:bg-surface-hover hover:text-content',
+                  )}
+                >
+                  <span
+                    aria-hidden="true"
+                    className="h-3.5 w-3.5 rounded-full"
+                    style={{
+                      backgroundColor: chip.base,
+                      boxShadow: `inset 0 0 0 1.5px ${chip.edge}`,
+                    }}
+                  />
+                  {chip.label}
+                </button>
+              );
+            })}
+          </div>
+        </Section>
+
+        <Section title="En la mesa">
+          <div className="flex flex-wrap gap-1.5">
+            <Chip
+              active={theme.showLogo}
+              label="Logo"
+              onClick={() => theme.setShowLogo(!theme.showLogo)}
+            />
+            <Chip
+              active={theme.showStack}
+              label="Fichas y stack"
+              onClick={() => theme.setShowStack(!theme.showStack)}
+            />
           </div>
         </Section>
 

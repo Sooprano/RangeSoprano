@@ -8,9 +8,11 @@ import {
 import { TABLE_THEME_STORE_KEY, createSafeJSONStorage } from './persist';
 import {
   DEFAULT_CARD_BACK,
+  DEFAULT_CHIP_STYLE,
   DEFAULT_PRESET_ID,
   presetById,
   type CardBackId,
+  type ChipStyleId,
   type PlayerBoxStyle,
   type TableLayer,
   type TableShape,
@@ -29,6 +31,9 @@ function buildInitial(): PersistedTableTheme {
     shape: 'stadium',
     playerBox: 'solid',
     cardBack: DEFAULT_CARD_BACK,
+    chipStyle: DEFAULT_CHIP_STYLE,
+    showLogo: true,
+    showStack: true,
   };
 }
 
@@ -43,6 +48,9 @@ type TableThemeState = PersistedTableTheme & {
   setShape: (shape: TableShape) => void;
   setPlayerBox: (style: PlayerBoxStyle) => void;
   setCardBack: (back: CardBackId) => void;
+  setChipStyle: (chip: ChipStyleId) => void;
+  setShowLogo: (show: boolean) => void;
+  setShowStack: (show: boolean) => void;
   reset: () => void;
 };
 
@@ -83,6 +91,9 @@ export const useTableThemeStore = create<TableThemeState>()(
       setShape: (shape) => set({ shape }),
       setPlayerBox: (playerBox) => set({ playerBox }),
       setCardBack: (cardBack) => set({ cardBack }),
+      setChipStyle: (chipStyle) => set({ chipStyle }),
+      setShowLogo: (showLogo) => set({ showLogo }),
+      setShowStack: (showStack) => set({ showStack }),
       reset: () => set({ ...INITIAL }),
     }),
     {
@@ -99,7 +110,28 @@ export const useTableThemeStore = create<TableThemeState>()(
         shape: s.shape,
         playerBox: s.playerBox,
         cardBack: s.cardBack,
+        chipStyle: s.chipStyle,
+        showLogo: s.showLogo,
+        showStack: s.showStack,
       }),
+      // v1 → v2 added chipStyle/showLogo/showStack. zPersistedTableTheme is
+      // `.strict()`, so without this a v1 blob would fail safeParse in `merge`
+      // and silently wipe a customized table back to defaults. Runs before
+      // `merge`, so it only has to fill the gaps.
+      // The return type is annotated so zustand keeps inferring
+      // PersistedTableTheme as the persisted shape (it drives the `storage`
+      // cast below). The casts are safe because `merge` still runs the blob
+      // through zPersistedTableTheme.safeParse — this only fills gaps.
+      migrate: (persisted, version): PersistedTableTheme => {
+        if (persisted == null || typeof persisted !== 'object') return INITIAL;
+        if (version >= 2) return persisted as PersistedTableTheme;
+        return {
+          chipStyle: DEFAULT_CHIP_STYLE,
+          showLogo: true,
+          showStack: true,
+          ...(persisted as Record<string, unknown>),
+        } as PersistedTableTheme;
+      },
       merge: (persisted, current) => {
         if (persisted == null) return current;
         const parsed = zPersistedTableTheme.safeParse(persisted);
