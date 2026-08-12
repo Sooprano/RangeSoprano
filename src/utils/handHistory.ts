@@ -513,11 +513,20 @@ export function parseHandHistory(raw: string): HandParseResult {
       if (lower.startsWith('bet') || lower.startsWith('raise')) {
         const to = parseRaiseTo(rest);
         const amt = parseAmount(rest);
-        // Raises use "to Y" (additional = total − already committed this street);
-        // bets/all-in shoves give the amount directly.
+        // A raise amount is always the street TOTAL, not the increment:
+        // explicit in the "raises X to Y" dialects (GG/Stars/Winamax) and
+        // implicit in iPoker's "Raise (NF) €40.00" (= raise to €40 with the
+        // €10 SB already inside it — the next line, "Call €20.00", only tops
+        // the BB up to €40). Either way the chips added = total − committed.
+        // Bets / all-in shoves give the amount directly.
         let added: number | null = null;
         if (lower.startsWith('raise') && to !== null) {
           added = to - (committed[actor] ?? 0);
+        } else if (lower.startsWith('raise') && amt) {
+          const already = committed[actor] ?? 0;
+          // If subtracting wipes out the raise, the number was an increment
+          // after all → take it raw (tolerant with unknown dialects).
+          added = amt.amount > already ? amt.amount - already : amt.amount;
         } else if (amt) {
           added = amt.amount;
         }
