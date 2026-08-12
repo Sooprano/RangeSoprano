@@ -6,7 +6,7 @@ import {
   ReadOnlyField,
   ResultCard,
   evInterpretation,
-  formatCurrency,
+  useMoney,
   parseField,
 } from './CalcShared';
 
@@ -17,6 +17,7 @@ export function EvComplexCalc({
   initialCurrentPot?: string | undefined;
   initialLoseAmount?: string | undefined;
 } = {}) {
+  const money = useMoney();
   const [foldPct, setFoldPct] = useState('60');
   const [currentPot, setCurrentPot] = useState(initialCurrentPot ?? '100');
   const [winAmount, setWinAmount] = useState('150');
@@ -53,14 +54,14 @@ export function EvComplexCalc({
 
   const tone =
     result === null ? 'neutral' : result > 0 ? 'positive' : result < 0 ? 'negative' : 'neutral';
-  const display = result === null ? '—' : formatCurrency(result);
+  const display = result === null ? '—' : money(result);
 
   const formula = 'EV = F% · Pot + C% · ($W · W% − $L · L%)';
   const substituted =
     fNum !== null && potNum !== null && wNum !== null && wpNum !== null && lNum !== null
       ? `${(fNum / 100).toFixed(2)} · ${potNum} + ${((100 - fNum) / 100).toFixed(2)} · (${wNum} · ${(wpNum / 100).toFixed(2)} − ${lNum} · ${((100 - wpNum) / 100).toFixed(2)})`
       : '—';
-  const resultStr = result !== null ? formatCurrency(result) : '—';
+  const resultStr = result !== null ? money(result) : '—';
 
   return (
     <div className="flex flex-col gap-5">
@@ -150,7 +151,7 @@ export function EvComplexCalc({
         label="EV ="
         display={display}
         tone={tone}
-        {...(result !== null ? { caption: evInterpretation(result) } : {})}
+        {...(result !== null ? { caption: evInterpretation(result, money) } : {})}
       />
 
       <FormulaDetails

@@ -5,7 +5,7 @@ import {
   NumberField,
   ResultCard,
   evInterpretation,
-  formatCurrency,
+  useMoney,
   parseField,
 } from './CalcShared';
 
@@ -14,6 +14,7 @@ export function CheckCompoundEvCalc({
 }: {
   initialPot?: string | undefined;
 } = {}) {
+  const money = useMoney();
   const [pot, setPot] = useState(initialPot ?? '100');
   const [villainBetsPct, setVillainBetsPct] = useState('50');
   const [villainBet, setVillainBet] = useState('60');
@@ -58,16 +59,16 @@ export function CheckCompoundEvCalc({
   const toneOf = (n: number | undefined) =>
     n === undefined ? 'neutral' : n > 0 ? 'positive' : n < 0 ? 'negative' : 'neutral';
 
-  const totalDisplay = result === null ? '—' : formatCurrency(result.evTotal);
-  const callDisplay = result === null ? '—' : formatCurrency(result.evCheckCall);
-  const xxDisplay = result === null ? '—' : formatCurrency(result.evCheckCheck);
+  const totalDisplay = result === null ? '—' : money(result.evTotal);
+  const callDisplay = result === null ? '—' : money(result.evCheckCall);
+  const xxDisplay = result === null ? '—' : money(result.evCheckCheck);
 
   const formula =
     'EV check = P(apuesta)·EV(check-call) + P(checkea)·EV(check-check)';
   const substituted = allValid
     ? `${(betsNum / 100).toFixed(2)}·[${(callEqNum / 100).toFixed(2)}·(${potNum}+${vbetNum}) − ${((100 - callEqNum) / 100).toFixed(2)}·${vbetNum}] + ${((100 - betsNum) / 100).toFixed(2)}·[${(xxEqNum / 100).toFixed(2)}·${potNum}]`
     : '—';
-  const resultStr = result === null ? '—' : formatCurrency(result.evTotal);
+  const resultStr = result === null ? '—' : money(result.evTotal);
 
   return (
     <div className="flex flex-col gap-5">
@@ -162,7 +163,7 @@ export function CheckCompoundEvCalc({
         label="EV total de checkear ="
         display={totalDisplay}
         tone={toneOf(result?.evTotal)}
-        {...(result !== null ? { caption: evInterpretation(result.evTotal) } : {})}
+        {...(result !== null ? { caption: evInterpretation(result.evTotal, money) } : {})}
       />
 
       <div className="grid gap-3 sm:grid-cols-2">

@@ -6,7 +6,7 @@ import {
   NumberField,
   ReadOnlyField,
   ResultCard,
-  formatCurrency,
+  useMoney,
   formatPct,
   parseField,
 } from './CalcShared';
@@ -24,6 +24,7 @@ export function CheckVsBetCalc({
   initialWinWhenCalledPct?: string | undefined;
   initialFoldPct?: string | undefined;
 } = {}) {
+  const money = useMoney();
   const [pot, setPot] = useState(initialPot ?? '100');
   const [checkWinPct, setCheckWinPct] = useState(initialCheckWinPct ?? '25');
   const [bet, setBet] = useState(initialBet ?? '50');
@@ -96,8 +97,8 @@ export function CheckVsBetCalc({
           ? 'negative'
           : 'neutral';
 
-  const checkDisplay = checkResult === null ? '—' : formatCurrency(checkResult);
-  const betDisplay = betResult === null ? '—' : formatCurrency(betResult);
+  const checkDisplay = checkResult === null ? '—' : money(checkResult);
+  const betDisplay = betResult === null ? '—' : money(betResult);
 
   const recommendation = (() => {
     if (checkResult === null || betResult === null) return null;
@@ -114,14 +115,14 @@ export function CheckVsBetCalc({
   const checkSubstituted = checkAllValid
     ? `${potNum} · ${(checkWinNum / 100).toFixed(2)}`
     : '—';
-  const checkResultStr = checkResult !== null ? formatCurrency(checkResult) : '—';
+  const checkResultStr = checkResult !== null ? money(checkResult) : '—';
 
   const betFormula =
     'EV bet = F·Pot + C·(W·(Pot+Bet) − (1−W)·Bet) − R·Bet   ·   C = 1−F−R';
   const betSubstituted = betAllValid
     ? `${(fNum / 100).toFixed(2)}·${potNum} + ${((100 - fNum - rNum) / 100).toFixed(2)}·(${(wcNum / 100).toFixed(2)}·(${potNum}+${betNum}) − ${((100 - wcNum) / 100).toFixed(2)}·${betNum}) − ${(rNum / 100).toFixed(2)}·${betNum}`
     : '—';
-  const betResultStr = betResult !== null ? formatCurrency(betResult) : '—';
+  const betResultStr = betResult !== null ? money(betResult) : '—';
 
   return (
     <div className="flex flex-col gap-5">
@@ -269,6 +270,7 @@ function RecommendationCard({
 }: {
   rec: { action: 'check' | 'bet' | 'tie'; delta: number } | null;
 }) {
+  const money = useMoney();
   if (rec === null) {
     return (
       <div className="rounded-xl border border-border bg-surface/30 px-4 py-3 text-sm text-content-disabled">
@@ -302,7 +304,7 @@ function RecommendationCard({
       <span className="text-sm text-content-muted">
         gana por{' '}
         <span className="font-mono font-semibold tabular-nums text-emerald-300">
-          {formatCurrency(rec.delta)}
+          {money(rec.delta)}
         </span>{' '}
         de EV frente a la otra opción.
       </span>

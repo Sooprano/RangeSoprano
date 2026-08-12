@@ -1,10 +1,59 @@
-import type { ReactNode } from 'react';
+import { createContext, useCallback, useContext, type ReactNode } from 'react';
 import { cn } from '@/lib/cn';
 
 export type FieldState = {
   value: string;
   num: number | null;
 };
+
+/**
+ * Unit every monetary amount of a calc is rendered in. One of the two sides is
+ * empty: a currency goes before the number ('$120', '€120') and a stack unit
+ * goes after it ('6 BB').
+ *
+ * The default is the plain '$' of /calculadoras, so a calc rendered outside a
+ * provider looks exactly as it always did. The /analisis worksheet wraps the
+ * inline calc in a provider to show the hand's real currency — or BB, when the
+ * user flips the Fichas/BB toggle (the seeded amounts are divided by the big
+ * blind there, so only the label has to follow).
+ */
+export type MoneyUnit = { prefix: string; suffix: string };
+
+const DEFAULT_MONEY_UNIT: MoneyUnit = { prefix: '$', suffix: '' };
+
+const MoneyUnitContext = createContext<MoneyUnit>(DEFAULT_MONEY_UNIT);
+
+export function MoneyUnitProvider({
+  unit,
+  children,
+}: {
+  unit: MoneyUnit;
+  children: ReactNode;
+}) {
+  return (
+    <MoneyUnitContext.Provider value={unit}>{children}</MoneyUnitContext.Provider>
+  );
+}
+
+function formatAmount(n: number, unit: MoneyUnit): string {
+  const rounded = Math.round(n * 100) / 100;
+  const abs = Math.abs(rounded).toFixed(2);
+  const trimmed = abs.replace(/\.?0+$/, '') || '0';
+  const sign = rounded < 0 ? '−' : '';
+  return unit.suffix
+    ? `${sign}${unit.prefix}${trimmed} ${unit.suffix}`
+    : `${sign}${unit.prefix}${trimmed}`;
+}
+
+/**
+ * Formats an amount in the ambient unit. Use this inside a calc instead of
+ * `formatCurrency` so the number carries the right symbol when the calc is
+ * embedded in the análisis worksheet.
+ */
+export function useMoney(): (n: number) => string {
+  const unit = useContext(MoneyUnitContext);
+  return useCallback((n: number) => formatAmount(n, unit), [unit]);
+}
 
 export function parseField(
   value: string,
@@ -18,12 +67,9 @@ export function parseField(
   return n;
 }
 
+/** Amount in the default '$' unit. For calc internals prefer `useMoney()`. */
 export function formatCurrency(n: number): string {
-  const rounded = Math.round(n * 100) / 100;
-  const abs = Math.abs(rounded).toFixed(2);
-  const trimmed = abs.replace(/\.?0+$/, '') || '0';
-  const sign = rounded < 0 ? '−' : '';
-  return `${sign}$${trimmed}`;
+  return formatAmount(n, DEFAULT_MONEY_UNIT);
 }
 
 export function formatPct(n: number): string {
@@ -32,11 +78,15 @@ export function formatPct(n: number): string {
 }
 
 // Línea de interpretación de un EV en dinero, para que se lea cómo afecta a largo plazo.
-export function evInterpretation(ev: number): string {
+// `format` permite pasar el `useMoney()` de la calc (€ o BB en /analisis).
+export function evInterpretation(
+  ev: number,
+  format: (n: number) => string = formatCurrency,
+): string {
   if (Math.abs(ev) < 0.005) {
     return 'Es break-even: en promedio ni ganas ni pierdes con esta jugada.';
   }
-  const abs = formatCurrency(Math.abs(ev));
+  const abs = format(Math.abs(ev));
   return ev > 0
     ? `A largo plazo ganas ${abs} en promedio cada vez que tomas esta decisión (+EV).`
     : `A largo plazo pierdes ${abs} en promedio cada vez que tomas esta decisión (−EV).`;
@@ -67,6 +117,13 @@ export function NumberField({
   step?: number;
   invalid?: boolean;
 }) {
+  // `prefix="$"` marks the field as monetary: the symbol actually shown comes
+  // from the ambient MoneyUnit ('$' by default, '€' o 'BB' en /analisis). No
+  // money field carries a suffix of its own, so BB can borrow that slot.
+  const unit = useContext(MoneyUnitContext);
+  const isMoney = prefix === '$';
+  const shownPrefix = isMoney ? unit.prefix : prefix;
+  const shownSuffix = isMoney && unit.suffix ? unit.suffix : suffix;
   return (
     <div className="flex flex-col gap-1.5">
       <label htmlFor={id} className="text-xs font-medium text-content-muted">
@@ -79,8 +136,8 @@ export function NumberField({
           invalid ? 'border-rose-500/50' : 'border-border',
         )}
       >
-        {prefix && (
-          <span className="text-sm text-content-muted">{prefix}</span>
+        {shownPrefix && (
+          <span className="text-sm text-content-muted">{shownPrefix}</span>
         )}
         <input
           id={id}
@@ -93,8 +150,8 @@ export function NumberField({
           step={step}
           className="w-full bg-transparent text-sm tabular-nums text-content outline-none placeholder:text-content-disabled"
         />
-        {suffix && (
-          <span className="text-sm text-content-muted">{suffix}</span>
+        {shownSuffix && (
+          <span className="text-sm text-content-muted">{shownSuffix}</span>
         )}
       </div>
       {hint && <p className="text-[11px] text-content-disabled">{hint}</p>}

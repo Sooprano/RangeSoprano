@@ -6,7 +6,7 @@ import {
   ReadOnlyField,
   ResultCard,
   evInterpretation,
-  formatCurrency,
+  useMoney,
   formatPct,
   parseField,
 } from './CalcShared';
@@ -20,6 +20,7 @@ export function EvBasicCalc({
   initialWinPct?: string | undefined;
   initialLoseAmount?: string | undefined;
 } = {}) {
+  const money = useMoney();
   const [winAmount, setWinAmount] = useState(initialWinAmount ?? '100');
   const [winPct, setWinPct] = useState(initialWinPct ?? '40');
   const [loseAmount, setLoseAmount] = useState(initialLoseAmount ?? '50');
@@ -47,14 +48,14 @@ export function EvBasicCalc({
 
   const tone =
     result === null ? 'neutral' : result > 0 ? 'positive' : result < 0 ? 'negative' : 'neutral';
-  const display = result === null ? '—' : formatCurrency(result);
+  const display = result === null ? '—' : money(result);
 
   const formula = 'EV = Pot · %ganar − Apuesta · %perder';
   const substituted =
     wNum !== null && wpNum !== null && lNum !== null
       ? `${wNum} · ${(wpNum / 100).toFixed(2)} − ${lNum} · ${((100 - wpNum) / 100).toFixed(2)}`
       : '—';
-  const resultStr = result !== null ? formatCurrency(result) : '—';
+  const resultStr = result !== null ? money(result) : '—';
 
   return (
     <div className="flex flex-col gap-5">
@@ -125,7 +126,7 @@ export function EvBasicCalc({
         label="EV ="
         display={display}
         tone={tone}
-        {...(result !== null ? { caption: evInterpretation(result) } : {})}
+        {...(result !== null ? { caption: evInterpretation(result, money) } : {})}
       />
 
       <FormulaDetails

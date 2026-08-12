@@ -22,6 +22,8 @@ export type CalcSeedNumbers = {
   betRiver?: number;
   currentPot?: number;
   loseAmount?: number;
+  /** Effective stack still behind after paying the current bet. */
+  effectiveStack?: number;
 };
 
 export type CalcSuggestion = {
@@ -83,6 +85,78 @@ function villainBetFaced(hand: ParsedHand, decision: Decision): number {
     }
   }
   return 0;
+}
+
+/**
+ * Chips the actor of `decision` still had to put in to continue: what the most
+ * aggressive opponent committed on this street minus what the actor already
+ * put in. Unlike reading the villain's bet amount raw, this is correct when the
+ * hero had already bet and the villain raised over it (you only owe the
+ * difference).
+ */
+function amountToCall(hand: ParsedHand, decision: Decision): number {
+  const sd = hand.streets.find((s) => s.street === decision.street);
+  if (!sd) return 0;
+  const idx = sd.decisions.indexOf(decision);
+  if (idx < 0) return 0;
+  const committed: Record<string, number> = {};
+  for (const d of sd.decisions.slice(0, idx)) {
+    committed[d.actor] = (committed[d.actor] ?? 0) + d.amount;
+  }
+  const mine = committed[decision.actor] ?? 0;
+  const theirs = Object.entries(committed)
+    .filter(([name]) => name !== decision.actor)
+    .reduce((max, [, v]) => Math.max(max, v), 0);
+  return Math.max(0, theirs - mine);
+}
+
+/**
+ * Chips each player still has behind at the moment `decision` is taken: their
+ * starting stack minus everything they already put in the pot across the whole
+ * hand (blinds and antes included, and the bet the hero is facing right now).
+ */
+function stacksBehind(
+  hand: ParsedHand,
+  decision: Decision,
+): Record<string, number> {
+  const behind: Record<string, number> = {};
+  for (const p of hand.players) behind[p.name] = p.stack;
+  for (const sd of hand.streets) {
+    for (const d of sd.decisions) {
+      if (d === decision) return behind;
+      const left = behind[d.actor];
+      if (left !== undefined) behind[d.actor] = left - d.amount;
+    }
+  }
+  return behind;
+}
+
+/**
+ * Money still playable behind the bet the hero is facing:
+ *   - `effective`: the most the hero can still win on future streets — capped
+ *     by the shortest stack, which is what implied odds are really limited by.
+ *   - `shove`: total chips the hero would put in raising all-in, capped at what
+ *     the villain can actually call (raising more than that wins nothing extra).
+ * Null when the history carries no stacks to work with.
+ */
+function stackContext(
+  hand: ParsedHand,
+  decision: Decision,
+  call: number,
+): { effective: number; shove: number } | null {
+  if (hand.players.length < 2) return null;
+  const behind = stacksBehind(hand, decision);
+  const mine = behind[decision.actor];
+  if (mine === undefined) return null;
+  const others = Object.entries(behind)
+    .filter(([name]) => name !== decision.actor)
+    .map(([, left]) => left);
+  if (others.length === 0) return null;
+  const opponent = Math.max(...others);
+  return {
+    effective: Math.max(0, Math.min(mine - call, opponent)),
+    shove: Math.max(call, Math.min(mine, call + Math.max(0, opponent))),
+  };
 }
 
 /** The two-street barrel line a hero bet participates in, if any. */
@@ -167,7 +241,8 @@ export function flopzillaInputsFor(mode: CalcMode): string[] {
 
 /**
  * Suggests the calculator for a hero decision. Returns null for actions with no
- * EV question (fold / post) or non-hero decisions. Seeds carry every generic
+ * EV question (a post, a fold that faced nothing) or non-hero decisions. Seeds
+ * carry every generic
  * field the offered calcs may read, so switching to an alternative keeps the
  * hand's numbers pre-filled (not the calc's defaults).
  */
@@ -232,16 +307,48 @@ export function suggestCalcForDecision(
 
   // ── Hero calls a bet ────────────────────────────────────────────────────
   if (decision.type === 'call') {
+    const stacks = stackContext(hand, decision, decision.amount);
     return {
       primary: 'call-vs-raise',
       seed: {
         pot: decision.potBefore,
         call: decision.amount,
-        currentPot: decision.potBefore - decision.amount,
+        // Implied odds read `currentPot` as the pot the call is priced against
+        // — the villain's bet included, your own call excluded. That is exactly
+        // `potBefore`.
+        currentPot: decision.potBefore,
+        ...(stacks
+          ? { effectiveStack: stacks.effective, shove: stacks.shove }
+          : {}),
       },
       alternatives: ['implied-odds', 'ev-basic'],
       rationale:
         'Pagar una apuesta: compara el EV de pagar con tu equity contra el de restear. Implied odds si esperas cobrar más en calles futuras.',
+    };
+  }
+
+  // ── Hero folds to a bet ─────────────────────────────────────────────────
+  // A fold is a decision like any other: the question is whether the pot was
+  // laying the price to continue. Same tool as a call (the calc already scores
+  // Fold = 0 against it), so the hand doesn't go dark on the street where you
+  // gave up — which is usually the one worth reviewing.
+  if (decision.type === 'fold') {
+    const call = amountToCall(hand, decision);
+    if (call <= 0) return null; // folded facing nothing → no EV question
+    const stacks = stackContext(hand, decision, call);
+    return {
+      primary: 'call-vs-raise',
+      seed: {
+        pot: decision.potBefore,
+        call,
+        currentPot: decision.potBefore, // ver el comentario del branch de call
+        ...(stacks
+          ? { effectiveStack: stacks.effective, shove: stacks.shove }
+          : {}),
+      },
+      alternatives: ['implied-odds', 'ev-basic'],
+      rationale:
+        'Te tiraste: la pregunta es si el pot te daba precio. Ingresa la equity que tenías y compara el EV de pagar contra el 0 que vale el fold (la calc también evalúa restarte all-in). Si esperabas cobrar más en calles futuras, mira implied odds.',
     };
   }
 

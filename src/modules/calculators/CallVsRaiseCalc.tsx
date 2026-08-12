@@ -6,7 +6,7 @@ import {
   NumberField,
   ReadOnlyField,
   ResultCard,
-  formatCurrency,
+  useMoney,
   formatPct,
   parseField,
 } from './CalcShared';
@@ -26,6 +26,7 @@ export function CallVsRaiseCalc({
   initialWinWhenCalledPct?: string | undefined;
   initialFoldPct?: string | undefined;
 } = {}) {
+  const money = useMoney();
   const [pot, setPot] = useState(initialPot ?? '150');
   const [call, setCall] = useState(initialCall ?? '50');
   const [callEquityPct, setCallEquityPct] = useState(initialCallEquityPct ?? '25');
@@ -99,9 +100,9 @@ export function CallVsRaiseCalc({
           ? 'negative'
           : 'neutral';
 
-  const callDisplay = callResult === null ? '—' : formatCurrency(callResult);
+  const callDisplay = callResult === null ? '—' : money(callResult);
   const raiseDisplay =
-    raiseResult === null ? '—' : formatCurrency(raiseResult.ev);
+    raiseResult === null ? '—' : money(raiseResult.ev);
 
   const raiseBreakeven = (() => {
     if (raiseResult === null) return null;
@@ -131,7 +132,7 @@ export function CallVsRaiseCalc({
   const callSubstituted = callAllValid
     ? `${potNum} · ${(callEqNum / 100).toFixed(2)} − ${callNum} · ${((100 - callEqNum) / 100).toFixed(2)}`
     : '—';
-  const callResultStr = callResult !== null ? formatCurrency(callResult) : '—';
+  const callResultStr = callResult !== null ? money(callResult) : '—';
 
   const raiseFormula =
     'EV Raise = F% · Pot + (1−F%) · W% · (Pot+Shove−Call) − (1−F%) · (1−W%) · Shove';
@@ -139,7 +140,7 @@ export function CallVsRaiseCalc({
     ? `${(fNum / 100).toFixed(2)} · ${potNum} + ${((100 - fNum) / 100).toFixed(2)} · ${(wcNum / 100).toFixed(2)} · (${potNum} + ${shoveNum} − ${callNum}) − ${((100 - fNum) / 100).toFixed(2)} · ${((100 - wcNum) / 100).toFixed(2)} · ${shoveNum}`
     : '—';
   const raiseResultStr =
-    raiseResult !== null ? formatCurrency(raiseResult.ev) : '—';
+    raiseResult !== null ? money(raiseResult.ev) : '—';
 
   return (
     <div className="flex flex-col gap-5">
@@ -284,6 +285,7 @@ function RecommendationCard({
 }: {
   rec: { action: 'call' | 'raise' | 'fold' | 'tie'; delta: number } | null;
 }) {
+  const money = useMoney();
   if (rec === null) {
     return (
       <div className="rounded-xl border border-border bg-surface/30 px-4 py-3 text-sm text-content-disabled">
@@ -318,7 +320,7 @@ function RecommendationCard({
       <span className="text-sm text-content-muted">
         gana por{' '}
         <span className="font-mono font-semibold tabular-nums text-emerald-300">
-          {formatCurrency(rec.delta)}
+          {money(rec.delta)}
         </span>{' '}
         de EV frente a la siguiente mejor opción.
       </span>

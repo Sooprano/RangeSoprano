@@ -5,7 +5,7 @@ import {
   FormulaDetails,
   NumberField,
   ResultCard,
-  formatCurrency,
+  useMoney,
   parseField,
 } from './CalcShared';
 
@@ -47,6 +47,7 @@ export function AllInEvCalc({
   initialEquityPct?: string | undefined;
   initialFoldPct?: string | undefined;
 } = {}) {
+  const money = useMoney();
   const [pot, setPot] = useState(initialPot ?? '100');
   const [call, setCall] = useState(initialCall ?? '75');
   const [shove, setShove] = useState(initialShove ?? '400');
@@ -93,7 +94,7 @@ export function AllInEvCalc({
         : result.ev < 0
           ? 'negative'
           : 'neutral';
-  const display = result === null ? '—' : formatCurrency(result.ev);
+  const display = result === null ? '—' : money(result.ev);
 
   const breakevenCaption = (() => {
     if (result === null) return null;
@@ -123,7 +124,7 @@ export function AllInEvCalc({
   const substituted = allValid
     ? `${(fNum / 100).toFixed(2)} · ${potNum} + ${((100 - fNum) / 100).toFixed(2)} · ${(eqNum / 100).toFixed(2)} · (${potNum} + ${shoveNum} − ${callNum}) − ${((100 - fNum) / 100).toFixed(2)} · ${((100 - eqNum) / 100).toFixed(2)} · ${shoveNum}`
     : '—';
-  const resultStr = result !== null ? formatCurrency(result.ev) : '—';
+  const resultStr = result !== null ? money(result.ev) : '—';
 
   return (
     <div className="flex flex-col gap-5">
@@ -235,6 +236,7 @@ function SensitivityTable({
   equityPct: number | null;
   foldPct: number | null;
 }) {
+  const money = useMoney();
   const cells = useMemo(() => {
     if (
       pot === null ||
@@ -303,7 +305,7 @@ function SensitivityTable({
                         'rounded-md bg-accent/10 ring-1 ring-accent/40',
                     )}
                   >
-                    {formatCurrency(c.ev)}
+                    {money(c.ev)}
                   </td>
                 ))}
               </tr>

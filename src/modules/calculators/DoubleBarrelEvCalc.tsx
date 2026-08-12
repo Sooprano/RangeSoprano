@@ -6,7 +6,7 @@ import {
   NumberField,
   ReadOnlyField,
   ResultCard,
-  formatCurrency,
+  useMoney,
   formatPct,
   parseField,
 } from './CalcShared';
@@ -20,6 +20,7 @@ export function DoubleBarrelEvCalc({
   initialBetTurn?: string | undefined;
   initialBetRiver?: string | undefined;
 } = {}) {
+  const money = useMoney();
   const [potTurn, setPotTurn] = useState(initialPotTurn ?? '100');
   const [betTurn, setBetTurn] = useState(initialBetTurn ?? '50');
   const [foldTurn, setFoldTurn] = useState('25');
@@ -84,9 +85,9 @@ export function DoubleBarrelEvCalc({
           ? 'negative'
           : 'neutral';
 
-  const turnDisplay = result === null ? '—' : formatCurrency(result.evTurnOnly);
+  const turnDisplay = result === null ? '—' : money(result.evTurnOnly);
   const combinedDisplay =
-    result === null ? '—' : formatCurrency(result.evCombined);
+    result === null ? '—' : money(result.evCombined);
 
   const insight = (() => {
     if (result === null) return null;
@@ -94,24 +95,24 @@ export function DoubleBarrelEvCalc({
     if (evCombined > 0 && evTurnOnly < 0) {
       return {
         tone: 'positive' as const,
-        text: `El barrel del river rescata la jugada: el bet del turn solo pierde ${formatCurrency(evTurnOnly)}, pero la línea completa gana ${formatCurrency(evCombined)}. Tener un plan de seguir en el river hace +EV una apuesta que sola sería −EV.`,
+        text: `El barrel del river rescata la jugada: el bet del turn solo pierde ${money(evTurnOnly)}, pero la línea completa gana ${money(evCombined)}. Tener un plan de seguir en el river hace +EV una apuesta que sola sería −EV.`,
       };
     }
     if (evCombined > 0 && evTurnOnly >= 0) {
       return {
         tone: 'positive' as const,
-        text: `Ambas son +EV: el bet del turn ya gana ${formatCurrency(evTurnOnly)} y la línea completa ${formatCurrency(evCombined)}. Apuesta con confianza.`,
+        text: `Ambas son +EV: el bet del turn ya gana ${money(evTurnOnly)} y la línea completa ${money(evCombined)}. Apuesta con confianza.`,
       };
     }
     if (evCombined <= 0 && evTurnOnly < 0) {
       return {
         tone: 'negative' as const,
-        text: `La línea completa sigue siendo −EV (${formatCurrency(evCombined)}). Ni con el barrel del river se rescata: necesitas más fold equity (en el turn o el river) o mejor equity de respaldo.`,
+        text: `La línea completa sigue siendo −EV (${money(evCombined)}). Ni con el barrel del river se rescata: necesitas más fold equity (en el turn o el river) o mejor equity de respaldo.`,
       };
     }
     return {
       tone: 'negative' as const,
-      text: `El bet del turn gana solo (${formatCurrency(evTurnOnly)}) pero seguir con el barrel baja el EV a ${formatCurrency(evCombined)}. Considerá apostar el turn y checkear el river.`,
+      text: `El bet del turn gana solo (${money(evTurnOnly)}) pero seguir con el barrel baja el EV a ${money(evCombined)}. Considerá apostar el turn y checkear el river.`,
     };
   })();
 
@@ -120,7 +121,7 @@ export function DoubleBarrelEvCalc({
     ? `${(foldTurnNum / 100).toFixed(2)} · ${potTurnNum} − ${((100 - foldTurnNum) / 100).toFixed(2)} · ${betTurnNum}`
     : '—';
   const turnResultStr =
-    result !== null ? formatCurrency(result.evTurnOnly) : '—';
+    result !== null ? money(result.evTurnOnly) : '—';
 
   const combinedFormula =
     'EV combinado = Fold_t · Pot_t + (1−Fold_t) · Fold_r · (Pot_t + Bet_t) − (1−Fold_t) · (1−Fold_r) · (Bet_t + Bet_r)';
@@ -128,7 +129,7 @@ export function DoubleBarrelEvCalc({
     ? `${(foldTurnNum / 100).toFixed(2)} · ${potTurnNum} + ${((100 - foldTurnNum) / 100).toFixed(2)} · ${(foldRiverNum / 100).toFixed(2)} · (${potTurnNum} + ${betTurnNum}) − ${((100 - foldTurnNum) / 100).toFixed(2)} · ${((100 - foldRiverNum) / 100).toFixed(2)} · (${betTurnNum} + ${betRiverNum})`
     : '—';
   const combinedResultStr =
-    result !== null ? formatCurrency(result.evCombined) : '—';
+    result !== null ? money(result.evCombined) : '—';
 
   return (
     <div className="flex flex-col gap-5">

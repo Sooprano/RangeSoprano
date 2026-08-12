@@ -95,14 +95,14 @@ export function FloatEvCalc({
         <div className="grid gap-4 sm:grid-cols-2">
           <NumberField
             id="float-pot"
-            label="Pot en el flop (antes de tu call)"
+            label="Pot en el flop — incluye la apuesta del villano"
             value={potOnFlop}
             onChange={setPotOnFlop}
             prefix="$"
             min={0}
             step={1}
             invalid={potOnFlop.trim() !== '' && potNum === null}
-            hint="Lo que hay en el bote incluyendo la apuesta del villano"
+            hint="Todo lo que hay en el centro antes de pagar. Tu call NO va acá"
           />
           <NumberField
             id="float-call"

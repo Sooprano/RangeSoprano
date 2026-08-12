@@ -5,7 +5,7 @@ import {
   NumberField,
   ReadOnlyField,
   ResultCard,
-  formatCurrency,
+  useMoney,
   parseField,
 } from './CalcShared';
 
@@ -18,6 +18,7 @@ export function BluffEvCalc({
   initialBet?: string | undefined;
   initialFoldPct?: string | undefined;
 } = {}) {
+  const money = useMoney();
   const [pot, setPot] = useState(initialPot ?? '100');
   const [bet, setBet] = useState(initialBet ?? '75');
   const [foldPct, setFoldPct] = useState(initialFoldPct ?? '45');
@@ -47,7 +48,7 @@ export function BluffEvCalc({
         : result.ev < 0
           ? 'negative'
           : 'neutral';
-  const display = result === null ? '—' : formatCurrency(result.ev);
+  const display = result === null ? '—' : money(result.ev);
 
   const breakevenCaption = (() => {
     if (result === null) return null;
@@ -71,7 +72,7 @@ export function BluffEvCalc({
   const substituted = allValid
     ? `${(fNum / 100).toFixed(2)} · ${potNum} − ${((100 - fNum) / 100).toFixed(2)} · ${betNum}`
     : '—';
-  const resultStr = result !== null ? formatCurrency(result.ev) : '—';
+  const resultStr = result !== null ? money(result.ev) : '—';
 
   return (
     <div className="flex flex-col gap-5">
@@ -162,6 +163,7 @@ function Breakdown({
   bet: number | null;
   foldPct: number | null;
 }) {
+  const money = useMoney();
   if (result === null || pot === null || bet === null || foldPct === null) {
     return null;
   }
@@ -177,11 +179,11 @@ function Breakdown({
             </span>{' '}
             del tiempo se tira → te llevas el pot de{' '}
             <span className="font-mono tabular-nums text-content">
-              {formatCurrency(pot)}
+              {money(pot)}
             </span>
           </span>
           <span className="font-mono font-semibold tabular-nums text-emerald-300">
-            {formatCurrency(result.pickupAmount)}
+            {money(result.pickupAmount)}
           </span>
         </div>
         <div className="flex items-baseline justify-between gap-3">
@@ -191,11 +193,11 @@ function Breakdown({
             </span>{' '}
             del tiempo paga → pierdes tu bet de{' '}
             <span className="font-mono tabular-nums text-content">
-              {formatCurrency(bet)}
+              {money(bet)}
             </span>
           </span>
           <span className="font-mono font-semibold tabular-nums text-rose-300">
-            −{formatCurrency(result.lossAmount)}
+            −{money(result.lossAmount)}
           </span>
         </div>
       </div>

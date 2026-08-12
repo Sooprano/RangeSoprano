@@ -2,12 +2,27 @@ import { useMemo, useState } from 'react';
 import { Calculator, Check, Coins, Pencil } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { CALC_META, type CalcMode } from '@/modules/calculators/calcMeta';
+import { MoneyUnitProvider, type MoneyUnit } from '@/modules/calculators/CalcShared';
 import type { Decision, ParsedHand, StreetData } from '@/utils/handHistory';
 import { flopzillaInputsFor, suggestCalcForDecision } from '@/utils/spotCalc';
 import { BoardCards } from './BoardCards';
 import { InlineCalc } from './InlineCalc';
 
 type Unit = 'chips' | 'bb';
+
+/**
+ * Everything the € / BB switch needs, threaded down to each decision row: the
+ * inline calc offers the same toggle (scrolling back up to the header to change
+ * units while reading a calc is the kind of friction that kills the feature)
+ * and needs the unit both to re-seed its amounts and to label them.
+ */
+type UnitControls = {
+  unit: Unit;
+  setUnit: (u: Unit) => void;
+  /** Symbol the embedded calcs render around every amount. */
+  moneyUnit: MoneyUnit;
+  bbDisabled: boolean;
+};
 
 const STREET_LABEL: Record<StreetData['street'], string> = {
   preflop: 'Preflop',
@@ -58,6 +73,15 @@ export function HandWorksheet({ hand }: { hand: ParsedHand }) {
     };
   }, [canBb, bb]);
 
+  const units: UnitControls = {
+    unit,
+    setUnit,
+    moneyUnit: canBb
+      ? { prefix: '', suffix: 'BB' }
+      : { prefix: hand.currency, suffix: '' },
+    bbDisabled: hand.bigBlind == null,
+  };
+
   return (
     <div className="flex flex-col gap-5">
       <HeaderCard hand={hand} unit={unit} onUnit={setUnit} display={display} />
@@ -69,6 +93,7 @@ export function HandWorksheet({ hand }: { hand: ParsedHand }) {
           hand={hand}
           display={display}
           seedFmt={seedFmt}
+          units={units}
           openId={openId}
           setOpenId={setOpenId}
           modeById={modeById}
@@ -197,6 +222,7 @@ function StreetSection({
   hand,
   display,
   seedFmt,
+  units,
   openId,
   setOpenId,
   modeById,
@@ -206,6 +232,7 @@ function StreetSection({
   hand: ParsedHand;
   display: (n: number | undefined) => string;
   seedFmt: (n: number | undefined) => string | undefined;
+  units: UnitControls;
   openId: string | null;
   setOpenId: (id: string | null) => void;
   modeById: Record<string, CalcMode>;
@@ -239,6 +266,7 @@ function StreetSection({
             hand={hand}
             display={display}
             seedFmt={seedFmt}
+            units={units}
             open={openId === d.id}
             onToggle={() => setOpenId(openId === d.id ? null : d.id)}
             mode={modeById[d.id]}
@@ -255,6 +283,7 @@ function DecisionRow({
   hand,
   display,
   seedFmt,
+  units,
   open,
   onToggle,
   mode,
@@ -264,6 +293,7 @@ function DecisionRow({
   hand: ParsedHand;
   display: (n: number | undefined) => string;
   seedFmt: (n: number | undefined) => string | undefined;
+  units: UnitControls;
   open: boolean;
   onToggle: () => void;
   mode: CalcMode | undefined;
@@ -342,40 +372,50 @@ function DecisionRow({
             </p>
           )}
 
-          {calcOptions.length > 1 && (
-            <div className="mb-4 flex flex-wrap gap-1.5">
-              {calcOptions.map((m) => {
-                const meta = CALC_META[m];
-                const Icon = meta.Icon;
-                return (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => onMode(m)}
-                    className={cn(
-                      'inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
-                      m === activeMode
-                        ? 'bg-surface text-content shadow-[inset_0_0_0_1px_rgb(var(--color-accent)/0.6)]'
-                        : 'bg-surface/40 text-content-muted ring-1 ring-inset ring-border/50 hover:text-content',
-                    )}
-                  >
-                    <Icon className="h-3.5 w-3.5" strokeWidth={2.25} />
-                    {meta.label}
-                  </button>
-                );
-              })}
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap gap-1.5">
+              {calcOptions.length > 1 &&
+                calcOptions.map((m) => {
+                  const meta = CALC_META[m];
+                  const Icon = meta.Icon;
+                  return (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => onMode(m)}
+                      className={cn(
+                        'inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
+                        m === activeMode
+                          ? 'bg-surface text-content shadow-[inset_0_0_0_1px_rgb(var(--color-accent)/0.6)]'
+                          : 'bg-surface/40 text-content-muted ring-1 ring-inset ring-border/50 hover:text-content',
+                      )}
+                    >
+                      <Icon className="h-3.5 w-3.5" strokeWidth={2.25} />
+                      {meta.label}
+                    </button>
+                  );
+                })}
             </div>
-          )}
+            <UnitToggle
+              unit={units.unit}
+              onUnit={units.setUnit}
+              disabled={units.bbDisabled}
+            />
+          </div>
 
           <DataSourceLegend mode={activeMode} />
 
-          {/* key remounts the calc so the seed re-applies when switching calc/decision. */}
-          <InlineCalc
-            key={`${decision.id}-${activeMode}`}
-            mode={activeMode}
-            seed={suggestion?.seed ?? {}}
-            fmt={seedFmt}
-          />
+          {/* The key remounts the calc so the seed re-applies when the decision,
+              the calc or the unit changes (the amounts are seeded once, on
+              mount — switching to BB has to re-feed them divided by the BB). */}
+          <MoneyUnitProvider unit={units.moneyUnit}>
+            <InlineCalc
+              key={`${decision.id}-${activeMode}-${units.unit}`}
+              mode={activeMode}
+              seed={suggestion?.seed ?? {}}
+              fmt={seedFmt}
+            />
+          </MoneyUnitProvider>
         </div>
       )}
     </li>
@@ -392,8 +432,9 @@ function DataSourceLegend({ mode }: { mode: CalcMode }) {
           Cargado de la mano
         </p>
         <p className="mt-1 text-xs text-content-muted">
-          Los montos (pot y apuesta) ya están puestos automáticamente desde el
-          historial. No los toques salvo que quieras simular otro tamaño.
+          Los montos (pot, apuesta y stack efectivo restante) ya están puestos
+          automáticamente desde el historial. No los toques salvo que quieras
+          simular otro tamaño.
         </p>
       </div>
       <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">

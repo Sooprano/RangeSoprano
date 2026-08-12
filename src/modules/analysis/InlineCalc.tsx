@@ -71,6 +71,7 @@ export function InlineCalc({
         <ImpliedOddsCalc
           initialCurrentPot={fmt(seed.currentPot ?? seed.pot)}
           initialCall={fmt(seed.call)}
+          initialRemainingStack={fmt(seed.effectiveStack)}
         />
       );
     case 'fold-equity-required':

@@ -5,7 +5,7 @@ import {
   FormulaDetails,
   NumberField,
   ResultCard,
-  formatCurrency,
+  useMoney,
   formatPct,
   parseField,
 } from './CalcShared';
@@ -13,14 +13,19 @@ import {
 export function ImpliedOddsCalc({
   initialCall,
   initialCurrentPot,
+  initialRemainingStack,
 }: {
   initialCall?: string | undefined;
   initialCurrentPot?: string | undefined;
+  initialRemainingStack?: string | undefined;
 } = {}) {
+  const money = useMoney();
   const [callAmount, setCallAmount] = useState(initialCall ?? '50');
   const [currentPot, setCurrentPot] = useState(initialCurrentPot ?? '100');
   const [equityPct, setEquityPct] = useState('20');
-  const [remainingStack, setRemainingStack] = useState('200');
+  const [remainingStack, setRemainingStack] = useState(
+    initialRemainingStack ?? '200',
+  );
 
   const callNum = parseField(callAmount, { min: 0 });
   const potNum = parseField(currentPot, { min: 0 });
@@ -49,9 +54,9 @@ export function ImpliedOddsCalc({
       const exceedsStack =
         stackNum !== null && result.impliedNeeded > stackNum;
       tone = exceedsStack ? 'negative' : 'neutral';
-      display = formatCurrency(result.impliedNeeded);
+      display = money(result.impliedNeeded);
       caption = exceedsStack
-        ? `Imposible: el villano sólo tiene ${formatCurrency(stackNum ?? 0)} de stack restante. Tirar.`
+        ? `Imposible: detrás sólo quedan ${money(stackNum ?? 0)} de stack efectivo. Tirar.`
         : `Pot odds requeridas: ${formatPct(result.potOddsNeededPct)}. Tu equity (${formatPct(eqNum ?? 0)}) no alcanza directo — necesitas sacarle al menos esta cantidad más en futuras calles cuando pegues.`;
     }
   }
@@ -61,7 +66,7 @@ export function ImpliedOddsCalc({
     callNum !== null && potNum !== null && eqNum !== null && eqNum > 0
       ? `${callNum} / ${(eqNum / 100).toFixed(2)} − ${callNum} − ${potNum}`
       : '—';
-  const resultStr = result !== null ? formatCurrency(result.impliedNeeded) : '—';
+  const resultStr = result !== null ? money(result.impliedNeeded) : '—';
 
   return (
     <div className="flex flex-col gap-5">
@@ -88,14 +93,14 @@ export function ImpliedOddsCalc({
           />
           <NumberField
             id="io-pot"
-            label="Pot actual (antes de tu call)"
+            label="Pot actual — incluye la apuesta del villano"
             value={currentPot}
             onChange={setCurrentPot}
             prefix="$"
             min={0}
             step={1}
             invalid={currentPot.trim() !== '' && potNum === null}
-            hint="Lo que hay en el bote incluyendo la apuesta del villano"
+            hint="Todo lo que hay en el centro ahora mismo. Tu call NO va acá: es lo que ganas si pagas y ganas"
           />
           <NumberField
             id="io-equity"
@@ -111,14 +116,14 @@ export function ImpliedOddsCalc({
           />
           <NumberField
             id="io-stack"
-            label="Stack restante del villano (opcional)"
+            label="Stack efectivo restante (opcional)"
             value={remainingStack}
             onChange={setRemainingStack}
             prefix="$"
             min={0}
             step={1}
             invalid={remainingStack.trim() !== '' && stackNum === null}
-            hint="Para chequear si lo que necesitas ganar es posible"
+            hint="El más corto de los dos stacks: es el tope de lo que puedes ganarle en calles futuras"
           />
         </div>
       </section>
