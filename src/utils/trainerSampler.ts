@@ -1,15 +1,9 @@
-import type { Action, HandNotation, Range, RangeCellData } from '@/types/poker';
+import type { HandNotation, Range, RangeCellData } from '@/types/poker';
 import { ALL_HANDS, combosOf } from './handUtils';
-
-/** Hands outside the range (and residual mass) are a direct preflop fold. */
-const FOLD_ID: Action = 'FOLD';
 
 export type TrainerHand = {
   hand: HandNotation;
-  /** Sampled expected answer for this draw. A direct FOLD when the cell is
-   *  missing (a hand outside the range) or for a mixed cell's residual mass. */
-  expectedAction: Action;
-  /** The range cell, or null if the hand is an implicit FOLD. */
+  /** The range cell, or null when the hand is outside the range (a direct fold). */
   cell: RangeCellData | null;
 };
 
@@ -26,31 +20,14 @@ function sampleHandIndex(rng: () => number): number {
   return HAND_COMBO_WEIGHTS.length - 1;
 }
 
-function sampleExpectedAction(
-  cell: RangeCellData | null,
-  rng: () => number,
-): Action {
-  if (!cell || cell.actions.length === 0) return FOLD_ID;
-  const sum = cell.actions.reduce((s, a) => s + a.weight, 0);
-  // Residual mass below 100 collapses into FOLD so mixed cells still
-  // train the discipline of folding the unassigned slice.
-  const residual = Math.max(0, 100 - sum);
-  const total = sum + residual;
-  if (total <= 0) return FOLD_ID;
-  const target = rng() * total;
-  let acc = 0;
-  for (const a of cell.actions) {
-    acc += a.weight;
-    if (target < acc) return a.action;
-  }
-  return FOLD_ID;
-}
-
 /**
- * Samples a hand by its combo weight (so each combo in a 52-card deck has
- * equal probability of being the next question), then samples the expected
- * action from the matching cell's mixed strategy. Hands outside the range
- * are implicit FOLD.
+ * Samples a hand by its combo weight, so every combo in a 52-card deck is
+ * equally likely to be the next question.
+ *
+ * It deliberately does NOT pick one branch of a mixed cell: a cell playing
+ * "Raise 18% / All in 83%" has TWO correct answers, and drawing one of them to
+ * grade against marked the dominant line wrong 18% of the time. The whole cell
+ * strategy travels in `cell` and the grading lives in `trainerSource`.
  */
 export function sampleTrainerHand(
   range: Range,
@@ -58,7 +35,5 @@ export function sampleTrainerHand(
 ): TrainerHand {
   const idx = sampleHandIndex(rng);
   const hand = ALL_HANDS[idx]!;
-  const cell = range.cells[hand] ?? null;
-  const expectedAction = sampleExpectedAction(cell, rng);
-  return { hand, expectedAction, cell };
+  return { hand, cell: range.cells[hand] ?? null };
 }

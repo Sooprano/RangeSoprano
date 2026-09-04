@@ -63,7 +63,7 @@ const MODULES: readonly ModuleCard[] = [
     label: 'Entrenador',
     icon: Target,
     description:
-      'Entrena manos en mesa 6-max o Heads-Up contra tus rangos guardados, de a uno o una carpeta entera mezclada (por ejemplo tus BBvsBU de 25bb a 8bb: cada mano sortea un stack y tienes que leerlo antes de decidir, con las fichas del villano contándote si limpeó, abrió o te llega sin acción). Modos Clásico (con auto-avance activable), Velocidad (contrarreloj con tabla de líderes local) y Dibujo (pintar el rango de memoria). El villano se sienta enfrente con sus cartas boca abajo, ves tu stack en fichas y la mesa es personalizable: colores, forma, reverso de las cartas y color de fichas. Asigna tus propias hotkeys a cada acción (las mismas que usas en las salas) con clic derecho en el botón. Filtros por posición, situación y villano.',
+      'Entrena manos en mesa 6-max o Heads-Up contra tus rangos guardados, de a uno o una carpeta entera mezclada (por ejemplo tus BBvsBU de 25bb a 8bb: cada mano sortea un stack y tienes que leerlo antes de decidir, con las fichas del villano contándote si limpeó, abrió o te llega sin acción). Modos Clásico (con auto-avance activable), Velocidad (contrarreloj con tabla de líderes local) y Dibujo (pintar el rango de memoria). Las manos de frecuencia mixta aceptan todas sus ramas y te marcan cuál es la línea principal. El villano se sienta enfrente con sus cartas boca abajo, ves tu stack en fichas y la mesa es personalizable: colores, forma, reverso de las cartas y color de fichas. Asigna tus propias hotkeys a cada acción (las mismas que usas en las salas) con clic derecho en el botón. Filtros por posición, situación y villano.',
   },
   {
     to: '/editor',
@@ -270,6 +270,11 @@ const FAQS: readonly Faq[] = [
     group: 'Sobre el proyecto',
     q: '¿Sirve para 6-max y Heads-Up?',
     a: 'Sí. Cada rango se crea con un formato (6max o HU). El Entrenador pinta la mesa acorde y el Visualizador filtra por formato.',
+  },
+  {
+    group: 'Entrenar y estudiar',
+    q: '¿Qué pasa con las manos de frecuencia mixta?',
+    a: 'Cuentan como correctas todas las acciones que la celda juega. Si una mano es "Raise 18% / All in 83%", tanto Raise como All in son respuestas válidas: son las dos ramas de la estrategia. Al responder, cada botón muestra su frecuencia — en verde la línea principal (la que más se juega), en ámbar las minoritarias y apagadas las que esa mano no juega — y el feedback te dice si tomaste la principal o una rama chica, con su porcentaje. Además, junto a la precisión aparece un contador "Línea principal X/Y" que solo cuenta las manos que tenían mezcla, para que veas cuánto te vas a las ramas menos frecuentes sin que eso te baje la precisión.',
   },
   {
     group: 'Entrenar y estudiar',

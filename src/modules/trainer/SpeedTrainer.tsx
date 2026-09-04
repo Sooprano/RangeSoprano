@@ -36,7 +36,10 @@ import { expandPlus } from '@/utils/handRangeParser';
 import {
   answerActionsFor,
   drawFromSource,
-  paletteOfRange,
+  formatFrequency,
+  isCorrectAnswer,
+  isMainLine,
+  weightOfAnswer,
   sourceKey,
   trainerPalette,
   type TrainerDraw,
@@ -81,7 +84,12 @@ export type ClassicMistake = { draw: TrainerDraw; picked: ActionId };
 type ClassicResult = Pick<
   SpeedClassicEntry,
   'correct' | 'total' | 'hpm' | 'accuracyPct'
-> & { mistakes: ClassicMistake[] };
+> & {
+  mistakes: ClassicMistake[];
+  /** Session-only: NOT persisted in the leaderboard (its schema is strict). */
+  mainLine: number;
+  mixedTotal: number;
+};
 
 type DrawingResult = Pick<
   SpeedDrawingEntry,
@@ -103,6 +111,10 @@ export function SpeedTrainer({ source }: SpeedTrainerProps) {
   const [lastEntry, setLastEntry] = useState<SpeedEntry | null>(null);
   const [madeTop, setMadeTop] = useState(false);
   const [sessionMistakes, setSessionMistakes] = useState<ClassicMistake[] | null>(null);
+  const [sessionMainLine, setSessionMainLine] = useState<{
+    mainLine: number;
+    mixedTotal: number;
+  } | null>(null);
   const [sessionDiff, setSessionDiff] = useState<RangeDiff | null>(null);
 
   const addEntry = useLeaderboardStore((s) => s.addEntry);
@@ -117,6 +129,7 @@ export function SpeedTrainer({ source }: SpeedTrainerProps) {
       setLastEntry(null);
       setMadeTop(false);
       setSessionMistakes(null);
+      setSessionMainLine(null);
       setSessionDiff(null);
     }
   }, [boardKey]);
@@ -141,7 +154,7 @@ export function SpeedTrainer({ source }: SpeedTrainerProps) {
 
   const finishClassic = useCallback(
     (r: ClassicResult) => {
-      const { mistakes, ...entryFields } = r;
+      const { mistakes, mainLine, mixedTotal, ...entryFields } = r;
       const entry: SpeedClassicEntry = {
         style: 'classic',
         durationSec: effectiveDuration,
@@ -152,6 +165,7 @@ export function SpeedTrainer({ source }: SpeedTrainerProps) {
       setLastEntry(entry);
       setMadeTop(top);
       setSessionMistakes(mistakes);
+      setSessionMainLine({ mainLine, mixedTotal });
       setSessionDiff(null);
       setPhase('finished');
     },
@@ -171,6 +185,7 @@ export function SpeedTrainer({ source }: SpeedTrainerProps) {
       setLastEntry(entry);
       setMadeTop(top);
       setSessionMistakes(null);
+      setSessionMainLine(null);
       setSessionDiff(diff);
       setPhase('finished');
     },
@@ -224,6 +239,7 @@ export function SpeedTrainer({ source }: SpeedTrainerProps) {
       folderMode={isFolder}
       answerActions={trainerPalette(source)}
       sessionMistakes={sessionMistakes}
+      sessionMainLine={sessionMainLine}
       sessionDiff={sessionDiff}
       onPlayAgain={start}
       onChangeConfig={() => setPhase('config')}
@@ -406,7 +422,12 @@ function SpeedClassicRun({
     [source, orderedActions, draw.range],
   );
   const [feedback, setFeedback] = useState<{ picked: ActionId; correct: boolean } | null>(null);
-  const [score, setScore] = useState({ correct: 0, total: 0 });
+  const [score, setScore] = useState({
+    correct: 0,
+    total: 0,
+    mainLine: 0,
+    mixedTotal: 0,
+  });
   const [remaining, setRemaining] = useState<number>(duration);
 
   const scoreRef = useRef(score);
@@ -432,6 +453,8 @@ function SpeedClassicRun({
           accuracyPct: s.total > 0 ? (s.correct / s.total) * 100 : 0,
           hpm: s.total > 0 ? (s.total / duration) * 60 : 0,
           mistakes: mistakesRef.current,
+          mainLine: s.mainLine,
+          mixedTotal: s.mixedTotal,
         });
       }
     }, 100);
@@ -446,7 +469,9 @@ function SpeedClassicRun({
   const answer = useCallback(
     (picked: ActionId) => {
       if (feedback || doneRef.current) return;
-      const correct = picked === draw.answerKey;
+      // Any branch of a mixed cell counts (see ClassicTrainer); the main-line
+      // tally is what separates the dominant play from a minority one.
+      const correct = isCorrectAnswer(draw, picked);
       if (!correct) {
         mistakesRef.current = [...mistakesRef.current, { draw, picked }];
       }
@@ -454,6 +479,8 @@ function SpeedClassicRun({
       setScore((s) => ({
         correct: s.correct + (correct ? 1 : 0),
         total: s.total + 1,
+        mainLine: s.mainLine + (draw.strategy.mixed && isMainLine(draw, picked) ? 1 : 0),
+        mixedTotal: s.mixedTotal + (draw.strategy.mixed ? 1 : 0),
       }));
       flashTimer.current = setTimeout(() => {
         setFeedback(null);
@@ -527,6 +554,9 @@ function SpeedClassicRun({
             const isPicked = feedback?.picked === def.id;
             const flashCorrect = feedback && isPicked && feedback.correct;
             const flashWrong = feedback && isPicked && !feedback.correct;
+            // Under the clock there is no time to read a breakdown: the flash
+            // stays binary and only the pressed button shows its frequency.
+            const pickedWeight = isPicked ? weightOfAnswer(draw, def.id) : 0;
             const isAssigning = hk.assigningId === def.id;
             const key = hk.effectiveKey(def.id);
             return (
@@ -558,10 +588,18 @@ function SpeedClassicRun({
                 <span
                   className={cn(
                     'shrink-0 rounded px-1 py-px text-[10px] font-semibold uppercase tracking-wider tabular-nums',
-                    isAssigning ? 'bg-accent/20 text-accent-light' : 'bg-surface text-content-muted',
+                    isAssigning
+                      ? 'bg-accent/20 text-accent-light'
+                      : flashCorrect
+                        ? 'bg-emerald-500/20 text-emerald-300'
+                        : 'bg-surface text-content-muted',
                   )}
                 >
-                  {isAssigning ? '…' : key || '·'}
+                  {isAssigning
+                    ? '…'
+                    : pickedWeight > 0
+                      ? formatFrequency(pickedWeight)
+                      : key || '·'}
                 </span>
               </button>
             );
@@ -819,6 +857,7 @@ function FinishedScreen({
   folderMode,
   answerActions,
   sessionMistakes,
+  sessionMainLine,
   sessionDiff,
   onPlayAgain,
   onChangeConfig,
@@ -829,6 +868,7 @@ function FinishedScreen({
   folderMode: boolean;
   answerActions: ActionDef[];
   sessionMistakes: ClassicMistake[] | null;
+  sessionMainLine: { mainLine: number; mixedTotal: number } | null;
   sessionDiff: RangeDiff | null;
   onPlayAgain: () => void;
   onChangeConfig: () => void;
@@ -857,7 +897,14 @@ function FinishedScreen({
         </div>
 
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Stat label="Precisión" value={`${entry.accuracyPct.toFixed(0)}%`} />
+          <Stat
+            label="Precisión"
+            value={`${entry.accuracyPct.toFixed(0)}%`}
+            {...(sessionMainLine !== null &&
+              sessionMainLine.mixedTotal > 0 && {
+                sub: `Línea principal ${sessionMainLine.mainLine}/${sessionMainLine.mixedTotal}`,
+              })}
+          />
           {entry.style === 'classic' ? (
             <>
               <Stat label="Correctas" value={`${entry.correct} / ${entry.total}`} />
@@ -910,11 +957,22 @@ function FinishedScreen({
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({
+  label,
+  value,
+  sub,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+}) {
   return (
     <div className="rounded-lg border border-border bg-surface/40 px-3 py-2">
       <p className="text-[10px] uppercase tracking-wider text-content-muted">{label}</p>
       <p className="text-lg font-semibold tabular-nums text-content">{value}</p>
+      {sub !== undefined && (
+        <p className="text-[10px] tabular-nums text-content-muted">{sub}</p>
+      )}
     </div>
   );
 }
@@ -956,11 +1014,9 @@ function ErrorsPanel({
       {open && (
         <div className="border-t border-border px-4 py-3">
           <div className="flex flex-col gap-2">
+            {/* Both sides live in the session's answer space (merged label keys
+                in a folder), so they resolve against the same palette. */}
             {mistakes.map(({ draw, picked }, i) => {
-              // Two palettes on purpose: what you PICKED lives in the session's
-              // answer space (merged label keys in a folder), what was EXPECTED
-              // is a local id of the hand's own range.
-              const acts = paletteOfRange(draw.range);
               return (
                 <div
                   key={i}
@@ -982,9 +1038,14 @@ function ErrorsPanel({
                     <span
                       aria-hidden
                       className="h-2.5 w-2.5 shrink-0 rounded-sm"
-                      style={{ backgroundColor: actionColor(acts, draw.hand.expectedAction) }}
+                      style={{
+                        backgroundColor: actionColor(answerActions, draw.strategy.bestKey),
+                      }}
                     />
-                    {actionLabel(acts, draw.hand.expectedAction)}
+                    {actionLabel(answerActions, draw.strategy.bestKey)}
+                    <span className="tabular-nums text-content-muted">
+                      {formatFrequency(draw.strategy.bestWeight)}
+                    </span>
                   </span>
                   {showRange && (
                     <span className="ml-auto truncate rounded-full bg-surface px-2 py-0.5 text-xs text-content-muted">

@@ -1,6 +1,8 @@
 import type { ActionDef, ActionId, Range } from '@/types/poker';
 import {
   actionLabel,
+  foldActionDef,
+  FOLD_ID,
   normalizeActionLabel,
   trainerAnswerActions,
 } from './actionMeta';
@@ -15,16 +17,51 @@ export type TrainerSource =
   | { kind: 'range'; range: Range }
   | { kind: 'folder'; path: string; label: string; ranges: Range[] };
 
+/**
+ * The cell's whole strategy, expressed in the SOURCE's answer space (range-local
+ * action ids in single mode, merged label keys in a folder).
+ *
+ * EVERY branch with frequency > 0 is a correct answer — a cell playing
+ * "Raise 18% / All in 83%" has two right answers and grading against one drawn
+ * branch marked the dominant line wrong 18% of the time. What separates them is
+ * `bestKey`: the main line, vs a correct-but-minority branch.
+ */
+export type AnswerStrategy = {
+  /** Frequency per answer key; only entries above 0. */
+  byKey: Map<ActionId, number>;
+  bestKey: ActionId;
+  bestWeight: number;
+  /** More than one branch — i.e. there was actually a choice to make. */
+  mixed: boolean;
+};
+
 export type TrainerDraw = {
   /** The range this hand came from (the source's own range in single mode). */
   range: Range;
   hand: TrainerHand;
-  /**
-   * Expected answer expressed in the SOURCE's answer space: the range-local
-   * action id in single mode, the merged label key in folder mode.
-   */
-  answerKey: ActionId;
+  strategy: AnswerStrategy;
 };
+
+/** Ties (a 50/50 cell) count as the main line on both sides. */
+const MAIN_LINE_EPS = 1e-6;
+
+export function weightOfAnswer(draw: TrainerDraw, key: ActionId): number {
+  return draw.strategy.byKey.get(key) ?? 0;
+}
+
+export function isCorrectAnswer(draw: TrainerDraw, key: ActionId): boolean {
+  return weightOfAnswer(draw, key) > 0;
+}
+
+/** `18%`, and `<1%` for a branch too thin to round to anything. */
+export function formatFrequency(weight: number): string {
+  const rounded = Math.round(weight);
+  return rounded === 0 ? '<1%' : `${rounded}%`;
+}
+
+export function isMainLine(draw: TrainerDraw, key: ActionId): boolean {
+  return weightOfAnswer(draw, key) >= draw.strategy.bestWeight - MAIN_LINE_EPS;
+}
 
 /** Stable identity of a session (leaderboard key, session-reset comparisons). */
 export function sourceKey(source: TrainerSource): string {
@@ -106,6 +143,45 @@ export function answerKeyOf(
 }
 
 /**
+ * Translates a cell's mixed strategy into the source's answer space.
+ *
+ * The unassigned mass of a cell (`100 − Σ`) is a fold, and a hand with no cell
+ * at all is a 100% fold — the same rule the sampler used to apply, only now it
+ * stays a branch you can answer instead of a coin flip. Two local ids can land
+ * on one key (a palette carrying its own uuid "Fold" plus the synthetic one),
+ * so weights are summed, never overwritten.
+ */
+export function strategyOf(
+  source: TrainerSource,
+  range: Range,
+  cell: TrainerHand['cell'],
+): AnswerStrategy {
+  const byKey = new Map<ActionId, number>();
+  const add = (id: ActionId, weight: number) => {
+    if (weight <= 0) return;
+    const key = answerKeyOf(source, range, id);
+    byKey.set(key, (byKey.get(key) ?? 0) + weight);
+  };
+
+  const sum = cell?.actions.reduce((s, a) => s + a.weight, 0) ?? 0;
+  for (const a of cell?.actions ?? []) add(a.action, a.weight);
+  add(
+    foldActionDef(paletteOfRange(range))?.id ?? FOLD_ID,
+    cell ? Math.max(0, 100 - sum) : 100,
+  );
+
+  let bestKey: ActionId = FOLD_ID;
+  let bestWeight = 0;
+  for (const [key, weight] of byKey) {
+    if (weight > bestWeight) {
+      bestKey = key;
+      bestWeight = weight;
+    }
+  }
+  return { byKey, bestKey, bestWeight, mixed: byKey.size > 1 };
+}
+
+/**
  * Draws the next question. In folder mode the range is picked uniformly first:
  * every range carries the same total combo weight (the full 1326), so uniform
  * per range is also uniform per combo.
@@ -122,5 +198,5 @@ export function drawFromSource(
           Math.floor(rng() * source.ranges.length),
         )]!;
   const hand = sampleTrainerHand(range, rng);
-  return { range, hand, answerKey: answerKeyOf(source, range, hand.expectedAction) };
+  return { range, hand, strategy: strategyOf(source, range, hand.cell) };
 }

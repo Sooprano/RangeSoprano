@@ -17,19 +17,16 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import type { ActionDef, ActionId, Range } from '@/types/poker';
-import {
-  actionColor,
-  actionDefOf,
-  actionLabel,
-  FOLD_FALLBACK_DEF,
-  foldActionDef,
-} from '@/utils/actionMeta';
+import { actionColor, actionLabel } from '@/utils/actionMeta';
 import {
   answerActionsFor,
   drawFromSource,
-  paletteOfRange,
+  formatFrequency,
+  isCorrectAnswer,
+  isMainLine,
   sourceKey,
   trainerPalette,
+  weightOfAnswer,
   type TrainerDraw,
   type TrainerSource,
 } from '@/utils/trainerSource';
@@ -50,8 +47,8 @@ type ClassicTrainerProps = {
 type Feedback = {
   /** In the source's answer space (range-local id, or merged key in a folder). */
   picked: ActionId;
-  expected: ActionId;
   wasCorrect: boolean;
+  wasMainLine: boolean;
   draw: TrainerDraw;
 };
 
@@ -60,6 +57,9 @@ type Score = {
   total: number;
   streak: number;
   bestStreak: number;
+  /** Main-line hits, counted only over hands that HAD a mix to choose from. */
+  mainLine: number;
+  mixedTotal: number;
 };
 
 /** Per-range tally, so a folder session shows which stack depth is leaking. */
@@ -70,6 +70,8 @@ const INITIAL_SCORE: Score = {
   total: 0,
   streak: 0,
   bestStreak: 0,
+  mainLine: 0,
+  mixedTotal: 0,
 };
 
 export function ClassicTrainer({ source }: ClassicTrainerProps) {
@@ -121,13 +123,12 @@ export function ClassicTrainer({ source }: ClassicTrainerProps) {
   const answer = useCallback(
     (picked: ActionId) => {
       if (!current || feedback) return;
-      const wasCorrect = picked === current.answerKey;
-      setFeedback({
-        picked,
-        expected: current.answerKey,
-        wasCorrect,
-        draw: current,
-      });
+      // Every branch of the mix is correct; taking the dominant one is what the
+      // main-line counter tracks.
+      const wasCorrect = isCorrectAnswer(current, picked);
+      const wasMainLine = isMainLine(current, picked);
+      const wasMixed = current.strategy.mixed;
+      setFeedback({ picked, wasCorrect, wasMainLine, draw: current });
       setScore((s) => {
         const streak = wasCorrect ? s.streak + 1 : 0;
         return {
@@ -135,6 +136,8 @@ export function ClassicTrainer({ source }: ClassicTrainerProps) {
           total: s.total + 1,
           streak,
           bestStreak: Math.max(s.bestStreak, streak),
+          mainLine: s.mainLine + (wasMixed && wasMainLine ? 1 : 0),
+          mixedTotal: s.mixedTotal + (wasMixed ? 1 : 0),
         };
       });
       const id = current.range.id;
@@ -266,9 +269,12 @@ export function ClassicTrainer({ source }: ClassicTrainerProps) {
         <div className="min-h-[3.5rem] w-full flex flex-col gap-2">
           {feedback ? (
             <>
+              {/* The session palette, not the range's: now that the cell
+                  breakdown lives on the buttons, the panel only names ids of
+                  the ANSWER space (merged keys in a folder). */}
               <FeedbackPanel
                 feedback={feedback}
-                actions={paletteOfRange(feedback.draw.range)}
+                actions={orderedActions}
                 {...(isFolder && { rangeName: feedback.draw.range.name })}
               />
               {autoAdvance && (
@@ -329,7 +335,15 @@ export function ClassicTrainer({ source }: ClassicTrainerProps) {
 function ScoreBar({ score, accuracy }: { score: Score; accuracy: number }) {
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-      <Stat label="Precisión" value={`${accuracy.toFixed(0)}%`} />
+      <Stat
+        label="Precisión"
+        value={`${accuracy.toFixed(0)}%`}
+        // Only once a mixed hand has come up: on cells with a single action
+        // there was no choice, and the counter would just echo "Correctas".
+        {...(score.mixedTotal > 0 && {
+          sub: `Línea principal ${score.mainLine}/${score.mixedTotal}`,
+        })}
+      />
       <Stat label="Correctas" value={`${score.correct} / ${score.total}`} />
       <Stat label="Racha" value={String(score.streak)} />
       <Stat label="Mejor racha" value={String(score.bestStreak)} />
@@ -441,13 +455,24 @@ function ByRangeBar({
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({
+  label,
+  value,
+  sub,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+}) {
   return (
     <div className="rounded-xl border border-border bg-surface/40 px-3 py-2">
       <p className="text-[10px] uppercase tracking-wider text-content-muted">
         {label}
       </p>
       <p className="text-lg font-semibold tabular-nums text-content">{value}</p>
+      {sub !== undefined && (
+        <p className="text-[10px] tabular-nums text-content-muted">{sub}</p>
+      )}
     </div>
   );
 }
@@ -464,7 +489,11 @@ function ActionGrid({ actions, feedback, onAnswer, hk }: ActionGridProps) {
   return (
     <div className="grid w-full max-w-md grid-cols-2 gap-1.5 sm:grid-cols-3">
       {actions.map((def) => {
-        const isExpected = feedback?.expected === def.id;
+        // Once answered, every button carries its share of the cell's strategy:
+        // the whole mix is on screen instead of a single "expected" verdict.
+        const weight = feedback ? weightOfAnswer(feedback.draw, def.id) : 0;
+        const isMain = feedback !== null && isMainLine(feedback.draw, def.id);
+        const isMinor = weight > 0 && !isMain;
         const isPicked = feedback?.picked === def.id;
         const isAssigning = hk.assigningId === def.id;
         const key = hk.effectiveKey(def.id);
@@ -486,11 +515,18 @@ function ActionGrid({ actions, feedback, onAnswer, hk }: ActionGridProps) {
               isAssigning
                 ? 'border-accent bg-accent/10 text-content ring-1 ring-accent'
                 : feedback
-                  ? isExpected
-                    ? 'border-emerald-500/60 bg-emerald-500/10 text-content'
-                    : isPicked
-                      ? 'border-rose-500/60 bg-rose-500/10 text-content'
-                      : 'border-border bg-surface/40 text-content-muted opacity-60'
+                  ? cn(
+                      isMain
+                        ? 'border-emerald-500/60 bg-emerald-500/10 text-content'
+                        : isMinor
+                          ? 'border-amber-500/60 bg-amber-500/10 text-content'
+                          : isPicked
+                            ? 'border-rose-500/60 bg-rose-500/10 text-content'
+                            : 'border-border bg-surface/40 text-content-muted opacity-60',
+                      // The one you pressed keeps a ring so it never gets lost
+                      // among the branches it shares a color with.
+                      isPicked && weight > 0 && 'ring-1 ring-inset ring-white/40',
+                    )
                   : 'border-border bg-surface/40 text-content hover:bg-surface-hover',
             )}
           >
@@ -505,10 +541,22 @@ function ActionGrid({ actions, feedback, onAnswer, hk }: ActionGridProps) {
                 'shrink-0 rounded px-1 py-px text-[10px] font-semibold uppercase tracking-wider tabular-nums',
                 isAssigning
                   ? 'bg-accent/20 text-accent-light'
-                  : 'bg-surface text-content-muted',
+                  : feedback
+                    ? isMain
+                      ? 'bg-emerald-500/20 text-emerald-300'
+                      : isMinor
+                        ? 'bg-amber-500/20 text-amber-300'
+                        : 'bg-surface text-content-muted'
+                    : 'bg-surface text-content-muted',
               )}
             >
-              {isAssigning ? '…' : key || '·'}
+              {isAssigning
+                ? '…'
+                : feedback
+                  ? weight > 0
+                    ? formatFrequency(weight)
+                    : '·'
+                  : key || '·'}
             </span>
           </button>
         );
@@ -523,60 +571,66 @@ function FeedbackPanel({
   rangeName,
 }: {
   feedback: Feedback;
-  /** The palette OF THE HAND'S RANGE — the cell breakdown uses local ids. */
+  /** The palette OF THE HAND'S RANGE — its own labels and colors. */
   actions: ActionDef[];
   rangeName?: string;
 }) {
-  const fold = foldActionDef(actions) ?? FOLD_FALLBACK_DEF;
-  const cell = feedback.draw.hand.cell;
-  // Range-local id (identical to feedback.expected outside folder mode, where
-  // the answer space is the merged label key).
-  const expectedLocal = feedback.draw.hand.expectedAction;
-  const sumWeights = cell?.actions.reduce((s, a) => s + a.weight, 0) ?? 0;
-  const residualFold = cell ? Math.max(0, 100 - sumWeights) : 100;
-  const breakdown = cell
-    ? [
-        ...cell.actions.map((a) => ({ action: a.action, weight: a.weight })),
-        ...(residualFold > 0
-          ? [{ action: fold.id, weight: residualFold }]
-          : []),
-      ]
-    : [{ action: fold.id, weight: 100 }];
-  const isMixed = breakdown.length > 1;
+  const { draw, picked, wasCorrect, wasMainLine } = feedback;
+  const best = draw.strategy.bestKey;
+  const bestPct = formatFrequency(draw.strategy.bestWeight);
+  const pickedPct = formatFrequency(weightOfAnswer(draw, picked));
+  // Three outcomes, not two: a minority branch of a mixed cell IS a correct
+  // answer, it just is not the play you make most of the time.
+  const tone = !wasCorrect ? 'wrong' : wasMainLine ? 'main' : 'minor';
 
   return (
     <div
       className={cn(
         'flex flex-col gap-2 rounded-lg border px-3 py-2 text-sm',
-        feedback.wasCorrect
+        tone === 'main'
           ? 'border-emerald-500/40 bg-emerald-500/5 text-content'
-          : 'border-rose-500/40 bg-rose-500/5 text-content',
+          : tone === 'minor'
+            ? 'border-amber-500/40 bg-amber-500/5 text-content'
+            : 'border-rose-500/40 bg-rose-500/5 text-content',
       )}
     >
-      <div className="flex items-center gap-2">
-        {feedback.wasCorrect ? (
-          <Check className="h-4 w-4 text-emerald-400" strokeWidth={2.5} />
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        {wasCorrect ? (
+          <Check
+            className={cn(
+              'h-4 w-4',
+              tone === 'main' ? 'text-emerald-400' : 'text-amber-400',
+            )}
+            strokeWidth={2.5}
+          />
         ) : (
           <X className="h-4 w-4 text-rose-400" strokeWidth={2.5} />
         )}
         <span className="font-semibold">
-          {feedback.wasCorrect ? 'Correcto' : 'Incorrecto'}
+          {wasCorrect ? 'Correcto' : 'Incorrecto'}
         </span>
         <span className="text-content-muted">·</span>
-        <span className="text-content-muted">
-          Esperada{' '}
-          <span className="inline-flex items-center gap-1 font-medium text-content">
-            <span
-              aria-hidden
-              className="h-2.5 w-2.5 rounded-sm"
-              style={{
-                backgroundColor:
-                  actionDefOf(actions, expectedLocal)?.color ?? fold.color,
-              }}
-            />
-            {actionLabel(actions, expectedLocal)}
+        {tone === 'main' ? (
+          <span className="text-content-muted">
+            <ActionTag actions={actions} id={best} /> es la línea principal
+            {draw.strategy.mixed && (
+              <span className="tabular-nums"> ({bestPct})</span>
+            )}
           </span>
-        </span>
+        ) : tone === 'minor' ? (
+          <span className="text-content-muted">
+            <ActionTag actions={actions} id={picked} /> se juega{' '}
+            <span className="tabular-nums">{pickedPct}</span>; la principal es{' '}
+            <ActionTag actions={actions} id={best} />
+            <span className="tabular-nums"> ({bestPct})</span>
+          </span>
+        ) : (
+          <span className="text-content-muted">
+            esta mano no juega <ActionTag actions={actions} id={picked} />; la
+            principal es <ActionTag actions={actions} id={best} />
+            <span className="tabular-nums"> ({bestPct})</span>
+          </span>
+        )}
         {rangeName !== undefined && (
           <>
             <span className="text-content-muted">·</span>
@@ -586,22 +640,20 @@ function FeedbackPanel({
           </>
         )}
       </div>
-      {isMixed && (
-        <div className="flex flex-wrap items-center gap-2 text-xs text-content-muted">
-          <span>Cell strategy:</span>
-          {breakdown.map((b) => (
-            <span key={b.action} className="inline-flex items-center gap-1">
-              <span
-                aria-hidden
-                className="h-2 w-2 rounded-sm"
-                style={{ backgroundColor: actionColor(actions, b.action) }}
-              />
-              <span className="text-content">{actionLabel(actions, b.action)}</span>
-              <span className="tabular-nums">{b.weight.toFixed(0)}%</span>
-            </span>
-          ))}
-        </div>
-      )}
     </div>
+  );
+}
+
+/** Action name with its color dot, inline inside a sentence. */
+function ActionTag({ actions, id }: { actions: ActionDef[]; id: ActionId }) {
+  return (
+    <span className="inline-flex items-center gap-1 font-medium text-content">
+      <span
+        aria-hidden
+        className="h-2.5 w-2.5 rounded-sm"
+        style={{ backgroundColor: actionColor(actions, id) }}
+      />
+      {actionLabel(actions, id)}
+    </span>
   );
 }
