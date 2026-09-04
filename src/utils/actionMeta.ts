@@ -39,6 +39,17 @@ export const FOLD_FALLBACK_DEF: ActionDef = {
 };
 
 /**
+ * Canonical key for an action LABEL, used wherever actions have to be matched
+ * across ranges — custom actions get a `crypto.randomUUID()` id per range, so
+ * two ranges' "Call" share nothing but their name. Single source of truth for
+ * the hotkey bindings map (global by name) and the folder trainer's merged
+ * palette, so a key bound in one place resolves in the other.
+ */
+export function normalizeActionLabel(label: string): string {
+  return label.trim().toLowerCase();
+}
+
+/**
  * The palette's own generic direct-fold action, if it has one (strict FOLD id).
  * A custom action such as "OR to Fold" (open-raise, then fold to a 3-bet) is a
  * DIFFERENT decision from a direct preflop fold, so it deliberately does NOT

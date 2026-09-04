@@ -187,6 +187,10 @@ export const zPersistedUiState = z
     gridTooltipEnabled: z.boolean(),
     viewerRangeId: z.string().nullable().default(null),
     trainerRangeId: z.string().nullable().default(null),
+    // Folder currently targeted by the trainer (train every range inside it).
+    // `.default(null)` on a `.strict()` object: strict rejects UNKNOWN keys, not
+    // missing ones, so an older persisted blob still parses — no version bump.
+    trainerFolderPath: z.string().nullable().default(null),
     groupMeta: z.record(z.string(), zGroupMeta).default({}),
     sidebarCollapsed: z.boolean().default(false),
     overviewSelectedGroups: z.array(z.string()).default([]),
@@ -282,6 +286,12 @@ export const zPersistedTableTheme = z
     chipStyle: z.enum(CHIP_STYLE_IDS),
     showLogo: z.boolean(),
     showStack: z.boolean(),
+    // Added after v2. `.default(true)` instead of a version bump + `migrate`
+    // entry: `.strict()` rejects UNKNOWN keys, not missing ones, so a stored v2
+    // blob still parses and just picks up the default.
+    showVillainAction: z.boolean().default(true),
+    showSpotName: z.boolean().default(true),
+    showBlinds: z.boolean().default(true),
   })
   .strict();
 

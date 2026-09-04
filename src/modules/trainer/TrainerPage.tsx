@@ -1,11 +1,17 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Brush, Dices, Palette, Zap } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { useRangeStore } from '@/store/rangeStore';
 import { useUiStore } from '@/store/uiStore';
-import { useRangeSummaries, useTrainerRange } from '@/store/selectors';
+import {
+  useRangeSummaries,
+  useRangesInGroup,
+  useTrainerRange,
+} from '@/store/selectors';
+import { isInGroup } from '@/utils/groupUtils';
+import type { TrainerSource } from '@/utils/trainerSource';
 import { ViewerRangeList } from '@/modules/viewer/ViewerRangeList';
 import {
   EMPTY_FILTERS,
@@ -33,7 +39,10 @@ export default function TrainerPage() {
   const summaries = useRangeSummaries();
   const trainerRangeId = useUiStore((s) => s.trainerRangeId);
   const setTrainerRangeId = useUiStore((s) => s.setTrainerRangeId);
+  const trainerFolderPath = useUiStore((s) => s.trainerFolderPath);
+  const setTrainerFolderPath = useUiStore((s) => s.setTrainerFolderPath);
   const range = useTrainerRange();
+  const folderRanges = useRangesInGroup(trainerFolderPath);
 
   const [mode, setMode] = useState<TrainerMode>('classic');
   const [filters, setFilters] = useState<ViewerFilters>(EMPTY_FILTERS);
@@ -45,6 +54,51 @@ export default function TrainerPage() {
         ? summaries.filter((s) => matchesFilters(s, filters))
         : summaries,
     [summaries, filters],
+  );
+
+  const folderMode = trainerFolderPath !== null && folderRanges.length > 0;
+
+  const source: TrainerSource | null = folderMode
+    ? {
+        kind: 'folder',
+        path: trainerFolderPath!,
+        label: folderLabel(trainerFolderPath!),
+        ranges: folderRanges,
+      }
+    : range
+      ? { kind: 'range', range }
+      : null;
+
+  // Drop a stale folder selection (folder renamed, moved or emptied).
+  useEffect(() => {
+    if (trainerFolderPath !== null && folderRanges.length === 0) {
+      setTrainerFolderPath(null);
+    }
+  }, [trainerFolderPath, folderRanges, setTrainerFolderPath]);
+
+  // Drawing paints one grid, so it trains one range. Derived, not synced with
+  // an effect: the mode you had comes back when you leave the folder.
+  const effectiveMode: TrainerMode =
+    folderMode && mode === 'drawing' ? 'classic' : mode;
+
+  const folderRangeCount = useCallback(
+    (path: string) => ranges.filter((r) => isInGroup(r.group, path)).length,
+    [ranges],
+  );
+
+  const selectRange = useCallback(
+    (id: string) => {
+      setTrainerRangeId(id);
+      setTrainerFolderPath(null);
+    },
+    [setTrainerRangeId, setTrainerFolderPath],
+  );
+
+  const selectFolder = useCallback(
+    (path: string) => {
+      setTrainerFolderPath(trainerFolderPath === path ? null : path);
+    },
+    [trainerFolderPath, setTrainerFolderPath],
   );
 
   useEffect(() => {
@@ -68,7 +122,7 @@ export default function TrainerPage() {
           description="Practicá decisiones contra tus rangos guardados. Modos clásico, dibujo y velocidad."
         />
         <div className="flex flex-wrap items-start justify-end gap-3 pb-4">
-          <ModeToggle value={mode} onChange={setMode} />
+          <ModeToggle value={mode} onChange={setMode} folderMode={false} />
         </div>
         <TrainerEmptyState />
       </>
@@ -79,19 +133,34 @@ export default function TrainerPage() {
     <>
       <PageHeader
         eyebrow={
-          range
-            ? `${range.position} · ${SITUATION_LABELS[range.situation] ?? range.situation}`
-            : 'Module'
+          source?.kind === 'folder'
+            ? `Carpeta · ${source.ranges.length} rangos`
+            : range
+              ? `${range.position} · ${SITUATION_LABELS[range.situation] ?? range.situation}`
+              : 'Module'
         }
-        title={range ? range.name : 'Entrenador'}
-        description="Practicá decisiones contra tus rangos guardados. Modos clásico, dibujo y velocidad."
+        title={
+          source?.kind === 'folder'
+            ? source.label
+            : range
+              ? range.name
+              : 'Entrenador'
+        }
+        description={
+          source?.kind === 'folder'
+            ? 'Entrenás toda la carpeta mezclada: cada mano sortea uno de sus rangos y el stack del paño te dice cuál.'
+            : 'Practicá decisiones contra tus rangos guardados. Modos clásico, dibujo y velocidad.'
+        }
       />
 
       <div className="grid gap-6 md:grid-cols-[220px_minmax(0,1fr)]">
         <ViewerRangeList
           summaries={filteredSummaries}
-          selectedId={trainerRangeId}
-          onSelect={setTrainerRangeId}
+          selectedId={folderMode ? null : trainerRangeId}
+          onSelect={selectRange}
+          selectedFolderPath={trainerFolderPath}
+          onSelectFolder={selectFolder}
+          folderRangeCount={folderRangeCount}
           emptyMessage={
             hasAnyFilter(filters)
               ? 'Ningún rango coincide con los filtros actuales.'
@@ -113,20 +182,24 @@ export default function TrainerPage() {
                 <Palette className="h-3.5 w-3.5" strokeWidth={2.25} />
                 <span className="hidden sm:inline">Mesa</span>
               </button>
-              <ModeToggle value={mode} onChange={setMode} />
+              <ModeToggle
+                value={effectiveMode}
+                onChange={setMode}
+                folderMode={folderMode}
+              />
             </div>
           </div>
-          {range ? (
-            mode === 'classic' ? (
-              <ClassicTrainer range={range} />
-            ) : mode === 'drawing' ? (
-              <DrawingTrainer range={range} />
+          {source ? (
+            effectiveMode === 'classic' ? (
+              <ClassicTrainer source={source} />
+            ) : effectiveMode === 'drawing' && source.kind === 'range' ? (
+              <DrawingTrainer range={source.range} />
             ) : (
-              <SpeedTrainer range={range} />
+              <SpeedTrainer source={source} />
             )
           ) : (
             <div className="flex min-h-[40vh] items-center justify-center rounded-xl border border-dashed border-border p-6 text-center text-sm text-content-muted">
-              Elige un rango de la lista para empezar.
+              Elige un rango o una carpeta de la lista para empezar.
             </div>
           )}
         </div>
@@ -137,12 +210,19 @@ export default function TrainerPage() {
   );
 }
 
+/** Last segment of a group path: "SPIN/BBvsBU OR" → "BBvsBU OR". */
+function folderLabel(path: string): string {
+  const segments = path.split('/');
+  return segments[segments.length - 1] ?? path;
+}
+
 type ModeToggleProps = {
   value: TrainerMode;
   onChange: (mode: TrainerMode) => void;
+  folderMode: boolean;
 };
 
-function ModeToggle({ value, onChange }: ModeToggleProps) {
+function ModeToggle({ value, onChange, folderMode }: ModeToggleProps) {
   return (
     <div
       role="tablist"
@@ -160,6 +240,10 @@ function ModeToggle({ value, onChange }: ModeToggleProps) {
         onClick={() => onChange('drawing')}
         icon={<Brush className="h-3.5 w-3.5" strokeWidth={2.25} />}
         label="Dibujo"
+        disabled={folderMode}
+        title={
+          folderMode ? 'El modo Dibujo entrena un rango a la vez' : undefined
+        }
       />
       <ModeButton
         active={value === 'speed'}
@@ -176,11 +260,15 @@ function ModeButton({
   onClick,
   icon,
   label,
+  disabled = false,
+  title,
 }: {
   active: boolean;
   onClick: () => void;
   icon: React.ReactNode;
   label: string;
+  disabled?: boolean;
+  title?: string | undefined;
 }) {
   return (
     <button
@@ -188,13 +276,17 @@ function ModeButton({
       role="tab"
       aria-selected={active}
       onClick={onClick}
+      disabled={disabled}
+      title={title}
       className={cn(
         'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium',
         'transition-colors duration-150 ease-out-soft',
         'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light',
-        active
-          ? 'bg-surface text-content shadow-[inset_0_0_0_1px_rgb(var(--color-accent)/0.6)]'
-          : 'text-content-muted hover:bg-surface-hover hover:text-content',
+        disabled
+          ? 'cursor-not-allowed text-content-disabled'
+          : active
+            ? 'bg-surface text-content shadow-[inset_0_0_0_1px_rgb(var(--color-accent)/0.6)]'
+            : 'text-content-muted hover:bg-surface-hover hover:text-content',
       )}
     >
       {icon}

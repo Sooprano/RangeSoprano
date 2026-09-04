@@ -48,6 +48,7 @@ export const SITUATIONS = [
   'RFI',
   'vs_LIMP',
   'vs_RFI',
+  'vs_OS',
   'vs_3BET',
   'vs_4BET',
   'SQUEEZE',

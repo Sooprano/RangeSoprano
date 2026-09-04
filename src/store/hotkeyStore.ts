@@ -6,11 +6,14 @@ import {
   type PersistedHotkeyState,
 } from './schemas';
 import { HOTKEY_STORE_KEY, createSafeJSONStorage } from './persist';
+import { normalizeActionLabel } from '@/utils/actionMeta';
 
-/** Normalize an action label into the map key (global-by-name binding). */
-export function normalizeHotkeyLabel(label: string): string {
-  return label.trim().toLowerCase();
-}
+/**
+ * Normalize an action label into the map key (global-by-name binding).
+ * Delegates to `normalizeActionLabel` so the hotkey map and the folder
+ * trainer's merged palette share one key space.
+ */
+export const normalizeHotkeyLabel = normalizeActionLabel;
 
 type HotkeyStoreState = PersistedHotkeyState & {
   /**

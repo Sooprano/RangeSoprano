@@ -31,16 +31,25 @@ import {
   actionColor,
   actionLabel,
   buildActionDefMap,
-  trainerAnswerActions,
 } from '@/utils/actionMeta';
 import { expandPlus } from '@/utils/handRangeParser';
-import { sampleTrainerHand, type TrainerHand } from '@/utils/trainerSampler';
+import {
+  answerActionsFor,
+  drawFromSource,
+  paletteOfRange,
+  sourceKey,
+  trainerPalette,
+  type TrainerDraw,
+  type TrainerSource,
+} from '@/utils/trainerSource';
 import { useActionHotkeys } from '@/hooks/useActionHotkeys';
 import { computeRangeDiff, type RangeDiff } from '@/utils/rangeDiff';
 import { DiffGrid } from './DiffGrid';
 import { PokerTable } from './PokerTable';
 import { TableSurface } from './TableSurface';
-import { stackLabelOf } from '@/utils/rangeStack';
+import { spotLabelOf, stackLabelOf } from '@/utils/rangeStack';
+import { VILLAIN_ACTION_LABELS } from '@/data/positions';
+import { useTableThemeStore } from '@/store/tableThemeStore';
 import {
   useLeaderboardStore,
   useRangeLeaderboard,
@@ -67,7 +76,7 @@ function formatDurationLabel(secs: number): string {
   return `${secs}s`;
 }
 
-export type ClassicMistake = { trainerHand: TrainerHand; picked: ActionId };
+export type ClassicMistake = { draw: TrainerDraw; picked: ActionId };
 
 type ClassicResult = Pick<
   SpeedClassicEntry,
@@ -79,9 +88,14 @@ type DrawingResult = Pick<
   'matchCombos' | 'truthCombos' | 'guessCombos' | 'accuracyPct'
 > & { diff: RangeDiff };
 
-type SpeedTrainerProps = { range: Range };
+type SpeedTrainerProps = { source: TrainerSource };
 
-export function SpeedTrainer({ range }: SpeedTrainerProps) {
+export function SpeedTrainer({ source }: SpeedTrainerProps) {
+  // Folder sessions get their own board under `folder:<path>`; the per-range
+  // records keep their own keys, untouched.
+  const boardKey = sourceKey(source);
+  const isFolder = source.kind === 'folder';
+
   const [phase, setPhase] = useState<Phase>('config');
   const [style, setStyle] = useState<SpeedStyle>('classic');
   const [duration, setDuration] = useState<number>(DEFAULT_CLASSIC);
@@ -93,19 +107,27 @@ export function SpeedTrainer({ range }: SpeedTrainerProps) {
 
   const addEntry = useLeaderboardStore((s) => s.addEntry);
   const clearForRange = useLeaderboardStore((s) => s.clearForRange);
-  const board = useRangeLeaderboard(range.id);
+  const board = useRangeLeaderboard(boardKey);
 
-  const rangeIdRef = useRef(range.id);
+  const boardKeyRef = useRef(boardKey);
   useEffect(() => {
-    if (rangeIdRef.current !== range.id) {
-      rangeIdRef.current = range.id;
+    if (boardKeyRef.current !== boardKey) {
+      boardKeyRef.current = boardKey;
       setPhase('config');
       setLastEntry(null);
       setMadeTop(false);
       setSessionMistakes(null);
       setSessionDiff(null);
     }
-  }, [range]);
+  }, [boardKey]);
+
+  // Drawing paints one grid, so it trains one range. Derived, not synced with
+  // an effect, so the style comes back when you leave the folder.
+  const effectiveStyle: SpeedStyle = isFolder ? 'classic' : style;
+  const effectiveDuration =
+    isFolder && !(CLASSIC_DURATIONS as readonly number[]).includes(duration)
+      ? DEFAULT_CLASSIC
+      : duration;
 
   const onStyleChange = useCallback((s: SpeedStyle) => {
     setStyle(s);
@@ -122,18 +144,18 @@ export function SpeedTrainer({ range }: SpeedTrainerProps) {
       const { mistakes, ...entryFields } = r;
       const entry: SpeedClassicEntry = {
         style: 'classic',
-        durationSec: duration,
+        durationSec: effectiveDuration,
         dateIso: new Date().toISOString(),
         ...entryFields,
       };
-      const top = addEntry(range.id, entry);
+      const top = addEntry(boardKey, entry);
       setLastEntry(entry);
       setMadeTop(top);
       setSessionMistakes(mistakes);
       setSessionDiff(null);
       setPhase('finished');
     },
-    [addEntry, duration, range.id],
+    [addEntry, effectiveDuration, boardKey],
   );
 
   const finishDrawing = useCallback(
@@ -145,14 +167,14 @@ export function SpeedTrainer({ range }: SpeedTrainerProps) {
         dateIso: new Date().toISOString(),
         ...entryFields,
       };
-      const top = addEntry(range.id, entry);
+      const top = addEntry(boardKey, entry);
       setLastEntry(entry);
       setMadeTop(top);
       setSessionMistakes(null);
       setSessionDiff(diff);
       setPhase('finished');
     },
-    [addEntry, duration, range.id],
+    [addEntry, duration, boardKey],
   );
 
   const cancel = useCallback(() => setPhase('config'), []);
@@ -160,32 +182,36 @@ export function SpeedTrainer({ range }: SpeedTrainerProps) {
   if (phase === 'config') {
     return (
       <ConfigScreen
-        style={style}
-        duration={duration}
+        style={effectiveStyle}
+        duration={effectiveDuration}
         board={board}
+        folderMode={isFolder}
         onStyleChange={onStyleChange}
         onDurationChange={setDuration}
         onStart={start}
-        onClearBoard={() => clearForRange(range.id)}
+        onClearBoard={() => clearForRange(boardKey)}
       />
     );
   }
 
   if (phase === 'running') {
-    return style === 'classic' ? (
+    if (effectiveStyle === 'drawing' && source.kind === 'range') {
+      return (
+        <SpeedDrawingRun
+          key={runId}
+          range={source.range}
+          duration={effectiveDuration}
+          onFinish={finishDrawing}
+        />
+      );
+    }
+    return (
       <SpeedClassicRun
         key={runId}
-        range={range}
-        duration={duration}
+        source={source}
+        duration={effectiveDuration}
         onFinish={finishClassic}
         onCancel={cancel}
-      />
-    ) : (
-      <SpeedDrawingRun
-        key={runId}
-        range={range}
-        duration={duration}
-        onFinish={finishDrawing}
       />
     );
   }
@@ -195,7 +221,8 @@ export function SpeedTrainer({ range }: SpeedTrainerProps) {
       entry={lastEntry}
       madeTop={madeTop}
       board={board}
-      rangeActions={trainerAnswerActions(range.actions)}
+      folderMode={isFolder}
+      answerActions={trainerPalette(source)}
       sessionMistakes={sessionMistakes}
       sessionDiff={sessionDiff}
       onPlayAgain={start}
@@ -210,6 +237,7 @@ function ConfigScreen({
   style,
   duration,
   board,
+  folderMode,
   onStyleChange,
   onDurationChange,
   onStart,
@@ -218,6 +246,7 @@ function ConfigScreen({
   style: SpeedStyle;
   duration: number;
   board: RangeLeaderboard;
+  folderMode: boolean;
   onStyleChange: (s: SpeedStyle) => void;
   onDurationChange: (n: number) => void;
   onStart: () => void;
@@ -233,7 +262,9 @@ function ConfigScreen({
           Modo velocidad
         </div>
         <p className="mt-1 text-xs text-content-muted">
-          Corre contra el reloj con tu rango. Los 5 mejores resultados por modo se guardan localmente.
+          {folderMode
+            ? 'Corre contra el reloj con toda la carpeta mezclada. Los 5 mejores resultados se guardan localmente, aparte de los de cada rango suelto.'
+            : 'Corre contra el reloj con tu rango. Los 5 mejores resultados por modo se guardan localmente.'}
         </p>
 
         <div className="mt-4 flex flex-col gap-3">
@@ -241,7 +272,14 @@ function ConfigScreen({
             <ToggleGroup
               options={[
                 { value: 'classic', label: 'Clásico' },
-                { value: 'drawing', label: 'Dibujo' },
+                {
+                  value: 'drawing',
+                  label: 'Dibujo',
+                  ...(folderMode && {
+                    disabled: true,
+                    title: 'El modo Dibujo entrena un rango a la vez',
+                  }),
+                },
               ]}
               value={style}
               onChange={onStyleChange}
@@ -299,7 +337,12 @@ function ToggleGroup<T extends string>({
   value,
   onChange,
 }: {
-  options: ReadonlyArray<{ value: T; label: string }>;
+  options: ReadonlyArray<{
+    value: T;
+    label: string;
+    disabled?: boolean;
+    title?: string;
+  }>;
   value: T;
   onChange: (v: T) => void;
 }) {
@@ -317,12 +360,16 @@ function ToggleGroup<T extends string>({
             role="radio"
             aria-checked={active}
             onClick={() => onChange(o.value)}
+            disabled={o.disabled ?? false}
+            title={o.title}
             className={cn(
               'rounded-md px-3 py-1 text-sm font-medium',
               'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light',
-              active
-                ? 'bg-surface text-content shadow-[inset_0_0_0_1px_rgb(var(--color-accent)/0.6)]'
-                : 'text-content-muted hover:bg-surface-hover hover:text-content',
+              o.disabled
+                ? 'cursor-not-allowed text-content-disabled'
+                : active
+                  ? 'bg-surface text-content shadow-[inset_0_0_0_1px_rgb(var(--color-accent)/0.6)]'
+                  : 'text-content-muted hover:bg-surface-hover hover:text-content',
             )}
           >
             {o.label}
@@ -336,23 +383,28 @@ function ToggleGroup<T extends string>({
 /* ----------------------------- CLASSIC RUN ----------------------------- */
 
 function SpeedClassicRun({
-  range,
+  source,
   duration,
   onFinish,
   onCancel,
 }: {
-  range: Range;
+  source: TrainerSource;
   duration: number;
   onFinish: (r: ClassicResult) => void;
   onCancel: () => void;
 }) {
-  const orderedActions = useMemo(
-    () => trainerAnswerActions(range.actions),
-    [range.actions],
-  );
+  // Hotkeys resolve on the full session palette so numbers stay put; only the
+  // actions this hand's range offers are rendered.
+  const orderedActions = useMemo(() => trainerPalette(source), [source]);
   const hk = useActionHotkeys(orderedActions);
+  const showVillainAction = useTableThemeStore((s) => s.showVillainAction);
+  const showSpotName = useTableThemeStore((s) => s.showSpotName);
 
-  const [hand, setHand] = useState<TrainerHand>(() => sampleTrainerHand(range));
+  const [draw, setDraw] = useState<TrainerDraw>(() => drawFromSource(source));
+  const visibleActions = useMemo(
+    () => answerActionsFor(source, orderedActions, draw.range),
+    [source, orderedActions, draw.range],
+  );
   const [feedback, setFeedback] = useState<{ picked: ActionId; correct: boolean } | null>(null);
   const [score, setScore] = useState({ correct: 0, total: 0 });
   const [remaining, setRemaining] = useState<number>(duration);
@@ -394,9 +446,9 @@ function SpeedClassicRun({
   const answer = useCallback(
     (picked: ActionId) => {
       if (feedback || doneRef.current) return;
-      const correct = picked === hand.expectedAction;
+      const correct = picked === draw.answerKey;
       if (!correct) {
-        mistakesRef.current = [...mistakesRef.current, { trainerHand: hand, picked }];
+        mistakesRef.current = [...mistakesRef.current, { draw, picked }];
       }
       setFeedback({ picked, correct });
       setScore((s) => ({
@@ -405,10 +457,10 @@ function SpeedClassicRun({
       }));
       flashTimer.current = setTimeout(() => {
         setFeedback(null);
-        setHand(sampleTrainerHand(range));
+        setDraw(drawFromSource(source));
       }, FEEDBACK_FLASH_MS);
     },
-    [feedback, hand, range],
+    [feedback, draw, source],
   );
 
   useEffect(() => {
@@ -417,17 +469,25 @@ function SpeedClassicRun({
       const target = e.target as HTMLElement | null;
       if (target?.closest('input, textarea, select, [contenteditable="true"]')) return;
       const actionId = hk.actionForKey(e.key);
-      if (actionId) {
+      // Ignore keys bound to actions this hand does not offer (see ClassicTrainer).
+      if (actionId && visibleActions.some((d) => d.id === actionId)) {
         e.preventDefault();
         answer(actionId);
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [answer, hk.actionForKey]);
+  }, [answer, hk.actionForKey, visibleActions]);
 
   const accuracy = score.total === 0 ? 0 : (score.correct / score.total) * 100;
-  const stackLabel = stackLabelOf(range);
+  const isFolder = source.kind === 'folder';
+  const handRange = draw.range;
+  const stackLabel = stackLabelOf(handRange);
+  const villainAction = showVillainAction
+    ? VILLAIN_ACTION_LABELS[handRange.situation]
+    : null;
+  const spotPill =
+    showSpotName || stackLabel === null ? spotLabelOf(handRange) : null;
 
   return (
     <div className="flex flex-col gap-4">
@@ -443,16 +503,27 @@ function SpeedClassicRun({
       />
 
       <TableSurface>
+        {/* See ClassicTrainer: in a folder the felt carries both cues — forced
+            stack chip for the depth, pill for the spot. */}
+        {isFolder && spotPill !== null && (
+          // self-start: see ClassicTrainer — the centered top seat overflows
+          // above the table and would sit on top of a centered pill.
+          <span className="max-w-full self-start truncate rounded-full border border-border bg-surface/70 px-2.5 py-1 text-[11px] font-medium text-content-muted">
+            {spotPill}
+          </span>
+        )}
         <PokerTable
-          heroPosition={range.position}
-          hand={hand.hand}
-          tableFormat={range.tableFormat}
-          {...(range.villainPosition !== undefined && { villainPosition: range.villainPosition })}
+          heroPosition={handRange.position}
+          hand={draw.hand.hand}
+          tableFormat={handRange.tableFormat}
+          {...(handRange.villainPosition !== undefined && { villainPosition: handRange.villainPosition })}
           {...(stackLabel !== null && { stackLabel })}
+          {...(isFolder && { forceStack: true })}
+          {...(villainAction !== null && { villainAction })}
         />
 
         <div className="grid w-full max-w-md grid-cols-2 gap-1.5 sm:grid-cols-3">
-          {orderedActions.map((def) => {
+          {visibleActions.map((def) => {
             const isPicked = feedback?.picked === def.id;
             const flashCorrect = feedback && isPicked && feedback.correct;
             const flashWrong = feedback && isPicked && !feedback.correct;
@@ -745,7 +816,8 @@ function FinishedScreen({
   entry,
   madeTop,
   board,
-  rangeActions,
+  folderMode,
+  answerActions,
   sessionMistakes,
   sessionDiff,
   onPlayAgain,
@@ -754,7 +826,8 @@ function FinishedScreen({
   entry: SpeedEntry | null;
   madeTop: boolean;
   board: RangeLeaderboard;
-  rangeActions: ActionDef[];
+  folderMode: boolean;
+  answerActions: ActionDef[];
   sessionMistakes: ClassicMistake[] | null;
   sessionDiff: RangeDiff | null;
   onPlayAgain: () => void;
@@ -821,7 +894,11 @@ function FinishedScreen({
       </div>
 
       {entry.style === 'classic' && sessionMistakes !== null && sessionMistakes.length > 0 && (
-        <ErrorsPanel mistakes={sessionMistakes} rangeActions={rangeActions} />
+        <ErrorsPanel
+          mistakes={sessionMistakes}
+          answerActions={answerActions}
+          showRange={folderMode}
+        />
       )}
 
       {entry.style === 'drawing' && sessionDiff !== null && (
@@ -846,10 +923,14 @@ function Stat({ label, value }: { label: string; value: string }) {
 
 function ErrorsPanel({
   mistakes,
-  rangeActions,
+  answerActions,
+  showRange,
 }: {
   mistakes: ClassicMistake[];
-  rangeActions: ActionDef[];
+  /** The session's answer palette — resolves what the player picked. */
+  answerActions: ActionDef[];
+  /** Folder sessions mix ranges, so each miss names the range it came from. */
+  showRange: boolean;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -875,33 +956,44 @@ function ErrorsPanel({
       {open && (
         <div className="border-t border-border px-4 py-3">
           <div className="flex flex-col gap-2">
-            {mistakes.map(({ trainerHand, picked }, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-3 rounded-lg border border-border bg-surface/60 px-3 py-2 text-sm"
-              >
-                <span className="w-8 shrink-0 font-mono font-semibold text-content">
-                  {trainerHand.hand}
-                </span>
-                <span className="flex items-center gap-1.5 text-rose-400">
-                  <span
-                    aria-hidden
-                    className="h-2.5 w-2.5 shrink-0 rounded-sm"
-                    style={{ backgroundColor: actionColor(rangeActions, picked) }}
-                  />
-                  {actionLabel(rangeActions, picked)}
-                </span>
-                <span className="text-content-muted">→</span>
-                <span className="flex items-center gap-1.5 text-emerald-400">
-                  <span
-                    aria-hidden
-                    className="h-2.5 w-2.5 shrink-0 rounded-sm"
-                    style={{ backgroundColor: actionColor(rangeActions, trainerHand.expectedAction) }}
-                  />
-                  {actionLabel(rangeActions, trainerHand.expectedAction)}
-                </span>
-              </div>
-            ))}
+            {mistakes.map(({ draw, picked }, i) => {
+              // Two palettes on purpose: what you PICKED lives in the session's
+              // answer space (merged label keys in a folder), what was EXPECTED
+              // is a local id of the hand's own range.
+              const acts = paletteOfRange(draw.range);
+              return (
+                <div
+                  key={i}
+                  className="flex items-center gap-3 rounded-lg border border-border bg-surface/60 px-3 py-2 text-sm"
+                >
+                  <span className="w-8 shrink-0 font-mono font-semibold text-content">
+                    {draw.hand.hand}
+                  </span>
+                  <span className="flex items-center gap-1.5 text-rose-400">
+                    <span
+                      aria-hidden
+                      className="h-2.5 w-2.5 shrink-0 rounded-sm"
+                      style={{ backgroundColor: actionColor(answerActions, picked) }}
+                    />
+                    {actionLabel(answerActions, picked)}
+                  </span>
+                  <span className="text-content-muted">→</span>
+                  <span className="flex items-center gap-1.5 text-emerald-400">
+                    <span
+                      aria-hidden
+                      className="h-2.5 w-2.5 shrink-0 rounded-sm"
+                      style={{ backgroundColor: actionColor(acts, draw.hand.expectedAction) }}
+                    />
+                    {actionLabel(acts, draw.hand.expectedAction)}
+                  </span>
+                  {showRange && (
+                    <span className="ml-auto truncate rounded-full bg-surface px-2 py-0.5 text-xs text-content-muted">
+                      {stackLabelOf(draw.range) ?? draw.range.name}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

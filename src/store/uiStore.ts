@@ -17,6 +17,7 @@ type UiStoreState = PersistedUiState & {
   setGridTooltipEnabled: (v: boolean) => void;
   setViewerRangeId: (id: string | null) => void;
   setTrainerRangeId: (id: string | null) => void;
+  setTrainerFolderPath: (path: string | null) => void;
   setGroupColor: (path: string, color: string | undefined) => void;
   toggleGroupCollapsed: (path: string) => void;
   setGroupCollapsed: (path: string, collapsed: boolean) => void;
@@ -42,6 +43,7 @@ const INITIAL: PersistedUiState = {
   gridTooltipEnabled: true,
   viewerRangeId: null,
   trainerRangeId: null,
+  trainerFolderPath: null,
   groupMeta: {},
   sidebarCollapsed: false,
   overviewSelectedGroups: [],
@@ -63,6 +65,7 @@ export const useUiStore = create<UiStoreState>()(
       setGridTooltipEnabled: (v) => set({ gridTooltipEnabled: v }),
       setViewerRangeId: (id) => set({ viewerRangeId: id }),
       setTrainerRangeId: (id) => set({ trainerRangeId: id }),
+      setTrainerFolderPath: (path) => set({ trainerFolderPath: path }),
 
       setGroupColor: (path, color) =>
         set((s) => {
@@ -186,6 +189,7 @@ export const useUiStore = create<UiStoreState>()(
         gridTooltipEnabled: s.gridTooltipEnabled,
         viewerRangeId: s.viewerRangeId,
         trainerRangeId: s.trainerRangeId,
+        trainerFolderPath: s.trainerFolderPath,
         groupMeta: s.groupMeta,
         sidebarCollapsed: s.sidebarCollapsed,
         overviewSelectedGroups: s.overviewSelectedGroups,

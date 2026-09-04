@@ -34,6 +34,9 @@ function buildInitial(): PersistedTableTheme {
     chipStyle: DEFAULT_CHIP_STYLE,
     showLogo: true,
     showStack: true,
+    showVillainAction: true,
+    showSpotName: true,
+    showBlinds: true,
   };
 }
 
@@ -51,6 +54,9 @@ type TableThemeState = PersistedTableTheme & {
   setChipStyle: (chip: ChipStyleId) => void;
   setShowLogo: (show: boolean) => void;
   setShowStack: (show: boolean) => void;
+  setShowVillainAction: (show: boolean) => void;
+  setShowSpotName: (show: boolean) => void;
+  setShowBlinds: (show: boolean) => void;
   reset: () => void;
 };
 
@@ -94,6 +100,9 @@ export const useTableThemeStore = create<TableThemeState>()(
       setChipStyle: (chipStyle) => set({ chipStyle }),
       setShowLogo: (showLogo) => set({ showLogo }),
       setShowStack: (showStack) => set({ showStack }),
+      setShowVillainAction: (showVillainAction) => set({ showVillainAction }),
+      setShowSpotName: (showSpotName) => set({ showSpotName }),
+      setShowBlinds: (showBlinds) => set({ showBlinds }),
       reset: () => set({ ...INITIAL }),
     }),
     {
@@ -113,6 +122,9 @@ export const useTableThemeStore = create<TableThemeState>()(
         chipStyle: s.chipStyle,
         showLogo: s.showLogo,
         showStack: s.showStack,
+        showVillainAction: s.showVillainAction,
+        showSpotName: s.showSpotName,
+        showBlinds: s.showBlinds,
       }),
       // v1 → v2 added chipStyle/showLogo/showStack. zPersistedTableTheme is
       // `.strict()`, so without this a v1 blob would fail safeParse in `merge`

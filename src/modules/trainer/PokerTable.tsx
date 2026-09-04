@@ -2,6 +2,7 @@ import { cn } from '@/lib/cn';
 import { combosOf } from '@/utils/handUtils';
 import { brighten, shade, withAlpha } from '@/utils/color';
 import { POSITIONS, huVillainOf } from '@/types/poker';
+import { BLIND_LABELS } from '@/data/positions';
 import type { Position, TableFormat } from '@/types/poker';
 import { Spade } from 'lucide-react';
 import { useTableThemeStore } from '@/store/tableThemeStore';
@@ -104,11 +105,17 @@ function getTableLayout(
 
 // ── Player box ───────────────────────────────────────────────────────────────
 
-type SeatRole = 'hero' | 'villain' | 'idle';
+/**
+ * `live` = a seat still in the hand that is not the spot's villain: the blinds
+ * behind you when you are first to act. Brighter than `idle` (folded / not
+ * dealt in) but without the villain's accent, which means "this is the player
+ * you are facing".
+ */
+type SeatRole = 'hero' | 'villain' | 'live' | 'idle';
 
 /**
  * The hero always keeps `bg-accent`: "this one is you" must never depend on a
- * cosmetic setting. Only the villain/idle boxes change with the style.
+ * cosmetic setting. Only the villain/live/idle boxes change with the style.
  */
 function playerBoxStyle(
   variant: PlayerBoxStyle,
@@ -135,7 +142,9 @@ function playerBoxStyle(
         'border backdrop-blur-sm',
         role === 'villain'
           ? 'border-white/25 bg-white/15 text-white'
-          : 'border-white/10 bg-white/5 text-white/55',
+          : role === 'live'
+            ? 'border-white/15 bg-white/10 text-white/85'
+            : 'border-white/10 bg-white/5 text-white/55',
       ),
       style: {},
     };
@@ -148,7 +157,9 @@ function playerBoxStyle(
         'border bg-surface/70',
         role === 'villain'
           ? 'border-accent/60 text-content'
-          : 'border-border text-content-disabled',
+          : role === 'live'
+            ? 'border-border text-content'
+            : 'border-border text-content-disabled',
       ),
       style:
         role === 'villain'
@@ -163,7 +174,9 @@ function playerBoxStyle(
       base,
       role === 'villain'
         ? 'border border-accent/50 bg-surface text-content'
-        : 'border border-border bg-surface/80 text-content-disabled',
+        : role === 'live'
+          ? 'border border-border bg-surface text-content'
+          : 'border border-border bg-surface/80 text-content-disabled',
     ),
     style: {},
   };
@@ -243,6 +256,105 @@ function StackChip({ label, chip }: { label: string; chip: ChipStyleDef }) {
   );
 }
 
+/**
+ * Splits a bet label into the parts that deserve different weights:
+ * `"Limp 1bb"` → word "Limp" + 1 + bb · `"0.5bb"` → 0.5 + bb · `"All in"` →
+ * word only. The number must be trailing, so "3-Bet" and "4-Bet" stay one word
+ * instead of having their sizing stolen by the digit.
+ */
+function splitBetLabel(label: string): {
+  word: string;
+  value: string;
+  unit: string;
+} {
+  const m = /^(.*?)\s*(\d+(?:\.\d+)?)\s*(bb)?$/i.exec(label.trim());
+  if (!m) return { word: label.trim(), value: '', unit: '' };
+  return { word: m[1]!.trim(), value: m[2]!, unit: m[3] ?? '' };
+}
+
+/**
+ * Money already in front of a seat, pushed toward the pot: the villain's action
+ * ("Limp 1bb", "Raise") or a posted blind ("0.5bb"). Shares the table's chip
+ * palette — chips belong to the house, not the player — but stays flatter than
+ * the hero's stack: this is money bet, not a stack sitting behind the cards.
+ *
+ * The label follows the same typography rules as the hero's StackChip, because
+ * they fail the same way: at one small size the whole token reads as a blur you
+ * have to squint at. So the amount carries the weight, the unit shrinks beside
+ * it, and it stays in Inter with `tabular-nums` — never `font-mono`, which
+ * resolves to Consolas on Windows and its slashed zero ruins "0.5bb".
+ */
+function SeatBet({
+  label,
+  chip,
+  tone = 'action',
+}: {
+  label: string;
+  chip: ChipStyleDef;
+  /**
+   * `action` = the decision you are facing, in the table's chip color.
+   * `blind` = forced money nobody chose to put in: fewer chips, shaded down and
+   * neutral white text, so the seat you actually have to answer stays the loud
+   * one. Derived from the same chip palette (never a hardcoded color) so it
+   * keeps looking deliberate under every theme.
+   */
+  tone?: 'action' | 'blind';
+}) {
+  const { word, value, unit } = splitBetLabel(label);
+  const isBlind = tone === 'blind';
+  const count = isBlind ? 2 : 3;
+  const base = isBlind ? shade(chip.base, -0.4) : chip.base;
+  const edge = isBlind ? shade(chip.edge, -0.3) : chip.edge;
+  const text = isBlind ? 'rgba(255,255,255,0.7)' : chip.text;
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <div
+        aria-hidden="true"
+        className="relative w-6"
+        style={{ height: `${count * 3 + 3}px` }}
+      >
+        {Array.from({ length: count }, (_, i) => (
+          <div
+            key={i}
+            className="absolute left-0 right-0 h-1.5 rounded-full"
+            style={{
+              bottom: `${i * 3}px`,
+              backgroundColor: base,
+              boxShadow: `inset 0 0 0 1px ${edge}, 0 1px 2px rgba(0,0,0,0.45)`,
+            }}
+          />
+        ))}
+      </div>
+      <span
+        className={cn(
+          'flex items-baseline gap-0.5 whitespace-nowrap leading-none tabular-nums',
+          isBlind && 'opacity-90',
+        )}
+        style={{ color: text, textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}
+      >
+        {word !== '' && (
+          <span className="text-[12px] font-semibold tracking-tight">{word}</span>
+        )}
+        {value !== '' && (
+          <span
+            className={cn(
+              'font-bold tracking-tight',
+              isBlind ? 'text-[11px]' : 'text-[13px]',
+            )}
+          >
+            {value}
+          </span>
+        )}
+        {unit !== '' && (
+          <span className="text-[9px] font-semibold uppercase opacity-75">
+            {unit}
+          </span>
+        )}
+      </span>
+    </div>
+  );
+}
+
 type PokerTableProps = {
   heroPosition: Position;
   villainPosition?: Position;
@@ -250,6 +362,17 @@ type PokerTableProps = {
   tableFormat?: TableFormat;
   /** Already formatted, e.g. "12bb". Omit to draw no chips at all. */
   stackLabel?: string;
+  /**
+   * Draw the stack even when the theme toggle has it off. Folder training mixes
+   * stacks, so the chip stops being cosmetic: it is the only cue for which
+   * range this hand belongs to.
+   */
+  forceStack?: boolean;
+  /**
+   * What the villain already did, e.g. "Limp 1bb". Omit (or pass nothing) when
+   * it folds to the hero — an empty seat IS the "no action" signal.
+   */
+  villainAction?: string;
 };
 
 export function PokerTable({
@@ -258,6 +381,8 @@ export function PokerTable({
   hand,
   tableFormat = '6max',
   stackLabel,
+  forceStack = false,
+  villainAction,
 }: PokerTableProps) {
   const theme = useTableThemeStore();
   const [card1, card2] = parseHandCards(hand);
@@ -326,8 +451,29 @@ export function PokerTable({
       {layout.map(({ position, slot }) => {
         const isHero = position === effectiveHero;
         const isVillain = !isHero && position === effectiveVillain;
-        const role: SeatRole = isHero ? 'hero' : isVillain ? 'villain' : 'idle';
+        // A blind still to act after the hero is a live player: on the button it
+        // folds to you, so SB and BB are exactly who you are opening into.
+        // POSITIONS is in preflop action order, so "acts after me" is an index
+        // comparison — which is also what keeps a BB-defend spot honest: there
+        // the SB is already behind you (folded), so it stays idle and chipless.
+        const blind =
+          theme.showBlinds &&
+          !isHero &&
+          POSITIONS.indexOf(position) > POSITIONS.indexOf(effectiveHero)
+            ? BLIND_LABELS[position]
+            : undefined;
+        const isLive = blind !== undefined && !isVillain;
+        const role: SeatRole = isHero
+          ? 'hero'
+          : isVillain
+            ? 'villain'
+            : isLive
+              ? 'live'
+              : 'idle';
         const box = playerBoxStyle(theme.playerBox, role, theme.outerBorder);
+        // The villain's action supersedes their blind: a limp IS the blind
+        // completed, showing both would count the same chips twice.
+        const seatBet = isVillain ? villainAction : blind;
         // Bottom-half seats stack their cards above the badge; top-half seats
         // put them below, so nothing is clipped by the container edge (slot 3
         // sits at y≈4% — cards above it would render off-canvas).
@@ -348,7 +494,7 @@ export function PokerTable({
                     compensates for), so centering on it dropped the chips onto
                     the rail. Absolute, so the column never shifts. */}
                 <div className="relative flex items-center gap-2">
-                  {theme.showStack && stackLabel !== undefined && (
+                  {(theme.showStack || forceStack) && stackLabel !== undefined && (
                     // `bottom-1/2` (not `top-1/2 -translate-y-1/2`): the block
                     // rests ON the cards' midline instead of straddling it, so
                     // the "20bb" label clears the inner rail — centered, its
@@ -365,14 +511,40 @@ export function PokerTable({
                   {position}
                 </div>
               </div>
-            ) : isVillain ? (
-              // Villain: face-down cards make the matchup readable at a glance.
-              <div className="flex flex-col items-center gap-1">
+            ) : isVillain || isLive ? (
+              // Still in the hand: face-down cards make it readable at a glance
+              // who you are actually playing against.
+              <div className="relative flex flex-col items-center gap-1">
                 {cardsAbove && <CardBackPair />}
                 <div className={box.className} style={box.style}>
                   {position}
                 </div>
                 {!cardsAbove && <CardBackPair />}
+                {/* The bet sits between the seat and the middle of the felt, so
+                    it reads as money pushed toward the pot. Absolute on purpose:
+                    the seat column must not grow, or the VISUAL_SLOTS geometry
+                    shifts (the top-center seat would clip out of the container). */}
+                {seatBet !== undefined && (
+                  <div
+                    className={cn(
+                      'absolute left-1/2 -translate-x-1/2',
+                      cardsAbove ? 'bottom-full mb-1' : 'top-full mt-1',
+                    )}
+                  >
+                    <SeatBet
+                      label={seatBet}
+                      chip={chip}
+                      // Keyed off what the chips ARE, not who the seat is: the
+                      // villain of an unopened pot shows their posted blind,
+                      // and that is still forced money, not a decision.
+                      tone={
+                        isVillain && villainAction !== undefined
+                          ? 'action'
+                          : 'blind'
+                      }
+                    />
+                  </div>
+                )}
               </div>
             ) : (
               <div className={box.className} style={box.style}>

@@ -1,10 +1,15 @@
 import { useMemo, useState } from 'react';
-import { Search } from 'lucide-react';
+import { Dices, Search } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import type { RangeSummary } from '@/store/selectors';
 import { useUiStore } from '@/store/uiStore';
 import type { GroupMeta } from '@/store/schemas';
-import { buildGroupTree, flattenVisibleTree, type GroupTreeNode } from '@/utils/groupUtils';
+import {
+  buildGroupTree,
+  collectRangeIds,
+  flattenVisibleTree,
+  type GroupTreeNode,
+} from '@/utils/groupUtils';
 import { FolderRow } from '@/components/FolderRow';
 import { TruncatedLabel } from '@/components/TruncatedLabel';
 import { SITUATION_LABELS } from '@/data/positions';
@@ -24,6 +29,19 @@ type ViewerRangeListProps = {
   onSelect: (id: string) => void;
   emptyMessage?: string;
   className?: string;
+  /**
+   * Opt-in folder targeting (the Trainer): when `onSelectFolder` is given, each
+   * folder row grows a "train this folder" button. The Viewer passes neither
+   * prop and renders exactly as before.
+   */
+  selectedFolderPath?: string | null;
+  onSelectFolder?: (path: string) => void;
+  /**
+   * How many ranges training that folder would actually draw from. Comes from
+   * the store, NOT from the (searched/filtered) tree — the search box and the
+   * situation filters narrow the list you browse, never the folder you train.
+   */
+  folderRangeCount?: (path: string) => number;
 };
 
 export function ViewerRangeList({
@@ -32,6 +50,9 @@ export function ViewerRangeList({
   onSelect,
   emptyMessage = 'No ranges yet. Create one in the Editor.',
   className,
+  selectedFolderPath = null,
+  onSelectFolder,
+  folderRangeCount,
 }: ViewerRangeListProps) {
   const [query, setQuery] = useState('');
   const groupMeta = useUiStore((s) => s.groupMeta);
@@ -78,15 +99,54 @@ export function ViewerRangeList({
   const renderFolder = (node: GroupTreeNode): React.ReactNode => {
     const meta = groupMeta[node.path];
     const isCollapsed = !isSearching && (meta?.collapsed ?? false);
+    const trainCount = onSelectFolder
+      ? (folderRangeCount?.(node.path) ?? collectRangeIds(node).length)
+      : 0;
+    const isFolderSelected = selectedFolderPath === node.path;
 
     return (
       <li key={node.path} className="flex flex-col">
-        <FolderRow
-          node={node}
-          meta={meta}
-          forceExpand={isSearching}
-          onToggleCollapse={() => toggleGroupCollapsed(node.path)}
-        />
+        <div
+          className={cn(
+            'rounded-md',
+            isFolderSelected && 'bg-accent/10 ring-1 ring-inset ring-accent/40',
+          )}
+        >
+          <FolderRow
+            node={node}
+            meta={meta}
+            forceExpand={isSearching}
+            onToggleCollapse={() => toggleGroupCollapsed(node.path)}
+            {...(onSelectFolder && trainCount > 0
+              ? {
+                  trailing: (
+                    <button
+                      type="button"
+                      onClick={() => onSelectFolder(node.path)}
+                      aria-pressed={isFolderSelected}
+                      title={
+                        isFolderSelected
+                          ? 'Dejar de entrenar la carpeta'
+                          : `Entrenar la carpeta (${trainCount} ${trainCount === 1 ? 'rango' : 'rangos'})`
+                      }
+                      className={cn(
+                        'mr-0.5 shrink-0 rounded-md p-1 transition-colors',
+                        'focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light',
+                        isFolderSelected
+                          ? 'text-accent-light'
+                          : 'text-content-disabled hover:bg-surface-hover hover:text-content',
+                      )}
+                    >
+                      <Dices className="h-3.5 w-3.5" strokeWidth={2.25} />
+                      <span className="sr-only">
+                        Entrenar la carpeta {node.label}
+                      </span>
+                    </button>
+                  ),
+                }
+              : {})}
+          />
+        </div>
         {!isCollapsed && (
           <div
             className="border-l border-border"

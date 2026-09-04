@@ -63,7 +63,7 @@ const MODULES: readonly ModuleCard[] = [
     label: 'Entrenador',
     icon: Target,
     description:
-      'Entrena manos en mesa 6-max o Heads-Up contra tus rangos guardados. Modos Clásico (con auto-avance activable), Velocidad (contrarreloj con tabla de líderes local) y Dibujo (pintar el rango de memoria). El villano se sienta enfrente con sus cartas boca abajo, ves tu stack en fichas y la mesa es personalizable: colores, forma, reverso de las cartas y color de fichas. Asigna tus propias hotkeys a cada acción (las mismas que usas en las salas) con clic derecho en el botón. Filtros por posición, situación y villano.',
+      'Entrena manos en mesa 6-max o Heads-Up contra tus rangos guardados, de a uno o una carpeta entera mezclada (por ejemplo tus BBvsBU de 25bb a 8bb: cada mano sortea un stack y tienes que leerlo antes de decidir, con las fichas del villano contándote si limpeó, abrió o te llega sin acción). Modos Clásico (con auto-avance activable), Velocidad (contrarreloj con tabla de líderes local) y Dibujo (pintar el rango de memoria). El villano se sienta enfrente con sus cartas boca abajo, ves tu stack en fichas y la mesa es personalizable: colores, forma, reverso de las cartas y color de fichas. Asigna tus propias hotkeys a cada acción (las mismas que usas en las salas) con clic derecho en el botón. Filtros por posición, situación y villano.',
   },
   {
     to: '/editor',
@@ -273,6 +273,11 @@ const FAQS: readonly Faq[] = [
   },
   {
     group: 'Entrenar y estudiar',
+    q: '¿Puedo entrenar una carpeta entera, con todos sus rangos mezclados?',
+    a: 'Sí. En el Entrenador, cada carpeta de la lista de la izquierda tiene un botón de dados: al pulsarlo entrenas todos los rangos que contiene (incluidos los de sus subcarpetas) mezclados. Cada mano sortea primero uno de esos rangos y después la mano, y la mesa te dice contra qué estás jugando sin nombrártelo: tu stack en fichas marca la profundidad (si la carpeta tiene tus BBvsBU de 25bb, 20bb, 16bb, 12bb, 10bb y 8bb, tienes que leerlo antes de elegir la acción) y las fichas delante del villano marcan lo que él ya hizo (Limp, Raise, 3-Bet o nada si te llega sin acción). Cuando la carpeta mezcla situaciones distintas, una pastilla sobre la mesa nombra el spot sin decirte el stack. Los botones de acción son solo los del rango de esa mano, y tus hotkeys mantienen la misma tecla en toda la sesión. Debajo del puntaje ves un desglose por rango, agrupado por subcarpeta, para detectar dónde fallas. Funciona en Clásico y en Velocidad, que guarda una tabla de líderes propia de la carpeta; el modo Dibujo queda para un rango a la vez, porque pintar el grid es pintar un rango.',
+  },
+  {
+    group: 'Entrenar y estudiar',
     q: '¿Puedo usar mis propias teclas (hotkeys) en el Entrenador?',
     a: 'Sí. En el Entrenador Clásico y Velocidad, haz clic derecho sobre el botón de una acción y presiona la tecla que quieras (por ejemplo f para Fold, r para Raise, d para Call), las mismas que usas en tu sala. Se guardan por nombre de acción, así que valen para todos los rangos de la misma familia y también en el modo Velocidad. Esc cancela y Backspace borra. Las acciones sin hotkey propia siguen respondiendo con su número (1-9), y todo queda guardado para la próxima sesión.',
   },
@@ -328,7 +333,7 @@ const FAQS: readonly Faq[] = [
       </>
     ),
     aPlain:
-      'Sí. En el Entrenador el botón Mesa abre un panel con vista previa en vivo: nueve preajustes de color (Navy, Wine, Emerald, Teal, Amber...) y, si quieres afinar, cada capa por separado: el fieltro, el borde, el marco, el riel interior y el fondo. También eliges la forma de la mesa (estadio o un oval más largo, como el de los replayers de escritorio), el estilo de las cajas de jugador (sólido, cristal o neón), el color del reverso de las cartas y el de tus fichas (siete colores de casino). Ese reverso es el de las cartas boca abajo del villano, que se sienta enfrente según la posición del rango: en un BBvsBTN ves al BTN con sus dos cartas tapadas, así que el matchup se lee de un vistazo. Junto a tus cartas ves tu stack en fichas ("12bb"), que sale del campo Stack del Editor o, si lo dejaste vacío, del propio nombre del rango. El logo del paño y las fichas se pueden apagar. Todo se guarda en tu navegador y el botón Restablecer vuelve al diseño original.',
+      'Sí. En el Entrenador el botón Mesa abre un panel con vista previa en vivo: nueve preajustes de color (Navy, Wine, Emerald, Teal, Amber...) y, si quieres afinar, cada capa por separado: el fieltro, el borde, el marco, el riel interior y el fondo. También eliges la forma de la mesa (estadio o un oval más largo, como el de los replayers de escritorio), el estilo de las cajas de jugador (sólido, cristal o neón), el color del reverso de las cartas y el de tus fichas (siete colores de casino). Ese reverso es el de las cartas boca abajo del villano, que se sienta enfrente según la posición del rango: en un BBvsBTN ves al BTN con sus dos cartas tapadas, así que el matchup se lee de un vistazo. Junto a tus cartas ves tu stack en fichas ("12bb"), que sale del campo Stack del Editor o, si lo dejaste vacío, del propio nombre del rango, y delante del villano las fichas de lo que él ya hizo (Limp, Raise, 3-Bet, All in…), según la situación del rango. Cuando abres desde el botón, la SB y la BB aparecen con sus ciegas y sus cartas boca abajo, para que se vea de un vistazo contra quiénes estás abriendo. El logo del paño, las fichas, las ciegas, la acción del villano y el nombre del spot se pueden apagar por separado. Todo se guarda en tu navegador y el botón Restablecer vuelve al diseño original.',
   },
   {
     group: 'Entrenar y estudiar',
@@ -735,7 +740,10 @@ export default function HomePage() {
               <span className="font-medium text-content">Dibujo</span> (pinta el rango de
               memoria y compara con la verdad). Las tres modalidades sobre mesa 6-max o HU,
               con el villano sentado enfrente y sus cartas boca abajo para que veas el
-              matchup de un vistazo. Puedes asignar tus propias{' '}
+              matchup de un vistazo. Cuando ya te sepas los rangos de a uno, entrena{' '}
+              <span className="font-medium text-content">toda una carpeta junta</span>: cada
+              mano sortea uno de sus rangos y el stack del paño te dice cuál, como en la
+              mesa real. Puedes asignar tus propias{' '}
               <span className="font-medium text-content">hotkeys</span> a cada acción (clic
               derecho en el botón) para responder con las mismas teclas de tu sala, y
               vestir la mesa a tu gusto desde el botón{' '}

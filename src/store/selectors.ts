@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import type { Range } from '@/types/poker';
+import { isInGroup, normalizeGroupPath } from '@/utils/groupUtils';
 import { useRangeStore } from './rangeStore';
 import { useUiStore } from './uiStore';
 
@@ -35,6 +36,30 @@ export function useTrainerRange(): Range | null {
     if (!trainerRangeId) return null;
     return s.ranges.find((r) => r.id === trainerRangeId) ?? null;
   });
+}
+
+const NO_RANGES: Range[] = [];
+
+/**
+ * Every range inside a folder, subfolders included, in the same order the
+ * RANGES list shows them. Empty when the folder no longer exists (renamed or
+ * deleted), which is what lets the trainer drop a stale selection.
+ */
+export function useRangesInGroup(path: string | null): Range[] {
+  const ranges = useRangeStore((s) => s.ranges);
+  return useMemo(() => {
+    if (!path) return NO_RANGES;
+    const target = normalizeGroupPath(path);
+    if (target === '') return NO_RANGES;
+    const inGroup = ranges.filter((r) => isInGroup(r.group, target));
+    if (inGroup.length === 0) return NO_RANGES;
+    return inGroup.sort((a, b) => {
+      const oa = a.order ?? Number.POSITIVE_INFINITY;
+      const ob = b.order ?? Number.POSITIVE_INFINITY;
+      if (oa !== ob) return oa - ob;
+      return a.name.localeCompare(b.name);
+    });
+  }, [ranges, path]);
 }
 
 export function useRangeById(id: string | null): Range | null {

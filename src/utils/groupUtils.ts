@@ -14,6 +14,47 @@ export type GroupTree = {
   roots: GroupTreeNode[];
 };
 
+/** Canonical form of a group path: trimmed segments, no empties. */
+export function normalizeGroupPath(raw: string): string {
+  return raw
+    .split('/')
+    .map((seg) => seg.trim())
+    .filter(Boolean)
+    .join('/');
+}
+
+/** True when `group` is `path` itself or lives under it (any depth). */
+export function isInGroup(group: string | undefined, path: string): boolean {
+  if (!group) return false;
+  const g = normalizeGroupPath(group);
+  return g === path || g.startsWith(path + '/');
+}
+
+/**
+ * Where a range sits INSIDE the folder being trained: `''` when it hangs
+ * directly off `basePath`, otherwise the path below it
+ * (`"SPIN/HUBBvsLP"` under base `"SPIN"` → `"HUBBvsLP"`). `null` when the range
+ * is not under the base at all.
+ */
+export function relativeGroupPath(
+  group: string | undefined,
+  basePath: string,
+): string | null {
+  if (!group) return null;
+  const g = normalizeGroupPath(group);
+  const base = normalizeGroupPath(basePath);
+  if (g === base) return '';
+  if (base !== '' && !g.startsWith(base + '/')) return null;
+  return base === '' ? g : g.slice(base.length + 1);
+}
+
+/** Every range id under a folder node, including its subfolders. */
+export function collectRangeIds(node: GroupTreeNode): string[] {
+  const out = [...node.rangeIds];
+  for (const child of node.children) out.push(...collectRangeIds(child));
+  return out;
+}
+
 export function buildGroupTree(
   summaries: RangeSummary[],
   groupMeta: Record<string, GroupMeta> = {},
@@ -36,10 +77,7 @@ export function buildGroupTree(
       ungrouped.push(s);
       continue;
     }
-    const segments = s.group
-      .split('/')
-      .map((seg) => seg.trim())
-      .filter(Boolean);
+    const segments = normalizeGroupPath(s.group).split('/').filter(Boolean);
     if (segments.length === 0) {
       ungrouped.push(s);
       continue;

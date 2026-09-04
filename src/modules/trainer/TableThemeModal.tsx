@@ -115,12 +115,15 @@ export function TableThemeModal({ onClose }: Props) {
         {/* Live preview — the real components reading the same store, panel
             included, so the background layer previews where it actually lands. */}
         <TableSurface>
+          {/* SB vs a BTN open: the one spot that exercises every toggle at once
+              — hero stack, villain action, and a live blind (the BB) behind. */}
           <PokerTable
-            heroPosition="BB"
+            heroPosition="SB"
             villainPosition="BTN"
             hand="AKs"
             tableFormat="6max"
             stackLabel="12bb"
+            villainAction="Raise"
           />
         </TableSurface>
 
@@ -299,6 +302,21 @@ export function TableThemeModal({ onClose }: Props) {
               active={theme.showStack}
               label="Fichas y stack"
               onClick={() => theme.setShowStack(!theme.showStack)}
+            />
+            <Chip
+              active={theme.showVillainAction}
+              label="Acción del villano"
+              onClick={() => theme.setShowVillainAction(!theme.showVillainAction)}
+            />
+            <Chip
+              active={theme.showBlinds}
+              label="Ciegas"
+              onClick={() => theme.setShowBlinds(!theme.showBlinds)}
+            />
+            <Chip
+              active={theme.showSpotName}
+              label="Nombre del spot"
+              onClick={() => theme.setShowSpotName(!theme.showSpotName)}
             />
           </div>
         </Section>
