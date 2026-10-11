@@ -15,7 +15,6 @@ import {
   Settings2,
   Square,
   Trophy,
-  X,
   Zap,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
@@ -27,11 +26,7 @@ import type {
   Range,
   RangeCellData,
 } from '@/types/poker';
-import {
-  actionColor,
-  actionLabel,
-  buildActionDefMap,
-} from '@/utils/actionMeta';
+import { buildActionDefMap } from '@/utils/actionMeta';
 import { expandPlus } from '@/utils/handRangeParser';
 import {
   answerActionsFor,
@@ -48,6 +43,7 @@ import {
 import { useActionHotkeys } from '@/hooks/useActionHotkeys';
 import { computeRangeDiff, type RangeDiff } from '@/utils/rangeDiff';
 import { DiffGrid } from './DiffGrid';
+import { SessionErrorsPanel, type ClassicMistake } from './SessionErrorsPanel';
 import { PokerTable } from './PokerTable';
 import { TableSurface } from './TableSurface';
 import { spotLabelOf, stackLabelOf } from '@/utils/rangeStack';
@@ -78,8 +74,6 @@ function formatDurationLabel(secs: number): string {
   if (secs % 60 === 0) return `${secs / 60}min`;
   return `${secs}s`;
 }
-
-export type ClassicMistake = { draw: TrainerDraw; picked: ActionId };
 
 type ClassicResult = Pick<
   SpeedClassicEntry,
@@ -941,7 +935,7 @@ function FinishedScreen({
       </div>
 
       {entry.style === 'classic' && sessionMistakes !== null && sessionMistakes.length > 0 && (
-        <ErrorsPanel
+        <SessionErrorsPanel
           mistakes={sessionMistakes}
           answerActions={answerActions}
           showRange={folderMode}
@@ -972,91 +966,6 @@ function Stat({
       <p className="text-lg font-semibold tabular-nums text-content">{value}</p>
       {sub !== undefined && (
         <p className="text-[10px] tabular-nums text-content-muted">{sub}</p>
-      )}
-    </div>
-  );
-}
-
-/* -------------------------- SESSION ERRORS ----------------------------- */
-
-function ErrorsPanel({
-  mistakes,
-  answerActions,
-  showRange,
-}: {
-  mistakes: ClassicMistake[];
-  /** The session's answer palette — resolves what the player picked. */
-  answerActions: ActionDef[];
-  /** Folder sessions mix ranges, so each miss names the range it came from. */
-  showRange: boolean;
-}) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <div className="overflow-hidden rounded-xl border border-border bg-surface/40">
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium text-content hover:bg-surface-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-accent-light"
-      >
-        <span className="flex items-center gap-2">
-          <X className="h-4 w-4 text-rose-400" strokeWidth={2.5} />
-          Errores de sesión
-          <span className="rounded-full bg-rose-500/15 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-rose-300">
-            {mistakes.length}
-          </span>
-        </span>
-        {open
-          ? <ChevronUp className="h-4 w-4 text-content-muted" strokeWidth={2} />
-          : <ChevronDown className="h-4 w-4 text-content-muted" strokeWidth={2} />}
-      </button>
-
-      {open && (
-        <div className="border-t border-border px-4 py-3">
-          <div className="flex flex-col gap-2">
-            {/* Both sides live in the session's answer space (merged label keys
-                in a folder), so they resolve against the same palette. */}
-            {mistakes.map(({ draw, picked }, i) => {
-              return (
-                <div
-                  key={i}
-                  className="flex items-center gap-3 rounded-lg border border-border bg-surface/60 px-3 py-2 text-sm"
-                >
-                  <span className="w-8 shrink-0 font-mono font-semibold text-content">
-                    {draw.hand.hand}
-                  </span>
-                  <span className="flex items-center gap-1.5 text-rose-400">
-                    <span
-                      aria-hidden
-                      className="h-2.5 w-2.5 shrink-0 rounded-sm"
-                      style={{ backgroundColor: actionColor(answerActions, picked) }}
-                    />
-                    {actionLabel(answerActions, picked)}
-                  </span>
-                  <span className="text-content-muted">→</span>
-                  <span className="flex items-center gap-1.5 text-emerald-400">
-                    <span
-                      aria-hidden
-                      className="h-2.5 w-2.5 shrink-0 rounded-sm"
-                      style={{
-                        backgroundColor: actionColor(answerActions, draw.strategy.bestKey),
-                      }}
-                    />
-                    {actionLabel(answerActions, draw.strategy.bestKey)}
-                    <span className="tabular-nums text-content-muted">
-                      {formatFrequency(draw.strategy.bestWeight)}
-                    </span>
-                  </span>
-                  {showRange && (
-                    <span className="ml-auto truncate rounded-full bg-surface px-2 py-0.5 text-xs text-content-muted">
-                      {stackLabelOf(draw.range) ?? draw.range.name}
-                    </span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
       )}
     </div>
   );

@@ -6,7 +6,6 @@ import {
   useState,
 } from 'react';
 
-const AUTO_ADVANCE_MS = 1500;
 import {
   Check,
   ChevronDown,
@@ -37,8 +36,20 @@ import { VILLAIN_ACTION_LABELS } from '@/data/positions';
 import { relativeGroupPath } from '@/utils/groupUtils';
 import { useTableThemeStore } from '@/store/tableThemeStore';
 import { CountdownBar } from './CountdownBar';
-import { AutoAdvanceToggle } from '@/modules/workbook/drillUi';
+import { SessionErrorsPanel, type ClassicMistake } from './SessionErrorsPanel';
 import { useActionHotkeys, type ActionHotkeys } from '@/hooks/useActionHotkeys';
+
+const AUTO_ADVANCE_MS = 1500;
+/** Same flash as Speed mode: long enough to register green/amber/red. */
+const INSTANT_ADVANCE_MS = 220;
+
+type AdvanceMode = 'manual' | 'timed' | 'instant';
+
+const ADVANCE_OPTIONS: ReadonlyArray<{ value: AdvanceMode; label: string }> = [
+  { value: 'manual', label: 'Manual' },
+  { value: 'timed', label: `${(AUTO_ADVANCE_MS / 1000).toFixed(1)}s` },
+  { value: 'instant', label: 'Instantáneo' },
+];
 
 type ClassicTrainerProps = {
   source: TrainerSource;
@@ -79,7 +90,8 @@ export function ClassicTrainer({ source }: ClassicTrainerProps) {
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [score, setScore] = useState<Score>(INITIAL_SCORE);
   const [byRange, setByRange] = useState<ByRange>({});
-  const [autoAdvance, setAutoAdvance] = useState(true);
+  const [mistakes, setMistakes] = useState<ClassicMistake[]>([]);
+  const [advanceMode, setAdvanceMode] = useState<AdvanceMode>('timed');
   const showVillainAction = useTableThemeStore((s) => s.showVillainAction);
   const showSpotName = useTableThemeStore((s) => s.showSpotName);
   const key = sourceKey(source);
@@ -96,17 +108,22 @@ export function ClassicTrainer({ source }: ClassicTrainerProps) {
       sourceKeyRef.current = key;
       setScore(INITIAL_SCORE);
       setByRange({});
+      setMistakes([]);
     }
     setFeedback(null);
     setCurrent(drawFromSource(source));
   }, [source, key]);
 
-  // Auto-advance to next hand after 1.5s when feedback is shown (if enabled)
+  // Auto-advance once feedback is shown: after 1.5s, or after a short flash in
+  // instant mode (misses are kept in the session errors list below the table).
   useEffect(() => {
-    if (!feedback || !autoAdvance) return;
-    const id = setTimeout(drawNext, AUTO_ADVANCE_MS);
+    if (!feedback || advanceMode === 'manual') return;
+    const id = setTimeout(
+      drawNext,
+      advanceMode === 'instant' ? INSTANT_ADVANCE_MS : AUTO_ADVANCE_MS,
+    );
     return () => clearTimeout(id);
-  }, [feedback, autoAdvance, drawNext]);
+  }, [feedback, advanceMode, drawNext]);
 
   // The session palette drives the hotkeys (stable numbering); only the subset
   // this hand's range actually offers is rendered.
@@ -129,6 +146,7 @@ export function ClassicTrainer({ source }: ClassicTrainerProps) {
       const wasMainLine = isMainLine(current, picked);
       const wasMixed = current.strategy.mixed;
       setFeedback({ picked, wasCorrect, wasMainLine, draw: current });
+      if (!wasCorrect) setMistakes((m) => [...m, { draw: current, picked }]);
       setScore((s) => {
         const streak = wasCorrect ? s.streak + 1 : 0;
         return {
@@ -163,6 +181,7 @@ export function ClassicTrainer({ source }: ClassicTrainerProps) {
   const reset = useCallback(() => {
     setScore(INITIAL_SCORE);
     setByRange({});
+    setMistakes([]);
     drawNext();
   }, [drawNext]);
 
@@ -267,7 +286,17 @@ export function ClassicTrainer({ source }: ClassicTrainerProps) {
         />
 
         <div className="min-h-[3.5rem] w-full flex flex-col gap-2">
-          {feedback ? (
+          {advanceMode === 'instant' ? (
+            // The flash is too short to read a sentence: the buttons carry the
+            // verdict and this row only holds its height so the table stays put.
+            !feedback && (
+              <p className="text-center text-xs text-content-muted">
+                {hk.assigningId
+                  ? 'Presiona una tecla para asignarla · Esc cancela · ⌫ borra'
+                  : 'Elige una acción · S para omitir · tus errores quedan en la lista de abajo'}
+              </p>
+            )
+          ) : feedback ? (
             <>
               {/* The session palette, not the range's: now that the cell
                   breakdown lives on the buttons, the panel only names ids of
@@ -277,7 +306,7 @@ export function ClassicTrainer({ source }: ClassicTrainerProps) {
                 actions={orderedActions}
                 {...(isFolder && { rangeName: feedback.draw.range.name })}
               />
-              {autoAdvance && (
+              {advanceMode === 'timed' && (
                 <CountdownBar key={score.total} durationMs={AUTO_ADVANCE_MS} />
               )}
             </>
@@ -296,11 +325,13 @@ export function ClassicTrainer({ source }: ClassicTrainerProps) {
             onClick={feedback ? drawNext : skip}
             className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-accent-deep focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
           >
-            {feedback ? (
+            {/* In instant mode the label would swap for a 220ms blink and
+                resize the button; it stays on "Omitir". */}
+            {feedback && advanceMode !== 'instant' ? (
               <>
                 Siguiente mano
                 <span className="text-[10px] uppercase tracking-wider text-white/70">
-                  {autoAdvance ? '↵ / auto' : '↵'}
+                  {advanceMode === 'manual' ? '↵' : '↵ / auto'}
                 </span>
               </>
             ) : (
@@ -322,11 +353,60 @@ export function ClassicTrainer({ source }: ClassicTrainerProps) {
       </TableSurface>
 
       <div className="flex justify-center">
-        <AutoAdvanceToggle
-          value={autoAdvance}
-          onChange={setAutoAdvance}
-          durationMs={AUTO_ADVANCE_MS}
-        />
+        <AdvanceModePicker value={advanceMode} onChange={setAdvanceMode} />
+      </div>
+
+      {/* Last on the page and always mounted: nothing above it moves when a
+          miss comes in or when it is opened. */}
+      <SessionErrorsPanel
+        mistakes={mistakes}
+        answerActions={orderedActions}
+        showRange={isFolder}
+        live
+      />
+    </div>
+  );
+}
+
+function AdvanceModePicker({
+  value,
+  onChange,
+}: {
+  value: AdvanceMode;
+  onChange: (next: AdvanceMode) => void;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-[11px] font-medium text-content-muted">
+        Auto-avance
+      </span>
+      <div
+        role="radiogroup"
+        aria-label="Auto-avance"
+        className="inline-flex items-center gap-1 rounded-full border border-border bg-surface/40 p-0.5"
+      >
+        {ADVANCE_OPTIONS.map((o) => {
+          const active = o.value === value;
+          return (
+            <button
+              key={o.value}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => onChange(o.value)}
+              className={cn(
+                'rounded-full px-2.5 py-0.5 text-[11px] font-medium tabular-nums',
+                'transition-colors duration-150 ease-out-soft',
+                'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light',
+                active
+                  ? 'bg-accent/10 text-content shadow-[inset_0_0_0_1px_rgb(var(--color-accent)/0.6)]'
+                  : 'text-content-muted hover:bg-surface-hover hover:text-content',
+              )}
+            >
+              {o.label}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
