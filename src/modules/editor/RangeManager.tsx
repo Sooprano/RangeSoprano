@@ -611,7 +611,7 @@ export function RangeManager({
 
       {summaries.length === 0 ? (
         <p className="rounded-md border border-dashed border-border px-3 py-4 text-center text-xs text-content-muted">
-          No ranges yet. Create one to start painting.
+          Todavía no hay rangos. Crea uno para empezar a pintar.
         </p>
       ) : (
         <div className="flex flex-col gap-1">

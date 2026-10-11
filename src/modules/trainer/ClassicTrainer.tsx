@@ -35,6 +35,8 @@ import { spotLabelOf, stackLabelOf } from '@/utils/rangeStack';
 import { VILLAIN_ACTION_LABELS } from '@/data/positions';
 import { relativeGroupPath } from '@/utils/groupUtils';
 import { useTableThemeStore } from '@/store/tableThemeStore';
+import { useUiStore } from '@/store/uiStore';
+import type { PersistedUiState } from '@/store/schemas';
 import { CountdownBar } from './CountdownBar';
 import { SessionErrorsPanel, type ClassicMistake } from './SessionErrorsPanel';
 import { useActionHotkeys, type ActionHotkeys } from '@/hooks/useActionHotkeys';
@@ -43,7 +45,7 @@ const AUTO_ADVANCE_MS = 1500;
 /** Same flash as Speed mode: long enough to register green/amber/red. */
 const INSTANT_ADVANCE_MS = 220;
 
-type AdvanceMode = 'manual' | 'timed' | 'instant';
+type AdvanceMode = PersistedUiState['trainerAdvanceMode'];
 
 const ADVANCE_OPTIONS: ReadonlyArray<{ value: AdvanceMode; label: string }> = [
   { value: 'manual', label: 'Manual' },
@@ -91,7 +93,9 @@ export function ClassicTrainer({ source }: ClassicTrainerProps) {
   const [score, setScore] = useState<Score>(INITIAL_SCORE);
   const [byRange, setByRange] = useState<ByRange>({});
   const [mistakes, setMistakes] = useState<ClassicMistake[]>([]);
-  const [advanceMode, setAdvanceMode] = useState<AdvanceMode>('timed');
+  // Persisted: leaving for the Viewer and coming back keeps the chosen mode.
+  const advanceMode = useUiStore((s) => s.trainerAdvanceMode);
+  const setAdvanceMode = useUiStore((s) => s.setTrainerAdvanceMode);
   const showVillainAction = useTableThemeStore((s) => s.showVillainAction);
   const showSpotName = useTableThemeStore((s) => s.showSpotName);
   const key = sourceKey(source);

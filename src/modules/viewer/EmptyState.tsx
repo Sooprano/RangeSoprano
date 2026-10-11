@@ -1,29 +1,9 @@
 import { Link } from 'react-router-dom';
 import { Sparkles, ArrowRight } from 'lucide-react';
-import { useRangeStore } from '@/store/rangeStore';
-import { SAMPLE_RANGES } from '@/data/sampleRanges';
+import { DEMO_RANGE_COUNT, useLoadDemoRanges } from '@/hooks/useLoadDemoRanges';
 
 export function EmptyState() {
-  const createRange = useRangeStore((s) => s.createRange);
-  const setActiveRange = useRangeStore((s) => s.setActiveRange);
-
-  const loadDemo = () => {
-    let firstId: string | null = null;
-    for (const r of SAMPLE_RANGES) {
-      const id = createRange({
-        name: r.name,
-        position: r.position,
-        situation: r.situation,
-        cells: r.cells,
-        actions: r.actions,
-        tableFormat: r.tableFormat,
-        ...(r.villainPosition !== undefined && { villainPosition: r.villainPosition }),
-        ...(r.group !== undefined && { group: r.group }),
-      });
-      if (!firstId) firstId = id;
-    }
-    if (firstId) setActiveRange(firstId);
-  };
+  const loadDemo = useLoadDemoRanges();
 
   return (
     <div className="flex min-h-[50vh] items-center justify-center">
@@ -36,7 +16,7 @@ export function EmptyState() {
         </span>
         <h2 className="text-lg font-semibold tracking-tight">Sin rango activo</h2>
         <p className="mt-2 text-sm text-content-muted">
-          Carga el set de demo ({SAMPLE_RANGES.length} rangos GTO en 1 carpeta + 4 subcarpetas) para
+          Carga el set de demo ({DEMO_RANGE_COUNT} rangos GTO en 1 carpeta + 4 subcarpetas) para
           explorar Individual, Comparar, Resumen e Imprimir PDF, o crea el tuyo en el Editor.
         </p>
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">

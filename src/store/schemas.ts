@@ -191,6 +191,8 @@ export const zPersistedUiState = z
     // `.default(null)` on a `.strict()` object: strict rejects UNKNOWN keys, not
     // missing ones, so an older persisted blob still parses — no version bump.
     trainerFolderPath: z.string().nullable().default(null),
+    // Classic trainer auto-advance; same `.default()` trick, no version bump.
+    trainerAdvanceMode: z.enum(['manual', 'timed', 'instant']).default('timed'),
     groupMeta: z.record(z.string(), zGroupMeta).default({}),
     sidebarCollapsed: z.boolean().default(false),
     overviewSelectedGroups: z.array(z.string()).default([]),
