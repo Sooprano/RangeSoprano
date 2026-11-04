@@ -111,9 +111,6 @@ export function ClassicTrainer({ source }: ClassicTrainerProps) {
   const setAdvanceMode = useUiStore((s) => s.setTrainerAdvanceMode);
   const borderFocus = useUiStore((s) => s.trainerBorderFocus);
   const setBorderFocus = useUiStore((s) => s.setTrainerBorderFocus);
-  // Read by the reset effect without making a focus change redraw the hand.
-  const borderFocusRef = useRef(borderFocus);
-  borderFocusRef.current = borderFocus;
   const showVillainAction = useTableThemeStore((s) => s.showVillainAction);
   const showSpotName = useTableThemeStore((s) => s.showSpotName);
   const key = sourceKey(source);
@@ -133,7 +130,12 @@ export function ClassicTrainer({ source }: ClassicTrainerProps) {
       setMistakes([]);
     }
     setFeedback(null);
-    setCurrent(drawFromSource(source, Math.random, borderFocusRef.current));
+    setCurrent(drawFromSource(
+        source,
+        Math.random,
+        // Read here, not as a dependency: changing the focus must not redraw the hand.
+        useUiStore.getState().trainerBorderFocus,
+      ));
   }, [source, key]);
 
   // Auto-advance once feedback is shown: after 1.5s, or after a short flash in
