@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { AlertTriangle, FileSearch } from 'lucide-react';
+import { useMemo, useRef, useState } from 'react';
+import { AlertTriangle, Eraser, FileSearch } from 'lucide-react';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { parseHandHistory } from '@/utils/handHistory';
@@ -44,6 +44,7 @@ export default function AnalysisPage() {
 
   const [text, setText] = useState('');
   const [submitted, setSubmitted] = useState('');
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const parsed = useMemo(
     () => (submitted.trim() ? parseHandHistory(submitted) : null),
@@ -74,6 +75,7 @@ export default function AnalysisPage() {
           </div>
           <textarea
             id="hh-input"
+            ref={inputRef}
             value={text}
             onChange={(e) => setText(e.target.value)}
             rows={8}
@@ -91,15 +93,18 @@ export default function AnalysisPage() {
               <FileSearch className="h-4 w-4" strokeWidth={2.25} />
               Analizar mano
             </button>
-            {submitted.trim() !== '' && (
+            {/* Visible as soon as there is text, so a wrong paste is one click away. */}
+            {(text !== '' || submitted !== '') && (
               <button
                 type="button"
                 onClick={() => {
                   setText('');
                   setSubmitted('');
+                  inputRef.current?.focus();
                 }}
-                className="text-xs font-medium text-content-muted hover:text-content"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-content-muted transition-colors hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
               >
+                <Eraser className="h-4 w-4" strokeWidth={2.25} />
                 Limpiar
               </button>
             )}

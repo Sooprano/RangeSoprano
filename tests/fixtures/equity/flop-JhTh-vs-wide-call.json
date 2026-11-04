@@ -1,0 +1,7 @@
+{
+  "description": "Equity de Hero en %, tomada de una calculadora de equity de referencia.",
+  "hero": "JhTh",
+  "board": "9h 8c 2h",
+  "villainRange": "22+, A2s+, KTs+, QTs+, JTs, T9s, 98s, ATo+, KJo+",
+  "expectedEquity": 61.034
+}

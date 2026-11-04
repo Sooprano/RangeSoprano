@@ -50,6 +50,12 @@ const ROUTES = [
       'Pega el historial de mano (.txt) de tu sala y la web extrae el spot y abre la calculadora de EV correcta pre-llenada. La equity la traes de Flopzilla. Sin login, sin tracking.',
   },
   {
+    path: 'sopranozilla',
+    title: 'Sopranozilla · Analizador de manos · Range Soprano',
+    description:
+      'Analizador de manos postflop: filtra el rango del villano por categorías con pesos, calle por calle, y mira tu equity exacta y el EV de cada acción. Abre las manos de Análisis o carga una de prueba. Sin login, sin tracking.',
+  },
+  {
     path: 'ejercicios',
     title: 'Ejercicios de poker · Range Soprano',
     description:

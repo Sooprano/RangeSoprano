@@ -12,6 +12,7 @@ const CalculatorsPage = lazy(() => import('@/modules/calculators/CalculatorsPage
 const AnalysisPage = lazy(() => import('@/modules/analysis/AnalysisPage'));
 const WorkbookPage = lazy(() => import('@/modules/workbook/WorkbookPage'));
 const PrintPage = lazy(() => import('@/modules/viewer/PrintPage'));
+const SopranozillaPage = lazy(() => import('@/features/sopranozilla/ui/SopranozillaPage'));
 
 function PageFallback() {
   return (
@@ -103,6 +104,14 @@ export const router = createBrowserRouter(
           element: (
             <Suspense fallback={<PageFallback />}>
               <WorkbookPage />
+            </Suspense>
+          ),
+        },
+        {
+          path: 'sopranozilla',
+          element: (
+            <Suspense fallback={<PageFallback />}>
+              <SopranozillaPage />
             </Suspense>
           ),
         },

@@ -1,0 +1,7 @@
+{
+  "description": "Equity de Hero en %, tomada de una calculadora de equity de referencia. Rango con pesos estilo [NN]...[/NN].",
+  "hero": "AsAd",
+  "board": "Kd 9s 6s 2c",
+  "villainRange": "KK, 99, 66, AKs, KQs, [50]QJs, JTs, T9s[/50], A5s, 87s",
+  "expectedEquity": 57.799
+}

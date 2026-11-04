@@ -1,0 +1,453 @@
+// EV calculator (§9), two modes:
+// - "Hero decide": Check + bet sizes. Each bet has its own continuation range.
+// - "Villano apuesta": Fold / Call / Raise N×. Call's range is the villain's
+//   betting range; each raise's range ("calls the raise") sits on top of it.
+// Selecting a row makes the category table edit its range. Shows what
+// continues, fold equity, Hero equity, EV in bb / % of the pot, the played row
+// and the best EV, with the green / amber / rose rule of `tone.ts`.
+
+import { useState } from 'react';
+import { Flag, Plus, Trophy } from 'lucide-react';
+import { cn } from '@/lib/cn';
+import type { ActionRow, AnalyzerMode } from '../engine/chain';
+import type { EvRowResult } from '../engine/ev';
+import { pct } from './format';
+import { evTone, TONE_BAR, TONE_TEXT, toneVs, type Tone } from './tone';
+
+export type EvRowView = ActionRow & EvRowResult & { edited: boolean };
+
+type Props = {
+  mode: AnalyzerMode;
+  onMode: (mode: AnalyzerMode) => void;
+  rows: EvRowView[];
+  bestId: string | null;
+  selectedRow: string;
+  playedRow: string;
+  /** Pot of the street in bb (before the villain's bet), or undefined. */
+  pot: number | undefined;
+  /** "Villano apuesta": the villain's bet in % of the pot. */
+  villainBetPct: number;
+  onVillainBet: (pct: number) => void;
+  /** "Villano apuesta": share of the starting range the villain bets with. */
+  betShare: number;
+  pending: boolean;
+  onSelect: (id: string) => void;
+  onMarkPlayed: (id: string) => void;
+  onAddSize: (size: number) => void;
+  onAddRaise: (multiple: number) => void;
+};
+
+function signed(x: number, digits: number): string {
+  if (!Number.isFinite(x)) return '—';
+  const s = x.toFixed(digits);
+  return x > 0 ? `+${s}` : s;
+}
+
+function Metric({
+  label,
+  value,
+  tone = 'neutral',
+  strong = false,
+  title,
+}: {
+  label: string;
+  value: string;
+  tone?: Tone;
+  strong?: boolean;
+  title?: string;
+}) {
+  return (
+    <div className="min-w-0" title={title}>
+      <p className="text-[10px] uppercase tracking-wide text-content-muted">{label}</p>
+      <p
+        className={cn(
+          // EV keeps "+4.57 bb" on one line; its column is sized to fit it.
+          'whitespace-nowrap tabular-nums',
+          strong ? 'text-base font-semibold' : 'text-sm',
+          TONE_TEXT[tone],
+        )}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
+
+/** Fold equity bar with a tick at the auto-profit threshold. */
+function FoldBar({ foldEq, threshold, tone }: { foldEq: number; threshold: number; tone: Tone }) {
+  const w = Math.min(100, Math.max(0, foldEq * 100));
+  const t = Math.min(100, Math.max(0, threshold * 100));
+  return (
+    <div
+      className="relative mt-1.5 h-1.5 w-full rounded-full bg-border/60"
+      role="img"
+      aria-label={`Fold equity ${w.toFixed(0)}%, umbral ${t.toFixed(0)}%`}
+    >
+      <div className={cn('h-full rounded-full', TONE_BAR[tone])} style={{ width: `${w}%` }} />
+      <div
+        className="absolute -top-0.5 h-2.5 w-0.5 rounded bg-content"
+        style={{ left: `calc(${t}% - 1px)` }}
+      />
+    </div>
+  );
+}
+
+function SizeForm({
+  id,
+  placeholder,
+  label,
+  button,
+  min,
+  onAdd,
+}: {
+  id: string;
+  placeholder: string;
+  label: string;
+  button: string;
+  min: number;
+  onAdd: (n: number) => void;
+}) {
+  const [value, setValue] = useState('');
+  return (
+    <form
+      className="mt-3 flex items-center gap-2"
+      onSubmit={(e) => {
+        e.preventDefault();
+        const n = Number(value.replace(',', '.').replace(/x$/i, ''));
+        if (Number.isFinite(n) && n > min) {
+          onAdd(n);
+          setValue('');
+        }
+      }}
+    >
+      <label htmlFor={id} className="sr-only">
+        {label}
+      </label>
+      <input
+        id={id}
+        inputMode="decimal"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        placeholder={placeholder}
+        className="w-24 rounded-md border border-border bg-bg px-2 py-1 text-sm"
+      />
+      <button
+        type="submit"
+        className="flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs text-content-muted hover:bg-surface-hover hover:text-content"
+      >
+        <Plus className="h-3.5 w-3.5" /> {button}
+      </button>
+    </form>
+  );
+}
+
+const VILLAIN_BET_CHIPS = [33, 50, 75, 100] as const;
+
+export function EvPanel(p: Props) {
+  const villain = p.mode === 'villain';
+  const bestEvPot = p.rows.find((x) => x.id === p.bestId)?.evPot ?? Number.NaN;
+  const villainBetBb = p.pot !== undefined ? (p.pot * p.villainBetPct) / 100 : undefined;
+
+  return (
+    <div className="rounded-xl border border-border bg-surface/40 p-3">
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-accent-light">
+          Calculadora de EV
+        </h2>
+        <p className="text-xs text-content-muted">
+          Bote{' '}
+          <span className="tabular-nums text-content">
+            {p.pot !== undefined ? `${p.pot.toFixed(1)} bb` : 'sin dato'}
+          </span>
+        </p>
+      </div>
+
+      <div role="tablist" aria-label="Modo de la calculadora" className="mb-2 flex gap-1">
+        {(
+          [
+            ['hero', 'Hero decide'],
+            ['villain', 'Villano apuesta'],
+          ] as const
+        ).map(([id, label]) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={p.mode === id}
+            onClick={() => p.onMode(id)}
+            className={cn(
+              'flex-1 rounded-full border px-2 py-1 text-xs font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light',
+              p.mode === id
+                ? 'border-amber-500 bg-amber-500/15 text-content'
+                : 'border-border text-content-muted hover:bg-surface-hover',
+            )}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {villain && (
+        <div className="mb-2 rounded-lg border border-border p-2 text-xs">
+          <div className="flex flex-wrap items-center gap-2">
+            <label htmlFor="sz-vbet" className="text-content-muted">
+              El villano apuesta
+            </label>
+            <input
+              id="sz-vbet"
+              inputMode="decimal"
+              key={p.villainBetPct}
+              defaultValue={p.villainBetPct}
+              onBlur={(e) => p.onVillainBet(Number(e.target.value.replace(',', '.')))}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter')
+                  p.onVillainBet(Number(e.currentTarget.value.replace(',', '.')));
+              }}
+              className="w-14 rounded-md border border-border bg-bg px-1.5 py-0.5 text-right tabular-nums"
+            />
+            <span className="text-content-muted">
+              % del bote
+              {villainBetBb !== undefined && (
+                <>
+                  {' '}
+                  = <span className="tabular-nums text-content">{villainBetBb.toFixed(1)} bb</span>
+                </>
+              )}
+            </span>
+          </div>
+          <div className="mt-1.5 flex gap-1">
+            {VILLAIN_BET_CHIPS.map((c) => (
+              <button
+                key={c}
+                type="button"
+                aria-pressed={p.villainBetPct === c}
+                onClick={() => p.onVillainBet(c)}
+                className={cn(
+                  'flex-1 rounded-md border px-1 py-0.5 tabular-nums',
+                  p.villainBetPct === c
+                    ? 'border-amber-500 bg-amber-500/15 text-content'
+                    : 'border-border text-content-muted hover:bg-surface-hover',
+                )}
+              >
+                {c}%
+              </button>
+            ))}
+          </div>
+          <p className="mt-1.5 text-content-muted">
+            Rango con el que apuesta: edítalo en la fila <b className="text-content">Call</b> ·{' '}
+            <span className="tabular-nums text-content">{pct(p.betShare, 0)}</span> de su rango.
+          </p>
+        </div>
+      )}
+
+      <ul className="flex flex-col gap-1.5">
+        {p.rows.map((r) => {
+          const selected = r.id === p.selectedRow;
+          const played = r.id === p.playedRow;
+          const best = r.id === p.bestId;
+          const hasRange = r.kind !== 'fold';
+          const foldTone =
+            r.bluffThreshold !== null ? toneVs(r.foldEq, r.bluffThreshold) : 'neutral';
+          const eqTarget = r.calledBreakEven ?? 0.5;
+          const eqTone: Tone = p.pending ? 'neutral' : toneVs(r.heroEq, eqTarget);
+          const evToneValue: Tone = p.pending ? 'neutral' : evTone(r.evPot, bestEvPot, best);
+          const evText =
+            p.pending && r.kind !== 'fold'
+              ? '…'
+              : !Number.isFinite(r.ev)
+                ? '—'
+                : p.pot !== undefined
+                  ? `${signed(r.ev, 2)} bb`
+                  : `${signed(r.evPot * 100, 1)}%`;
+          return (
+            <li
+              key={r.id}
+              className={cn(
+                'rounded-lg border p-2',
+                selected ? 'border-accent/60 bg-accent/10' : 'border-border',
+              )}
+            >
+              <div className="flex flex-wrap items-center gap-1.5">
+                {hasRange ? (
+                  <button
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => p.onSelect(r.id)}
+                    className="mr-auto shrink-0 text-left text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
+                  >
+                    {r.label}
+                    {r.bet !== null && p.pot !== undefined && (
+                      <span className="ml-1 text-xs font-normal text-content-muted">
+                        ({r.kind === 'raise' ? 'a ' : ''}
+                        {r.bet.toFixed(1)} bb)
+                      </span>
+                    )}
+                  </button>
+                ) : (
+                  <span className="mr-auto text-sm font-semibold">{r.label}</span>
+                )}
+                {r.edited && (
+                  <span className="rounded bg-amber-500/20 px-1 py-px text-[10px] font-medium text-amber-700 dark:text-amber-300">
+                    editado
+                  </span>
+                )}
+                {best && !p.pending && (
+                  <span className="flex items-center gap-0.5 rounded bg-emerald-600/20 px-1 py-px text-[10px] font-medium text-emerald-700 dark:text-emerald-300">
+                    <Trophy className="h-3 w-3" /> Mejor EV
+                  </span>
+                )}
+                {played ? (
+                  <span className="flex items-center gap-0.5 rounded bg-sky-600/20 px-1 py-px text-[10px] font-medium text-sky-700 dark:text-sky-300">
+                    <Flag className="h-3 w-3" /> Jugada
+                  </span>
+                ) : (
+                  hasRange && (
+                    <button
+                      type="button"
+                      onClick={() => p.onMarkPlayed(r.id)}
+                      className="rounded border border-border px-1.5 py-px text-[10px] text-content-muted hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
+                    >
+                      Marcar como jugada
+                    </button>
+                  )
+                )}
+              </div>
+
+              {r.kind === 'fold' ? (
+                <div className="mt-1.5 grid grid-cols-[repeat(3,minmax(0,1fr))_auto] gap-2">
+                  <p className="col-span-3 self-end text-[11px] text-content-muted">
+                    Dejas el bote; lo ya invertido no cuenta.
+                  </p>
+                  <Metric label="EV" value={evText} tone={evToneValue} strong />
+                </div>
+              ) : r.kind === 'call' ? (
+                <div className="mt-1.5 grid grid-cols-[repeat(3,minmax(0,1fr))_auto] gap-2">
+                  <Metric label="Apuesta" value={pct(p.betShare, 0)} />
+                  <Metric
+                    label="Pot odds"
+                    value={r.calledBreakEven !== null ? pct(r.calledBreakEven, 0) : '—'}
+                    title="Equity mínima para pagar: V / (P + 2V)"
+                  />
+                  <Metric
+                    label="Tu eq."
+                    value={p.pending ? '…' : pct(r.heroEq)}
+                    tone={eqTone}
+                    title="Contra el rango con el que apuesta el villano"
+                  />
+                  <Metric label="EV" value={evText} tone={evToneValue} strong />
+                </div>
+              ) : (
+                <div className="mt-1.5 grid grid-cols-[repeat(3,minmax(0,1fr))_auto] gap-2">
+                  <Metric
+                    label="Sigue"
+                    value={pct(r.follows, 0)}
+                    {...(r.kind === 'raise' && { title: 'Del rango con el que apuesta' })}
+                  />
+                  <Metric
+                    label="Fold eq."
+                    value={r.kind === 'check' ? '—' : pct(r.foldEq, 0)}
+                    tone={foldTone}
+                    {...(r.bluffThreshold !== null && {
+                      title: `Autoprofit con este tamaño: ${pct(r.bluffThreshold, 0)} de fold`,
+                    })}
+                  />
+                  <Metric
+                    label="Tu eq."
+                    value={p.pending ? '…' : pct(r.heroEq)}
+                    tone={eqTone}
+                    title={
+                      r.calledBreakEven !== null
+                        ? `Si te pagan necesitas ${pct(r.calledBreakEven, 0)} de equity`
+                        : 'Comparada con 50%'
+                    }
+                  />
+                  <Metric label="EV" value={evText} tone={evToneValue} strong />
+                </div>
+              )}
+
+              {r.bluffThreshold !== null && Number.isFinite(r.bluffThreshold) && (
+                <>
+                  <FoldBar foldEq={r.foldEq} threshold={r.bluffThreshold} tone={foldTone} />
+                  <p className="mt-1 text-[11px] text-content-muted">
+                    Autoprofit: necesita{' '}
+                    <span className="tabular-nums text-content">{pct(r.bluffThreshold, 0)}</span> de
+                    fold ·{' '}
+                    <span className={TONE_TEXT[foldTone]}>
+                      {foldTone === 'good'
+                        ? 'lo supera'
+                        : foldTone === 'close'
+                          ? 'está justo'
+                          : 'no llega'}
+                    </span>
+                    {r.calledBreakEven !== null && (
+                      <>
+                        {' '}
+                        · si pagan necesitas{' '}
+                        <span className="tabular-nums text-content">
+                          {pct(r.calledBreakEven, 0)}
+                        </span>{' '}
+                        de eq.
+                      </>
+                    )}
+                    {p.pot !== undefined && Number.isFinite(r.evPot) && (
+                      <> · EV {signed(r.evPot * 100, 0)}% del bote</>
+                    )}
+                  </p>
+                </>
+              )}
+              {r.kind === 'call' && r.calledBreakEven !== null && !p.pending && (
+                <p className="mt-1 text-[11px] text-content-muted">
+                  Pagar necesita{' '}
+                  <span className="tabular-nums text-content">{pct(r.calledBreakEven, 0)}</span> de
+                  equity ·{' '}
+                  <span className={TONE_TEXT[eqTone]}>
+                    {eqTone === 'good'
+                      ? 'te sobra'
+                      : eqTone === 'close'
+                        ? 'está justo'
+                        : 'no llega'}
+                  </span>
+                </p>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+
+      {villain ? (
+        <SizeForm
+          id="sz-raise"
+          placeholder="3x"
+          label="Nuevo raise, en veces la apuesta del villano"
+          button="Raise"
+          min={1}
+          onAdd={p.onAddRaise}
+        />
+      ) : (
+        <SizeForm
+          id="sz-size"
+          placeholder="% del bote"
+          label="Nuevo tamaño en % del bote"
+          button="Tamaño"
+          min={0}
+          onAdd={p.onAddSize}
+        />
+      )}
+
+      <p className="mt-3 text-[11px] text-content-muted">
+        <span className="text-emerald-600 dark:text-emerald-400">Verde</span>: supera el objetivo
+        por 5 puntos o más · <span className="text-amber-600 dark:text-amber-300">Ámbar</span>: a ±5
+        puntos · <span className="text-rose-600 dark:text-rose-400">Rosa</span>: por debajo. Fold
+        eq. contra el autoprofit del tamaño; tu eq. contra la que necesitas si te pagan (o por pot
+        odds al pagar); EV contra el mejor de la calle.
+      </p>
+      <p className="mt-2 border-t border-border pt-2 text-[11px] text-content-muted">
+        Supuesto: equity hasta el river sin apuestas posteriores; no modela la realización de
+        equity.{' '}
+        {villain
+          ? 'P = bote antes de la apuesta, V = apuesta del villano, R = tu raise (total). Call: EV = eq × (P + 2V) − V. Raise: EV = fold eq. × (P + V) + (1 − fold eq.) × (eq × (P + 2R) − R).'
+          : 'Check: EV = tu equity × bote. Apuesta B: EV = fold eq. × bote + (1 − fold eq.) × (tu eq. × (bote + 2B) − B).'}
+      </p>
+    </div>
+  );
+}

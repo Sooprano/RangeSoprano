@@ -8,6 +8,7 @@ import {
   Eye,
   FileSearch,
   Home,
+  Microscope,
   Pencil,
   Spade,
   Target,
@@ -69,6 +70,7 @@ const NAV_SECTIONS: readonly NavSection[] = [
       { to: '/calculadoras', label: 'Calculadoras', icon: Calculator },
       { to: '/ejercicios', label: 'Ejercicios', icon: Dumbbell },
       { to: '/analisis', label: 'Análisis', icon: FileSearch },
+      { to: '/sopranozilla', label: 'Sopranozilla', icon: Microscope },
     ],
   },
 ];

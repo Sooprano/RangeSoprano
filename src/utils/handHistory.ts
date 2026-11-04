@@ -59,6 +59,8 @@ export type ParsedHand = {
   smallBlind: number | null;
   bigBlind: number | null;
   ante: number | null;
+  /** Table size from the table line ("6-max" → 6); null when the room does not say. */
+  maxSeats: number | null;
   players: PlayerInfo[];
   hero: string | null;
   heroCards: Card[];
@@ -195,6 +197,7 @@ export function parseHandHistory(raw: string): HandParseResult {
   let heroCards: Card[] = [];
   let totalPot: number | null = null;
   let buttonSeat: number | null = null;
+  let maxSeats: number | null = null;
   const shows: Showdown[] = [];
   const winners: { name: string; amount: number }[] = [];
 
@@ -300,6 +303,8 @@ export function parseHandHistory(raw: string): HandParseResult {
       }
       const anteMatch = line.match(/Ante:\s*([\d.]+)/i);
       if (anteMatch) ante = Number(anteMatch[1]);
+      const size = line.match(/Size:\s*(\d{1,2})\b/i);
+      if (size) maxSeats = Number(size[1]);
       continue;
     }
 
@@ -310,6 +315,8 @@ export function parseHandHistory(raw: string): HandParseResult {
     if (line.startsWith('Table')) {
       const btn = line.match(/Seat #(\d+) is the button/i);
       if (btn) buttonSeat = Number(btn[1]);
+      const max = line.match(/\b(\d{1,2})-max\b/i);
+      if (max) maxSeats = Number(max[1]);
       continue;
     }
 
@@ -570,6 +577,7 @@ export function parseHandHistory(raw: string): HandParseResult {
     smallBlind,
     bigBlind,
     ante,
+    maxSeats,
     players,
     hero,
     heroCards,

@@ -12,6 +12,7 @@ import {
   Download,
   Dumbbell,
   Eye,
+  Microscope,
   FileSearch,
   FolderInput,
   FolderOpen,
@@ -90,6 +91,14 @@ const MODULES: readonly ModuleCard[] = [
       'Pega el historial .txt de una mano real (el que exporta PokerTracker 4) y la web extrae el spot (board, pot y apuesta de cada decisión) y por cada jugada de hero te abre la calculadora de EV adecuada, ya cargada con los números. La equity la traes de Flopzilla y la ingresas: la web hace el razonamiento de EV y te enseña qué herramienta usar.',
   },
   {
+    to: '/sopranozilla',
+    command: '/sopranozilla',
+    label: 'Sopranozilla (beta)',
+    icon: Microscope,
+    description:
+      'Analizador de manos postflop. Filtra el rango del villano por categorías (top pair, proyectos, filtros propios por palo) con pesos, calle por calle, y mira tu equity exacta y el EV de cada acción. Edita el rango desde el grid, deshace con Ctrl+Z e importa/exporta rangos. Abre las manos de Análisis con un clic.',
+  },
+  {
     to: '/ejercicios',
     command: '/ejercicios',
     label: 'Ejercicios',
@@ -118,7 +127,7 @@ const FAQS: readonly Faq[] = [
   {
     group: 'Sobre el proyecto',
     q: '¿Qué es Range Soprano?',
-    a: 'Una herramienta web gratis para estudiar poker. Empezó con tres módulos para rangos preflop —Visualizador, Entrenador y Editor— y hoy suma Calculadoras de EV, Análisis de manos desde el historial .txt y Ejercicios para practicar. Pensada para repasar, memorizar y comparar tus propios rangos (o copiados de un libro/solver) en mesa 6-max o Heads-Up, y para estudiar la matemática de tus decisiones.',
+    a: 'Una herramienta web gratis para estudiar poker. Empezó con tres módulos para rangos preflop —Visualizador, Entrenador y Editor— y hoy suma Calculadoras de EV, Análisis de manos desde el historial .txt, el analizador postflop Sopranozilla (beta) y Ejercicios para practicar. Pensada para repasar, memorizar y comparar tus propios rangos (o copiados de un libro/solver) en mesa 6-max o Heads-Up, y para estudiar la matemática de tus decisiones.',
   },
   {
     group: 'Sobre el proyecto',
@@ -450,6 +459,33 @@ const FAQS: readonly Faq[] = [
     ),
     aPlain:
       'Entra a Análisis de manos y pega el historial .txt que exporta PokerTracker 4. La web lo lee y arma una hoja de estudio: posiciones, stacks, board calle por calle y el pot y la apuesta de cada decisión. Por cada jugada agresiva de hero te ofrece un botón Analizar que abre la calculadora de EV adecuada (EV de bluff, doble barrel, all-in, call vs raise) ya pre-llenada con esos números. Tú solo ingresas la equity o el fold% que sacaste de Flopzilla y la web hace el razonamiento de EV. No reproduce la mano (para eso ya tienes tu replayer) ni calcula equity (eso lo hace Flopzilla): lo que aporta es enseñarte qué herramienta usar y automatizar el cálculo. Puedes alternar entre fichas y BB y dejar tu conclusión escrita.',
+  },
+  {
+    group: 'Entrenar y estudiar',
+    q: '¿Qué es Sopranozilla?',
+    a: (
+      <>
+        Es el analizador de manos postflop de Range Soprano, en{' '}
+        <span className="font-medium text-content">versión beta</span>. Abres una mano (desde{' '}
+        <Link to="/analisis" className="font-medium text-accent-light hover:underline">
+          Análisis de manos
+        </Link>
+        , pegando el historial o con una mano de prueba) y en{' '}
+        <Link to="/sopranozilla" className="font-medium text-accent-light hover:underline">
+          Sopranozilla
+        </Link>{' '}
+        filtras el rango del villano por categorías —set, top pair, proyectos de color o
+        escalera, o filtros propios con reglas de palo— dándole a cada una un peso. La web
+        calcula al instante tu{' '}
+        <span className="font-medium text-content">equity exacta</span> contra lo que queda y
+        el <span className="font-medium text-content">EV de cada acción</span> (check, bet de
+        varios tamaños, call o raise), y encadena el rango del flop al turn y al river. Puedes
+        editar el rango pintando el grid, ver los combos por palo, deshacer con Ctrl+Z e
+        importar o exportar el rango de cada calle.
+      </>
+    ),
+    aPlain:
+      'Es el analizador de manos postflop de Range Soprano, en versión beta. Abres una mano (desde Análisis de manos, pegando el historial o con una mano de prueba) y en Sopranozilla filtras el rango del villano por categorías —set, top pair, proyectos de color o escalera, o filtros propios con reglas de palo— dándole a cada una un peso. La web calcula al instante tu equity exacta contra lo que queda y el EV de cada acción (check, bet de varios tamaños, call o raise), y encadena el rango del flop al turn y al river. Puedes editar el rango pintando el grid, ver los combos por palo, deshacer con Ctrl+Z e importar o exportar el rango de cada calle.',
   },
   {
     group: 'Entrenar y estudiar',
@@ -801,6 +837,14 @@ export default function HomePage() {
             Es ideal para revisar si un bluff, un barrel o un call fue rentable a largo
             plazo, sin volver a escribir los datos a mano. No reemplaza tu replayer ni a
             Flopzilla: automatiza el cálculo y te enseña qué herramienta usar en cada spot.
+          </p>
+          <p>
+            ¿Quieres la equity sin salir de la web? Cada mano tiene un botón para abrirla en{' '}
+            <Link to="/sopranozilla" className="font-medium text-accent-light hover:underline">
+              Sopranozilla
+            </Link>{' '}
+            (beta): filtras el rango del villano por categorías, calle por calle, y ves tu
+            equity exacta y el EV de cada acción.
           </p>
           <div>
             <Link

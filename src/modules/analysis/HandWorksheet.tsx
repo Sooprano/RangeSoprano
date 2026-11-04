@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
 import { Calculator, Check, Coins, Pencil } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { CALC_META, type CalcMode } from '@/modules/calculators/calcMeta';
@@ -7,6 +7,11 @@ import type { Decision, ParsedHand, StreetData } from '@/utils/handHistory';
 import { flopzillaInputsFor, suggestCalcForDecision } from '@/utils/spotCalc';
 import { BoardCards } from './BoardCards';
 import { InlineCalc } from './InlineCalc';
+
+// Lazy: the Sopranozilla chunk loads only when a hand is on screen.
+const OpenInSopranozilla = lazy(
+  () => import('@/features/sopranozilla/ui/OpenInSopranozillaButton'),
+);
 
 type Unit = 'chips' | 'bb';
 
@@ -169,6 +174,9 @@ function HeaderCard({
         </div>
 
         <div className="flex flex-col items-end gap-3">
+          <Suspense fallback={null}>
+            <OpenInSopranozilla hand={hand} />
+          </Suspense>
           <UnitToggle unit={unit} onUnit={onUnit} disabled={hand.bigBlind == null} />
           <div className="flex flex-col items-end gap-0.5 text-xs text-content-muted">
             {hand.players.map((p) => (
