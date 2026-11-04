@@ -53,6 +53,19 @@ const ADVANCE_OPTIONS: ReadonlyArray<{ value: AdvanceMode; label: string }> = [
   { value: 'instant', label: 'Instantáneo' },
 ];
 
+type BorderFocus = PersistedUiState['trainerBorderFocus'];
+
+const FOCUS_OPTIONS: ReadonlyArray<{ value: BorderFocus; label: string; title: string }> = [
+  { value: 'off', label: 'No', title: 'Reparto natural: cada combo igual de probable' },
+  { value: 'soft', label: 'Suave', title: 'Manos borde ×2 · mixtas ×1.5' },
+  { value: 'strong', label: 'Fuerte', title: 'Manos borde ×4 · mixtas ×2.5' },
+  {
+    value: 'only',
+    label: 'Solo bordes',
+    title: 'Sin relleno: solo manos borde (×3) y mixtas (×2)',
+  },
+];
+
 type ClassicTrainerProps = {
   source: TrainerSource;
 };
@@ -96,15 +109,20 @@ export function ClassicTrainer({ source }: ClassicTrainerProps) {
   // Persisted: leaving for the Viewer and coming back keeps the chosen mode.
   const advanceMode = useUiStore((s) => s.trainerAdvanceMode);
   const setAdvanceMode = useUiStore((s) => s.setTrainerAdvanceMode);
+  const borderFocus = useUiStore((s) => s.trainerBorderFocus);
+  const setBorderFocus = useUiStore((s) => s.setTrainerBorderFocus);
+  // Read by the reset effect without making a focus change redraw the hand.
+  const borderFocusRef = useRef(borderFocus);
+  borderFocusRef.current = borderFocus;
   const showVillainAction = useTableThemeStore((s) => s.showVillainAction);
   const showSpotName = useTableThemeStore((s) => s.showSpotName);
   const key = sourceKey(source);
   const sourceKeyRef = useRef(key);
 
   const drawNext = useCallback(() => {
-    setCurrent(drawFromSource(source));
+    setCurrent(drawFromSource(source, Math.random, borderFocus));
     setFeedback(null);
-  }, [source]);
+  }, [source, borderFocus]);
 
   // Reset session when the range (or folder) being trained changes.
   useEffect(() => {
@@ -115,7 +133,7 @@ export function ClassicTrainer({ source }: ClassicTrainerProps) {
       setMistakes([]);
     }
     setFeedback(null);
-    setCurrent(drawFromSource(source));
+    setCurrent(drawFromSource(source, Math.random, borderFocusRef.current));
   }, [source, key]);
 
   // Auto-advance once feedback is shown: after 1.5s, or after a short flash in
@@ -356,8 +374,20 @@ export function ClassicTrainer({ source }: ClassicTrainerProps) {
         </div>
       </TableSurface>
 
-      <div className="flex justify-center">
-        <AdvanceModePicker value={advanceMode} onChange={setAdvanceMode} />
+      <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
+        <PillPicker
+          label="Auto-avance"
+          options={ADVANCE_OPTIONS}
+          value={advanceMode}
+          onChange={setAdvanceMode}
+        />
+        <PillPicker
+          label="Enfocar bordes"
+          hint="Manos donde el rango cambia de acción (ej. Q2o y J2o en un shove Q2o+). Las mixtas salen algo menos que los bordes."
+          options={FOCUS_OPTIONS}
+          value={borderFocus}
+          onChange={setBorderFocus}
+        />
       </div>
 
       {/* Last on the page and always mounted: nothing above it moves when a
@@ -372,29 +402,36 @@ export function ClassicTrainer({ source }: ClassicTrainerProps) {
   );
 }
 
-function AdvanceModePicker({
+function PillPicker<T extends string>({
+  label,
+  hint,
+  options,
   value,
   onChange,
 }: {
-  value: AdvanceMode;
-  onChange: (next: AdvanceMode) => void;
+  label: string;
+  hint?: string;
+  options: ReadonlyArray<{ value: T; label: string; title?: string }>;
+  value: T;
+  onChange: (next: T) => void;
 }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="text-[11px] font-medium text-content-muted">
-        Auto-avance
+      <span className="text-[11px] font-medium text-content-muted" title={hint}>
+        {label}
       </span>
       <div
         role="radiogroup"
-        aria-label="Auto-avance"
+        aria-label={label}
         className="inline-flex items-center gap-1 rounded-full border border-border bg-surface/40 p-0.5"
       >
-        {ADVANCE_OPTIONS.map((o) => {
+        {options.map((o) => {
           const active = o.value === value;
           return (
             <button
               key={o.value}
               type="button"
+              title={o.title}
               role="radio"
               aria-checked={active}
               onClick={() => onChange(o.value)}

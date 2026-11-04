@@ -63,7 +63,7 @@ const MODULES: readonly ModuleCard[] = [
     label: 'Entrenador',
     icon: Target,
     description:
-      'Entrena manos en mesa 6-max o Heads-Up contra un rango o una carpeta entera mezclada. Modos Clásico (auto-avance de 1.5s o instantáneo, con lista de errores), Velocidad (contrarreloj con tabla de líderes) y Dibujo. Acepta frecuencias mixtas, lee el spot en las fichas del villano y asigna tus propias hotkeys. Mesa personalizable.',
+      'Entrena manos en mesa 6-max o Heads-Up contra un rango o una carpeta entera mezclada. Modos Clásico (auto-avance de 1.5s o instantáneo, lista de errores y foco en las manos borde), Velocidad (contrarreloj con tabla de líderes) y Dibujo (con peso para las manos mixtas). Acepta frecuencias mixtas, lee el spot en las fichas del villano y asigna tus propias hotkeys. Mesa personalizable.',
   },
   {
     to: '/editor',
@@ -743,7 +743,10 @@ export default function HomePage() {
               <span className="font-medium text-content">Velocidad</span> (contrarreloj
               con tabla de líderes local) o{' '}
               <span className="font-medium text-content">Dibujo</span> (pinta el rango de
-              memoria y compara con la verdad). Las tres modalidades sobre mesa 6-max o HU,
+              memoria, con peso para las manos mixtas, y compara con la verdad). En
+              Clásico, <span className="font-medium text-content">Enfocar bordes</span>{' '}
+              hace salir más las manos donde el rango cambia de acción (o solo esas),
+              que son las que cuesta recordar. Las tres modalidades sobre mesa 6-max o HU,
               con el villano sentado enfrente y sus cartas boca abajo para que veas el
               matchup de un vistazo. Cuando ya te sepas los rangos de a uno, entrena{' '}
               <span className="font-medium text-content">toda una carpeta junta</span>: cada

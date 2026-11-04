@@ -19,6 +19,7 @@ type UiStoreState = PersistedUiState & {
   setTrainerRangeId: (id: string | null) => void;
   setTrainerFolderPath: (path: string | null) => void;
   setTrainerAdvanceMode: (mode: PersistedUiState['trainerAdvanceMode']) => void;
+  setTrainerBorderFocus: (focus: PersistedUiState['trainerBorderFocus']) => void;
   setGroupColor: (path: string, color: string | undefined) => void;
   toggleGroupCollapsed: (path: string) => void;
   setGroupCollapsed: (path: string, collapsed: boolean) => void;
@@ -46,6 +47,7 @@ const INITIAL: PersistedUiState = {
   trainerRangeId: null,
   trainerFolderPath: null,
   trainerAdvanceMode: 'timed',
+  trainerBorderFocus: 'off',
   groupMeta: {},
   sidebarCollapsed: false,
   overviewSelectedGroups: [],
@@ -69,6 +71,7 @@ export const useUiStore = create<UiStoreState>()(
       setTrainerRangeId: (id) => set({ trainerRangeId: id }),
       setTrainerFolderPath: (path) => set({ trainerFolderPath: path }),
       setTrainerAdvanceMode: (mode) => set({ trainerAdvanceMode: mode }),
+      setTrainerBorderFocus: (focus) => set({ trainerBorderFocus: focus }),
 
       setGroupColor: (path, color) =>
         set((s) => {
@@ -194,6 +197,7 @@ export const useUiStore = create<UiStoreState>()(
         trainerRangeId: s.trainerRangeId,
         trainerFolderPath: s.trainerFolderPath,
         trainerAdvanceMode: s.trainerAdvanceMode,
+        trainerBorderFocus: s.trainerBorderFocus,
         groupMeta: s.groupMeta,
         sidebarCollapsed: s.sidebarCollapsed,
         overviewSelectedGroups: s.overviewSelectedGroups,

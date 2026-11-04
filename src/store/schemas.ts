@@ -193,6 +193,8 @@ export const zPersistedUiState = z
     trainerFolderPath: z.string().nullable().default(null),
     // Classic trainer auto-advance; same `.default()` trick, no version bump.
     trainerAdvanceMode: z.enum(['manual', 'timed', 'instant']).default('timed'),
+    // Classic trainer "Enfocar bordes" (see utils/borderHands.ts); same trick.
+    trainerBorderFocus: z.enum(['off', 'soft', 'strong', 'only']).default('off'),
     groupMeta: z.record(z.string(), zGroupMeta).default({}),
     sidebarCollapsed: z.boolean().default(false),
     overviewSelectedGroups: z.array(z.string()).default([]),
