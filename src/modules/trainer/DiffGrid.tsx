@@ -4,6 +4,7 @@ import type { DiffCellState } from '@/utils/rangeDiff';
 
 const STATE_CLASS: Record<DiffCellState, string> = {
   match: 'bg-emerald-500/45 text-content',
+  freq: 'bg-sky-500/45 text-content',
   fp: 'bg-rose-500/45 text-content',
   fn: 'bg-amber-500/45 text-content',
   none: 'bg-surface/40 text-content-muted',
@@ -11,14 +12,16 @@ const STATE_CLASS: Record<DiffCellState, string> = {
 
 type DiffGridProps = {
   diff: Record<string, DiffCellState>;
+  /** Optional hover text per hand (real strategy vs drawn). */
+  titles?: Record<string, string> | undefined;
   className?: string;
 };
 
-export function DiffGrid({ diff, className }: DiffGridProps) {
+export function DiffGrid({ diff, titles, className }: DiffGridProps) {
   return (
     <div
       role="img"
-      aria-label="Range diff grid: green match, red false positive, amber false negative."
+      aria-label="Range diff grid: green match, blue frequency off, red false positive, amber false negative."
       className={cn(
         'mx-auto grid aspect-square w-full max-w-[min(640px,92vw)]',
         'grid-cols-[repeat(13,minmax(0,1fr))] gap-px rounded-xl border border-border bg-border/60 shadow-surface',
@@ -30,6 +33,7 @@ export function DiffGrid({ diff, className }: DiffGridProps) {
         return (
           <div
             key={hand}
+            title={titles?.[hand]}
             className={cn(
               'flex items-center justify-center text-[10px] font-medium tabular-nums',
               STATE_CLASS[state],

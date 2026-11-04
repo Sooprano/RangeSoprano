@@ -26,7 +26,9 @@ import type {
   Range,
   RangeCellData,
 } from '@/types/poker';
-import { buildActionDefMap } from '@/utils/actionMeta';
+import { actionLabel, buildActionDefMap } from '@/utils/actionMeta';
+import { paintHands } from '@/utils/cellUtils';
+import { WeightSlider } from '@/modules/editor/WeightSlider';
 import { expandPlus } from '@/utils/handRangeParser';
 import {
   answerActionsFor,
@@ -41,7 +43,12 @@ import {
   type TrainerSource,
 } from '@/utils/trainerSource';
 import { useActionHotkeys } from '@/hooks/useActionHotkeys';
-import { computeRangeDiff, type RangeDiff } from '@/utils/rangeDiff';
+import {
+  computeRangeDiff,
+  diffCellTitles,
+  FREQUENCY_TOLERANCE,
+  type RangeDiff,
+} from '@/utils/rangeDiff';
 import { DiffGrid } from './DiffGrid';
 import { SessionErrorsPanel, type ClassicMistake } from './SessionErrorsPanel';
 import { PokerTable } from './PokerTable';
@@ -88,7 +95,9 @@ type ClassicResult = Pick<
 type DrawingResult = Pick<
   SpeedDrawingEntry,
   'matchCombos' | 'truthCombos' | 'guessCombos' | 'accuracyPct'
-> & { diff: RangeDiff };
+> & { diff: RangeDiff; titles: Record<HandNotation, string> };
+
+type DiffReview = { diff: RangeDiff; titles: Record<HandNotation, string> };
 
 type SpeedTrainerProps = { source: TrainerSource };
 
@@ -109,7 +118,7 @@ export function SpeedTrainer({ source }: SpeedTrainerProps) {
     mainLine: number;
     mixedTotal: number;
   } | null>(null);
-  const [sessionDiff, setSessionDiff] = useState<RangeDiff | null>(null);
+  const [sessionDiff, setSessionDiff] = useState<DiffReview | null>(null);
 
   const addEntry = useLeaderboardStore((s) => s.addEntry);
   const clearForRange = useLeaderboardStore((s) => s.clearForRange);
@@ -168,7 +177,7 @@ export function SpeedTrainer({ source }: SpeedTrainerProps) {
 
   const finishDrawing = useCallback(
     (r: DrawingResult) => {
-      const { diff, ...entryFields } = r;
+      const { diff, titles, ...entryFields } = r;
       const entry: SpeedDrawingEntry = {
         style: 'drawing',
         durationSec: duration,
@@ -180,7 +189,7 @@ export function SpeedTrainer({ source }: SpeedTrainerProps) {
       setMadeTop(top);
       setSessionMistakes(null);
       setSessionMainLine(null);
-      setSessionDiff(diff);
+      setSessionDiff({ diff, titles });
       setPhase('finished');
     },
     [addEntry, duration, boardKey],
@@ -629,6 +638,7 @@ function SpeedDrawingRun({
 
   const [guess, setGuess] = useState<Record<HandNotation, RangeCellData>>({});
   const [selectedAction, setSelectedAction] = useState<ActionDef>(() => orderedActions[0]!);
+  const [weight, setWeight] = useState(100);
   const [remaining, setRemaining] = useState<number>(duration);
 
   const guessRef = useRef(guess);
@@ -636,6 +646,22 @@ function SpeedDrawingRun({
   const onFinishRef = useRef(onFinish);
   onFinishRef.current = onFinish;
   const doneRef = useRef(false);
+
+  const resultOf = useCallback(
+    (g: Record<HandNotation, RangeCellData>): DrawingResult => {
+      const diff = computeRangeDiff(g, range.cells);
+      return {
+        matchCombos: diff.matchCombos,
+        truthCombos: diff.truthCombos,
+        guessCombos: diff.guessCombos,
+        accuracyPct: diff.accuracyPct,
+        diff,
+        titles: diffCellTitles(g, range.cells, (id) => actionLabel(actionsMap, id)),
+      };
+    },
+    [range.cells, actionsMap],
+  );
+
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -647,45 +673,27 @@ function SpeedDrawingRun({
       if (r <= 0 && !doneRef.current) {
         doneRef.current = true;
         if (intervalRef.current) clearInterval(intervalRef.current);
-        const diff = computeRangeDiff(guessRef.current, range.cells);
-        onFinishRef.current({
-          matchCombos: diff.matchCombos,
-          truthCombos: diff.truthCombos,
-          guessCombos: diff.guessCombos,
-          accuracyPct: diff.accuracyPct,
-          diff,
-        });
+        onFinishRef.current(resultOf(guessRef.current));
       }
     }, 100);
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [duration, range.cells]);
+  }, [duration, resultOf]);
 
   const handleFinishEarly = useCallback(() => {
     if (doneRef.current) return;
     doneRef.current = true;
     if (intervalRef.current) clearInterval(intervalRef.current);
-    const diff = computeRangeDiff(guessRef.current, range.cells);
-    onFinishRef.current({
-      matchCombos: diff.matchCombos,
-      truthCombos: diff.truthCombos,
-      guessCombos: diff.guessCombos,
-      accuracyPct: diff.accuracyPct,
-      diff,
-    });
-  }, [range.cells]);
+    onFinishRef.current(resultOf(guessRef.current));
+  }, [resultOf]);
 
   const onPaint = useCallback(
     (h: HandNotation) => {
       if (doneRef.current) return;
-      setGuess((g) => {
-        const next = { ...g };
-        next[h] = { hand: h, actions: [{ action: selectedAction.id, weight: 100 }] };
-        return next;
-      });
+      setGuess((g) => paintHands(g, [h], selectedAction.id, weight));
     },
-    [selectedAction],
+    [selectedAction, weight],
   );
 
   const onErase = useCallback((h: HandNotation) => {
@@ -702,15 +710,9 @@ function SpeedDrawingRun({
     (h: HandNotation) => {
       if (doneRef.current) return;
       const hands = expandPlus(h);
-      setGuess((g) => {
-        const next = { ...g };
-        for (const hh of hands) {
-          next[hh] = { hand: hh, actions: [{ action: selectedAction.id, weight: 100 }] };
-        }
-        return next;
-      });
+      setGuess((g) => paintHands(g, hands, selectedAction.id, weight));
     },
-    [selectedAction],
+    [selectedAction, weight],
   );
 
   return (
@@ -723,6 +725,7 @@ function SpeedDrawingRun({
         rightStats={[{ label: 'Pintadas', value: `${Object.keys(guess).length} manos` }]}
       />
 
+      <div className="flex flex-wrap items-center gap-3">
       <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Paint action">
         {orderedActions.map((def) => {
           const isSelected = def.id === selectedAction.id;
@@ -747,6 +750,13 @@ function SpeedDrawingRun({
             </button>
           );
         })}
+      </div>
+        <WeightSlider
+          label="Peso"
+          value={weight}
+          onChange={setWeight}
+          className="min-w-[220px] flex-1 sm:max-w-xs"
+        />
       </div>
 
       <RangeGrid
@@ -863,7 +873,7 @@ function FinishedScreen({
   answerActions: ActionDef[];
   sessionMistakes: ClassicMistake[] | null;
   sessionMainLine: { mainLine: number; mixedTotal: number } | null;
-  sessionDiff: RangeDiff | null;
+  sessionDiff: DiffReview | null;
   onPlayAgain: () => void;
   onChangeConfig: () => void;
 }) {
@@ -943,7 +953,7 @@ function FinishedScreen({
       )}
 
       {entry.style === 'drawing' && sessionDiff !== null && (
-        <DiffReviewPanel diff={sessionDiff} />
+        <DiffReviewPanel diff={sessionDiff.diff} titles={sessionDiff.titles} />
       )}
 
       <Leaderboard board={board} highlightDateIso={entry.dateIso} onClear={null} />
@@ -973,7 +983,13 @@ function Stat({
 
 /* -------------------------- DIFF REVIEW -------------------------------- */
 
-function DiffReviewPanel({ diff }: { diff: RangeDiff }) {
+function DiffReviewPanel({
+  diff,
+  titles,
+}: {
+  diff: RangeDiff;
+  titles: Record<HandNotation, string>;
+}) {
   const [open, setOpen] = useState(true);
 
   return (
@@ -1007,11 +1023,15 @@ function DiffReviewPanel({ diff }: { diff: RangeDiff }) {
 
       {open && (
         <div className="border-t border-border px-4 py-4">
-          <DiffGrid diff={diff.cells} />
+          <DiffGrid diff={diff.cells} titles={titles} />
           <div className="mt-3 flex flex-wrap gap-4 text-xs text-content-muted">
             <span className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-sm bg-emerald-500/45" />
-              Acierto
+              Acierto (±{FREQUENCY_TOLERANCE}%)
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-sm bg-sky-500/45" />
+              Frecuencia distinta
             </span>
             <span className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-sm bg-rose-500/45" />

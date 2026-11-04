@@ -1,7 +1,13 @@
 import type { ActionId, HandNotation, RangeCellData } from '@/types/poker';
 import { ALL_HANDS, combosOf } from './handUtils';
 
-export type DiffCellState = 'match' | 'fp' | 'fn' | 'none';
+/**
+ * - match: every action within tolerance of the truth frequency.
+ * - freq: right actions (some overlap) but at least one frequency is off.
+ * - fp: painted something with no overlap with the truth (or hand not in range).
+ * - fn: the truth has the hand and nothing was painted.
+ */
+export type DiffCellState = 'match' | 'freq' | 'fp' | 'fn' | 'none';
 
 export type RangeDiff = {
   /** Per-hand classification covering all 169 hands. */
@@ -15,32 +21,30 @@ export type RangeDiff = {
   accuracyPct: number;
 };
 
-function getPaintedAction(
-  cells: Record<HandNotation, RangeCellData>,
-  hand: HandNotation,
-): ActionId | null {
-  const cell = cells[hand];
-  if (!cell) return null;
-  return cell.actions.find((a) => a.weight > 0)?.action ?? null;
-}
+/**
+ * Points of frequency (0-100) a painted action may miss the truth by and still
+ * count as exact. Nobody memorizes an 18% branch to the point; 20% is right.
+ */
+export const FREQUENCY_TOLERANCE = 10;
 
-function isPainted(cells: Record<HandNotation, RangeCellData>, hand: HandNotation): boolean {
-  return getPaintedAction(cells, hand) !== null;
-}
-
-function truthHasAction(
-  cells: Record<HandNotation, RangeCellData>,
-  hand: HandNotation,
-  action: ActionId,
-): boolean {
-  return cells[hand]?.actions.some((a) => a.action === action && a.weight > 0) ?? false;
+function weightsOf(cell: RangeCellData | undefined): Map<ActionId, number> {
+  const out = new Map<ActionId, number>();
+  if (!cell) return out;
+  for (const a of cell.actions) {
+    if (a.weight > 0) out.set(a.action, (out.get(a.action) ?? 0) + a.weight);
+  }
+  return out;
 }
 
 /**
- * Computes an action-aware diff between the user's guess and the truth range.
- * Match: painted action exists in the truth cell (weight > 0).
- * False positive: painted an action the truth cell doesn't have, or hand not in range.
- * False negative: truth has the hand but the user didn't paint any action on it.
+ * Frequency-aware diff between the user's drawing and the truth range, in
+ * combos. Per hand and per action, a painted frequency within
+ * `FREQUENCY_TOLERANCE` of the truth snaps to it; then the overlap
+ * `min(guess, truth)` is a match, the excess a false positive and the shortfall
+ * a false negative — each scaled by the hand's combos.
+ *
+ * A pure cell (100%) painted 100% with the right action scores exactly as the
+ * old binary diff did; only mixed cells change.
  */
 export function computeRangeDiff(
   guess: Record<HandNotation, RangeCellData>,
@@ -54,27 +58,42 @@ export function computeRangeDiff(
   let guessCombos = 0;
 
   for (const hand of ALL_HANDS) {
-    const guessAction = getPaintedAction(guess, hand);
-    const inTruth = isPainted(truth, hand);
-    const correctAction =
-      guessAction !== null && truthHasAction(truth, hand, guessAction);
-    const c = combosOf(hand);
+    const g = weightsOf(guess[hand]);
+    const t = weightsOf(truth[hand]);
+    const c = combosOf(hand) / 100;
 
-    if (guessAction !== null) guessCombos += c;
-    if (inTruth) truthCombos += c;
+    let gSum = 0;
+    let tSum = 0;
+    let match = 0;
+    let fp = 0;
+    let fn = 0;
+    let allWithinTolerance = true;
 
-    if (guessAction !== null && correctAction) {
-      cells[hand] = 'match';
-      matchCombos += c;
-    } else if (guessAction !== null) {
-      cells[hand] = 'fp';
-      fpCombos += c;
-    } else if (inTruth) {
-      cells[hand] = 'fn';
-      fnCombos += c;
-    } else {
-      cells[hand] = 'none';
+    for (const action of new Set([...g.keys(), ...t.keys()])) {
+      const gw = g.get(action) ?? 0;
+      const tw = t.get(action) ?? 0;
+      gSum += gw;
+      tSum += tw;
+      const within = Math.abs(gw - tw) <= FREQUENCY_TOLERANCE;
+      if (!within) allWithinTolerance = false;
+      const snapped = within ? tw : gw;
+      match += Math.min(snapped, tw);
+      fp += Math.max(0, snapped - tw);
+      fn += Math.max(0, tw - snapped);
     }
+
+    guessCombos += gSum * c;
+    truthCombos += tSum * c;
+    matchCombos += match * c;
+    fpCombos += fp * c;
+    fnCombos += fn * c;
+
+    if (gSum === 0 && tSum === 0) cells[hand] = 'none';
+    else if (gSum === 0) cells[hand] = allWithinTolerance ? 'none' : 'fn';
+    else if (allWithinTolerance) cells[hand] = tSum === 0 ? 'none' : 'match';
+    else if (match > 0) cells[hand] = 'freq';
+    else if (tSum === 0 || fp > 0) cells[hand] = 'fp';
+    else cells[hand] = 'fn';
   }
 
   const denom = matchCombos + fpCombos + fnCombos;
@@ -89,4 +108,30 @@ export function computeRangeDiff(
     guessCombos,
     accuracyPct,
   };
+}
+
+function describeCell(
+  cell: RangeCellData | undefined,
+  labelOf: (id: ActionId) => string,
+): string {
+  const parts = (cell?.actions ?? [])
+    .filter((a) => a.weight > 0)
+    .map((a) => `${labelOf(a.action)} ${Math.round(a.weight)}%`);
+  return parts.length === 0 ? 'Fold' : parts.join(' · ');
+}
+
+/**
+ * Hover text per hand for the diff grid: the real strategy vs what was drawn,
+ * which is what a "frecuencia distinta" cell needs to be learned from.
+ */
+export function diffCellTitles(
+  guess: Record<HandNotation, RangeCellData>,
+  truth: Record<HandNotation, RangeCellData>,
+  labelOf: (id: ActionId) => string,
+): Record<HandNotation, string> {
+  const out: Record<HandNotation, string> = {};
+  for (const hand of ALL_HANDS) {
+    out[hand] = `${hand} — Rango: ${describeCell(truth[hand], labelOf)} | Tuyo: ${describeCell(guess[hand], labelOf)}`;
+  }
+  return out;
 }

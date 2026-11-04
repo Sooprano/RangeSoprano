@@ -5,6 +5,8 @@ type WeightSliderProps = {
   onChange: (value: number) => void;
   disabled?: boolean;
   className?: string;
+  /** Visible label; the Editor keeps its original "Weight". */
+  label?: string;
 };
 
 const STEP = 5;
@@ -14,6 +16,7 @@ export function WeightSlider({
   onChange,
   disabled = false,
   className,
+  label = 'Weight',
 }: WeightSliderProps) {
   return (
     <div
@@ -26,7 +29,7 @@ export function WeightSlider({
         htmlFor="weight-slider"
         className="text-xs font-medium uppercase tracking-wider text-content-muted"
       >
-        Weight
+        {label}
       </label>
       <input
         id="weight-slider"

@@ -50,3 +50,31 @@ export function upsertActionInCell(
   const nextActions: HandAction[] = [...others, { action, weight: finalWeight }];
   return { kind: 'update', cell: { hand, actions: nextActions } };
 }
+
+/**
+ * Paints `action` at `weight` onto every hand of a local (non-store) cell map,
+ * with the exact semantics of the Editor's `upsertActionInCell` — so a mixed
+ * cell is drawn in two passes (Raise 20% then All in 80%). Returns the same
+ * object when nothing changed.
+ */
+export function paintHands(
+  cells: Record<HandNotation, RangeCellData>,
+  hands: readonly HandNotation[],
+  action: Action,
+  weight: number,
+): Record<HandNotation, RangeCellData> {
+  let next: Record<HandNotation, RangeCellData> | null = null;
+  for (const hand of hands) {
+    const current = next ?? cells;
+    const result = upsertActionInCell(current[hand], hand, action, weight);
+    if (result.kind === 'clear') {
+      if (!(hand in current)) continue;
+      next ??= { ...cells };
+      delete next[hand];
+    } else {
+      next ??= { ...cells };
+      next[hand] = result.cell;
+    }
+  }
+  return next ?? cells;
+}

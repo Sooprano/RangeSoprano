@@ -8,9 +8,11 @@ import type {
   Range,
   RangeCellData,
 } from '@/types/poker';
-import { buildActionDefMap } from '@/utils/actionMeta';
+import { actionLabel, buildActionDefMap } from '@/utils/actionMeta';
+import { paintHands } from '@/utils/cellUtils';
 import { expandPlus } from '@/utils/handRangeParser';
-import { computeRangeDiff } from '@/utils/rangeDiff';
+import { computeRangeDiff, diffCellTitles, FREQUENCY_TOLERANCE } from '@/utils/rangeDiff';
+import { WeightSlider } from '@/modules/editor/WeightSlider';
 import { DiffGrid } from './DiffGrid';
 
 type DrawingTrainerProps = {
@@ -33,6 +35,7 @@ export function DrawingTrainer({ range }: DrawingTrainerProps) {
   const [selectedAction, setSelectedAction] = useState<ActionDef>(
     () => firstAction(range.actions),
   );
+  const [weight, setWeight] = useState(100);
   const [sessionRounds, setSessionRounds] = useState<SessionRound[]>([]);
   const rangeIdRef = useRef(range.id);
 
@@ -55,16 +58,9 @@ export function DrawingTrainer({ range }: DrawingTrainerProps) {
 
   const onPaint = useCallback(
     (hand: HandNotation) => {
-      setGuess((g) => {
-        const next = { ...g };
-        next[hand] = {
-          hand,
-          actions: [{ action: selectedAction.id, weight: 100 }],
-        };
-        return next;
-      });
+      setGuess((g) => paintHands(g, [hand], selectedAction.id, weight));
     },
-    [selectedAction],
+    [selectedAction, weight],
   );
 
   const onErase = useCallback((hand: HandNotation) => {
@@ -79,18 +75,9 @@ export function DrawingTrainer({ range }: DrawingTrainerProps) {
   const onPaintPlus = useCallback(
     (hand: HandNotation) => {
       const hands = expandPlus(hand);
-      setGuess((g) => {
-        const next = { ...g };
-        for (const h of hands) {
-          next[h] = {
-            hand: h,
-            actions: [{ action: selectedAction.id, weight: 100 }],
-          };
-        }
-        return next;
-      });
+      setGuess((g) => paintHands(g, hands, selectedAction.id, weight));
     },
-    [selectedAction],
+    [selectedAction, weight],
   );
 
   const reset = useCallback(() => {
@@ -101,6 +88,14 @@ export function DrawingTrainer({ range }: DrawingTrainerProps) {
   const diff = useMemo(
     () => (revealed ? computeRangeDiff(guess, range.cells) : null),
     [revealed, guess, range.cells],
+  );
+
+  const diffTitles = useMemo(
+    () =>
+      revealed
+        ? diffCellTitles(guess, range.cells, (id) => actionLabel(actionsMap, id))
+        : undefined,
+    [revealed, guess, range.cells, actionsMap],
   );
 
   const saveRound = useCallback(() => {
@@ -147,7 +142,7 @@ export function DrawingTrainer({ range }: DrawingTrainerProps) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs text-content-muted">
           Pinta las manos que creas que pertenecen a <span className="text-content">{range.name}</span>{' '}
-          · clic o arrastre para agregar · clic derecho o doble toque para quitar · Ctrl+clic derecho para mano+ (ej. 88+) · luego revelar para comparar.
+          · clic o arrastre para agregar · clic derecho o doble toque para quitar · Ctrl+clic derecho para mano+ (ej. 88+) · para una mano mixta baja el peso y pinta cada acción (ej. Raise 20% y luego All in 80%) · luego revelar para comparar.
         </p>
         <div className="flex items-center gap-2">
           <button
@@ -194,16 +189,24 @@ export function DrawingTrainer({ range }: DrawingTrainerProps) {
         </div>
       </div>
 
-      <ActionPalette
-        actions={orderedActions}
-        selected={selectedAction}
-        onSelect={setSelectedAction}
-      />
+      <div className="flex flex-wrap items-center gap-3">
+        <ActionPalette
+          actions={orderedActions}
+          selected={selectedAction}
+          onSelect={setSelectedAction}
+        />
+        <WeightSlider
+          label="Peso"
+          value={weight}
+          onChange={setWeight}
+          className="min-w-[220px] flex-1 sm:max-w-xs"
+        />
+      </div>
 
       {revealed && diff ? (
         <div className="flex flex-col gap-4">
           <DiffStats diff={diff} />
-          <DiffGrid diff={diff.cells} />
+          <DiffGrid diff={diff.cells} titles={diffTitles} />
           <DiffLegend />
         </div>
       ) : (
@@ -362,9 +365,11 @@ function Stat({
 function DiffLegend() {
   return (
     <ul className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-content-muted">
-      <Legend dot="bg-emerald-500/70" label="Acierto (acción correcta)" />
+      <Legend dot="bg-emerald-500/70" label={`Acierto (acción y frecuencia ±${FREQUENCY_TOLERANCE}%)`} />
+      <Legend dot="bg-sky-500/70" label="Frecuencia distinta (acción correcta, peso fuera de tolerancia)" />
       <Legend dot="bg-rose-500/70" label="Falso positivo (acción incorrecta o fuera del rango)" />
       <Legend dot="bg-amber-500/70" label="Falso negativo (el rango la tenía, tú no)" />
+      <li className="text-content-muted/80">Pasa el cursor sobre una mano para ver su frecuencia real.</li>
     </ul>
   );
 }
