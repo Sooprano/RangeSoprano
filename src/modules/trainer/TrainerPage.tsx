@@ -1,15 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Brush, Dices, Palette, Zap } from 'lucide-react';
+import { Brush, Dices, Expand, Focus, Minimize2, Palette, Shrink, Zap } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { useRangeStore } from '@/store/rangeStore';
 import { useUiStore } from '@/store/uiStore';
-import {
-  useRangeSummaries,
-  useRangesInGroup,
-  useTrainerRange,
-} from '@/store/selectors';
+import { useRangeSummaries, useRangesInGroup, useTrainerRange } from '@/store/selectors';
 import { isInGroup } from '@/utils/groupUtils';
 import type { TrainerSource } from '@/utils/trainerSource';
 import { ViewerRangeList } from '@/modules/viewer/ViewerRangeList';
@@ -47,12 +43,30 @@ export default function TrainerPage() {
   const [mode, setMode] = useState<TrainerMode>('classic');
   const [filters, setFilters] = useState<ViewerFilters>(EMPTY_FILTERS);
   const [themeOpen, setThemeOpen] = useState(false);
+  // Focus mode (phase 55): only the trainer, no sidebars or headers. Page
+  // state on purpose: entering it is a choice per session, not a setting.
+  const [focus, setFocus] = useState(false);
+  const fullscreen = useFullscreen();
+  const exitFocus = useCallback(() => {
+    setFocus(false);
+    fullscreen.exit();
+  }, [fullscreen]);
+
+  // Esc leaves Focus. The hotkey capture (right click on an action) eats its
+  // own Esc in the capture phase, and an open dialog keeps it.
+  useEffect(() => {
+    if (!focus) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || e.defaultPrevented) return;
+      if (document.querySelector('[role="dialog"]')) return;
+      exitFocus();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [focus, exitFocus]);
 
   const filteredSummaries = useMemo(
-    () =>
-      hasAnyFilter(filters)
-        ? summaries.filter((s) => matchesFilters(s, filters))
-        : summaries,
+    () => (hasAnyFilter(filters) ? summaries.filter((s) => matchesFilters(s, filters)) : summaries),
     [summaries, filters],
   );
 
@@ -78,8 +92,7 @@ export default function TrainerPage() {
 
   // Drawing paints one grid, so it trains one range. Derived, not synced with
   // an effect: the mode you had comes back when you leave the folder.
-  const effectiveMode: TrainerMode =
-    folderMode && mode === 'drawing' ? 'classic' : mode;
+  const effectiveMode: TrainerMode = folderMode && mode === 'drawing' ? 'classic' : mode;
 
   const folderRangeCount = useCallback(
     (path: string) => ranges.filter((r) => isInGroup(r.group, path)).length,
@@ -106,9 +119,7 @@ export default function TrainerPage() {
       if (trainerRangeId !== null) setTrainerRangeId(null);
       return;
     }
-    const stillValid = trainerRangeId
-      ? ranges.some((r) => r.id === trainerRangeId)
-      : false;
+    const stillValid = trainerRangeId ? ranges.some((r) => r.id === trainerRangeId) : false;
     if (!stillValid) {
       setTrainerRangeId(ranges[0]!.id);
     }
@@ -131,82 +142,171 @@ export default function TrainerPage() {
 
   return (
     <>
-      <PageHeader
-        eyebrow={
-          source?.kind === 'folder'
-            ? `Carpeta · ${source.ranges.length} rangos`
-            : range
-              ? `${range.position} · ${SITUATION_LABELS[range.situation] ?? range.situation}`
-              : 'Module'
-        }
-        title={
-          source?.kind === 'folder'
-            ? source.label
-            : range
-              ? range.name
-              : 'Entrenador'
-        }
-        description={
-          source?.kind === 'folder'
-            ? 'Entrenás toda la carpeta mezclada: cada mano sortea uno de sus rangos y el stack del paño te dice cuál.'
-            : 'Practicá decisiones contra tus rangos guardados. Modos clásico, dibujo y velocidad.'
-        }
-      />
-
-      <div className="grid gap-6 md:grid-cols-[220px_minmax(0,1fr)]">
-        <ViewerRangeList
-          summaries={filteredSummaries}
-          selectedId={folderMode ? null : trainerRangeId}
-          onSelect={selectRange}
-          selectedFolderPath={trainerFolderPath}
-          onSelectFolder={selectFolder}
-          folderRangeCount={folderRangeCount}
-          emptyMessage={
-            hasAnyFilter(filters)
-              ? 'Ningún rango coincide con los filtros actuales.'
-              : 'Sin rangos todavía. Crea uno en el Editor.'
+      {!focus && (
+        <PageHeader
+          eyebrow={
+            source?.kind === 'folder'
+              ? `Carpeta · ${source.ranges.length} rangos`
+              : range
+                ? `${range.position} · ${SITUATION_LABELS[range.situation] ?? range.situation}`
+                : 'Module'
+          }
+          title={source?.kind === 'folder' ? source.label : range ? range.name : 'Entrenador'}
+          description={
+            source?.kind === 'folder'
+              ? 'Entrenás toda la carpeta mezclada: cada mano sortea uno de sus rangos y el stack del paño te dice cuál.'
+              : 'Practicá decisiones contra tus rangos guardados. Modos clásico, dibujo y velocidad.'
           }
         />
+      )}
 
-        <div className="flex min-w-0 flex-col gap-4">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <SituationSelector filters={filters} onChange={setFilters} />
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setThemeOpen(true)}
-                title="Apariencia de la mesa"
-                aria-label="Apariencia de la mesa"
-                className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface/60 px-3 py-2 text-sm font-medium text-content-muted transition-colors hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
-              >
-                <Palette className="h-3.5 w-3.5" strokeWidth={2.25} />
-                <span className="hidden sm:inline">Mesa</span>
-              </button>
-              <ModeToggle
-                value={effectiveMode}
-                onChange={setMode}
-                folderMode={folderMode}
-              />
-            </div>
-          </div>
-          {source ? (
-            effectiveMode === 'classic' ? (
-              <ClassicTrainer source={source} />
-            ) : effectiveMode === 'drawing' && source.kind === 'range' ? (
-              <DrawingTrainer range={source.range} />
-            ) : (
-              <SpeedTrainer source={source} />
-            )
+      <div className="grid gap-6 md:grid-cols-[220px_minmax(0,1fr)]">
+        {!focus && (
+          <ViewerRangeList
+            summaries={filteredSummaries}
+            selectedId={folderMode ? null : trainerRangeId}
+            onSelect={selectRange}
+            selectedFolderPath={trainerFolderPath}
+            onSelectFolder={selectFolder}
+            folderRangeCount={folderRangeCount}
+            emptyMessage={
+              hasAnyFilter(filters)
+                ? 'Ningún rango coincide con los filtros actuales.'
+                : 'Sin rangos todavía. Crea uno en el Editor.'
+            }
+          />
+        )}
+
+        <div
+          className={cn(
+            'flex min-w-0 flex-col gap-4',
+            // Covers the whole window (sidebar included); the trainer stays
+            // mounted, only its frame changes.
+            focus && 'fixed inset-0 z-40 overflow-y-auto bg-bg px-4 pb-8 pt-3 sm:px-6',
+          )}
+        >
+          {focus ? (
+            <FocusBar
+              fullscreen={fullscreen.active}
+              canFullscreen={fullscreen.supported}
+              onFullscreen={fullscreen.toggle}
+              onExit={exitFocus}
+            />
           ) : (
-            <div className="flex min-h-[40vh] items-center justify-center rounded-xl border border-dashed border-border p-6 text-center text-sm text-content-muted">
-              Elige un rango o una carpeta de la lista para empezar.
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <SituationSelector filters={filters} onChange={setFilters} />
+              <div className="flex items-center gap-2">
+                {source && (
+                  <button
+                    type="button"
+                    onClick={() => setFocus(true)}
+                    title="Modo Focus: solo la mesa, sin nada a los lados (Esc para salir)"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface/60 px-3 py-2 text-sm font-medium text-content-muted transition-colors hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
+                  >
+                    <Focus className="h-3.5 w-3.5" strokeWidth={2.25} />
+                    <span className="hidden sm:inline">Focus</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setThemeOpen(true)}
+                  title="Apariencia de la mesa"
+                  aria-label="Apariencia de la mesa"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface/60 px-3 py-2 text-sm font-medium text-content-muted transition-colors hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light"
+                >
+                  <Palette className="h-3.5 w-3.5" strokeWidth={2.25} />
+                  <span className="hidden sm:inline">Mesa</span>
+                </button>
+                <ModeToggle value={effectiveMode} onChange={setMode} folderMode={folderMode} />
+              </div>
             </div>
           )}
+          <div className={cn('flex min-w-0 flex-col gap-4', focus && 'mx-auto w-full max-w-5xl')}>
+            {source ? (
+              effectiveMode === 'classic' ? (
+                <ClassicTrainer source={source} />
+              ) : effectiveMode === 'drawing' && source.kind === 'range' ? (
+                <DrawingTrainer range={source.range} />
+              ) : (
+                <SpeedTrainer source={source} />
+              )
+            ) : (
+              <div className="flex min-h-[40vh] items-center justify-center rounded-xl border border-dashed border-border p-6 text-center text-sm text-content-muted">
+                Elige un rango o una carpeta de la lista para empezar.
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {themeOpen && <TableThemeModal onClose={() => setThemeOpen(false)} />}
     </>
+  );
+}
+
+/** Browser fullscreen, opt-in inside Focus (the window size may be on purpose). */
+function useFullscreen() {
+  const supported = typeof document !== 'undefined' && document.fullscreenEnabled === true;
+  const [active, setActive] = useState(
+    () => typeof document !== 'undefined' && document.fullscreenElement !== null,
+  );
+  useEffect(() => {
+    const onChange = () => setActive(document.fullscreenElement !== null);
+    document.addEventListener('fullscreenchange', onChange);
+    return () => document.removeEventListener('fullscreenchange', onChange);
+  }, []);
+  const toggle = useCallback(() => {
+    if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
+    else void document.documentElement.requestFullscreen().catch(() => {});
+  }, []);
+  const exit = useCallback(() => {
+    if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
+  }, []);
+  return useMemo(() => ({ supported, active, toggle, exit }), [supported, active, toggle, exit]);
+}
+
+const FOCUS_BUTTON =
+  'inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface/60 px-2.5 py-1.5 text-xs font-medium text-content-muted transition-colors hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light';
+
+function FocusBar({
+  fullscreen,
+  canFullscreen,
+  onFullscreen,
+  onExit,
+}: {
+  fullscreen: boolean;
+  canFullscreen: boolean;
+  onFullscreen: () => void;
+  onExit: () => void;
+}) {
+  return (
+    <div className="mx-auto flex w-full max-w-5xl justify-end gap-2">
+      {canFullscreen && (
+        <button
+          type="button"
+          onClick={onFullscreen}
+          aria-pressed={fullscreen}
+          title={
+            fullscreen
+              ? 'Volver a la ventana del navegador'
+              : 'Pantalla completa: oculta las pestañas y la barra del navegador'
+          }
+          className={FOCUS_BUTTON}
+        >
+          {fullscreen ? (
+            <Shrink className="h-3.5 w-3.5" strokeWidth={2.25} />
+          ) : (
+            <Expand className="h-3.5 w-3.5" strokeWidth={2.25} />
+          )}
+          {fullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
+        </button>
+      )}
+      <button type="button" onClick={onExit} title="Salir de Focus (Esc)" className={FOCUS_BUTTON}>
+        <Minimize2 className="h-3.5 w-3.5" strokeWidth={2.25} />
+        Salir de Focus
+        <kbd className="rounded border border-border px-1 font-sans text-[10px]">Esc</kbd>
+      </button>
+    </div>
   );
 }
 
@@ -241,9 +341,7 @@ function ModeToggle({ value, onChange, folderMode }: ModeToggleProps) {
         icon={<Brush className="h-3.5 w-3.5" strokeWidth={2.25} />}
         label="Dibujo"
         disabled={folderMode}
-        title={
-          folderMode ? 'El modo Dibujo entrena un rango a la vez' : undefined
-        }
+        title={folderMode ? 'El modo Dibujo entrena un rango a la vez' : undefined}
       />
       <ModeButton
         active={value === 'speed'}
@@ -294,4 +392,3 @@ function ModeButton({
     </button>
   );
 }
-

@@ -746,7 +746,9 @@ export default function HomePage() {
               memoria, con peso para las manos mixtas, y compara con la verdad). En
               Clásico, <span className="font-medium text-content">Enfocar bordes</span>{' '}
               hace salir más las manos donde el rango cambia de acción (o solo esas),
-              que son las que cuesta recordar. Las tres modalidades sobre mesa 6-max o HU,
+              que son las que cuesta recordar. El botón{' '}
+              <span className="font-medium text-content">Focus</span> deja solo la mesa,
+              sin nada a los lados (con pantalla completa opcional). Las tres modalidades sobre mesa 6-max o HU,
               con el villano sentado enfrente y sus cartas boca abajo para que veas el
               matchup de un vistazo. Cuando ya te sepas los rangos de a uno, entrena{' '}
               <span className="font-medium text-content">toda una carpeta junta</span>: cada
