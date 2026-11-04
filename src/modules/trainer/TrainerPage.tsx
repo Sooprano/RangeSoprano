@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Brush, Dices, Expand, Focus, Minimize2, Palette, Shrink, Zap } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
@@ -93,6 +93,11 @@ export default function TrainerPage() {
   // Drawing paints one grid, so it trains one range. Derived, not synced with
   // an effect: the mode you had comes back when you leave the folder.
   const effectiveMode: TrainerMode = folderMode && mode === 'drawing' ? 'classic' : mode;
+
+  // In Focus the trainer grows to the screen (big monitors, fullscreen).
+  const fitRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  useFocusFit(focus, fitRef, contentRef, effectiveMode);
 
   const folderRangeCount = useCallback(
     (path: string) => ranges.filter((r) => isInGroup(r.group, path)).length,
@@ -221,20 +226,25 @@ export default function TrainerPage() {
               </div>
             </div>
           )}
-          <div className={cn('flex min-w-0 flex-col gap-4', focus && 'mx-auto w-full max-w-5xl')}>
-            {source ? (
-              effectiveMode === 'classic' ? (
-                <ClassicTrainer source={source} />
-              ) : effectiveMode === 'drawing' && source.kind === 'range' ? (
-                <DrawingTrainer range={source.range} />
+          <div ref={fitRef}>
+            <div
+              ref={contentRef}
+              className={cn('flex min-w-0 flex-col gap-4', focus && 'mx-auto w-full max-w-5xl')}
+            >
+              {source ? (
+                effectiveMode === 'classic' ? (
+                  <ClassicTrainer source={source} />
+                ) : effectiveMode === 'drawing' && source.kind === 'range' ? (
+                  <DrawingTrainer range={source.range} />
+                ) : (
+                  <SpeedTrainer source={source} />
+                )
               ) : (
-                <SpeedTrainer source={source} />
-              )
-            ) : (
-              <div className="flex min-h-[40vh] items-center justify-center rounded-xl border border-dashed border-border p-6 text-center text-sm text-content-muted">
-                Elige un rango o una carpeta de la lista para empezar.
-              </div>
-            )}
+                <div className="flex min-h-[40vh] items-center justify-center rounded-xl border border-dashed border-border p-6 text-center text-sm text-content-muted">
+                  Elige un rango o una carpeta de la lista para empezar.
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -242,6 +252,67 @@ export default function TrainerPage() {
       {themeOpen && <TableThemeModal onClose={() => setThemeOpen(false)} />}
     </>
   );
+}
+
+/** Biggest zoom in Focus: past this the table feels on top of you. */
+const FOCUS_MAX_SCALE = 1.6;
+/** Share of the free height the trainer may take (some air around it). */
+const FOCUS_FILL = 0.94;
+
+/**
+ * Focus mode: scales the trainer (tiles, table, actions, pills) to fill the
+ * screen, keeping its proportions — before, it kept its page size and on a big
+ * or fullscreen monitor it was a small island in the middle. `transform` (not
+ * `zoom`) because offsetWidth / offsetHeight ignore it, so the natural size can
+ * be measured at any time; the outer box gets the scaled height so the page
+ * still scrolls right. Measured on entering, on a window resize (fullscreen
+ * included) and on a mode change — NOT on content changes: opening the session
+ * errors list must not shrink the table under your cursor. Written to the DOM
+ * directly (no state): it is pure presentation.
+ */
+function useFocusFit(
+  focus: boolean,
+  fitRef: React.RefObject<HTMLDivElement | null>,
+  contentRef: React.RefObject<HTMLDivElement | null>,
+  mode: string,
+) {
+  useLayoutEffect(() => {
+    const box = fitRef.current;
+    const el = contentRef.current;
+    if (!box || !el) return;
+    const clear = () => {
+      el.style.transform = '';
+      el.style.transformOrigin = '';
+      box.style.height = '';
+    };
+    if (!focus) {
+      clear();
+      return;
+    }
+    const fit = () => {
+      const w = el.offsetWidth;
+      const h = el.offsetHeight;
+      if (w === 0 || h === 0) return;
+      // Room left under the Focus bar (the box's top) and inside the side padding.
+      const top = box.getBoundingClientRect().top + (box.parentElement?.scrollTop ?? 0);
+      const freeH = (window.innerHeight - top - 16) * FOCUS_FILL;
+      const freeW = window.innerWidth - 48;
+      const scale = Math.max(1, Math.min(FOCUS_MAX_SCALE, freeH / h, freeW / w));
+      if (scale <= 1.01) {
+        clear();
+        return;
+      }
+      el.style.transformOrigin = 'top center';
+      el.style.transform = `scale(${scale.toFixed(3)})`;
+      box.style.height = `${Math.ceil(h * scale)}px`;
+    };
+    fit();
+    window.addEventListener('resize', fit);
+    return () => {
+      window.removeEventListener('resize', fit);
+      clear();
+    };
+  }, [focus, fitRef, contentRef, mode]);
 }
 
 /** Browser fullscreen, opt-in inside Focus (the window size may be on purpose). */
