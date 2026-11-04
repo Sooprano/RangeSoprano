@@ -8,7 +8,7 @@ React 19 + TypeScript estricto (noUncheckedIndexedAccess, exactOptionalPropertyT
 
 ## Estado de fases
 
-Fases 1-53 completadas ✅. Detalle completo de cada fase, hashes de rollback y decisiones de diseño no obvias → `RECOVERY.md`.
+Fases 1-54 completadas ✅. Detalle completo de cada fase, hashes de rollback y decisiones de diseño no obvias → `RECOVERY.md`.
 
 1. Setup y fundamentos
 2. RangeGrid completo (base · stats · a11y)
@@ -73,6 +73,7 @@ Fases 1-53 completadas ✅. Detalle completo de cada fase, hashes de rollback y 
 52. **Frecuencias mixtas**: toda rama con frecuencia > 0 es correcta; el feedback separa la línea principal de una rama minoritaria y los botones muestran la mezcla
 53. Entrenador › Clásico: **auto-avance de 3 modos** (`AdvanceMode` manual · 1.5s default · instantáneo = flash de 220 ms como Velocidad, sin frase de feedback) + **errores de sesión en vivo** (`SessionErrorsPanel.tsx`, extraído de Velocidad y compartido; con `live` va debajo de la mesa, siempre montado, más reciente arriba y scroll interno → la mesa nunca se desplaza) · modo persistido en `uiStore.trainerAdvanceMode` · Editor vacío: botón "Cargar rangos de demo" (`src/hooks/useLoadDemoRanges.ts`, single source con el Visualizador)
 51. Entrenar una **carpeta entera** en el Entrenador (`TrainerSource` rango|carpeta) + la mesa cuenta el spot: acción del villano en fichas, ciegas vivas, pastilla del spot, botones filtrados al rango de la mano · situación `vs_OS` (Open Shove)
+54. Entrenador › Dibujo con **peso** (slider, `paintHands`) y diff por frecuencia (±10 pts, estado `freq` azul + tooltip real vs tuyo) · Clásico › **Enfocar bordes** (`src/utils/borderHands.ts`: borde/mixta/interior por 4-vecinos de la grilla; No · Suave · Fuerte · Solo bordes; persistido en `uiStore.trainerBorderFocus`; Velocidad no lo usa)
 48. Rework "Rangos": banco real (29 3bet lineal por % + 15 3bet GTO Wizard con peso + 5 open RFI + 5 call BB + 5 cold-call BTN/SB = 59 spots, familias `linear-3bet`/`gto-3bet`/`open`/`call`/`cold-call`) · `RangeSpot.family` + scopes por drill · split en 3 tabs ("% y combos" · "Composición" mini-charts · "Tipo de rango" con las 4 formas: open lineal + gto-3bet mergeado(posicional)/polarizado(BB) + call/cold-call condensado) · `MiniRangeChart` (peso = relleno horizontal como el grid grande) · morfología reforzada (mergeado SUBE / condensado PAGA; 3bet: BB polar, resto merged) · **filtros `ChipFilter`** minimalistas por drill (familia "Rangos a estudiar"; "% y combos" además "Tipos de pregunta" %/Combos, misma línea que Pot Odds) · **demo por defecto reemplazado** (`sampleRanges.ts`): 30 rangos GTO reales en carpeta `Rangos GTO cash` + 4 subcarpetas (OR/3bet/BBDefend/Call cold), reusando las notaciones de los raw files via `parseHandRange`.
 
 ## Convenciones
