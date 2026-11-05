@@ -38,6 +38,8 @@ type Props = {
   rowIsPlayed: boolean;
   /** "turn" / "river"; null on the river (nothing comes after). */
   nextStreet: string | null;
+  /** D135: what the colors mean when the row filters another row's range. */
+  baseHint: string | null;
 };
 
 export function GridEditBar(p: Props) {
@@ -192,6 +194,20 @@ export function GridEditBar(p: Props) {
         Clic o arrastre: pintar · Clic derecho: quitar
         {p.target === 'row' && ' · Alt+clic: restaurar'} · Shift+clic: ver palos
       </p>
+      {p.target === 'row' && p.baseHint && (
+        <p className="mt-1 flex flex-wrap items-center gap-x-2 text-[11px] text-content-muted">
+          <span className="inline-flex items-center gap-1">
+            <span className="inline-block h-2 w-2 rounded-sm bg-slate-400/60" /> gris
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <span className="inline-block h-2 w-2 rounded-sm bg-amber-500" /> ámbar
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <span className="inline-block h-2 w-2 rounded-sm bg-rose-500" /> rojo
+          </span>
+          <span className="basis-full">{p.baseHint}</span>
+        </p>
+      )}
       {p.targetLabel && (
         <p className="mt-1 text-[11px] text-violet-700 dark:text-violet-300">
           Con «{p.targetLabel}» elegida, el pincel solo pinta sus combos, mano por mano. Para

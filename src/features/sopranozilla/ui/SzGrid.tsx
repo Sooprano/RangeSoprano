@@ -10,6 +10,8 @@ import type { HandCategory, HandNotation } from '@/types/poker';
 import type { GridCell } from './viewModel';
 
 const AMBER = 'rgb(245 158 11)';
+/** The part that re-raises all-in (D135), like a solver's raise color. */
+const ROSE = 'rgb(244 63 94)';
 const GREY = 'rgb(148 163 184 / 0.45)';
 
 const EMPTY_BG: Record<HandCategory, string> = {
@@ -29,6 +31,8 @@ type CellProps = {
   overridden: boolean;
   /** Its 4×4 suit picker is open. */
   open: boolean;
+  /** Share of the class that re-raises all-in (inside `follows`). */
+  shove: number;
 };
 
 const Cell = memo(function Cell({
@@ -40,12 +44,14 @@ const Cell = memo(function Cell({
   categoryShare,
   overridden,
   open,
+  shove,
 }: CellProps) {
   const f = Math.round(follows * 1000) / 10;
   const r = Math.round(inRange * 1000) / 10;
+  const s = Math.min(f, Math.round(shove * 1000) / 10);
   const background =
     live > 0 && r > 0
-      ? `linear-gradient(to right, ${AMBER} 0 ${f}%, ${GREY} ${f}% ${r}%, transparent ${r}% 100%)`
+      ? `linear-gradient(to right, ${ROSE} 0 ${s}%, ${AMBER} ${s}% ${f}%, ${GREY} ${f}% ${r}%, transparent ${r}% 100%)`
       : undefined;
   return (
     <button
@@ -194,6 +200,7 @@ export function SzGrid({
           categoryShare={c.categoryShare}
           overridden={c.overridden}
           open={c.hand === openHand}
+          shove={c.shove}
         />
       ))}
     </div>

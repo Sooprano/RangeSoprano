@@ -292,7 +292,8 @@ export function CategoryTable(props: Props) {
           ))}
       </table>
       <p className="mt-3 border-t border-border pt-2 text-xs text-content-muted">
-        Rango: <span className="tabular-nums text-content">{combos(model.total)}</span> combos (
+        {model.baseName ? `De ${model.baseName}` : 'Rango'}:{' '}
+        <span className="tabular-nums text-content">{combos(model.total)}</span> combos (
         {pct(model.liveCombos > 0 ? model.total / model.liveCombos : 0)} de manos vivas) · Siguen:{' '}
         <span className="tabular-nums text-content">{combos(model.follows)}</span> (
         {pct(model.total > 0 ? model.follows / model.total : 0)})

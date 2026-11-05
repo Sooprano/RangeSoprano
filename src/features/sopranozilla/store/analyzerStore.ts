@@ -339,6 +339,12 @@ type AnalyzerActions = {
   /** Effective stack behind on the active street, typed by hand (null = from the hand). */
   setEffStack: (bb: number | null) => void;
   /**
+   * Removes a bet or raise size of the active street (its re-raise row goes
+   * with a raise). The played row cannot be removed (it feeds the next street).
+   * False when nothing was removed.
+   */
+  removeRow: (rowId: string) => boolean;
+  /**
    * Saves the current range and street edits before an edit, so «Deshacer»
    * can go back to them. Calls with the same `key` in a row are one step (a
    * drag paints many cells, a slider fires many changes).
@@ -642,6 +648,49 @@ export const useAnalyzerStore = create<AnalyzerStore>()((set, get) => {
       set({
         streets: { ...streets, [street]: { ...st, startOverride: recordFromWeights(weights) } },
       });
+    },
+
+    removeRow: (rowId) => {
+      const { streets, activeStreet } = get();
+      const st = streets[activeStreet];
+      const row = st.actionRows.find((r) => r.id === rowId);
+      if (!row || (row.kind !== 'bet' && row.kind !== 'raise')) return false;
+      if (st.playedRow === rowId) return false;
+      const gone = new Set([rowId]);
+      if (row.kind === 'raise') gone.add(reraiseRowId(row.size ?? 3));
+      const drop = <T,>(m: Record<string, T>) =>
+        Object.fromEntries(Object.entries(m).filter(([k]) => !gone.has(k)));
+      const safe = (id: string) => (gone.has(id) ? st.playedRow : id);
+      set({
+        streets: {
+          ...streets,
+          [activeStreet]: {
+            ...st,
+            actionRows: st.actionRows.filter((r) => !gone.has(r.id)),
+            rows: drop(st.rows),
+            presets: drop(st.presets),
+            presetRefs: drop(st.presetRefs),
+            invertedRows: (st.invertedRows ?? []).filter((r) => !gone.has(r)),
+            selectedRow: safe(st.selectedRow),
+            recordedRow: st.recordedRow && gone.has(st.recordedRow) ? null : st.recordedRow,
+            modeMemory: {
+              hero: {
+                selectedRow: gone.has(st.modeMemory.hero.selectedRow)
+                  ? st.modeMemory.hero.playedRow
+                  : st.modeMemory.hero.selectedRow,
+                playedRow: st.modeMemory.hero.playedRow,
+              },
+              villain: {
+                selectedRow: gone.has(st.modeMemory.villain.selectedRow)
+                  ? st.modeMemory.villain.playedRow
+                  : st.modeMemory.villain.selectedRow,
+                playedRow: st.modeMemory.villain.playedRow,
+              },
+            },
+          },
+        },
+      });
+      return true;
     },
 
     setEffStack: (bb) => {

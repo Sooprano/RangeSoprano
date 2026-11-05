@@ -10,7 +10,7 @@
 // and the best EV, with the green / amber / rose rule of `tone.ts`.
 
 import { useState } from 'react';
-import { Flag, Plus, Trophy, Zap } from 'lucide-react';
+import { Flag, Plus, Trophy, X, Zap } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import type { ActionRow, AnalyzerMode } from '../engine/chain';
 import type { EvRowResult } from '../engine/ev';
@@ -46,7 +46,14 @@ type Props = {
   onEffStack: (bb: number | null) => void;
   /** Weighted combos marked as re-raising all-in over the raise of `multiple`. */
   reraiseCombos: (multiple: number) => number;
+  /** D135: how the villain's betting range answers the raise of `multiple`. */
+  raiseSplit: (multiple: number) => RaiseSplit | null;
+  /** Removes a bet / raise size (not the played one). */
+  onRemove: (id: string) => void;
 };
+
+/** Shares of the villain's betting range that fold / call / shove vs a raise. */
+export type RaiseSplit = { fold: number; call: number; allin: number };
 
 function signed(x: number, digits: number): string {
   if (!Number.isFinite(x)) return '—';
@@ -307,6 +314,17 @@ export function EvPanel(p: Props) {
                     <Trophy className="h-3 w-3" /> Mejor EV
                   </span>
                 )}
+                {(r.kind === 'bet' || r.kind === 'raise') && !played && (
+                  <button
+                    type="button"
+                    onClick={() => p.onRemove(r.id)}
+                    aria-label={`Quitar ${r.label}`}
+                    title={`Quitar ${r.label} (Ctrl+Z lo devuelve)`}
+                    className="order-last rounded p-0.5 text-content-disabled hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
                 {played ? (
                   <span className="flex items-center gap-0.5 rounded bg-sky-600/20 px-1 py-px text-[10px] font-medium text-sky-700 dark:text-sky-300">
                     <Flag className="h-3 w-3" /> Jugada
@@ -374,6 +392,16 @@ export function EvPanel(p: Props) {
                   />
                   <Metric label="EV" value={evText} tone={evToneValue} strong />
                 </div>
+              )}
+
+              {r.kind === 'raise' && r.size !== undefined && (
+                <AnswerBar
+                  split={p.raiseSplit(r.size)}
+                  onFoldCall={() => p.onSelect(r.id)}
+                  onAllIn={() => p.onSelect(reraiseRowId(r.size!))}
+                  selectedRaise={selected}
+                  selectedAllIn={p.selectedRow === reraiseRowId(r.size)}
+                />
               )}
 
               {r.kind === 'raise' && r.size !== undefined && (
@@ -593,6 +621,69 @@ function ReraiseBlock(p: {
           )}
         </label>
       )}
+    </div>
+  );
+}
+
+/**
+ * D135: how the villain's betting range answers the raise, like a solver's
+ * action bar — Foldea (gray) · Paga (amber) · All-in (rose), the same colors
+ * as the grid. Fold and call are set in the raise row (✗ = folds), the
+ * all-in in «Si te re-sube all-in»: each label selects the row that sets it.
+ */
+function AnswerBar(p: {
+  split: RaiseSplit | null;
+  onFoldCall: () => void;
+  onAllIn: () => void;
+  selectedRaise: boolean;
+  selectedAllIn: boolean;
+}) {
+  const s = p.split;
+  if (!s) return null;
+  const w = (x: number) => `${Math.max(0, Math.min(1, x)) * 100}%`;
+  const item =
+    'rounded px-1 py-px hover:bg-surface-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light';
+  return (
+    <div className="mt-2">
+      <p className="mb-1 text-[11px] text-content-muted">Ante tu raise, de lo que te apuesta:</p>
+      <div
+        className="flex h-2.5 overflow-hidden rounded-full bg-surface-hover"
+        role="img"
+        aria-label={`Foldea ${pct(s.fold, 0)}, paga ${pct(s.call, 0)}, all-in ${pct(s.allin, 0)}`}
+      >
+        <span className="h-full bg-slate-400/60" style={{ width: w(s.fold) }} />
+        <span className="h-full bg-amber-500" style={{ width: w(s.call) }} />
+        <span className="h-full bg-rose-500" style={{ width: w(s.allin) }} />
+      </div>
+      <div className="mt-1 flex flex-wrap gap-x-2 text-[11px] tabular-nums">
+        <button
+          type="button"
+          onClick={p.onFoldCall}
+          title="Se define en esta fila: lo que marques con ✗ foldea"
+          className={cn(item, p.selectedRaise && 'bg-accent/15')}
+        >
+          <span className="mr-1 inline-block h-2 w-2 rounded-full bg-slate-400/60" />
+          Foldea <b className="text-content">{pct(s.fold, 0)}</b>
+        </button>
+        <button
+          type="button"
+          onClick={p.onFoldCall}
+          title="Se define en esta fila: lo que dejes en ✓ sigue (y paga si no va all-in)"
+          className={cn(item, p.selectedRaise && 'bg-accent/15')}
+        >
+          <span className="mr-1 inline-block h-2 w-2 rounded-full bg-amber-500" />
+          Paga <b className="text-content">{pct(s.call, 0)}</b>
+        </button>
+        <button
+          type="button"
+          onClick={p.onAllIn}
+          title="Se define en «Si te re-sube all-in»"
+          className={cn(item, p.selectedAllIn && 'bg-rose-500/15')}
+        >
+          <span className="mr-1 inline-block h-2 w-2 rounded-full bg-rose-500" />
+          All-in <b className="text-content">{pct(s.allin, 0)}</b>
+        </button>
+      </div>
     </div>
   );
 }

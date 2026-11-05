@@ -28,6 +28,7 @@ import { FilterBuilder } from './FilterBuilder';
 import { useAnalyzerShortcuts } from './shortcuts';
 import {
   CALL_ROW_ID,
+  raiseRowId as raiseRowIdOf,
   reraiseRowId,
   useAnalyzerStore,
   visibleRows,
@@ -119,7 +120,7 @@ const WIDE_MIN = 1050;
 const MEDIUM_MIN = 720;
 /** Grid and calculator stay in view while scrolling the table. */
 const STICKY_COLUMN =
-  'sticky top-4 max-h-[calc(100vh-2rem)] self-start overflow-y-auto [scrollbar-gutter:stable]';
+  'sz-scroll sticky top-4 max-h-[calc(100vh-2rem)] self-start overflow-y-auto [scrollbar-gutter:stable]';
 
 function sum(w: ComboWeights): number {
   let s = 0;
@@ -196,6 +197,7 @@ export default function SopranozillaPage() {
   const clearStartOverride = useAnalyzerStore((s) => s.clearStartOverride);
   const toggleInverse = useAnalyzerStore((s) => s.toggleInverse);
   const setEffStack = useAnalyzerStore((s) => s.setEffStack);
+  const removeRow = useAnalyzerStore((s) => s.removeRow);
   const checkpoint = useAnalyzerStore((s) => s.checkpoint);
   const [io, setIo] = useState<'import' | 'export' | null>(null);
   // Painting a hand that is not in the range only filters: say how to add it.
@@ -483,6 +485,28 @@ export default function SopranozillaPage() {
   const inverted = !editingStart && (st.invertedRows?.includes(st.selectedRow) ?? false);
   const shown = (inverted ? view?.inverse[st.selectedRow] : cont) ?? cont;
   const mirror = (w: number | null) => (w === null || !inverted ? w : 100 - w);
+  // D135: a raise row filters the villain's betting range and a re-raise row
+  // what goes on vs the raise — that range is what the grid and the table show
+  // as "in range", like a solver's action tree. The all-in part gets its color.
+  const selRow = st.actionRows.find((r) => r.id === st.selectedRow);
+  const baseRowId = editingStart ? undefined : selRow?.basedOn;
+  const base = (baseRowId ? view?.rows[baseRowId] : undefined) ?? view?.start ?? null;
+  const baseName =
+    editingStart || !selRow
+      ? null
+      : selRow.kind === 'raise'
+        ? 'su rango de apuesta'
+        : selRow.kind === 'reraise'
+          ? 'lo que sigue contra tu raise'
+          : null;
+  const shoveLayer =
+    editingStart || inverted || !selRow
+      ? undefined
+      : selRow.kind === 'raise'
+        ? view?.rows[reraiseRowId(selRow.size ?? 3)]
+        : selRow.kind === 'reraise'
+          ? (cont ?? undefined)
+          : undefined;
   const eq = useEquity(hand?.hero ?? null, view?.board ?? null, view?.start ?? null);
 
   const cells = useMemo(
@@ -494,15 +518,20 @@ export default function SopranozillaPage() {
             editingStart ? undefined : editedRow,
             highlightTarget,
             gridFilters,
+            base ?? view.start,
+            shoveLayer,
           )
         : [],
-    [view, cont, shown, editedRow, highlightTarget, gridFilters, editingStart],
+    [view, cont, shown, editedRow, highlightTarget, gridFilters, editingStart, base, shoveLayer],
   );
   const model = useMemo(
-    () => (view && cont ? tableModel(view, cont, editedRow, eq.table, filters) : null),
+    () =>
+      view && cont
+        ? tableModel(view, cont, editedRow, eq.table, filters, base ?? view.start, baseName)
+        : null,
     // eq.version: the equity table is filled in place.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [view, cont, editedRow, eq.table, eq.version, filters],
+    [view, cont, editedRow, eq.table, eq.version, filters, base, baseName],
   );
   const heroEq = useMemo(
     () => (view ? equityOf(view.start, eq.table) : Number.NaN),
@@ -665,9 +694,10 @@ export default function SopranozillaPage() {
             editingStart ? undefined : editedRow,
             openHand,
             filters,
+            editingStart ? view.start : (base ?? view.start),
           )
         : null,
-    [view, cont, shown, editedRow, openHand, filters, editingStart],
+    [view, cont, shown, editedRow, openHand, filters, editingStart, base],
   );
   const hoverCells = useMemo(
     () =>
@@ -678,9 +708,10 @@ export default function SopranozillaPage() {
             editingStart ? undefined : editedRow,
             hovered,
             filters,
+            editingStart ? view.start : (base ?? view.start),
           )
         : [],
-    [view, cont, shown, editedRow, hovered, filters, editingStart],
+    [view, cont, shown, editedRow, hovered, filters, editingStart, base],
   );
   const hoverTarget = useMemo<ReadonlySet<ComboId> | null>(
     () =>
@@ -809,8 +840,13 @@ export default function SopranozillaPage() {
     }
     const cell = cells.find((c) => c.hand === h);
     if (stroke === 'paint' && cell && cell.live > 0 && cell.inRange === 0) {
+      const baseLabel = baseRowId
+        ? st.actionRows.find((r) => r.id === baseRowId)?.label
+        : undefined;
       setNotice(
-        `${h} no está en el rango del villano en el ${streetName}: aquí el pincel solo filtra lo que ya está. Para agregarla, elige «${startLabel}» arriba del grid.`,
+        baseName && baseLabel
+          ? `${h} no está en ${baseName}: márcala primero en la fila «${baseLabel}».`
+          : `${h} no está en el rango del villano en el ${streetName}: aquí el pincel solo filtra lo que ya está. Para agregarla, elige «${startLabel}» arriba del grid.`,
       );
       return;
     }
@@ -948,6 +984,21 @@ export default function SopranozillaPage() {
       reraiseCombos={(m: number) => {
         const w = view.rows[reraiseRowId(m)];
         return w ? sum(w) : 0;
+      }}
+      raiseSplit={(m: number) => {
+        // Shares of his betting range (the Call row) vs the raise of m×.
+        const betW = view.rows[CALL_ROW_ID];
+        const bet = betW ? sum(betW) : 0;
+        if (!(bet > 0)) return null;
+        const raiseW = view.rows[raiseRowIdOf(m)];
+        const shoveW = view.rows[reraiseRowId(m)];
+        const goOn = Math.min(raiseW ? sum(raiseW) : 0, bet);
+        const allin = Math.min(shoveW ? sum(shoveW) : 0, goOn);
+        return { fold: 1 - goOn / bet, call: (goOn - allin) / bet, allin: allin / bet };
+      }}
+      onRemove={(id: string) => {
+        checkpoint();
+        removeRow(id);
       }}
     />
   );
@@ -1135,7 +1186,7 @@ export default function SopranozillaPage() {
         tabs={tabs}
         onStreet={setActiveStreet}
         pot={hand.pots?.[activeStreet]}
-        rangeCombos={model.total}
+        rangeCombos={sum(view.start)}
         heroEq={heroEq}
         progress={eq.progress}
         streetEquity={streetEquity}
@@ -1283,6 +1334,13 @@ export default function SopranozillaPage() {
               }}
               inverseCombos={inverted && shown ? sum(shown) : 0}
               rowIsPlayed={st.selectedRow === st.playedRow}
+              baseHint={
+                selRow?.kind === 'raise'
+                  ? 'Gris = su rango de apuesta. De ahí, ámbar paga tu raise, rojo va all-in y lo que queda gris foldea (✗ en la tabla).'
+                  : selRow?.kind === 'reraise'
+                    ? 'Gris = lo que sigue contra tu raise. Marca lo que va all-in (rojo); el resto paga.'
+                    : null
+              }
               nextStreet={
                 activeStreet === 'flop' ? 'turn' : activeStreet === 'turn' ? 'river' : null
               }

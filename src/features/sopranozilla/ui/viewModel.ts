@@ -81,14 +81,24 @@ export type GridCell = {
   rangeCombos: number;
   /** Painted by hand (class or combo override) in the edited EV row. */
   overridden: boolean;
+  /** Σ all-in weight / live (D135): the part of `follows` that re-raises all-in. */
+  shove: number;
 };
 
+/**
+ * `base` (D135): the range the edited row filters — the villain's betting
+ * range for a raise row, what goes on vs the raise for a re-raise row. It is
+ * the "in range" part of each cell (default: the street's start range).
+ * `shove`: the part of `cont` that re-raises all-in, drawn in its own color.
+ */
 export function gridCells(
   view: StreetView,
   cont: ComboWeights,
   row: ActionRowState | undefined,
   selected: RowTarget | null,
   filters: readonly CustomFilter[],
+  base: ComboWeights = view.start,
+  shove?: ComboWeights,
 ): GridCell[] {
   const filterCtx = makeFilterContext(view.board, filters);
   const comboOverridden = new Set<HandNotation>();
@@ -103,14 +113,16 @@ export function gridCells(
     let live = 0;
     let start = 0;
     let follows = 0;
+    let shoves = 0;
     let inCategory = 0;
     for (const id of combosOfClass(hand)) {
       const cls = view.classes.get(id);
-      const w = view.start[id] ?? 0;
+      const w = base[id] ?? 0;
       if (!cls || view.liveMask[id] !== 1) continue;
       live++;
       start += w;
       follows += cont[id] ?? 0;
+      shoves += shove?.[id] ?? 0;
       if (selected && w > 0 && inRow(id, cls, selected, filters, filterCtx)) inCategory += w;
     }
     const highlighted: boolean | null = selected ? inCategory > 0 : null;
@@ -124,6 +136,7 @@ export function gridCells(
       categoryCombos: inCategory,
       rangeCombos: start,
       overridden: row ? row.classOverrides[hand] !== undefined || comboOverridden.has(hand) : false,
+      shove: live > 0 ? Math.min(shoves, follows) / live : 0,
     };
   });
 }
@@ -171,6 +184,8 @@ export type TableModel = {
   /** Σ continuation weights of the edited EV row. */
   follows: number;
   liveCombos: number;
+  /** What the table counts when it is not the whole range ("su rango de apuesta"), D135. */
+  baseName: string | null;
 };
 
 export function tableModel(
@@ -179,6 +194,8 @@ export function tableModel(
   row: ActionRowState | undefined,
   eq: EqComboTable | null,
   filters: readonly CustomFilter[],
+  base: ComboWeights = view.start,
+  baseName: string | null = null,
 ): TableModel {
   const filterCtx = makeFilterContext(view.board, filters);
   const acc = new Map<string, { w: number; eqNum: number; eqDen: number }>();
@@ -195,7 +212,7 @@ export function tableModel(
   let total = 0;
   let follows = 0;
   for (const [id, cls] of view.classes) {
-    const w = view.start[id] ?? 0;
+    const w = base[id] ?? 0;
     if (w <= 0) continue;
     total += w;
     follows += cont[id] ?? 0;
@@ -232,7 +249,7 @@ export function tableModel(
       rows: filters.map((f) => build({ kind: 'custom', id: f.id })),
     },
   ];
-  return { groups, total, follows, liveCombos: view.liveCombos };
+  return { groups, total, follows, liveCombos: view.liveCombos, baseName };
 }
 
 /** Hero equity vs a weighted set of combos from the cached table (NaN if pending). */
@@ -280,6 +297,7 @@ export function classCombos(
   row: ActionRowState | undefined,
   hand: HandNotation,
   filters: readonly CustomFilter[],
+  base: ComboWeights = view.start,
 ): ComboCell[] {
   const ctx: ResolveContext = { filters, filterCtx: makeFilterContext(view.board, filters) };
   return combosOfClass(hand).map((combo) => {
@@ -301,7 +319,7 @@ export function classCombos(
       colSuit: suitOf(lo),
       label,
       blocked,
-      inRange: blocked ? 0 : (view.start[combo] ?? 0),
+      inRange: blocked ? 0 : (base[combo] ?? 0),
       follows: blocked ? 0 : (cont[combo] ?? 0),
       override: row?.comboOverrides[combo],
       reason,
