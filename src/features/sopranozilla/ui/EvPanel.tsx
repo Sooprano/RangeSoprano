@@ -10,7 +10,7 @@
 // and the best EV, with the green / amber / rose rule of `tone.ts`.
 
 import { useState } from 'react';
-import { Flag, Plus, Trophy, X, Zap } from 'lucide-react';
+import { Flag, Plus, Star, X, Zap } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import type { ActionRow, AnalyzerMode } from '../engine/chain';
 import type { EvRowResult } from '../engine/ev';
@@ -283,6 +283,9 @@ export function EvPanel(p: Props) {
               className={cn(
                 'rounded-lg border p-2',
                 selected ? 'border-accent/60 bg-accent/10' : 'border-border',
+                // The line with the highest EV of the street (D136): it moves
+                // by itself as the ranges change.
+                best && !p.pending && 'ring-2 ring-emerald-500/70',
               )}
             >
               <div className="flex flex-wrap items-center gap-1.5">
@@ -324,7 +327,7 @@ export function EvPanel(p: Props) {
                 )}
                 {best && !p.pending && (
                   <span className="flex items-center gap-0.5 rounded bg-emerald-600/20 px-1 py-px text-[10px] font-medium text-emerald-700 dark:text-emerald-300">
-                    <Trophy className="h-3 w-3" /> Mejor EV
+                    <Star className="h-3 w-3 fill-current" /> Mejor línea
                   </span>
                 )}
                 {played ? (
@@ -584,14 +587,16 @@ function ReraiseBlock(p: {
             '…'
           ) : res.call ? (
             <b className="text-emerald-700 dark:text-emerald-300">
+              <Star className="mr-0.5 inline h-3 w-3 fill-current align-[-2px]" />
               Pagar ({signed(res.callEv, 2)} bb, mejor que foldear {res.foldEv.toFixed(2)} bb)
             </b>
           ) : (
             <b className="text-rose-700 dark:text-rose-300">
+              <Star className="mr-0.5 inline h-3 w-3 fill-current align-[-2px]" />
               Foldear ({res.foldEv.toFixed(2)} bb; pagar daría {signed(res.callEv, 2)} bb)
             </b>
           )}
-          . Ya está dentro del EV del raise.
+          . Ya está dentro del EV del raise (no es otra línea: no lo sumes aparte).
         </p>
       ) : null}
 
