@@ -1,4 +1,4 @@
-// Spins preflop lines of 55 real hands (anonymized: Hero / Rival1 / Rival2)
+// Spins preflop lines of 59 real hands (anonymized: Hero / Rival1 / Rival2)
 // from PokerStars (Spin & Go), Winamax (Expresso) and iPoker (Twister, XML),
 // checked against the user's own index of what each hand is. «—» = no folder
 // for that spot in the Regular catalog; «~» = approximate (the range of the
@@ -401,6 +401,20 @@ const EXPECTED: [string, string, number, string, string][] = [
     17.0,
     'SB limp · BB sube a 3bb · SB paga',
     'BTN=SBHU 16bb callvsRol 3bb ; BB=BBHU 16bb ROL 3bb',
+  ],
+  [
+    'winamax/3H_mnr_call_SB_4643867276368412673-10-1773869400.txt',
+    '3H',
+    15.33,
+    'SB abre a 2bb · BB paga',
+    'SB=15bb or 2.5bb ; BB=15bb call 2.5bb',
+  ],
+  [
+    'winamax/3H_mnr_call_SB_4643887406880129025-2-1773869677.txt',
+    '3H',
+    25,
+    'SB abre a 2bb · BB paga',
+    'SB=25bb or 3bb ; BB=25bb call 3bb',
   ],
 ];
 

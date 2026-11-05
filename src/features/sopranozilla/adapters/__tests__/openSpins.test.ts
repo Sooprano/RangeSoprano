@@ -4,7 +4,8 @@
 
 import { describe, expect, it } from 'vitest';
 import { parseHandHistory, type ParsedHand } from '@/utils/handHistory';
-import { needsSpinsCatalog, openParsedHand } from '../openHand';
+import { needsSpinsCatalog, openParsedHand, repickSaved } from '../openHand';
+import { loadSpinsCatalog } from '../../ranges/spinsCatalog';
 
 const files = import.meta.glob<string>('/tests/fixtures/hands/spins/**/*.{txt,xml}', {
   query: '?raw',
@@ -69,5 +70,40 @@ describe('opening a spins hand', () => {
     const hand = handOf('pokerstars/HU_limp_check_SB_255189531825.txt');
     expect(needsSpinsCatalog(hand)).toBe(true);
     expect(needsSpinsCatalog({ ...hand, currency: '€', tournament: false })).toBe(false);
+  });
+
+  it('Fish rival (D137): repicks the same hand with the FISH range and keeps the choice', async () => {
+    const result = await openParsedHand(
+      handOf('pokerstars/HU_limp_check_SB_255189531825.txt'),
+      [],
+      [],
+    );
+    if (!result.ok) throw new Error(result.error);
+    const spins = await loadSpinsCatalog();
+    const fish = repickSaved(result.saved, { rival: 'fish', spins }, [], []);
+    expect(fish?.meta?.rangeLabel).toBe('FISH HU SB / LIMP 7-10 · Fish');
+    expect(fish?.meta?.spinsRival).toBe('fish');
+    expect(fish?.range.length).toBeGreaterThan(0);
+    // Another repick (e.g. the library toggle) keeps the Fish rival.
+    expect(repickSaved(fish!, { spins }, [], [])?.meta?.rangeLabel).toBe(
+      'FISH HU SB / LIMP 7-10 · Fish',
+    );
+    // And back to Regular.
+    expect(repickSaved(fish!, { rival: 'regular', spins }, [], [])?.meta?.rangeLabel).toBe(
+      'SBHU 9bb LP · Regular',
+    );
+  });
+
+  it('Fish rival below the lowest band: no range, and says which bands there are', async () => {
+    const result = await openParsedHand(handOf('ipoker/HU_limp_check_SB_12088199780.xml'), [], [], {
+      rival: 'fish',
+    });
+    if (!result.ok) throw new Error(result.error);
+    const meta = result.saved.meta!;
+    expect(meta.rangeLabel).toBeNull();
+    expect(result.saved.range).toBe('');
+    expect(meta.rangeMissing).toMatch(
+      /^No hay rango de Fish para «SB limp · BB check» con 5\.5bb: sus tramos son (7-10 · 10-20 · 20\+|7-10 · 10\+) \(desde 7bb\)\./,
+    );
   });
 });

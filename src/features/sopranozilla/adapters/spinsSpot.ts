@@ -221,9 +221,12 @@ export function detectSpinsLine(
     text = `${F} ${shove ? 'va all-in' : `abre ${sizeText(a0)}`}${a1 ? ` · ${O} paga` : ''}`;
   } else if (pattern === 'raise raise' || pattern === 'raise raise call') {
     const shove = a0.kind === 'raise' && a0.allin;
+    // Calling the 3-bet: FISH has that range (D137); Regular falls back to the open.
     firstWants = shove
       ? [want('shove', 'AI')]
-      : [want('open', sizeOf(a0), pattern === 'raise raise call')];
+      : pattern === 'raise raise call'
+        ? [want('call-3bet', sizeOf(a1!)), want('open', sizeOf(a0), true)]
+        : [want('open', sizeOf(a0))];
     otherWants = [want('3bet', sizeOf(a1!))];
     text = `${F} abre ${sizeText(a0)} · ${O} 3-bet ${sizeText(a1)}${a2 ? ` · ${F} paga` : ''}`;
   } else {

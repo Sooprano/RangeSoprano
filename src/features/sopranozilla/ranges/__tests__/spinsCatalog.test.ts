@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { parseRangeText } from '../../engine/rangeText';
 import data from '../spins-regular.json';
-import { buildSpinsCatalog, parseSpinsName } from '../spinsCatalog';
+import fishData from '../spins-fish.json';
+import {
+  bandText,
+  buildSpinsCatalog,
+  inBand,
+  parseFishName,
+  parseSpinsName,
+} from '../spinsCatalog';
 
 const catalog = buildSpinsCatalog(data);
 const byName = (group: string, name: string) =>
@@ -96,5 +103,92 @@ describe('spins Regular catalog', () => {
     const { weights } = parseRangeText(byName('BU 3H', 'BU OR 25bb').range);
     const k8o = parseRangeText('Kh8d').weights.findIndex((w) => w > 0);
     expect(weights[k8o]).toBeCloseTo(0.53095, 5);
+  });
+});
+
+describe('spins FISH catalog (D137)', () => {
+  const fishCatalog = buildSpinsCatalog(fishData, 'fish');
+  const fishRange = (group: string, name: string) =>
+    fishCatalog.find((r) => r.group === group && r.name === name)!;
+
+  it('every bundled FISH range parses: 26 of the export + 7 for the BU + the SB vs BU call', () => {
+    const all = fishData.groups.flatMap((g) => g.ranges.map((r) => `${g.name}/${r.name}`));
+    expect(fishCatalog.map((r) => r.id)).toEqual(all);
+    expect(fishCatalog).toHaveLength(35);
+    expect(fishCatalog.every((r) => r.rival === 'fish')).toBe(true);
+  });
+
+  it('reads stack bands and size bands from the names', () => {
+    expect(parseFishName('FISH HU SB', 'MNR 16-20')).toMatchObject({
+      format: 'HU',
+      position: 'BTN',
+      action: 'open',
+      band: { min: 16, max: 20 },
+      sizeBand: { min: 0, max: 2.25 },
+    });
+    expect(parseFishName('FISH 3wSBvBB', '3x 10+')).toMatchObject({
+      position: 'SB',
+      vs: 'BB',
+      band: { min: 10, max: null },
+      sizeBand: { min: 2.25, max: 3.5 },
+    });
+    expect(parseFishName('FISH HU SB', 'CALL vs 3Bet NAI')).toMatchObject({
+      action: 'call-3bet',
+      band: { min: 0, max: null },
+    });
+    expect(parseFishName('FISH 3wBBvSB', 'CALL vs 2,5-3X 16+')).toMatchObject({
+      action: 'call-open',
+      band: { min: 16, max: null },
+      sizeBand: { min: 2.25, max: 3.5 },
+    });
+    expect(parseFishName('FISH 3w SBvBU', 'CALL vs OR 18+')).toMatchObject({
+      format: '3H',
+      position: 'SB',
+      vs: 'BTN',
+      action: 'call-open',
+      band: { min: 18, max: null },
+    });
+    expect(parseFishName('FISH 3wBBvSB', 'CHECK vs LIMP 10+')).toMatchObject({ action: 'check' });
+    expect(parseFishName('FISH HU BB', 'ISO v LIMP 10+')).toMatchObject({ action: 'rol' });
+    expect(parseFishName('FISH 3wSBvBB', 'OS 10-16')).toMatchObject({
+      action: 'shove',
+      size: 'AI',
+    });
+    expect(parseFishName('FISH HU SB', 'RAISE 20+')).toBeNull();
+    expect(parseFishName('BU 3H', 'MNR 20+')).toBeNull();
+  });
+
+  it('the lower bound is in the band: 20bb → 20+, 19.99bb → 16-20', () => {
+    expect(inBand({ min: 20, max: null }, 20)).toBe(true);
+    expect(inBand({ min: 16, max: 20 }, 20)).toBe(false);
+    expect(inBand({ min: 16, max: 20 }, 19.99)).toBe(true);
+    expect(inBand({ min: 10, max: 16 }, 9.99)).toBe(false);
+    expect(bandText({ min: 16, max: 20 })).toBe('16-20');
+    expect(bandText({ min: 20, max: null })).toBe('20+');
+  });
+
+  it('the 3H BU has the heads-up button ranges, with LIMP 20+ doubled (capped at 100 %)', () => {
+    const names = (g: string) => fishCatalog.filter((r) => r.group === g).map((r) => r.name);
+    expect(names('FISH 3H BU')).toEqual(names('FISH HU SB'));
+    expect(fishRange('FISH 3H BU', 'MNR 20+').range).toBe(fishRange('FISH HU SB', 'MNR 20+').range);
+    const hu = parseRangeText(fishRange('FISH HU SB', 'LIMP 20+').range).weights;
+    const bu = parseRangeText(fishRange('FISH 3H BU', 'LIMP 20+').range).weights;
+    for (let i = 0; i < hu.length; i++) {
+      expect(bu[i] ?? 0, String(i)).toBeCloseTo(Math.min(1, 2 * (hu[i] ?? 0)), 6);
+    }
+    expect(fishRange('FISH 3H BU', 'LIMP 20+').combos / 1326).toBeCloseTo(0.501, 3);
+  });
+
+  it('every FISH range reads in the app with the combos the script counted', () => {
+    for (const r of fishCatalog) {
+      const { weights, errors } = parseRangeText(r.range);
+      expect(errors, r.id).toEqual([]);
+      let sum = 0;
+      for (let i = 0; i < weights.length; i++) sum += weights[i] ?? 0;
+      expect(sum, r.id).toBeCloseTo(r.combos, 2);
+    }
+    // The SB vs BU calls the user sent by hand.
+    expect(fishRange('FISH 3w SBvBU', 'CALL vs OR 18+').combos).toBeCloseTo(560.9, 1);
+    expect(fishRange('FISH 3w SBvBU', 'CALL vs OR 14-18').combos).toBeCloseTo(431.7, 1);
   });
 });

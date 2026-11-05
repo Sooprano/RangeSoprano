@@ -14,6 +14,11 @@
 //   BBHU 25bb ROL 6.5bb · ROL AI · X    HU BB raises over the limp / shoves / checks
 //   BBHU 25bb 3B 6.5bb · 3B AI · CALL   HU BB 3-bets / 3-bet shoves / calls the open
 // MR = min-raise (2bb). "RIK" is a typo of "ROL" in one name (confirmed).
+//
+// FISH ranges (D137, `spins-fish.json`): the user's ranges for a recreational
+// rival. Their names carry a stack BAND, not a stack ("MNR 16-20", "LIMP 20+";
+// the lower bound is in the band: 20bb → "20+") and some a size band
+// ("MNR" ≤ 2.25bb, "3x" 2.25–3.5bb). See `parseFishName`.
 
 import type { Position } from '@/types/poker';
 
@@ -28,7 +33,16 @@ export type SpinsAction =
   | 'call-open' // calls an open raise
   | 'call-rol' // limped, then calls a raise over the limp
   | 'rol' // raise over a limp (ROL)
-  | '3bet'; // 3-bet over an open
+  | '3bet' // 3-bet over an open
+  | 'call-3bet'; // opened, then calls a 3-bet that is not all-in (FISH only)
+
+/** Kind of rival the ranges are for: GTO "Regular" or recreational "FISH". */
+export type SpinsRival = 'regular' | 'fish';
+
+export const RIVAL_LABEL: Record<SpinsRival, string> = { regular: 'Regular', fish: 'Fish' };
+
+/** Effective stacks a FISH range is for: min ≤ eff < max (max null = and up). */
+export type StackBand = { min: number; max: number | null };
 
 export type SpinsRange = {
   /** Unique: "<folder>/<name>". */
@@ -44,6 +58,11 @@ export type SpinsRange = {
   stackBb: number;
   /** Raise size in bb (open, ROL, 3-bet, or the raise that was called); 'AI' = all in. */
   size: number | 'AI' | null;
+  rival: SpinsRival;
+  /** FISH: the stacks the range is for (`stackBb` is its lower bound). Regular: null. */
+  band: StackBand | null;
+  /** FISH: sizes the range takes, min < size ≤ max (bb). Regular: null (closest size). */
+  sizeBand: { min: number; max: number } | null;
   /** Range text (bracket notation, exact combos). */
   range: string;
   combos: number;
@@ -133,22 +152,97 @@ export function parseSpinsName(
   }
 }
 
+type Meta = Pick<
+  SpinsRange,
+  'format' | 'position' | 'vs' | 'action' | 'stackBb' | 'size' | 'band' | 'sizeBand'
+>;
+
+/**
+ * FISH folder → table format and villain seat. "FISH 3H BU" and
+ * "FISH 3w SBvBU" are added by the build script.
+ */
+const FISH_FOLDERS: Record<string, Omit<Folder, 'prefix'>> = {
+  'fish hu sb': { format: 'HU', position: 'BTN', vs: 'BB' },
+  'fish hu bb': { format: 'HU', position: 'BB', vs: 'BTN' },
+  'fish 3w bbvbu': { format: '3H', position: 'BB', vs: 'BTN' },
+  'fish 3wsbvbb': { format: '3H', position: 'SB', vs: 'BB' },
+  'fish 3wbbvsb': { format: '3H', position: 'BB', vs: 'SB' },
+  'fish 3h bu': { format: '3H', position: 'BTN', vs: null },
+  'fish 3w sbvbu': { format: '3H', position: 'SB', vs: 'BTN' },
+};
+
+const MNR = { min: 0, max: 2.25 };
+const THREE_X = { min: 2.25, max: 3.5 };
+const ANY = { min: 0, max: Number.POSITIVE_INFINITY };
+
+/** FISH actions, by the name without its stack band. */
+const FISH_ACTIONS: Record<string, Pick<SpinsRange, 'action' | 'size' | 'sizeBand'>> = {
+  mnr: { action: 'open', size: 2, sizeBand: MNR },
+  '3x': { action: 'open', size: 3, sizeBand: THREE_X },
+  limp: { action: 'limp', size: null, sizeBand: null },
+  os: { action: 'shove', size: 'AI', sizeBand: null },
+  'x vs limp': { action: 'check', size: null, sizeBand: null },
+  'check vs limp': { action: 'check', size: null, sizeBand: null },
+  'iso v limp': { action: 'rol', size: null, sizeBand: ANY },
+  'call vs mnr': { action: 'call-open', size: 2, sizeBand: MNR },
+  'call vs 2,5-3x': { action: 'call-open', size: 3, sizeBand: THREE_X },
+  'call vs 3bet nai': { action: 'call-3bet', size: null, sizeBand: ANY },
+  // Calls an open of any size that is not all-in.
+  'call vs or': { action: 'call-open', size: null, sizeBand: ANY },
+};
+
+/**
+ * What a FISH range is: "MNR 16-20" · "LIMP 20+" · "CALL vs 3Bet NAI" (no
+ * band = any stack). Null when the folder or the name is unknown.
+ */
+export function parseFishName(group: string, name: string): Meta | null {
+  const folder = FISH_FOLDERS[group.trim().toLowerCase()];
+  if (!folder) return null;
+  let rest = name.trim().toLowerCase().replace(/\s+/g, ' ');
+  let band: StackBand = { min: 0, max: null };
+  const m = /\s(\d+(?:\.\d+)?)(?:\+|-(\d+(?:\.\d+)?))$/.exec(rest);
+  if (m) {
+    band = { min: Number(m[1]), max: m[2] !== undefined ? Number(m[2]) : null };
+    rest = rest.slice(0, m.index);
+  }
+  const act = FISH_ACTIONS[rest];
+  if (!act) return null;
+  return { ...folder, ...act, stackBb: band.min, band };
+}
+
+/** Does a FISH range take this effective stack? */
+export function inBand(band: StackBand, eff: number): boolean {
+  return eff >= band.min - 1e-9 && (band.max === null || eff < band.max - 1e-9);
+}
+
+/** "16-20" · "20+" · "todos" (a FISH band, as the user names it). */
+export function bandText(band: StackBand): string {
+  if (band.max === null) return band.min > 0 ? `${band.min}+` : 'todos';
+  return `${band.min}-${band.max}`;
+}
+
 type RawFile = {
   groups: { name: string; ranges: { name: string; range: string; combos: number }[] }[];
 };
 
 /** Bundled data → typed catalog (ranges whose name does not parse are left out). */
-export function buildSpinsCatalog(data: RawFile): SpinsRange[] {
+export function buildSpinsCatalog(data: RawFile, rival: SpinsRival = 'regular'): SpinsRange[] {
   const out: SpinsRange[] = [];
   for (const g of data.groups) {
     for (const r of g.ranges) {
-      const meta = parseSpinsName(g.name, r.name);
+      let meta: Meta | null;
+      if (rival === 'fish') meta = parseFishName(g.name, r.name);
+      else {
+        const m = parseSpinsName(g.name, r.name);
+        meta = m && { ...m, band: null, sizeBand: null };
+      }
       if (!meta) continue;
       out.push({
         id: `${g.name}/${r.name}`,
         group: g.name,
         name: r.name,
         ...meta,
+        rival,
         range: r.range,
         combos: r.combos,
       });
@@ -159,8 +253,22 @@ export function buildSpinsCatalog(data: RawFile): SpinsRange[] {
 
 let cache: Promise<SpinsRange[]> | null = null;
 
-/** The Regular spins catalog, loaded on first use (its own chunk, ~480 KB). */
-export function loadSpinsRegular(): Promise<SpinsRange[]> {
-  cache ??= import('./spins-regular.json').then((m) => buildSpinsCatalog(m.default as RawFile));
+/**
+ * Every spins range, Regular and FISH, loaded on first use (their own chunks,
+ * ~480 KB + 16 KB). The picker filters by rival.
+ */
+export function loadSpinsCatalog(): Promise<SpinsRange[]> {
+  cache ??= Promise.all([import('./spins-regular.json'), import('./spins-fish.json')]).then(
+    ([reg, fish]) => [
+      ...buildSpinsCatalog(reg.default as RawFile),
+      ...buildSpinsCatalog(fish.default as RawFile, 'fish'),
+    ],
+  );
   return cache;
+}
+
+/** Label of a spins range: "BBHU 13bb ROL 4.5bb · Regular" · "FISH HU SB / LIMP 20+ · Fish". */
+export function spinsRangeLabel(r: SpinsRange, approx: boolean): string {
+  const name = r.rival === 'fish' ? `${r.group} / ${r.name}` : r.name;
+  return `${name} · ${RIVAL_LABEL[r.rival]}${approx ? ' (aproximado)' : ''}`;
 }

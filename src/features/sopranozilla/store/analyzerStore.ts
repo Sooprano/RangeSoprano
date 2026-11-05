@@ -7,6 +7,7 @@ import { create } from 'zustand';
 import type { HandNotation } from '@/types/poker';
 import type { OpponentOption } from '../adapters/fromParsedHand';
 import type { TableInfo } from '../adapters/tableInfo';
+import type { SpinsRival } from '../ranges/spinsCatalog';
 import type { CategoryId } from '../engine/categories';
 import {
   availableStreets,
@@ -248,8 +249,10 @@ export type HandMeta = {
   villainName?: string | undefined;
   /** Real hands only: every opponent who saw the flop (D96). */
   opponents?: OpponentOption[] | undefined;
-  /** Spins hands: the Regular range in use (`SpinsRange.id`), D128. */
+  /** Spins hands: the range in use (`SpinsRange.id`), D128. */
   spinsRangeId?: string | undefined;
+  /** Spins hands: the kind of rival the villain's range is for (D137). Default Regular. */
+  spinsRival?: SpinsRival | undefined;
 };
 
 /** A table row: a category or a saved custom filter. */

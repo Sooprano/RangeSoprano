@@ -70,7 +70,17 @@ const zSpot = z
 
 const zSpinsWant = z
   .object({
-    action: z.enum(['open', 'shove', 'limp', 'check', 'call-open', 'call-rol', 'rol', '3bet']),
+    action: z.enum([
+      'open',
+      'shove',
+      'limp',
+      'check',
+      'call-open',
+      'call-rol',
+      'rol',
+      '3bet',
+      'call-3bet',
+    ]),
     size: z.union([z.number().positive().max(1000), z.literal('AI')]).nullable(),
     approx: z.boolean(),
   })
@@ -129,6 +139,7 @@ const zSavedHand = z
         villainName: z.string().max(60).optional(),
         opponents: z.array(zOpponent).max(9).optional(),
         spinsRangeId: z.string().max(200).optional(),
+        spinsRival: z.enum(['regular', 'fish']).optional(),
       })
       .strict()
       .nullable(),

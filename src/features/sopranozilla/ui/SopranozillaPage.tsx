@@ -47,7 +47,7 @@ import {
 import type { OpenInSopranozillaState } from './OpenInSopranozillaButton';
 import { RangeLibraryDialog } from './RangeLibraryDialog';
 import { SpinsBar } from './SpinsBar';
-import { loadSpinsRegular, type SpinsRange } from '../ranges/spinsCatalog';
+import { loadSpinsCatalog, type SpinsRange } from '../ranges/spinsCatalog';
 import { selectStreetView, useStreetView } from '../store/selectors';
 import {
   bluffThreshold,
@@ -313,13 +313,13 @@ export default function SopranozillaPage() {
   // Library searched first for the villain's range (D97), remembered.
   const [rangeSource, setRangeSource] = useState<RangeSource>(readRangeSource);
   const [libraryOpen, setLibraryOpen] = useState(false);
-  // Spins hands (D128): the Regular catalog, loaded only when a spins hand is open.
+  // Spins hands (D128, D137): the Regular + Fish catalog, loaded only when a spins hand is open.
   const [spinsCatalog, setSpinsCatalog] = useState<SpinsRange[] | null>(null);
   const hasSpins = useAnalyzerStore((s) => Boolean(s.meta?.opponents?.some((o) => o.spins)));
   useEffect(() => {
     if (!hasSpins || spinsCatalog) return;
     let alive = true;
-    void loadSpinsRegular().then((c) => {
+    void loadSpinsCatalog().then((c) => {
       if (alive) setSpinsCatalog(c);
     });
     return () => {
@@ -465,6 +465,7 @@ export default function SopranozillaPage() {
       rangeLabel: spinsRangeLabel(r, false),
       rangeMissing: null,
       spinsRangeId: r.id,
+      spinsRival: r.rival,
     });
     writeLastHand(saved);
     loadSaved(saved);
@@ -1116,7 +1117,9 @@ export default function SopranozillaPage() {
               info={villainSpins}
               catalog={spinsCatalog}
               currentId={meta.spinsRangeId}
+              rival={meta.spinsRival ?? 'regular'}
               onPick={applySpinsRange}
+              onRival={(rival) => repick({ rival })}
             />
           )}
           {meta.table && (

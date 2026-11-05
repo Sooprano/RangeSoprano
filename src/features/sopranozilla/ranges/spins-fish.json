@@ -1,0 +1,216 @@
+{
+ "source": "spins FISH ranges",
+ "ranges": 35,
+ "groups": [
+  {
+   "name": "FISH HU SB",
+   "ranges": [
+    {
+     "name": "MNR 20+",
+     "range": "[90]K9s,K8s,K7s,Q9s,Q8s,Q7s,J9s,J8s,J7s,T9s,T8s,T7s,98s,97s,87s,KJo,KTo,QJo,QTo,JTo[/90],[85]AA,KK,QQ,JJ,AKs,AQs,AJs,KQs,KJs,KTs,QJs,QTs,JTs,KQo[/85],[75]TT,ATs,A9s,A8s,A7s,A6s,A5s,A4s,A3s,A2s,K6s,K5s,K4s,K3s,K2s,Q6s,J6s,T6s,96s,86s,76s,AKo,AQo,AJo,ATo,A9o,A6o,A5o,A4o,A3o,A2o,K9o,K8o,Q9o,J9o,T9o[/75],[50]99,Q5s,Q4s,Q3s,Q2s,J5s,J4s,J3s,T5s,T4s,95s,94s,85s,84s,75s,74s,65s,64s,54s,A8o,A7o,K7o,Q8o,Q7o,J8o,J7o,T8o,T7o,98o,97o,87o[/50],[25]88,77,43s[/25],[10]66,55,53s[/10],[5]K6o,Q6o,J6o,T6o,96o,86o,76o,65o[/5]",
+     "combos": 490.1
+    },
+    {
+     "name": "MNR 16-20",
+     "range": "[85]AA,KK,QQ,JJ[/85],[75]TT,AKs,AQs,AJs,KQs,KJs,KTs,K9s,K8s,K7s,K6s,K5s,K4s,K3s,K2s,QJs,QTs,Q9s,Q8s,Q7s,Q6s,JTs,J9s,J8s,J7s,J6s,T9s,T8s,T7s,T6s,98s,97s,96s,87s,86s,76s,KQo,KJo,KTo,K9o,K8o,QJo,QTo,Q9o,JTo,J9o,T9o[/75],[50]ATs,A9s,A8s,A7s,A6s,A5s,A4s,A3s,A2s,Q5s,Q4s,Q3s,Q2s,J5s,J4s,J3s,T5s,T4s,95s,94s,85s,84s,75s,74s,65s,64s,54s,AKo,AQo,AJo,A8o,A7o,A6o,A5o,A4o,A3o,A2o,98o[/50],[25]99,ATo,A9o,K7o,Q8o,Q7o,J8o,J7o,T8o,T7o,97o,87o[/25],[10]88,77[/10]",
+     "combos": 384.6
+    },
+    {
+     "name": "MNR 10-16",
+     "range": "[85]AA,KK,QQ,JJ[/85],[75]TT,AKs,AQs,AJs,K9s,K8s,K7s,K6s,K5s,K4s,K3s,K2s,Q9s,Q8s,Q7s,Q6s,J9s,J8s,J7s,J6s,T9s,T8s,T7s,T6s,98s,97s,96s,87s,86s,76s,KTo,QJo,QTo,JTo[/75],[50]KQs,KJs,QJs,AKo,AQo,K9o,K8o,Q9o,J9o,T9o[/50],[25]99,ATs,A9s,KTs,QTs,Q5s,Q4s,Q3s,Q2s,JTs,J5s,J4s,J3s,T5s,T4s,95s,94s,85s,84s,75s,74s,65s,64s,54s,AJo,KQo,KJo,K7o,Q8o,Q7o,J8o,J7o,T8o,T7o,98o,97o,87o[/25],[10]A8s,A7s,A6s,ATo,A9o,A8o,A7o[/10]",
+     "combos": 265.4
+    },
+    {
+     "name": "CALL vs 3Bet NAI",
+     "range": "[90]A9s[/90],[75]A8s,A7s,A6s,KTs,K9s,K8s,K7s,K6s,QTs,Q9s,Q8s,Q7s,Q6s,JTs,J9s,J8s,J7s,J6s,T9s[/75],[50]T8s,T7s,T6s,98s,97s,96s,87s,86s,76s,75s,65s,A8o,A7o,KJo,KTo,K9o,QJo,QTo,JTo,T9o,98o[/50],[25]A5s,A4s,A3s,A2s,K5s,K4s,K3s,Q5s,J5s,T5s,95s,85s,74s,64s,54s,53s,43s,Q9o,J9o[/25],[5]AA,KK,QQ,JJ,TT,AKs,AQs,AJs,ATs,KQs,KJs,QJs,AKo,AQo,AJo,ATo,KQo[/5]",
+     "combos": 171.5
+    },
+    {
+     "name": "LIMP 20+",
+     "range": "[75]T3s,T2s,93s,92s,83s,82s,73s,72s,63s,62s,52s,42s,32s,K6o,K5o,Q6o,Q5o,J6o,T6o,96o,86o,76o,65o,54o[/75],[50]Q5s,Q4s,Q3s,Q2s,J5s,J4s,J3s,J2s,T5s,T4s,95s,94s,85s,84s,75s,74s,65s,64s,54s,53s,43s,K7o,K4o,K3o,K2o,Q8o,Q7o,J8o,J7o,T8o,T7o,98o,97o,95o,87o,85o,75o,64o,53o,43o[/50],[25]A6s,A5s,A4s,A3s,A2s,K6s,K5s,K4s,K3s,K2s,Q6s,J6s,T6s,96s,86s,76s,A8o,A7o,A6o,A5o,A4o,A3o,A2o,K9o,K8o,Q9o,J9o,T9o[/25],[10]AA,KK,QQ,JJ,TT,99,88,77,66,55,44,33,22,AKs,AQs,AJs,ATs,A9s,A8s,A7s,KQs,KJs,KTs,K9s,K8s,K7s,QJs,QTs,Q9s,Q8s,Q7s,JTs,J9s,J8s,J7s,T9s,T8s,T7s,98s,97s,87s,AKo,AQo,AJo,ATo,A9o,KQo,KJo,KTo,QJo,QTo,JTo[/10]",
+     "combos": 378.2
+    },
+    {
+     "name": "LIMP 10-20",
+     "range": "[75]T3s,T2s,93s,92s,83s,82s,73s,72s,63s,62s,53s,52s,43s,42s,32s,K7o,K6o,Q8o,Q7o,Q6o,J8o,J7o,J6o,T8o,T7o,T6o,97o,96o,87o,86o,76o,65o[/75],[50]A5s,A4s,A3s,A2s,Q5s,Q4s,Q3s,Q2s,J5s,J4s,J3s,J2s,T5s,T4s,95s,94s,85s,84s,75s,74s,65s,64s,54s,A6o,A5o,A4o,A3o,A2o,K5o,Q5o,98o,54o[/50],[25]AKs,AQs,AJs,ATs,A9s,A8s,A7s,A6s,KQs,KJs,KTs,K9s,K8s,K7s,K6s,K5s,K4s,K3s,K2s,QJs,QTs,Q9s,Q8s,Q7s,Q6s,JTs,J9s,J8s,J7s,J6s,T9s,T8s,T7s,T6s,98s,97s,96s,87s,86s,76s,AKo,AQo,AJo,ATo,A9o,A8o,A7o,KQo,KJo,KTo,K9o,K8o,K4o,K3o,K2o,QJo,QTo,Q9o,JTo,J9o,T9o,95o,85o,75o,64o,53o,43o[/25],[10]AA,KK,QQ,JJ,TT,99,88,77,66[/10]",
+     "combos": 424.4
+    },
+    {
+     "name": "LIMP 7-10",
+     "range": "[75]T3s,T2s,93s,92s,83s,73s,63s,53s,43s,K7o,K6o,Q8o,Q7o,Q6o,J8o,J7o,J6o,T8o,T7o,T6o,97o,96o,87o,86o,76o[/75],[50]Q5s,Q4s,Q3s,Q2s,J5s,J4s,J3s,J2s,T5s,T4s,95s,94s,85s,84s,75s,74s,65s,64s,54s,K5o,98o[/50],[25]AKs,AQs,AJs,ATs,A9s,A8s,A7s,KQs,KJs,KTs,K9s,K8s,K7s,K6s,K5s,K4s,K3s,K2s,QJs,QTs,Q9s,Q8s,Q7s,Q6s,JTs,J9s,J8s,J7s,J6s,T9s,T8s,T7s,T6s,98s,97s,96s,87s,86s,76s,AKo,AQo,AJo,KQo,KJo,KTo,K9o,K8o,QJo,QTo,Q9o,JTo,J9o,T9o[/25],[10]AA,KK,QQ,JJ,TT[/10]",
+     "combos": 305
+    }
+   ]
+  },
+  {
+   "name": "FISH HU BB",
+   "ranges": [
+    {
+     "name": "CALL vs MNR 20+",
+     "range": "K7s,K6s,K5s,K4s,K3s,K2s,Q8s,Q7s,Q6s,Q5s,Q4s,Q3s,Q2s,J8s,J7s,J6s,J5s,J4s,J3s,J2s,T8s,T7s,T6s,T5s,T4s,T3s,T2s,98s,97s,96s,95s,94s,93s,87s,86s,85s,84s,83s,76s,75s,74s,73s,65s,64s,63s,62s,54s,53s,52s,43s,42s,32s,K9o,K8o,K7o,K6o,K5o,QTo,Q9o,Q8o,Q7o,JTo,J9o,J8o,J7o,T9o,T8o,T7o,98o,97o,96o,87o,86o,76o,75o,65o,[75]Q9s,J9s,T9s,KTo[/75],[50]KQs,KJs,KTs,K9s,K8s,QJs,QTs,JTs,92s,82s,72s,KJo,K4o,QJo,Q6o,Q5o,J6o,J5o,T6o,T5o,95o,85o[/50],[25]A6s,A5s,A4s,A3s,A2s,A6o,A5o,A4o,A3o,A2o,KQo[/25]",
+     "combos": 625
+    },
+    {
+     "name": "CALL vs MNR 16-20",
+     "range": "K7s,K6s,K5s,K4s,K3s,K2s,Q7s,Q6s,Q5s,Q4s,Q3s,Q2s,J7s,J6s,J5s,J4s,J3s,T6s,T5s,T4s,T3s,96s,95s,94s,93s,85s,84s,83s,74s,73s,64s,63s,62s,54s,53s,52s,43s,42s,32s,K9o,K8o,K7o,K6o,QTo,Q9o,Q8o,Q7o,JTo,J9o,J8o,J7o,T9o,T8o,T7o,98o,97o,87o,76o,65o,[75]Q8s,J8s,T7s,86s,75s,KTo[/75],[50]KJs,KTs,K9s,K8s,QJs,QTs,Q9s,JTs,J9s,J2s,T9s,T8s,T2s,98s,97s,92s,87s,82s,76s,72s,65s,KJo,K5o,K4o,QJo,Q6o,Q5o,J6o,J5o,T6o,T5o,96o,95o,86o,85o,75o[/50],[25]A5s,A4s,A3s,A2s,KQs,A5o,A4o,A3o,A2o,KQo[/25]",
+     "combos": 572
+    },
+    {
+     "name": "CALL vs MNR 10-16",
+     "range": "K7s,K6s,K5s,K4s,K3s,K2s,Q7s,Q6s,Q5s,Q4s,Q3s,Q2s,J7s,J6s,J5s,J4s,J3s,T6s,T5s,T4s,T3s,96s,95s,94s,93s,85s,84s,83s,74s,73s,64s,63s,62s,54s,53s,52s,43s,42s,32s,K9o,K8o,K7o,K6o,QTo,Q9o,Q8o,Q7o,JTo,J9o,J8o,J7o,T9o,T8o,T7o,98o,97o,87o,76o,[75]Q8s,J8s,T7s,86s,75s,KTo[/75],[50]K9s,K8s,Q9s,J9s,T9s,T8s,98s,97s,87s,76s,65s,QJo[/50],[25]KJs,KTs,QJs,QTs,JTs,J2s,T2s,92s,82s,72s,KJo,K5o,K4o,Q6o,Q5o,J6o,J5o,T6o,T5o,96o,95o,86o,85o,75o,65o[/25]",
+     "combos": 491
+    },
+    {
+     "name": "X vs LIMP 10+",
+     "range": "[90]K5s,K4s,K3s,K2s,Q5s,Q4s,Q3s,Q2s,J5s,J4s,J3s,J2s,T5s,T4s,T3s,T2s,95s,94s,93s,92s,85s,84s,83s,82s,75s,74s,73s,72s,65s,64s,63s,62s,54s,53s,52s,43s,42s,32s,K8o,K7o,K6o,K5o,K4o,K3o,K2o,Q8o,Q7o,Q6o,Q5o,Q4o,Q3o,Q2o,J8o,J7o,J6o,J5o,J4o,J3o,J2o,T8o,T7o,T6o,T5o,T4o,T3o,T2o,98o,97o,96o,95o,94o,93o,92o,87o,86o,85o,84o,83o,82o,76o,75o,74o,73o,72o,65o,64o,63o,62o,54o,53o,52o,43o,42o,32o[/90],[50]A3s,A2s,K9s,K8s,K7s,K6s,Q9s,Q8s,Q7s,Q6s,J9s,J8s,J7s,J6s,T8s,T7s,T6s,97s,96s,87s,86s,76s,A3o,A2o,KTo,K9o,QTo,Q9o,J9o,T9o[/50],[25]A5s,A4s,KQs,KJs,KTs,QJs,QTs,JTs,T9s,98s,A5o,A4o,KQo,KJo,QJo,JTo[/25]",
+     "combos": 861.6
+    },
+    {
+     "name": "X vs LIMP 7-10",
+     "range": "[90]K5s,K4s,K3s,K2s,Q5s,Q4s,Q3s,Q2s,J5s,J4s,J3s,J2s,T5s,T4s,T3s,T2s,95s,94s,93s,92s,85s,84s,83s,82s,75s,74s,73s,72s,65s,64s,63s,62s,54s,53s,52s,43s,42s,32s,K8o,K7o,K6o,K5o,K4o,K3o,K2o,Q8o,Q7o,Q6o,Q5o,Q4o,Q3o,Q2o,J8o,J7o,J6o,J5o,J4o,J3o,J2o,T8o,T7o,T6o,T5o,T4o,T3o,T2o,98o,97o,96o,95o,94o,93o,92o,87o,86o,85o,84o,83o,82o,76o,75o,74o,73o,72o,65o,64o,63o,62o,54o,53o,52o,43o,42o,32o[/90],[50]K8s,K7s,K6s,Q8s,Q7s,Q6s,J8s,J7s,J6s,T8s,T7s,T6s,97s,96s,87s,86s,76s,Q9o,J9o[/50],[25]K9s,Q9s,J9s,T9s,98s,KTo,K9o,QTo,JTo,T9o[/25]",
+     "combos": 807.6
+    },
+    {
+     "name": "ISO v LIMP 10+",
+     "range": "[75]AA,KK,QQ,JJ,TT,AKs,AQs,AJs,ATs,A9s,A8s,KQs,KJs,KTs,QJs,QTs,JTs,T9s,98s,AKo,AQo,AJo,KQo,KJo,QJo,JTo[/75],[50]99,88,K9s,K8s,K7s,Q9s,Q8s,Q7s,J9s,J8s,J7s,T8s,T7s,97s,87s,ATo,KTo,QTo[/50],[25]A7s,A6s,A5s,A4s,A3s,A2s,K6s,Q6s,J6s,T6s,96s,86s,76s,K9o,Q9o,J9o,T9o[/25],[10]K5s,K4s,K3s,K2s,Q5s,Q4s,Q3s,Q2s,J5s,J4s,J3s,J2s,T5s,T4s,T3s,T2s,95s,94s,93s,92s,85s,84s,83s,82s,75s,74s,73s,72s,65s,64s,63s,62s,54s,53s,52s,43s,42s,32s,A9o,A8o,A7o,A6o,A5o,A4o,A3o,A2o,K8o,K7o,K6o,K5o,K4o,K3o,K2o,Q8o,Q7o,Q6o,Q5o,J8o,J7o,J6o,J5o,T8o,T7o,T6o,T5o,98o,97o,96o,95o,87o,86o,85o,76o,75o,65o,64o,54o,43o[/10]",
+     "combos": 265.7
+    }
+   ]
+  },
+  {
+   "name": "FISH 3w BBvBU",
+   "ranges": [
+    {
+     "name": "Call vs MNR 20+",
+     "range": "A4s,A3s,A2s,K9s,K8s,K7s,K6s,K5s,K4s,K3s,K2s,QTs,Q9s,Q8s,Q7s,Q6s,Q5s,Q4s,Q3s,Q2s,JTs,J9s,J8s,J7s,J6s,J5s,J4s,J3s,J2s,T9s,T8s,T7s,T6s,T5s,T4s,T3s,T2s,98s,97s,96s,95s,94s,93s,92s,87s,86s,85s,84s,83s,82s,76s,75s,74s,73s,72s,65s,64s,63s,62s,54s,53s,52s,43s,42s,32s,A4o,A3o,A2o,KTo,K9o,K8o,K7o,K6o,K5o,QJo,QTo,Q9o,Q8o,Q7o,JTo,J9o,J8o,J7o,T9o,T8o,T7o,98o,97o,96o,87o,86o,76o,75o,65o,64o,54o,[50]A7s,A6s,A5s,KTs,QJs,A8o,A7o,A6o,A5o,KQo,KJo,K4o,Q6o,J6o,T6o,85o[/50],[33.333]A9s,A8s,KQs,KJs[/33.333]",
+     "combos": 713.333
+    },
+    {
+     "name": "Call vs MNR 10-20",
+     "range": "A4s,A3s,A2s,K9s,K8s,K7s,K6s,K5s,K4s,K3s,K2s,QTs,Q9s,Q8s,Q7s,Q6s,Q5s,Q4s,Q3s,Q2s,JTs,J9s,J8s,J7s,J6s,J5s,J4s,J3s,J2s,T9s,T8s,T7s,T6s,T5s,T4s,T3s,T2s,98s,97s,96s,95s,94s,93s,92s,87s,86s,85s,84s,83s,82s,76s,75s,74s,73s,72s,65s,64s,63s,62s,54s,53s,52s,43s,42s,32s,A4o,A3o,A2o,KTo,K9o,K8o,K7o,K6o,QJo,QTo,Q9o,Q8o,JTo,J9o,J8o,T9o,T8o,T7o,98o,97o,87o,76o,[50]K5o,Q7o,J7o,86o,75o,65o,54o[/50],[33.333]A9s,A8s,A7s,A6s,A5s,KQs,KJs,KTs,QJs,A8o,A7o,A6o,A5o,KQo,KJo[/33.333],[25]96o,64o[/25]",
+     "combos": 608
+    }
+   ]
+  },
+  {
+   "name": "FISH 3wSBvBB",
+   "ranges": [
+    {
+     "name": "LIMP 16+",
+     "range": "[90]A7o,A6o,A5o,A4o,A3o,A2o,K7o,K6o,K5o,Q7o,J8o,J7o,T8o,T7o,97o,87o,76o[/90],[75]K4s,K3s,K2s,Q4s,Q3s,Q2s,J4s,J3s,J2s,T4s,T3s,T2s,94s,93s,92s,84s,83s,82s,74s,73s,72s,64s,63s,62s,54s,53s,52s,43s,42s,32s,86o,75o,65o,54o[/75],[40]A9o,A8o,K9o,K8o,Q9o,Q8o,J9o,T9o,98o[/40],[20]A7s,A6s,A5s,A4s,A3s,A2s,K8s,K7s,K6s,K5s,Q9s,Q8s,Q7s,Q6s,Q5s,J9s,J8s,J7s,J6s,J5s,T9s,T8s,T7s,T6s,T5s,98s,97s,96s,95s,87s,86s,85s,76s,75s,65s,K4o,96o,64o,43o[/20],[5]AA,KK,QQ,JJ,TT,99,88,77,66,55,44,33,22,AKs,AQs,AJs,ATs,A9s,A8s,KQs,KJs,KTs,K9s,QJs,QTs,JTs,AKo,AQo,AJo,ATo,KQo,KJo,KTo,QJo,QTo,JTo[/5]",
+     "combos": 402.9
+    },
+    {
+     "name": "LIMP 10-16",
+     "range": "Q3s,Q2s,J3s,J2s,T4s,T3s,T2s,94s,93s,92s,84s,83s,82s,74s,73s,72s,63s,62s,53s,52s,43s,42s,32s,K6o,K5o,Q7o,J7o,T7o,86o,75o,65o,54o,[75]K6s,K5s,K4s,K3s,K2s,Q6s,Q5s,Q4s,J6s,J5s,J4s,T6s,T5s,96s,95s,86s,85s,75s,65s,64s,54s,K7o,Q8o,J8o,T8o,97o,76o[/75],[25]K7s,Q7s,J7s,T7s,K9o,K8o,Q9o,J9o,T9o,98o,87o[/25],[20]K4o,96o,64o,43o[/20],[5]AA,KK,QQ,JJ,TT,99,AKs,AQs,AJs,ATs,A9s,A8s,A7s,A6s,A5s,A4s,A3s,A2s,KQs,KJs,KTs,K9s,K8s,QJs,QTs,Q9s,Q8s,JTs,J9s,J8s,T9s,T8s,98s,97s,87s,76s,A5o,A4o,A3o,A2o,KTo,QJo,QTo,JTo[/5]",
+     "combos": 364.2
+    },
+    {
+     "name": "OS 16+",
+     "range": "[95]33,22[/95],[75]66,55,44[/75],[50]88,77[/50],[25]JJ,TT,99,AKs,AQs,AJs,ATs,A9s,A8s,A7s,A6s,KQs,KJs,QJs,AKo,AQo,AJo,KQo,KJo,QJo[/25],[10]AA,KK,QQ,KTs,K9s,K8s,QTs,Q9s,Q8s,JTs,J9s,J8s,T9s,T8s,98s,97s,87s,76s,ATo,A9o,A8o,KTo,QTo,JTo[/10]",
+     "combos": 79.4
+    },
+    {
+     "name": "OS 10-16",
+     "range": "33,22,[90]88,77,66,55,44,A5s,A4s,A3s,A2s,A8o,A7o,A6o[/90],[75]A5o,A4o,A3o,A2o[/75],[65]A9s,A8s,A7s,A6s,KTo,QTo[/65],[50]ATo,A9o[/50],[45]JTo[/45],[35]TT,99,KTs,K9s,QTs,JTs[/35],[30]AKo,AQo,AJo,KQo,KJo,QJo[/30],[25]AA,KK,QQ,JJ,AKs,AQs,AJs,ATs,KQs,KJs,K8s,QJs,Q9s,Q8s,J9s,J8s,T9s,T8s,98s,97s,87s,76s[/25]",
+     "combos": 220.6
+    },
+    {
+     "name": "3x 10+",
+     "range": "[65]AA,KK,QQ,JJ,TT,AKs,AQs,AJs,ATs,KQs,KJs,QJs,AKo,AQo,AJo,KQo,KJo[/65],[25]99,A9s,A8s,A7s,A6s,KTs,K9s,QTs,Q9s,JTs,J9s,T9s,ATo,A9o,QJo[/25],[20]K8s,Q8s,J8s,T8s,98s,97s,87s,86s,76s[/20]",
+     "combos": 105.4
+    },
+    {
+     "name": "MNR 16+",
+     "range": "[80]A5s,A4s,A3s,A2s,K7s,K6s,K5s,Q7s,Q6s,Q5s,J7s,J6s,J5s,T7s,T6s,T5s,96s,95s,86s,85s,75s,65s[/80],[75]KTo,QTo,JTo[/75],[70]97s[/70],[60]KTs,K9s,K8s,QTs,Q8s,JTs,J8s,T8s,98s,87s,76s,K9o,K8o,Q9o,Q8o,J9o,T9o,98o[/60],[50]ATo[/50],[45]99,88,77,A7s,Q9s,J9s,T9s,A8o[/45],[40]A6s[/40],[30]KQs,KJs,QJs[/30],[25]K4s,K3s,K2s,Q4s,Q3s,Q2s,J4s,J3s,J2s,T4s,T3s,T2s,94s,93s,92s,84s,83s,82s,74s,73s,72s,64s,63s,62s,54s,53s,52s,43s,42s,32s,86o,75o,65o,54o[/25],[20]66,55,44,A9o[/20],[10]AA,KK,QQ,A7o,A6o,A5o,A4o,A3o,A2o,K7o,K6o,K5o,Q7o,J8o,J7o,T8o,T7o,97o,87o,76o[/10],[5]JJ,TT,AKs,AQs,AJs,ATs,A9s,A8s,AKo,AQo,AJo,KQo,KJo,QJo[/5]",
+     "combos": 284.5
+    },
+    {
+     "name": "MNR 10-16",
+     "range": "[90]86s[/90],[75]K7s,Q7s,J7s,T7s,K9o,K8o,Q9o,J9o,T9o,98o,87o[/75],[60]JTo[/60],[50]K8s,Q8s,J8s,T8s,98s,97s,87s,76s[/50],[45]Q9s,J9s,T9s[/45],[40]KTo,QTo[/40],[35]99,KTs,K9s,QTs,JTs,QJo[/35],[25]TT,K6s,K5s,K4s,K3s,K2s,Q6s,Q5s,Q4s,J6s,J5s,J4s,T6s,T5s,96s,95s,85s,75s,65s,64s,54s,K7o,Q8o,J8o,T8o,97o,76o[/25],[20]A5o,A4o,A3o,A2o[/20],[10]88,77,66,55,44,A8o,A7o,A6o[/10],[5]AA,KK,QQ,JJ,AKs,AQs,AJs,ATs,A9s,A8s,A7s,A6s,A5s,A4s,A3s,A2s,KQs,KJs,QJs,AKo,AQo,AJo,ATo,A9o,KQo,KJo[/5]",
+     "combos": 192.8
+    }
+   ]
+  },
+  {
+   "name": "FISH 3wBBvSB",
+   "ranges": [
+    {
+     "name": "CALL vs MNR 16+",
+     "range": "K9s,K8s,K7s,K6s,K5s,K4s,K3s,K2s,Q9s,Q8s,Q7s,Q6s,Q5s,Q4s,Q3s,Q2s,J9s,J8s,J7s,J6s,J5s,J4s,J3s,T9s,T8s,T7s,T6s,T5s,T4s,T3s,98s,97s,96s,95s,94s,93s,87s,86s,85s,84s,83s,76s,75s,74s,73s,65s,64s,63s,54s,53s,43s,KTo,K9o,K8o,K7o,K6o,K5o,K4o,QJo,QTo,Q9o,Q8o,Q7o,Q6o,JTo,J9o,J8o,J7o,T9o,T8o,T7o,98o,97o,87o,65o,[75]A4s,A3s,A2s,KTs,QTs,JTs,J2s,T2s,92s,82s,72s,62s,52s,42s,32s,A4o,A3o,A2o,KJo,J6o,T6o,96o,86o,76o,75o,54o[/75],[50]A7s,A6s,A5s,KQs,KJs,QJs,A7o,A6o,A5o,KQo,K3o,K2o,Q5o,Q4o,Q3o,J5o,T5o,95o,85o[/50],[10]AA,KK,QQ,JJ,TT,99,88,77,66,55,44,33,22,AKs,AQs,AJs,ATs,A9s,A8s,AKo,AQo,AJo,ATo,A9o,A8o[/10]",
+     "combos": 743.4
+    },
+    {
+     "name": "CALL vs MNR 10-16",
+     "range": "K8s,K7s,K6s,K5s,K4s,K3s,K2s,Q8s,Q7s,Q6s,Q5s,Q4s,Q3s,Q2s,J8s,J7s,J6s,J5s,J4s,J3s,T8s,T7s,T6s,T5s,T4s,T3s,98s,97s,96s,95s,94s,93s,87s,86s,85s,84s,83s,76s,75s,74s,73s,65s,64s,63s,54s,53s,43s,K9o,K8o,K7o,K6o,K5o,K4o,QJo,QTo,Q9o,Q8o,Q7o,Q6o,JTo,J9o,J8o,J7o,T9o,T8o,T7o,98o,97o,87o,65o,[90]K9s,Q9s,J9s,T9s[/90],[75]J2s,T2s,92s,82s,72s,62s,52s,42s,32s,J6o,T6o,96o,86o,76o,75o,54o[/75],[50]K3o,K2o,Q5o,Q4o,Q3o,J5o,T5o,95o,85o[/50],[10]AA,KK,QQ,JJ,TT,99,88,77,66,55,44,33,22,A9s,A8s,A7s,A6s,A5s,A4s,A3s,A2s,KQs,KJs,KTs,QJs,QTs,JTs,A9o,A8o,A7o,A6o,A5o,A4o,A3o,A2o,KQo,KJo,KTo[/10]",
+     "combos": 649
+    },
+    {
+     "name": "CALL vs 2,5-3X 16+",
+     "range": "K8s,K7s,K6s,K5s,K4s,K3s,K2s,Q8s,Q7s,Q6s,Q5s,Q4s,Q3s,Q2s,J8s,J7s,J6s,J5s,J4s,J3s,J2s,T8s,T7s,T6s,T5s,T4s,T3s,98s,97s,96s,95s,94s,93s,87s,86s,85s,84s,83s,76s,75s,74s,73s,65s,64s,63s,54s,53s,43s,K9o,K8o,K7o,K6o,QTo,Q9o,Q8o,JTo,J9o,J8o,T9o,T8o,98o,87o,[90]A6s,A5s,A4s,A3s,A2s,A7o,A6o,A5o,A4o,A3o,A2o[/90],[75]K9s,Q9s,J9s,T9s,KJo,KTo,QJo[/75],[50]T2s,92s,82s,72s,62s,52s,42s,32s,K5o,K4o,Q7o,Q6o,Q5o,J7o,T7o,97o,86o,76o,65o[/50],[25]ATs,A9s,A8s,A7s,KQs,KJs,KTs,QJs,QTs,JTs,A9o,A8o,KQo[/25],[10]AA,KK,QQ,JJ,TT,99,88,77,66,55,44,33,22,AKs,AQs,AJs,AKo,AQo,AJo,ATo[/10]",
+     "combos": 596.6
+    },
+    {
+     "name": "CHECK vs LIMP 10+",
+     "range": "[95]K3s,K2s,Q3s,Q2s,J3s,J2s,T3s,T2s,93s,92s,83s,82s,73s,72s,63s,62s,53s,52s,43s,42s,32s,Q4o,Q3o,Q2o,J4o,J3o,J2o,T4o,T3o,T2o,94o,93o,92o,84o,83o,82o,74o,73o,72o,64o,63o,62o,54o,53o,52o,43o,42o,32o[/95],[90]K5s,K4s,Q5s,Q4s,J5s,J4s,T5s,T4s,95s,94s,85s,84s,75s,74s,65s,64s,54s,A6o,A5o,A4o,A3o,A2o,K6o,K5o,Q6o,Q5o,J6o,J5o,T6o,T5o,96o,95o,86o,85o,76o,75o,65o[/90],[70]K9s,K8s,K7s,K6s,Q9s,Q8s,Q7s,Q6s,J9s,J8s,J7s,J6s,T9s,T8s,T7s,T6s,98s,97s,96s,87s,86s,76s,K9o,K8o,K7o,K4o,K3o,K2o,Q9o,Q8o,Q7o,J9o,J8o,J7o,T9o,T8o,T7o,98o,97o,87o[/70],[50]A6s,A5s,A4s,A3s,A2s[/50],[10]22[/10],[5]AA,KK,QQ,JJ,TT,99,88,77,66,55,44,33,AKs,AQs,AJs,ATs,A9s,A8s,A7s,KQs,KJs,KTs,QJs,QTs,JTs,AKo,AQo,AJo,ATo,A9o,A8o,A7o,KQo,KJo,KTo,QJo,QTo,JTo[/5]",
+     "combos": 902.2
+    }
+   ]
+  },
+  {
+   "name": "FISH 3w SBvBU",
+   "ranges": [
+    {
+     "name": "CALL vs OR 18+",
+     "range": "[85]A7s,A6s,A5s,A4s,A3s,A2s,KQs,KJs,KTs,K9s,K8s,K7s,QJs,QTs,Q9s,JTs,J9s,T9s,98s,87s,76s,65s,54s,43s,A8o,A7o,A6o,A5o,A4o,A3o,A2o,KQo,KJo,KTo,K9o,K8o,QJo,QTo,Q9o,Q8o,JTo,J8o[/85],[70]K6s,K5s,K4s,K3s,Q8s,J8s,T8s,97s,86s,75s,64s,K7o[/70],[50]K6o,K5o,K4o,Q7o,Q6o,J9o,J7o,J6o,T9o,T8o,T7o,T6o,98o,97o,96o,87o,86o,85o,76o,75o,65o,64o,54o[/50],[45]K2s,Q7s,Q6s,Q5s,Q4s,Q3s,Q2s,J7s,T7s,96s[/45],[40]99,88,77,66,55,44,33,22,J6s,J5s,T6s,T5s,95s,85s[/40],[25]AKs,AQs,AJs,ATs,A9s,A8s,J4s,J3s,J2s,T4s,94s,84s,74s,63s,53s,52s,42s,32s,AKo,AQo,AJo,ATo,A9o[/25],[15]AA,KK,QQ,JJ,TT,T3s,T2s,93s,92s,83s,82s,73s,72s,62s,K3o,K2o,Q5o,Q4o,Q3o,Q2o,J5o,J4o,J3o,J2o,T5o,95o,74o,53o,43o,32o[/15]",
+     "combos": 560.9
+    },
+    {
+     "name": "CALL vs OR 14-18",
+     "range": "[85]A7s,A6s,A5s,A4s,A3s,A2s,KQs,KJs,KTs,K9s,K8s,K7s,QJs,QTs,Q9s,JTs,J9s,T9s,98s,87s,76s,65s,54s,43s,A8o,A7o,A6o,A5o,A4o,A3o,A2o,KQo,KJo,KTo,K9o,K8o,QJo,QTo,Q9o,Q8o,JTo,J8o[/85],[70]K7o[/70],[50]K6s,K5s,K4s,K3s,Q8s,J8s,T8s,97s,86s,75s,64s,K6o,K5o,K4o,Q7o,J9o,T9o,T8o,98o,87o,76o,65o,54o[/50],[45]K2s[/45],[33.333]K3o,K2o,Q6o,J7o,T7o,97o[/33.333],[20]99,88,77,66,55,AKs,AQs,AJs,ATs,A9s,A8s,Q7s,Q6s,Q5s,Q4s,Q3s,Q2s,J7s,T7s,AKo,AQo,AJo,ATo,A9o[/20],[15]AA,KK,QQ,JJ,TT[/15],[10]44,33,22,J6s,J5s,J4s,J3s,J2s,T6s,96s[/10]",
+     "combos": 431.7
+    }
+   ]
+  },
+  {
+   "name": "FISH 3H BU",
+   "ranges": [
+    {
+     "name": "MNR 20+",
+     "range": "[90]K9s,K8s,K7s,Q9s,Q8s,Q7s,J9s,J8s,J7s,T9s,T8s,T7s,98s,97s,87s,KJo,KTo,QJo,QTo,JTo[/90],[85]AA,KK,QQ,JJ,AKs,AQs,AJs,KQs,KJs,KTs,QJs,QTs,JTs,KQo[/85],[75]TT,ATs,A9s,A8s,A7s,A6s,A5s,A4s,A3s,A2s,K6s,K5s,K4s,K3s,K2s,Q6s,J6s,T6s,96s,86s,76s,AKo,AQo,AJo,ATo,A9o,A6o,A5o,A4o,A3o,A2o,K9o,K8o,Q9o,J9o,T9o[/75],[50]99,Q5s,Q4s,Q3s,Q2s,J5s,J4s,J3s,T5s,T4s,95s,94s,85s,84s,75s,74s,65s,64s,54s,A8o,A7o,K7o,Q8o,Q7o,J8o,J7o,T8o,T7o,98o,97o,87o[/50],[25]88,77,43s[/25],[10]66,55,53s[/10],[5]K6o,Q6o,J6o,T6o,96o,86o,76o,65o[/5]",
+     "combos": 490.1
+    },
+    {
+     "name": "MNR 16-20",
+     "range": "[85]AA,KK,QQ,JJ[/85],[75]TT,AKs,AQs,AJs,KQs,KJs,KTs,K9s,K8s,K7s,K6s,K5s,K4s,K3s,K2s,QJs,QTs,Q9s,Q8s,Q7s,Q6s,JTs,J9s,J8s,J7s,J6s,T9s,T8s,T7s,T6s,98s,97s,96s,87s,86s,76s,KQo,KJo,KTo,K9o,K8o,QJo,QTo,Q9o,JTo,J9o,T9o[/75],[50]ATs,A9s,A8s,A7s,A6s,A5s,A4s,A3s,A2s,Q5s,Q4s,Q3s,Q2s,J5s,J4s,J3s,T5s,T4s,95s,94s,85s,84s,75s,74s,65s,64s,54s,AKo,AQo,AJo,A8o,A7o,A6o,A5o,A4o,A3o,A2o,98o[/50],[25]99,ATo,A9o,K7o,Q8o,Q7o,J8o,J7o,T8o,T7o,97o,87o[/25],[10]88,77[/10]",
+     "combos": 384.6
+    },
+    {
+     "name": "MNR 10-16",
+     "range": "[85]AA,KK,QQ,JJ[/85],[75]TT,AKs,AQs,AJs,K9s,K8s,K7s,K6s,K5s,K4s,K3s,K2s,Q9s,Q8s,Q7s,Q6s,J9s,J8s,J7s,J6s,T9s,T8s,T7s,T6s,98s,97s,96s,87s,86s,76s,KTo,QJo,QTo,JTo[/75],[50]KQs,KJs,QJs,AKo,AQo,K9o,K8o,Q9o,J9o,T9o[/50],[25]99,ATs,A9s,KTs,QTs,Q5s,Q4s,Q3s,Q2s,JTs,J5s,J4s,J3s,T5s,T4s,95s,94s,85s,84s,75s,74s,65s,64s,54s,AJo,KQo,KJo,K7o,Q8o,Q7o,J8o,J7o,T8o,T7o,98o,97o,87o[/25],[10]A8s,A7s,A6s,ATo,A9o,A8o,A7o[/10]",
+     "combos": 265.4
+    },
+    {
+     "name": "CALL vs 3Bet NAI",
+     "range": "[90]A9s[/90],[75]A8s,A7s,A6s,KTs,K9s,K8s,K7s,K6s,QTs,Q9s,Q8s,Q7s,Q6s,JTs,J9s,J8s,J7s,J6s,T9s[/75],[50]T8s,T7s,T6s,98s,97s,96s,87s,86s,76s,75s,65s,A8o,A7o,KJo,KTo,K9o,QJo,QTo,JTo,T9o,98o[/50],[25]A5s,A4s,A3s,A2s,K5s,K4s,K3s,Q5s,J5s,T5s,95s,85s,74s,64s,54s,53s,43s,Q9o,J9o[/25],[5]AA,KK,QQ,JJ,TT,AKs,AQs,AJs,ATs,KQs,KJs,QJs,AKo,AQo,AJo,ATo,KQo[/5]",
+     "combos": 171.5
+    },
+    {
+     "name": "LIMP 20+",
+     "range": "T3s,T2s,93s,92s,83s,82s,73s,72s,63s,62s,52s,42s,32s,K6o,K5o,Q6o,Q5o,J6o,T6o,96o,86o,76o,65o,54o,Q5s,Q4s,Q3s,Q2s,J5s,J4s,J3s,J2s,T5s,T4s,95s,94s,85s,84s,75s,74s,65s,64s,54s,53s,43s,K7o,K4o,K3o,K2o,Q8o,Q7o,J8o,J7o,T8o,T7o,98o,97o,95o,87o,85o,75o,64o,53o,43o,[50]A6s,A5s,A4s,A3s,A2s,K6s,K5s,K4s,K3s,K2s,Q6s,J6s,T6s,96s,86s,76s,A8o,A7o,A6o,A5o,A4o,A3o,A2o,K9o,K8o,Q9o,J9o,T9o[/50],[20]AA,KK,QQ,JJ,TT,99,88,77,66,55,44,33,22,AKs,AQs,AJs,ATs,A9s,A8s,A7s,KQs,KJs,KTs,K9s,K8s,K7s,QJs,QTs,Q9s,Q8s,Q7s,JTs,J9s,J8s,J7s,T9s,T8s,T7s,98s,97s,87s,AKo,AQo,AJo,ATo,A9o,KQo,KJo,KTo,QJo,QTo,JTo[/20]",
+     "combos": 664.4
+    },
+    {
+     "name": "LIMP 10-20",
+     "range": "[75]T3s,T2s,93s,92s,83s,82s,73s,72s,63s,62s,53s,52s,43s,42s,32s,K7o,K6o,Q8o,Q7o,Q6o,J8o,J7o,J6o,T8o,T7o,T6o,97o,96o,87o,86o,76o,65o[/75],[50]A5s,A4s,A3s,A2s,Q5s,Q4s,Q3s,Q2s,J5s,J4s,J3s,J2s,T5s,T4s,95s,94s,85s,84s,75s,74s,65s,64s,54s,A6o,A5o,A4o,A3o,A2o,K5o,Q5o,98o,54o[/50],[25]AKs,AQs,AJs,ATs,A9s,A8s,A7s,A6s,KQs,KJs,KTs,K9s,K8s,K7s,K6s,K5s,K4s,K3s,K2s,QJs,QTs,Q9s,Q8s,Q7s,Q6s,JTs,J9s,J8s,J7s,J6s,T9s,T8s,T7s,T6s,98s,97s,96s,87s,86s,76s,AKo,AQo,AJo,ATo,A9o,A8o,A7o,KQo,KJo,KTo,K9o,K8o,K4o,K3o,K2o,QJo,QTo,Q9o,JTo,J9o,T9o,95o,85o,75o,64o,53o,43o[/25],[10]AA,KK,QQ,JJ,TT,99,88,77,66[/10]",
+     "combos": 424.4
+    },
+    {
+     "name": "LIMP 7-10",
+     "range": "[75]T3s,T2s,93s,92s,83s,73s,63s,53s,43s,K7o,K6o,Q8o,Q7o,Q6o,J8o,J7o,J6o,T8o,T7o,T6o,97o,96o,87o,86o,76o[/75],[50]Q5s,Q4s,Q3s,Q2s,J5s,J4s,J3s,J2s,T5s,T4s,95s,94s,85s,84s,75s,74s,65s,64s,54s,K5o,98o[/50],[25]AKs,AQs,AJs,ATs,A9s,A8s,A7s,KQs,KJs,KTs,K9s,K8s,K7s,K6s,K5s,K4s,K3s,K2s,QJs,QTs,Q9s,Q8s,Q7s,Q6s,JTs,J9s,J8s,J7s,J6s,T9s,T8s,T7s,T6s,98s,97s,96s,87s,86s,76s,AKo,AQo,AJo,KQo,KJo,KTo,K9o,K8o,QJo,QTo,Q9o,JTo,J9o,T9o[/25],[10]AA,KK,QQ,JJ,TT[/10]",
+     "combos": 305
+    }
+   ]
+  }
+ ]
+}

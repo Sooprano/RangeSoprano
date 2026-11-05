@@ -12,8 +12,16 @@ import { rangeToText } from '../ui/rangeLibrary';
 import { fromParsedHand, handTitle, type OpponentOption } from './fromParsedHand';
 import type { TableInfo } from './tableInfo';
 import { findVillainRange, type RangeSource } from './villainRange';
-import { loadSpinsRegular, type SpinsRange } from '../ranges/spinsCatalog';
-import { pickSpinsRange } from './spinsPick';
+import {
+  bandText,
+  loadSpinsCatalog,
+  RIVAL_LABEL,
+  spinsRangeLabel,
+  type SpinsRange,
+  type SpinsRival,
+} from '../ranges/spinsCatalog';
+import { pickSpinsRange, spinsSpotRanges } from './spinsPick';
+import type { SpinsLine, SpinsRole } from './spinsSpot';
 import { positionsOf } from './positions';
 import { isSpinsHand, type SpinsInfo } from './spinsSpot';
 
@@ -26,44 +34,71 @@ export type OpenOptions = {
   prefer?: RangeSource;
   /** Rival to analyze in a multiway pot (default: first to act on the flop). */
   villain?: string;
-  /** Spins hands: the Regular catalog (D128). Without it they use the library. */
+  /** Spins hands: the catalog, Regular + FISH (D128, D137). Without it they use the library. */
   spins?: readonly SpinsRange[] | null;
+  /** Spins hands: the kind of rival (default: the one saved with the hand, else Regular). */
+  rival?: SpinsRival;
 };
 
-/** Label of a spins range: "BBHU 13bb ROL 4.5bb · Regular". */
-export function spinsRangeLabel(r: SpinsRange, approx: boolean): string {
-  return `${r.name} · Regular${approx ? ' (aproximado)' : ''}`;
+export { spinsRangeLabel };
+
+/** The line and role the picker reads, from what the saved hand kept. */
+export function spinsLineOf(info: SpinsInfo): { line: SpinsLine; role: SpinsRole } | null {
+  if (!info.role || info.effectiveBb === null || info.description === null) return null;
+  return {
+    line: {
+      format: info.format,
+      effectiveBb: info.effectiveBb,
+      description: info.description,
+      roles: [],
+    },
+    role: { name: '', ...info.role },
+  };
 }
 
-/** The Regular pick for a spins opponent, or why there is none. */
+/** Why a spins opponent has no range of this rival, in the user's words. */
+export function spinsMissing(
+  info: SpinsInfo,
+  catalog: readonly SpinsRange[],
+  rival: SpinsRival,
+): string {
+  const spot = info.description ?? 'este spot';
+  const lr = spinsLineOf(info);
+  if (!lr) {
+    return `${info.reason ?? 'No pude leer la línea preflop.'} Elige un rango de la lista de spins.`;
+  }
+  const name = RIVAL_LABEL[rival];
+  const found = spinsSpotRanges(catalog, lr.line, lr.role, rival);
+  if (rival === 'fish' && found) {
+    const lowest = Math.min(...found.sameSpot.map((r) => r.band?.min ?? 0));
+    const bands = [...found.sameSpot]
+      .sort((a, b) => a.stackBb - b.stackBb)
+      .map((r) => (r.band ? bandText(r.band) : ''))
+      .join(' · ');
+    return `No hay rango de ${name} para «${spot}» con ${info.effectiveBb}bb: sus tramos son ${bands} (desde ${lowest}bb). Elige uno de la lista de spins.`;
+  }
+  return `No hay rango de ${name} para «${spot}». Elige uno de la lista de spins.`;
+}
+
+/** The pick for a spins opponent, or why there is none. */
 function pickSpins(
   info: SpinsInfo,
   catalog: readonly SpinsRange[],
-): Pick<HandMeta, 'spot' | 'rangeLabel' | 'rangeMissing' | 'spinsRangeId'> & { range: string } {
+  rival: SpinsRival,
+): Pick<HandMeta, 'spot' | 'rangeLabel' | 'rangeMissing' | 'spinsRangeId' | 'spinsRival'> & {
+  range: string;
+} {
   const spot = info.description;
-  const role = info.role;
-  const pick =
-    role && info.effectiveBb !== null && info.description !== null
-      ? pickSpinsRange(
-          catalog,
-          {
-            format: info.format,
-            effectiveBb: info.effectiveBb,
-            description: info.description,
-            roles: [],
-          },
-          { name: '', ...role },
-        )
-      : null;
+  const lr = spinsLineOf(info);
+  const pick = lr ? pickSpinsRange(catalog, lr.line, lr.role, rival) : null;
   if (!pick) {
     return {
       range: '',
       spot,
       rangeLabel: null,
-      rangeMissing: role
-        ? `No hay rango de Regular para «${spot ?? 'este spot'}». Elige uno de la lista de spins.`
-        : `${info.reason ?? 'No pude leer la línea preflop.'} Elige un rango de la lista de spins.`,
+      rangeMissing: spinsMissing(info, catalog, rival),
       spinsRangeId: undefined,
+      spinsRival: rival,
     };
   }
   return {
@@ -72,6 +107,7 @@ function pickSpins(
     rangeLabel: spinsRangeLabel(pick.range, pick.want.approx),
     rangeMissing: null,
     spinsRangeId: pick.range.id,
+    spinsRival: rival,
   };
 }
 
@@ -89,9 +125,12 @@ function pickRange(
   lib: Library,
   prefer: RangeSource,
   spins: readonly SpinsRange[] | null | undefined,
-): Pick<HandMeta, 'spot' | 'rangeLabel' | 'rangeMissing' | 'spinsRangeId'> & { range: string } {
+  rival: SpinsRival,
+): Pick<HandMeta, 'spot' | 'rangeLabel' | 'rangeMissing' | 'spinsRangeId' | 'spinsRival'> & {
+  range: string;
+} {
   if (opp.spins) {
-    if (spins) return pickSpins(opp.spins, spins);
+    if (spins) return pickSpins(opp.spins, spins, rival);
     // A spins hand never falls back to the cash library.
     return {
       range: '',
@@ -99,6 +138,7 @@ function pickRange(
       rangeLabel: null,
       rangeMissing: 'Faltan los rangos de spins: vuelve a abrir la mano.',
       spinsRangeId: undefined,
+      spinsRival: rival,
     };
   }
   const pick = opp.spot
@@ -116,6 +156,7 @@ function pickRange(
       : (opp.spotNote ??
         `No hay un rango para «${opp.spot?.description ?? 'este spot'}» en la biblioteca.`),
     spinsRangeId: undefined,
+    spinsRival: undefined,
   };
 }
 
@@ -150,7 +191,14 @@ export function savedHandFromParsed(
   const a = adapted.value;
   const prefer = options.prefer ?? 'gto';
   const villain = a.opponents.find((o) => o.name === a.villainName)!;
-  const { range, ...picked } = pickRange(villain, a.table, { mine, gto }, prefer, options.spins);
+  const { range, ...picked } = pickRange(
+    villain,
+    a.table,
+    { mine, gto },
+    prefer,
+    options.spins,
+    options.rival ?? 'regular',
+  );
   return {
     ok: true,
     saved: toSavedHand(a.hand, range, a.recorded, {
@@ -188,6 +236,7 @@ export function repickSaved(
     { mine, gto },
     options.prefer ?? 'gto',
     options.spins,
+    options.rival ?? meta.spinsRival ?? 'regular',
   );
   const heroPosition = saved.heroPosition as Parameters<typeof handTitle>[1];
   return {
@@ -212,8 +261,8 @@ export function needsSpinsCatalog(parsed: ParsedHand): boolean {
 }
 
 /**
- * `savedHandFromParsed` for the UI: a spins hand first loads the Regular
- * catalog (its own chunk, only then), so cash hands never download it.
+ * `savedHandFromParsed` for the UI: a spins hand first loads the spins
+ * catalog (its own chunks, only then), so cash hands never download it.
  */
 export async function openParsedHand(
   parsed: ParsedHand,
@@ -221,6 +270,6 @@ export async function openParsedHand(
   gto: readonly Range[],
   options: OpenOptions = {},
 ): Promise<OpenResult> {
-  const spins = needsSpinsCatalog(parsed) ? await loadSpinsRegular() : null;
+  const spins = needsSpinsCatalog(parsed) ? await loadSpinsCatalog() : null;
   return savedHandFromParsed(parsed, mine, gto, { ...options, spins });
 }
