@@ -68,6 +68,27 @@ const zSpot = z
   })
   .strict();
 
+const zSpinsWant = z
+  .object({
+    action: z.enum(['open', 'shove', 'limp', 'check', 'call-open', 'call-rol', 'rol', '3bet']),
+    size: z.union([z.number().positive().max(1000), z.literal('AI')]).nullable(),
+    approx: z.boolean(),
+  })
+  .strict();
+
+const zSpins = z
+  .object({
+    format: z.enum(['3H', 'HU']),
+    effectiveBb: z.number().nonnegative().max(1e6).nullable(),
+    description: z.string().max(200).nullable(),
+    role: z
+      .object({ position: zPosition, vs: zPosition, wants: z.array(zSpinsWant).max(4) })
+      .strict()
+      .nullable(),
+    reason: z.string().max(300).nullable(),
+  })
+  .strict();
+
 const zStreetMap = <T extends z.ZodTypeAny>(t: T) =>
   z.object({ flop: t.optional(), turn: t.optional(), river: t.optional() }).strict();
 
@@ -78,6 +99,7 @@ const zOpponent = z
     recorded: zStreetMap(zRecorded),
     spot: zSpot.nullable(),
     spotNote: z.string().max(300).nullable(),
+    spins: zSpins.nullable().optional(),
   })
   .strict();
 
@@ -104,6 +126,7 @@ const zSavedHand = z
         handLabel: z.string().max(80).optional(),
         villainName: z.string().max(60).optional(),
         opponents: z.array(zOpponent).max(9).optional(),
+        spinsRangeId: z.string().max(200).optional(),
       })
       .strict()
       .nullable(),

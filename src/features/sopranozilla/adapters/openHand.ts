@@ -12,6 +12,10 @@ import { rangeToText } from '../ui/rangeLibrary';
 import { fromParsedHand, handTitle, type OpponentOption } from './fromParsedHand';
 import type { TableInfo } from './tableInfo';
 import { findVillainRange, type RangeSource } from './villainRange';
+import { loadSpinsRegular, type SpinsRange } from '../ranges/spinsCatalog';
+import { pickSpinsRange } from './spinsPick';
+import { positionsOf } from './positions';
+import { isSpinsHand, type SpinsInfo } from './spinsSpot';
 
 export const SOURCE_LABEL = { mine: 'Mis rangos', gto: 'Rangos GTO' } as const;
 
@@ -22,7 +26,54 @@ export type OpenOptions = {
   prefer?: RangeSource;
   /** Rival to analyze in a multiway pot (default: first to act on the flop). */
   villain?: string;
+  /** Spins hands: the Regular catalog (D128). Without it they use the library. */
+  spins?: readonly SpinsRange[] | null;
 };
+
+/** Label of a spins range: "BBHU 13bb ROL 4.5bb · Regular". */
+export function spinsRangeLabel(r: SpinsRange, approx: boolean): string {
+  return `${r.name} · Regular${approx ? ' (aproximado)' : ''}`;
+}
+
+/** The Regular pick for a spins opponent, or why there is none. */
+function pickSpins(
+  info: SpinsInfo,
+  catalog: readonly SpinsRange[],
+): Pick<HandMeta, 'spot' | 'rangeLabel' | 'rangeMissing' | 'spinsRangeId'> & { range: string } {
+  const spot = info.description;
+  const role = info.role;
+  const pick =
+    role && info.effectiveBb !== null && info.description !== null
+      ? pickSpinsRange(
+          catalog,
+          {
+            format: info.format,
+            effectiveBb: info.effectiveBb,
+            description: info.description,
+            roles: [],
+          },
+          { name: '', ...role },
+        )
+      : null;
+  if (!pick) {
+    return {
+      range: '',
+      spot,
+      rangeLabel: null,
+      rangeMissing: role
+        ? `No hay rango de Regular para «${spot ?? 'este spot'}». Elige uno de la lista de spins.`
+        : `${info.reason ?? 'No pude leer la línea preflop.'} Elige un rango de la lista de spins.`,
+      spinsRangeId: undefined,
+    };
+  }
+  return {
+    range: pick.range.range,
+    spot,
+    rangeLabel: spinsRangeLabel(pick.range, pick.want.approx),
+    rangeMissing: null,
+    spinsRangeId: pick.range.id,
+  };
+}
 
 type Library = { mine: readonly Range[]; gto: readonly Range[] };
 
@@ -37,7 +88,19 @@ function pickRange(
   table: TableInfo | undefined,
   lib: Library,
   prefer: RangeSource,
-): Pick<HandMeta, 'spot' | 'rangeLabel' | 'rangeMissing'> & { range: string } {
+  spins: readonly SpinsRange[] | null | undefined,
+): Pick<HandMeta, 'spot' | 'rangeLabel' | 'rangeMissing' | 'spinsRangeId'> & { range: string } {
+  if (opp.spins) {
+    if (spins) return pickSpins(opp.spins, spins);
+    // A spins hand never falls back to the cash library.
+    return {
+      range: '',
+      spot: opp.spins.description,
+      rangeLabel: null,
+      rangeMissing: 'Faltan los rangos de spins: vuelve a abrir la mano.',
+      spinsRangeId: undefined,
+    };
+  }
   const pick = opp.spot
     ? findVillainRange(opp.spot, lib.mine, lib.gto, prefer, {
         format: formatOf(table),
@@ -52,6 +115,7 @@ function pickRange(
       ? null
       : (opp.spotNote ??
         `No hay un rango para «${opp.spot?.description ?? 'este spot'}» en la biblioteca.`),
+    spinsRangeId: undefined,
   };
 }
 
@@ -86,7 +150,7 @@ export function savedHandFromParsed(
   const a = adapted.value;
   const prefer = options.prefer ?? 'gto';
   const villain = a.opponents.find((o) => o.name === a.villainName)!;
-  const { range, ...picked } = pickRange(villain, a.table, { mine, gto }, prefer);
+  const { range, ...picked } = pickRange(villain, a.table, { mine, gto }, prefer, options.spins);
   return {
     ok: true,
     saved: toSavedHand(a.hand, range, a.recorded, {
@@ -118,7 +182,13 @@ export function repickSaved(
   const opp = meta.opponents.find((o) => o.name === name);
   if (!opp) return null;
   const table = withVillainRole(meta.table, opp.name);
-  const { range, ...picked } = pickRange(opp, table, { mine, gto }, options.prefer ?? 'gto');
+  const { range, ...picked } = pickRange(
+    opp,
+    table,
+    { mine, gto },
+    options.prefer ?? 'gto',
+    options.spins,
+  );
   const heroPosition = saved.heroPosition as Parameters<typeof handTitle>[1];
   return {
     ...saved,
@@ -133,4 +203,23 @@ export function repickSaved(
       ...(table && { table }),
     },
   };
+}
+
+/** Does this hand need the spins catalog (a 2- or 3-handed tournament hand)? */
+export function needsSpinsCatalog(parsed: ParsedHand): boolean {
+  return isSpinsHand(parsed, positionsOf(parsed));
+}
+
+/**
+ * `savedHandFromParsed` for the UI: a spins hand first loads the Regular
+ * catalog (its own chunk, only then), so cash hands never download it.
+ */
+export async function openParsedHand(
+  parsed: ParsedHand,
+  mine: readonly Range[],
+  gto: readonly Range[],
+  options: OpenOptions = {},
+): Promise<OpenResult> {
+  const spins = needsSpinsCatalog(parsed) ? await loadSpinsRegular() : null;
+  return savedHandFromParsed(parsed, mine, gto, { ...options, spins });
 }

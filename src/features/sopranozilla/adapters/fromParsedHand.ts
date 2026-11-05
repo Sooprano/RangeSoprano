@@ -10,6 +10,7 @@ import type { Street } from '../engine/equity';
 import type { RecordedAction, RecordedStreets, Response } from '../engine/recorded';
 import { positionsOf } from './positions';
 import { detectPreflopSpot, type PreflopSpot } from './preflopSpot';
+import { spinsInfoOf, type SpinsInfo } from './spinsSpot';
 import { tableInfoOf, type TableInfo } from './tableInfo';
 
 /** One opponent who saw the flop: everything that changes with the villain. */
@@ -20,6 +21,8 @@ export type OpponentOption = {
   /** Null when the spot could not be named. */
   spot: PreflopSpot | null;
   spotNote: string | null;
+  /** Spins hands only (D128): the line and this player's wants. */
+  spins?: SpinsInfo | null | undefined;
 };
 
 export type AdaptedHand = {
@@ -111,6 +114,7 @@ function opponentOf(
     recorded,
     spot: spot.ok ? spot.spot : null,
     spotNote: spot.ok ? null : spot.reason,
+    spins: spinsInfoOf(hand, positions, name),
   };
 }
 

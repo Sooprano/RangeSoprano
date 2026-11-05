@@ -1,6 +1,5 @@
-// Dev-only button in /analisis (D3): saves the hand as Sopranozilla's last
-// hand and opens the analyzer. Loaded lazily and only when
-// import.meta.env.DEV, so it never reaches the production build.
+// Button in /analisis (D3): saves the hand as Sopranozilla's last hand and
+// opens the analyzer. Loaded lazily (its chunk only when a hand is on screen).
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -8,7 +7,7 @@ import { Microscope } from 'lucide-react';
 import { SAMPLE_RANGES } from '@/data/sampleRanges';
 import { useRangeStore } from '@/store/rangeStore';
 import type { ParsedHand } from '@/utils/handHistory';
-import { savedHandFromParsed } from '../adapters/openHand';
+import { openParsedHand } from '../adapters/openHand';
 import { readRangeSource, writeLastHand } from '../store/lastHand';
 
 export type OpenInSopranozillaState = { fromAnalysis: true };
@@ -21,8 +20,8 @@ export default function OpenInSopranozillaButton({ hand }: { hand: ParsedHand })
     <span className="inline-flex flex-col items-end gap-1">
       <button
         type="button"
-        onClick={() => {
-          const result = savedHandFromParsed(hand, useRangeStore.getState().ranges, SAMPLE_RANGES, {
+        onClick={async () => {
+          const result = await openParsedHand(hand, useRangeStore.getState().ranges, SAMPLE_RANGES, {
             prefer: readRangeSource(),
           });
           if (!result.ok) {

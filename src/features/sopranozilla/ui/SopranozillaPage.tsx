@@ -12,7 +12,7 @@ import { SAMPLE_RANGES } from '@/data/sampleRanges';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import type { HandNotation, Range } from '@/types/poker';
-import { repickSaved, SOURCE_LABEL, type OpenOptions } from '../adapters/openHand';
+import { repickSaved, SOURCE_LABEL, spinsRangeLabel, type OpenOptions } from '../adapters/openHand';
 import { PRESETS_ENABLED } from '../presets';
 import type { RangeSource } from '../adapters/villainRange';
 import { CATEGORY_INFO } from '../engine/categories';
@@ -44,6 +44,8 @@ import {
 } from '../store/lastHand';
 import type { OpenInSopranozillaState } from './OpenInSopranozillaButton';
 import { RangeLibraryDialog } from './RangeLibraryDialog';
+import { SpinsBar } from './SpinsBar';
+import { loadSpinsRegular, type SpinsRange } from '../ranges/spinsCatalog';
 import { selectStreetView, useStreetView } from '../store/selectors';
 import {
   bluffThreshold,
@@ -302,6 +304,19 @@ export default function SopranozillaPage() {
   // Library searched first for the villain's range (D97), remembered.
   const [rangeSource, setRangeSource] = useState<RangeSource>(readRangeSource);
   const [libraryOpen, setLibraryOpen] = useState(false);
+  // Spins hands (D128): the Regular catalog, loaded only when a spins hand is open.
+  const [spinsCatalog, setSpinsCatalog] = useState<SpinsRange[] | null>(null);
+  const hasSpins = useAnalyzerStore((s) => Boolean(s.meta?.opponents?.some((o) => o.spins)));
+  useEffect(() => {
+    if (!hasSpins || spinsCatalog) return;
+    let alive = true;
+    void loadSpinsRegular().then((c) => {
+      if (alive) setSpinsCatalog(c);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [hasSpins, spinsCatalog]);
   const closeLibrary = useCallback(() => setLibraryOpen(false), []);
 
   // Saved custom filters (phase 7) and the filter builder.
@@ -423,13 +438,27 @@ export default function SopranozillaPage() {
     const current = toSavedHand(state.hand, '', state.recorded, state.meta);
     const next = repickSaved(
       current,
-      { prefer: rangeSource, ...options },
+      { prefer: rangeSource, spins: spinsCatalog, ...options },
       useRangeStore.getState().ranges,
       SAMPLE_RANGES,
     );
     if (!next) return;
     writeLastHand(next);
     loadSaved(next);
+  };
+
+  // Another range of the spins catalog (other stack / size, or a spot without folder).
+  const applySpinsRange = (r: SpinsRange) => {
+    const state = useAnalyzerStore.getState();
+    if (!state.hand) return;
+    const saved = toSavedHand(state.hand, r.range, state.recorded, {
+      ...(state.meta ?? { title: 'Mano', spot: null, warnings: [] }),
+      rangeLabel: spinsRangeLabel(r, false),
+      rangeMissing: null,
+      spinsRangeId: r.id,
+    });
+    writeLastHand(saved);
+    loadSaved(saved);
   };
 
   const changeSource = (source: RangeSource) => {
@@ -674,6 +703,8 @@ export default function SopranozillaPage() {
     );
   }
 
+  const villainSpins =
+    meta?.opponents?.find((o) => o.name === meta.villainName)?.spins ?? null;
   const available = availableStreets(hand);
   const tabs: StreetTab[] = STREETS.map((s, i) => {
     const prev = i > 0 ? streets[STREETS[i - 1]!] : null;
@@ -951,7 +982,7 @@ export default function SopranozillaPage() {
               Rango del villano:{' '}
               <span className="text-content">{meta.rangeLabel ?? 'sin elegir'}</span>
             </span>
-            {meta.opponents && (
+            {meta.opponents && !villainSpins && (
               <span
                 role="group"
                 aria-label="Buscar el rango primero en"
@@ -981,13 +1012,21 @@ export default function SopranozillaPage() {
               onClick={() => setLibraryOpen(true)}
               className={cn(
                 'flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs hover:bg-surface-hover',
-                !meta.opponents && 'ml-auto',
+                (!meta.opponents || villainSpins) && 'ml-auto',
               )}
             >
               <Library className="h-3.5 w-3.5" />{' '}
               {meta.rangeLabel ? 'Cambiar rango' : 'Elegir rango'}
             </button>
           </div>
+          {villainSpins && (
+            <SpinsBar
+              info={villainSpins}
+              catalog={spinsCatalog}
+              currentId={meta.spinsRangeId}
+              onPick={applySpinsRange}
+            />
+          )}
           {meta.table && (
             <TableSeats
               table={meta.table}
@@ -1007,7 +1046,8 @@ export default function SopranozillaPage() {
           )}
           {meta.rangeMissing && (
             <p role="alert" className="mt-1 text-xs text-amber-700 dark:text-amber-300">
-              {meta.rangeMissing} Elige el rango del villano en la biblioteca.
+              {meta.rangeMissing}
+              {!villainSpins && ' Elige el rango del villano en la biblioteca.'}
             </p>
           )}
           {meta.warnings.map((w) => (

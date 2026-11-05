@@ -216,6 +216,8 @@ export type HandMeta = {
   villainName?: string | undefined;
   /** Real hands only: every opponent who saw the flop (D96). */
   opponents?: OpponentOption[] | undefined;
+  /** Spins hands: the Regular range in use (`SpinsRange.id`), D128. */
+  spinsRangeId?: string | undefined;
 };
 
 /** A table row: a category or a saved custom filter. */

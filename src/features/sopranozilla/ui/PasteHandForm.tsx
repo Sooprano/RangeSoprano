@@ -6,7 +6,7 @@ import { Eraser, FileSearch } from 'lucide-react';
 import { SAMPLE_RANGES } from '@/data/sampleRanges';
 import { useRangeStore } from '@/store/rangeStore';
 import { parseHandHistory } from '@/utils/handHistory';
-import { savedHandFromParsed } from '../adapters/openHand';
+import { openParsedHand } from '../adapters/openHand';
 import type { RangeSource } from '../adapters/villainRange';
 import type { SavedHand } from '../store/lastHand';
 
@@ -21,13 +21,13 @@ export function PasteHandForm({ prefer, onLoad, onClose }: Props) {
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const analyze = () => {
+  const analyze = async () => {
     const { hand, errors } = parseHandHistory(text);
     if (!hand) {
       setError(errors[0]?.reason ?? 'No reconocí ninguna mano en el texto pegado.');
       return;
     }
-    const result = savedHandFromParsed(hand, useRangeStore.getState().ranges, SAMPLE_RANGES, {
+    const result = await openParsedHand(hand, useRangeStore.getState().ranges, SAMPLE_RANGES, {
       prefer,
     });
     if (!result.ok) {
@@ -43,12 +43,12 @@ export function PasteHandForm({ prefer, onLoad, onClose }: Props) {
       className="mb-4 rounded-xl border border-border bg-surface/40 p-4"
       onSubmit={(e) => {
         e.preventDefault();
-        analyze();
+        void analyze();
       }}
     >
       <div className="mb-2 flex items-center justify-between gap-3">
         <label htmlFor="sz-paste" className="text-sm font-semibold">
-          Pegar mano (.txt)
+          Pegar mano (.txt o .xml de iPoker)
         </label>
         <button
           type="button"

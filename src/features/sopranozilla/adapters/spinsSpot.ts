@@ -38,6 +38,43 @@ export type SpinsLine = {
   roles: SpinsRole[];
 };
 
+/**
+ * What an opponent's spins line says, kept with the saved hand so the range
+ * can be picked again (another villain, another stack) without the history.
+ */
+export type SpinsInfo = {
+  format: SpinsFormat;
+  effectiveBb: number | null;
+  /** "SB limp · BB check"; null when the line could not be read. */
+  description: string | null;
+  /** This player's seat and wants; null when the line has no part for them. */
+  role: Omit<SpinsRole, 'name'> | null;
+  /** Why there is no role (multiway, unknown line…). */
+  reason: string | null;
+};
+
+/** The spins info of `name` in the hand (null when the hand is not a spin). */
+export function spinsInfoOf(
+  hand: ParsedHand,
+  positions: Map<string, Position> | null,
+  name: string,
+): SpinsInfo | null {
+  if (!positions || !isSpinsHand(hand, positions)) return null;
+  const format: SpinsFormat = positions.size === 2 ? 'HU' : '3H';
+  const result = detectSpinsLine(hand, positions);
+  if (!result.ok) {
+    return { format, effectiveBb: null, description: null, role: null, reason: result.reason };
+  }
+  const role = result.line.roles.find((r) => r.name === name) ?? null;
+  return {
+    format,
+    effectiveBb: result.line.effectiveBb,
+    description: result.line.description,
+    role: role ? { position: role.position, vs: role.vs, wants: role.wants } : null,
+    reason: role ? null : 'Este jugador no tiene parte en la línea preflop.',
+  };
+}
+
 export type SpinsLineResult = { ok: true; line: SpinsLine } | { ok: false; reason: string };
 
 type Act =
