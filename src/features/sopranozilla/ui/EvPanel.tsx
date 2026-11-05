@@ -287,20 +287,33 @@ export function EvPanel(p: Props) {
             >
               <div className="flex flex-wrap items-center gap-1.5">
                 {hasRange ? (
-                  <button
-                    type="button"
-                    aria-pressed={selected}
-                    onClick={() => p.onSelect(r.id)}
-                    className="mr-auto shrink-0 text-left text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
-                  >
-                    {r.label}
-                    {r.bet !== null && p.pot !== undefined && (
-                      <span className="ml-1 text-xs font-normal text-content-muted">
-                        ({r.kind === 'raise' ? 'a ' : ''}
-                        {r.bet.toFixed(1)} bb)
-                      </span>
+                  <span className="mr-auto flex shrink-0 items-center gap-0.5">
+                    <button
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() => p.onSelect(r.id)}
+                      className="text-left text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
+                    >
+                      {r.label}
+                      {r.bet !== null && p.pot !== undefined && (
+                        <span className="ml-1 text-xs font-normal text-content-muted">
+                          ({r.kind === 'raise' ? 'a ' : ''}
+                          {r.bet.toFixed(1)} bb)
+                        </span>
+                      )}
+                    </button>
+                    {(r.kind === 'bet' || r.kind === 'raise') && !played && (
+                      <button
+                        type="button"
+                        onClick={() => p.onRemove(r.id)}
+                        aria-label={`Quitar ${r.label}`}
+                        title={`Quitar ${r.label} (Ctrl+Z lo devuelve)`}
+                        className="rounded p-0.5 text-content-disabled hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
                     )}
-                  </button>
+                  </span>
                 ) : (
                   <span className="mr-auto text-sm font-semibold">{r.label}</span>
                 )}
@@ -313,17 +326,6 @@ export function EvPanel(p: Props) {
                   <span className="flex items-center gap-0.5 rounded bg-emerald-600/20 px-1 py-px text-[10px] font-medium text-emerald-700 dark:text-emerald-300">
                     <Trophy className="h-3 w-3" /> Mejor EV
                   </span>
-                )}
-                {(r.kind === 'bet' || r.kind === 'raise') && !played && (
-                  <button
-                    type="button"
-                    onClick={() => p.onRemove(r.id)}
-                    aria-label={`Quitar ${r.label}`}
-                    title={`Quitar ${r.label} (Ctrl+Z lo devuelve)`}
-                    className="order-last rounded p-0.5 text-content-disabled hover:bg-surface-hover hover:text-content focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
                 )}
                 {played ? (
                   <span className="flex items-center gap-0.5 rounded bg-sky-600/20 px-1 py-px text-[10px] font-medium text-sky-700 dark:text-sky-300">

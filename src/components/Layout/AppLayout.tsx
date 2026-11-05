@@ -31,7 +31,7 @@ export function AppLayout() {
         onToggleCollapsed={toggleSidebarCollapsed}
         onCloseMobile={handleCloseMobile}
       />
-      <main className="flex min-w-0 flex-1 flex-col overflow-auto">
+      <main className="quiet-scroll flex min-w-0 flex-1 flex-col overflow-auto">
         <button
           ref={menuButtonRef}
           type="button"

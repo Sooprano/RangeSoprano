@@ -262,12 +262,14 @@
   }
 }
 
-/* Sopranozilla's sticky columns (grid, EV calculator): a thin, quiet scrollbar
-   that only shows up when you reach for it. */
+/* A thin, quiet scrollbar that only shows up when you reach for it: the
+   page's own scroll (AppLayout's <main>) and Sopranozilla's sticky columns. */
+.quiet-scroll,
 .sz-scroll {
   scrollbar-width: thin;
   scrollbar-color: rgb(148 163 184 / 0.18) transparent;
 }
+.quiet-scroll:hover,
 .sz-scroll:hover {
   scrollbar-color: rgb(148 163 184 / 0.4) transparent;
 }
