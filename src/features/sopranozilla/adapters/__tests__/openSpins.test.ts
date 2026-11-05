@@ -45,6 +45,20 @@ describe('opening a spins hand', () => {
     expect(meta.spot).toBe('BU abre a 2bb · BB paga');
   });
 
+  it('the turn of a real hand knows the stack behind (for a re-raise all-in, D133)', async () => {
+    const result = await openParsedHand(
+      handOf('ipoker_txt/HU_limp_check_turn_raise_12622361249.txt'),
+      [],
+      [],
+    );
+    if (!result.ok) throw new Error(result.error);
+    // 480 − 5 ante − 30 BB = 445 chips behind = 14.83bb on flop and turn.
+    expect(result.saved.stacks?.turn).toBeCloseTo(14.83, 2);
+    expect(result.saved.stacks?.flop).toBeCloseTo(14.83, 2);
+    expect(result.saved.pots.turn).toBeCloseTo(70 / 30, 2);
+    expect(result.saved.meta?.rangeLabel).toBe('BBHU 16bb X · Regular');
+  });
+
   it('a spot without folder (SB 3-bets the BU) asks for a range', async () => {
     const meta = await open('pokerstars/3H_3bet_call_BU_251724712673.txt');
     expect(meta.rangeLabel).toBeNull();

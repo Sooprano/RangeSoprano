@@ -80,6 +80,26 @@ export type EvRowResult = {
   /** Bets only: B / (P + 2B), the equity needed when called. */
   calledBreakEven: number | null;
   bet: number | null;
+  /** Raise rows with a re-raise all-in range (D133). */
+  reraise?: ReraiseResult | null;
+};
+
+/** What the villain's all-in over Hero's raise does to the raise (D133). */
+export type ReraiseResult = {
+  /** Share of what goes on vs the raise that re-raises all-in. */
+  share: number;
+  /** Hero equity vs the all-in range. */
+  eq: number;
+  /** Equity needed to call the all-in: (A − R) / (P + 2A). */
+  need: number;
+  /** EV of calling the all-in, from the start of the street (fold = −R). */
+  callEv: number;
+  /** Folding loses the raise (−R). */
+  foldEv: number;
+  /** Calling is better than folding. */
+  call: boolean;
+  /** The villain's total on the street when all in (A). */
+  allInTo: number;
 };
 
 export type EvTable = { rows: EvRowResult[]; bestId: string | null };
@@ -164,17 +184,64 @@ export type RaiseEvInput = {
   raiseTo: number;
   /** Σ weights of the villain's betting range. */
   betRange: number;
-  /** Σ weights that call the raise. */
+  /** Σ weights that go on vs the raise (call or re-raise all-in). */
   cont: number;
   eqCont: number;
+  /**
+   * The part of `cont` that re-raises all-in (D133): Σ weights, Hero equity vs
+   * it, Hero equity vs the part that only calls, and the villain's all-in
+   * total on the street (A). Without it, everything that goes on calls.
+   */
+  shove?: { cont: number; eq: number; eqCall: number; allInTo: number } | null;
 };
 
-export function raiseEv({ pot, bet, raiseTo, betRange, cont, eqCont }: RaiseEvInput): BetEv {
-  if (!(betRange > 0)) return { ev: Number.NaN, foldEq: Number.NaN };
+/**
+ * EV of raising to R over a bet V (pot P before the bet):
+ *   fold eq. × (P + V)
+ *   + calls × (eq_call × (P + 2R) − R)
+ *   + re-raises all-in × max(eq_all-in × (P + 2A) − A, −R)
+ * (all as shares of the betting range). Facing the all-in Hero takes the
+ * better of calling and folding.
+ */
+export function raiseEv({
+  pot,
+  bet,
+  raiseTo,
+  betRange,
+  cont,
+  eqCont,
+  shove,
+}: RaiseEvInput): BetEv & { reraise: ReraiseResult | null } {
+  if (!(betRange > 0)) return { ev: Number.NaN, foldEq: Number.NaN, reraise: null };
   const c = Math.min(Math.max(cont, 0), betRange);
   const foldEq = 1 - c / betRange;
-  const showdown = foldEq >= 1 ? 0 : (1 - foldEq) * (eqCont * (pot + 2 * raiseTo) - raiseTo);
-  return { ev: foldEq * (pot + bet) + showdown, foldEq };
+  const R = raiseTo;
+  const A = shove?.allInTo ?? 0;
+  // A re-raise needs chips behind the raise; a raise that is already all in has none.
+  if (!shove || !(A > R) || !(shove.cont > 0) || c <= 0) {
+    const showdown = foldEq >= 1 ? 0 : (1 - foldEq) * (eqCont * (pot + 2 * R) - R);
+    return { ev: foldEq * (pot + bet) + showdown, foldEq, reraise: null };
+  }
+  const s = Math.min(shove.cont, c);
+  const callShare = (c - s) / betRange;
+  const shoveShare = s / betRange;
+  const callEvShove = shove.eq * (pot + 2 * A) - A;
+  const best = Math.max(callEvShove, -R);
+  const ev =
+    foldEq * (pot + bet) + callShare * (shove.eqCall * (pot + 2 * R) - R) + shoveShare * best;
+  return {
+    ev,
+    foldEq,
+    reraise: {
+      share: s / c,
+      eq: shove.eq,
+      need: (A - R) / (pot + 2 * A),
+      callEv: callEvShove,
+      foldEv: -R,
+      call: callEvShove > -R,
+      allInTo: A,
+    },
+  };
 }
 
 /** Fold equity a pure bluff-raise needs: R / (P + V + R). */
@@ -186,7 +253,15 @@ export function raiseThreshold(pot: number, bet: number, raiseTo: number): numbe
 export type VillainRowInput =
   | { id: string; kind: 'fold' }
   | { id: string; kind: 'call'; betRange: number; eq: number }
-  | { id: string; kind: 'raise'; multiple: number; betRange: number; cont: number; eqCont: number };
+  | {
+      id: string;
+      kind: 'raise';
+      multiple: number;
+      betRange: number;
+      cont: number;
+      eqCont: number;
+      shove?: RaiseEvInput['shove'];
+    };
 
 /**
  * EV of Fold / Call / Raise rows when the villain bets `betPct` % of the pot.
@@ -229,13 +304,14 @@ export function villainEvTable(
       };
     }
     const raiseTo = bet * r.multiple;
-    const { ev, foldEq } = raiseEv({
+    const { ev, foldEq, reraise } = raiseEv({
       pot,
       bet,
       raiseTo,
       betRange: r.betRange,
       cont: r.cont,
       eqCont: r.eqCont,
+      shove: r.shove ?? null,
     });
     return {
       id: r.id,
@@ -247,6 +323,7 @@ export function villainEvTable(
       bluffThreshold: raiseThreshold(pot, bet, raiseTo),
       calledBreakEven: calledBreakEven(pot, raiseTo),
       bet: raiseTo,
+      reraise,
     };
   });
   return { rows: out, bestId: bestOf(out) };

@@ -32,11 +32,15 @@ export type AnalyzerHandInput = {
   board: CardId[];
   /** Pot (in bb) when each street starts. */
   pots?: Partial<Record<Street, number>> | undefined;
+  /** Effective stack behind (in bb) when each street starts: Hero vs the villain (D133). */
+  stacks?: Partial<Record<Street, number>> | undefined;
   heroPosition?: string | undefined;
   villainPosition?: string | undefined;
 };
 
-export type ActionRowKind = 'check' | 'bet' | 'fold' | 'call' | 'raise';
+/** 'reraise': the villain re-raises all-in over Hero's raise (D133); its range
+ * sits on the raise row's range ("goes on vs the raise"). */
+export type ActionRowKind = 'check' | 'bet' | 'fold' | 'call' | 'raise' | 'reraise';
 
 /** "Hero decide" (check / bet) or "Villano apuesta" (fold / call / raise). */
 export type AnalyzerMode = 'hero' | 'villain';
@@ -73,6 +77,12 @@ export type StreetState = {
    * the chained range. The flop never needs one: its start IS the preflop
    * range, which is edited directly. */
   startOverride?: Readonly<Record<number, number>> | null | undefined;
+  /**
+   * Rows shown inverted (D132, Flopzilla's «Inv»): what does NOT pass the
+   * row's filter — e.g. the villain's checking range from his betting range.
+   * An inverted played row chains its inverse into the next street.
+   */
+  invertedRows?: readonly string[] | undefined;
 };
 
 export function boardFor(hand: AnalyzerHandInput, street: Street): CardId[] | null {
@@ -190,6 +200,8 @@ export type StreetView = {
   start: ComboWeights;
   /** Effective continuation weights of each EV row: start × row factor. */
   rows: Record<string, ComboWeights>;
+  /** Inverted rows only (D132): start × (1 − row factor), what does not pass. */
+  inverse: Record<string, ComboWeights>;
   /** Combos not blocked by Hero or the board. */
   liveCombos: number;
   /** liveMask[id] === 1 when the combo is not blocked by Hero or the board. */
@@ -223,6 +235,29 @@ function applyRow(
   if (base) applyRow(target, board, st, base, filters, depth + 1);
 }
 
+/**
+ * `target` × (1 − this row's factor), on top of the rows it is based on: what
+ * does NOT pass the row (the inverse of a raise row is what calls the bet but
+ * not the raise).
+ */
+function applyRowInverse(
+  target: ComboWeights,
+  board: readonly CardId[],
+  st: StreetState,
+  rowId: string,
+  filters: readonly CustomFilter[],
+): void {
+  const passing = new Float64Array(target);
+  applyRow(passing, board, st, rowId, filters);
+  const base = st.actionRows.find((r) => r.id === rowId)?.basedOn;
+  if (base) applyRow(target, board, st, base, filters);
+  for (let id = 0; id < COMBO_COUNT; id++) {
+    target[id] = Math.max(0, (target[id] ?? 0) - (passing[id] ?? 0));
+  }
+}
+
+const isInverted = (st: StreetState, rowId: string) => st.invertedRows?.includes(rowId) ?? false;
+
 /** The effective ranges of one street, or null if the board does not reach it. */
 export function streetView(input: ChainInput, street: Street): StreetView | null {
   const board = boardFor(input.hand, street);
@@ -251,18 +286,25 @@ export function streetView(input: ChainInput, street: Street): StreetView | null
     const prevBoard = boardFor(input.hand, s);
     if (!prevBoard) continue;
     // A played row always exists; if it ever went missing nothing continues.
-    applyRow(start, prevBoard, st, st.playedRow, input.filters);
+    if (isInverted(st, st.playedRow)) applyRowInverse(start, prevBoard, st, st.playedRow, input.filters);
+    else applyRow(start, prevBoard, st, st.playedRow, input.filters);
   }
 
   const st = input.streets[street];
   const rows: Record<string, ComboWeights> = {};
+  const inverse: Record<string, ComboWeights> = {};
   for (const ar of st.actionRows) {
     const w = new Float64Array(start);
     applyRow(w, board, st, ar.id, input.filters);
     rows[ar.id] = w;
+    if (isInverted(st, ar.id)) {
+      const inv = new Float64Array(start);
+      applyRowInverse(inv, board, st, ar.id, input.filters);
+      inverse[ar.id] = inv;
+    }
   }
 
-  return { street, board, classes: classifyBoard(board), start, rows, liveCombos, liveMask };
+  return { street, board, classes: classifyBoard(board), start, rows, inverse, liveCombos, liveMask };
 }
 
 // ── Counts per table row ─────────────────────────────────────────────────────

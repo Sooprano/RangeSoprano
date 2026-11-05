@@ -19,6 +19,8 @@ export type StreetTab = {
   available: boolean;
   /** The previous street's played row that feeds this one (null on the flop). */
   fedBy: ActionRow | null;
+  /** The played row of the previous street is inverted (D132). */
+  fedInverse?: boolean;
 };
 
 type Props = {
@@ -133,7 +135,7 @@ export function TopBar(p: Props) {
               <span className="text-sm font-semibold">{STREET_LABEL[t.street]}</span>
               <span className="text-[11px] text-content-muted">
                 {t.fedBy
-                  ? `${STREET_LABEL[t.street]} ← ${STREET_LABEL[STREETS[STREETS.indexOf(t.street) - 1]!]}: ${t.fedBy.label}`
+                  ? `${STREET_LABEL[t.street]} ← ${STREET_LABEL[STREETS[STREETS.indexOf(t.street) - 1]!]}: ${t.fedInverse ? 'inverso de ' : ''}${t.fedBy.label}`
                   : 'Rango preflop'}
               </span>
             </button>

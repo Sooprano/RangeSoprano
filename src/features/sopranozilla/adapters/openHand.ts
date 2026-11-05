@@ -194,6 +194,7 @@ export function repickSaved(
     ...saved,
     ...(opp.position ? { villainPosition: opp.position } : { villainPosition: undefined }),
     range,
+    stacks: opp.stacks ? { ...opp.stacks } : undefined,
     recorded: opp.recorded,
     meta: {
       ...meta,

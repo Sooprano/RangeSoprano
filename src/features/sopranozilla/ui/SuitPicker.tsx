@@ -39,14 +39,26 @@ type Props = {
   mode?: 'row' | 'start';
   /** Replaces the default card look (the floating panel brings its own). */
   className?: string;
+  /** Inverted row (D132): weights are shown and set as the inverse (100 − filter). */
+  inverted?: boolean;
 };
 
 /** What a combo goes back to: its override (row) or its range weight (start). */
-function baseOf(c: ComboCell, isStart: boolean): number | null {
-  return isStart ? Math.round(c.inRange * 100) : (c.override ?? null);
+function baseOf(c: ComboCell, isStart: boolean, inverted: boolean): number | null {
+  if (isStart) return Math.round(c.inRange * 100);
+  if (c.override === undefined) return null;
+  return inverted ? 100 - c.override : c.override;
 }
 
-export function SuitPicker({ hand, cells, onSet, onClose, mode = 'row', className }: Props) {
+export function SuitPicker({
+  hand,
+  cells,
+  onSet,
+  onClose,
+  mode = 'row',
+  className,
+  inverted = false,
+}: Props) {
   const isStart = mode === 'start';
   // Adding combos to the range is the common edit there; filtering them out here.
   const [pick, setPick] = useState<number>(isStart ? 100 : 0);
@@ -54,7 +66,8 @@ export function SuitPicker({ hand, cells, onSet, onClose, mode = 'row', classNam
   // Weights when the picker opened, updated by the taps (the picker is
   // re-mounted per hand and per grid target).
   const [base, setBase] = useState<Map<ComboId, number | null>>(
-    () => new Map(cells.filter((c) => !c.blocked).map((c) => [c.combo, baseOf(c, isStart)])),
+    () =>
+      new Map(cells.filter((c) => !c.blocked).map((c) => [c.combo, baseOf(c, isStart, inverted)])),
   );
   const at = (r: number, c: number) => cells.find((x) => x.rowSuit === r && x.colSuit === c);
   const live = cells.filter((c) => !c.blocked);

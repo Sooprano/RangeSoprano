@@ -48,7 +48,9 @@ function labelOf(
   const f = filters.find((x) => x.id === target.id);
   return {
     label: f?.name ?? 'Filtro',
-    definition: f ? `Filtro personalizado: ${describeExpr(f.expr, filters)}.` : 'Filtro personalizado.',
+    definition: f
+      ? `Filtro personalizado: ${describeExpr(f.expr, filters)}.`
+      : 'Filtro personalizado.',
   };
 }
 
@@ -92,7 +94,11 @@ function Row({
                 aria-pressed={isSel}
                 className={cn(
                   'w-full rounded px-1.5 py-0.5 text-left text-[13px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light',
-                  isSel ? 'font-semibold text-content' : empty ? 'text-content-disabled' : 'text-content',
+                  isSel
+                    ? 'font-semibold text-content'
+                    : empty
+                      ? 'text-content-disabled'
+                      : 'text-content',
                   'hover:bg-surface-hover',
                 )}
               >
@@ -102,7 +108,10 @@ function Row({
           </Tip>
           {row.target.kind === 'custom' && (
             <>
-              <IconButton label={`Editar ${label}`} onClick={() => filterActions.onEdit(row.target.id)}>
+              <IconButton
+                label={`Editar ${label}`}
+                onClick={() => filterActions.onEdit(row.target.id)}
+              >
                 <Pencil className="h-3 w-3" />
               </IconButton>
               <IconButton
@@ -111,7 +120,10 @@ function Row({
               >
                 <Copy className="h-3 w-3" />
               </IconButton>
-              <IconButton label={`Borrar ${label}`} onClick={() => filterActions.onDelete(row.target.id)}>
+              <IconButton
+                label={`Borrar ${label}`}
+                onClick={() => filterActions.onDelete(row.target.id)}
+              >
                 <Trash2 className="h-3 w-3" />
               </IconButton>
             </>
@@ -307,28 +319,41 @@ export function CategoryTable(props: Props) {
         </p>
       </details>
       <details className="mt-1 text-xs text-content-muted">
-        <summary className="cursor-pointer select-none hover:text-content">Atajos de teclado</summary>
+        <summary className="cursor-pointer select-none hover:text-content">
+          Atajos de teclado
+        </summary>
         <ul className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5">
           {[
             ['↑ / ↓', 'Moverse entre filas de la tabla'],
             ['1 – 9, 0', 'Peso 10 – 90 y 100 de la fila seleccionada (sin fila: el del pincel)'],
             ['F', '✓ en la fila seleccionada'],
             ['X', '✗ en la fila seleccionada'],
-            ['Clic / arrastre', 'Pintar con el peso del pincel (con una fila elegida, solo sus combos)'],
+            [
+              'Clic / arrastre',
+              'Pintar con el peso del pincel (con una fila elegida, solo sus combos)',
+            ],
             ['Clic derecho', 'Quitar la mano (peso 0)'],
             ['Alt + clic', 'Restaurar la mano (vuelve a lo que digan las filas)'],
             ['Shift + clic', 'Ver y editar los palos de la mano'],
             ['Control violeta', 'Con una fila elegida: toda la fila a la vez (peso y palos)'],
             ['Ctrl + Z', 'Deshacer la última edición'],
+            [
+              'Inv',
+              'Ver lo que NO sigue en la fila; si es la jugada, eso pasa a la siguiente calle',
+            ],
             ['[ / ]', 'Calle anterior / siguiente'],
           ].map(([k, v]) => (
             <li key={k} className="contents">
-              <kbd className="rounded border border-border px-1 font-mono text-[10px] text-content">{k}</kbd>
+              <kbd className="rounded border border-border px-1 font-mono text-[10px] text-content">
+                {k}
+              </kbd>
               <span>{v}</span>
             </li>
           ))}
         </ul>
-        <p className="mt-1">No funcionan mientras escribes en un campo ni con el constructor de filtros abierto.</p>
+        <p className="mt-1">
+          No funcionan mientras escribes en un campo ni con el constructor de filtros abierto.
+        </p>
       </details>
     </div>
   );

@@ -208,3 +208,64 @@ describe('invariants (§11.5)', () => {
     }
   });
 });
+
+describe('«Inv»: the inverse of a row (D132)', () => {
+  const sumOf = (w: ArrayLike<number>) => {
+    let s = 0;
+    for (let i = 0; i < w.length; i++) s += w[i] ?? 0;
+    return s;
+  };
+
+  it('row + inverse = the start range, and only the inverted rows get one', () => {
+    const flop = street(topPairOnly(50), { invertedRows: ['check'] });
+    const v = streetView(input({ flop }), 'flop')!;
+    const row = v.rows.check!;
+    const inv = v.inverse.check!;
+    expect(v.inverse['bet-33']).toBeUndefined();
+    for (let id = 0; id < COMBO_COUNT; id++) {
+      expect((row[id] ?? 0) + (inv[id] ?? 0)).toBeCloseTo(v.start[id] ?? 0, 9);
+    }
+    expect(sumOf(inv)).toBeGreaterThan(0);
+  });
+
+  it('an inverted played row chains its inverse: the turn starts with what did not pass', () => {
+    const plain = streetView(input({ flop: street(topPairOnly(100)) }), 'flop')!;
+    const flop = street(topPairOnly(100), { invertedRows: ['check'] });
+    const turn = streetView(input({ flop }), 'turn')!;
+    const flopView = streetView(input({ flop }), 'flop')!;
+    // Combo by combo, the turn starts with the flop's inverse (turn card aside).
+    for (let id = 0; id < COMBO_COUNT; id++) {
+      if (turn.liveMask[id] !== 1) continue;
+      expect(turn.start[id] ?? 0).toBeCloseTo(flopView.inverse.check![id] ?? 0, 9);
+    }
+    expect(sumOf(turn.start)).toBeLessThan(sumOf(flopView.start));
+    expect(sumOf(plain.rows.check!) + sumOf(flopView.inverse.check!)).toBeCloseTo(
+      sumOf(flopView.start),
+      6,
+    );
+  });
+
+  it('the inverse of a raise row is what bet but does not go on vs the raise', () => {
+    const flop: StreetState = {
+      actionRows: [
+        { id: 'call', label: 'Call', kind: 'call', mode: 'villain' },
+        {
+          id: 'raise-3',
+          label: 'Raise 3×',
+          kind: 'raise',
+          size: 3,
+          mode: 'villain',
+          basedOn: 'call',
+        },
+      ],
+      rows: { call: topPairOnly(100), 'raise-3': topPairOnly(50) },
+      mode: 'villain',
+      selectedRow: 'raise-3',
+      playedRow: 'call',
+      invertedRows: ['raise-3'],
+    };
+    const v = streetView(input({ flop }), 'flop')!;
+    const bet = sumOf(v.rows.call!);
+    expect(sumOf(v.inverse['raise-3']!)).toBeCloseTo(bet / 2, 6);
+  });
+});

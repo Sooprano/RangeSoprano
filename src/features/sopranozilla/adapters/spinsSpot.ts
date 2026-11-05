@@ -164,7 +164,8 @@ export function detectSpinsLine(
           {
             name: lone.name,
             position,
-            vs: 'BB',
+            // The player left to act behind: BB, or the SB when the BB raised.
+            vs: position === 'BB' ? (format === 'HU' ? 'BTN' : 'SB') : 'BB',
             wants: [
               lone.allin
                 ? { action: 'shove', size: 'AI', approx: false }

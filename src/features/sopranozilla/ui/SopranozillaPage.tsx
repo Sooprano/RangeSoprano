@@ -28,6 +28,7 @@ import { FilterBuilder } from './FilterBuilder';
 import { useAnalyzerShortcuts } from './shortcuts';
 import {
   CALL_ROW_ID,
+  reraiseRowId,
   useAnalyzerStore,
   visibleRows,
   type AnalyzerStreetState,
@@ -133,6 +134,10 @@ function loadDefaultTestHand(load: (h: AnalyzerHandInput, v: ComboWeights) => vo
 
 /** Preset band: where the selected row's initial state came from. */
 function presetText(st: AnalyzerStreetState): string {
+  // A re-raise all-in row starts empty (D133).
+  if (st.actionRows.find((r) => r.id === st.selectedRow)?.kind === 'reraise') {
+    return 'empieza vacía: marca qué manos van all-in sobre tu raise';
+  }
   // Presets off for now (not calibrated): every row starts at 100.
   if (!PRESETS_ENABLED) return 'empieza con todo ✓ 100 (sin presets por ahora)';
   const ref = st.presetRefs[st.selectedRow];
@@ -189,6 +194,8 @@ export default function SopranozillaPage() {
   const editStart = useAnalyzerStore((s) => s.editStart);
   const replaceStart = useAnalyzerStore((s) => s.replaceStart);
   const clearStartOverride = useAnalyzerStore((s) => s.clearStartOverride);
+  const toggleInverse = useAnalyzerStore((s) => s.toggleInverse);
+  const setEffStack = useAnalyzerStore((s) => s.setEffStack);
   const checkpoint = useAnalyzerStore((s) => s.checkpoint);
   const [io, setIo] = useState<'import' | 'export' | null>(null);
   // Painting a hand that is not in the range only filters: say how to add it.
@@ -471,6 +478,11 @@ export default function SopranozillaPage() {
   const st = streets[activeStreet];
   const editedRow = st.rows[st.selectedRow];
   const cont = view?.rows[st.selectedRow] ?? null;
+  // «Inv» (D132): the grid shows what does NOT pass the row; edits are mirrored
+  // (100 − weight) so what you paint is what you see.
+  const inverted = !editingStart && (st.invertedRows?.includes(st.selectedRow) ?? false);
+  const shown = (inverted ? view?.inverse[st.selectedRow] : cont) ?? cont;
+  const mirror = (w: number | null) => (w === null || !inverted ? w : 100 - w);
   const eq = useEquity(hand?.hero ?? null, view?.board ?? null, view?.start ?? null);
 
   const cells = useMemo(
@@ -478,13 +490,13 @@ export default function SopranozillaPage() {
       view && cont
         ? gridCells(
             view,
-            editingStart ? view.start : cont,
+            editingStart ? view.start : shown!,
             editingStart ? undefined : editedRow,
             highlightTarget,
             gridFilters,
           )
         : [],
-    [view, cont, editedRow, highlightTarget, gridFilters, editingStart],
+    [view, cont, shown, editedRow, highlightTarget, gridFilters, editingStart],
   );
   const model = useMemo(
     () => (view && cont ? tableModel(view, cont, editedRow, eq.table, filters) : null),
@@ -498,6 +510,9 @@ export default function SopranozillaPage() {
     [view, eq.table, eq.version],
   );
   const pot = hand?.pots?.[activeStreet];
+  // Effective stack behind on this street: typed by hand, or from the hand (D133).
+  const stackFromHand = hand?.stacks?.[activeStreet] ?? null;
+  const effStackBb = st.effStackBb ?? stackFromHand;
   const ev = useMemo(() => {
     if (!view) return null;
     const total = sum(view.start);
@@ -510,6 +525,10 @@ export default function SopranozillaPage() {
         const w = view.rows[r.id];
         if (r.kind === 'fold') return { id: r.id, kind: 'fold' };
         if (r.kind === 'raise') {
+          // Of what goes on vs the raise, the part that re-raises all-in (D133).
+          const sw = view.rows[reraiseRowId(r.size ?? 3)];
+          const shoveSum = sw ? sum(sw) : 0;
+          const callOnly = w && sw ? w.map((x, i) => Math.max(0, x - (sw[i] ?? 0))) : null;
           return {
             id: r.id,
             kind: 'raise',
@@ -517,6 +536,15 @@ export default function SopranozillaPage() {
             betRange,
             cont: w ? sum(w) : 0,
             eqCont: w ? equityOf(w, eq.table) : Number.NaN,
+            shove:
+              sw && callOnly && shoveSum > 0 && effStackBb !== null && pot !== undefined
+                ? {
+                    cont: shoveSum,
+                    eq: equityOf(sw, eq.table),
+                    eqCall: equityOf(callOnly, eq.table),
+                    allInTo: effStackBb,
+                  }
+                : null,
           };
         }
         return { id: r.id, kind: 'call', betRange, eq: w ? equityOf(w, eq.table) : Number.NaN };
@@ -544,7 +572,7 @@ export default function SopranozillaPage() {
     }));
     return { rows, bestId: table.bestId, betShare: total > 0 ? betRange / total : Number.NaN };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [view, st, pot, heroEq, eq.table, eq.version]);
+  }, [view, st, pot, heroEq, eq.table, eq.version, effStackBb]);
 
   // Every street, for "Equity por calle" (the background worker fills them).
   const flopView = useStreetView('flop', filters);
@@ -559,7 +587,12 @@ export default function SopranozillaPage() {
           // How much of the previous street continued after its played row.
           const prevView = i > 0 ? all[i - 1]! : null;
           const prevState = prevView ? streets[prevView.street] : null;
-          const prevPlayed = prevView && prevState ? prevView.rows[prevState.playedRow] : undefined;
+          // What went on to this street: the played row, or its inverse (D132).
+          const passOf = (pv: typeof v, ps: AnalyzerStreetState) =>
+            ps.invertedRows?.includes(ps.playedRow)
+              ? pv.inverse[ps.playedRow]
+              : pv.rows[ps.playedRow];
+          const prevPlayed = prevView && prevState ? passOf(prevView, prevState) : undefined;
           const prevRow = prevState?.actionRows.find((r) => r.id === prevState.playedRow);
           const prevTotal = prevView ? sum(prevView.start) : 0;
           const kept =
@@ -576,7 +609,7 @@ export default function SopranozillaPage() {
               : null;
           const table = streetTables.tables[v.street] ?? null;
           const s = streets[v.street];
-          const played = v.rows[s.playedRow];
+          const played = passOf(v, s);
           const playedRow = s.actionRows.find((r) => r.id === s.playedRow);
           const total = sum(v.start);
           // Thresholds only depend on the sizes (pot = 1):
@@ -628,26 +661,26 @@ export default function SopranozillaPage() {
       view && cont && openHand
         ? classCombos(
             view,
-            editingStart ? view.start : cont,
+            editingStart ? view.start : shown!,
             editingStart ? undefined : editedRow,
             openHand,
             filters,
           )
         : null,
-    [view, cont, editedRow, openHand, filters, editingStart],
+    [view, cont, shown, editedRow, openHand, filters, editingStart],
   );
   const hoverCells = useMemo(
     () =>
       view && cont && hovered
         ? classCombos(
             view,
-            editingStart ? view.start : cont,
+            editingStart ? view.start : shown!,
             editingStart ? undefined : editedRow,
             hovered,
             filters,
           )
         : [],
-    [view, cont, editedRow, hovered, filters, editingStart],
+    [view, cont, shown, editedRow, hovered, filters, editingStart],
   );
   const hoverTarget = useMemo<ReadonlySet<ComboId> | null>(
     () =>
@@ -712,6 +745,7 @@ export default function SopranozillaPage() {
       street: s,
       available: available.includes(s),
       fedBy: prev ? (prev.actionRows.find((r) => r.id === prev.playedRow) ?? null) : null,
+      fedInverse: prev?.invertedRows?.includes(prev.playedRow) ?? false,
     };
   });
 
@@ -781,7 +815,7 @@ export default function SopranozillaPage() {
       return;
     }
     setNotice(null);
-    const weight = stroke === 'restore' ? null : stroke === 'remove' ? 0 : brush;
+    const weight = mirror(stroke === 'restore' ? null : stroke === 'remove' ? 0 : brush);
     if (limited) {
       // Only the row's combos of this hand, written per combo.
       setComboOverrides(limited.map((combo) => ({ combo, weight })));
@@ -908,6 +942,13 @@ export default function SopranozillaPage() {
       onSelect={selectRow}
       onMarkPlayed={(id) => setPlayedRow(activeStreet, id)}
       onAddSize={addBetSize}
+      effStack={effStackBb}
+      stackFromHand={stackFromHand}
+      onEffStack={setEffStack}
+      reraiseCombos={(m: number) => {
+        const w = view.rows[reraiseRowId(m)];
+        return w ? sum(w) : 0;
+      }}
     />
   );
 
@@ -1116,7 +1157,9 @@ export default function SopranozillaPage() {
               editado
             </span>
           )}
-          {st.selectedRow !== st.playedRow && activeStreet !== 'river' && (
+          {st.selectedRow !== st.playedRow &&
+            activeStreet !== 'river' &&
+            !st.selectedRow.startsWith('reraise-') && (
             <span role="note" className="mt-1 block text-xs text-sky-700 dark:text-sky-300">
               No es la fila jugada: la siguiente calle usa «{playedLabel}». Para que use esta, toca
               «Marcar como jugada».
@@ -1233,6 +1276,16 @@ export default function SopranozillaPage() {
               targetLabel={selectedLabel}
               canUndo={undoDepth > 0}
               onUndo={undo}
+              inverted={inverted}
+              onToggleInverse={() => {
+                checkpoint();
+                toggleInverse(st.selectedRow);
+              }}
+              inverseCombos={inverted && shown ? sum(shown) : 0}
+              rowIsPlayed={st.selectedRow === st.playedRow}
+              nextStreet={
+                activeStreet === 'flop' ? 'turn' : activeStreet === 'turn' ? 'river' : null
+              }
             />
             <SzGrid
               cells={cells}
@@ -1266,15 +1319,16 @@ export default function SopranozillaPage() {
                 onClose={() => setOpenHand(null)}
               >
                 <SuitPicker
-                  key={`${openHand}-${gridTarget}`}
+                  key={`${openHand}-${gridTarget}-${inverted ? 'inv' : ''}`}
                   hand={openHand}
                   cells={openCombos}
                   mode={editingStart ? 'start' : 'row'}
+                  inverted={inverted}
                   className="p-3"
                   onSet={(entries) => {
                     checkpoint();
                     if (editingStart) setStartCombos(entries);
-                    else setComboOverrides(entries);
+                    else setComboOverrides(entries.map((e) => ({ ...e, weight: mirror(e.weight) })));
                   }}
                   onClose={() => setOpenHand(null)}
                 />

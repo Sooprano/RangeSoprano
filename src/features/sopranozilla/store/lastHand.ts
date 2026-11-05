@@ -100,6 +100,7 @@ const zOpponent = z
     spot: zSpot.nullable(),
     spotNote: z.string().max(300).nullable(),
     spins: zSpins.nullable().optional(),
+    stacks: zStreetMap(z.number().nonnegative().max(1e7)).optional(),
   })
   .strict();
 
@@ -109,6 +110,7 @@ const zSavedHand = z
     hero: z.string().max(10),
     board: z.string().max(20),
     pots: zStreetMap(z.number().positive().max(1e7)),
+    stacks: zStreetMap(z.number().nonnegative().max(1e7)).optional(),
     heroPosition: z.string().max(8).optional(),
     villainPosition: z.string().max(8).optional(),
     // Edited ranges are saved combo by combo when suits differ: room for it.
@@ -138,6 +140,7 @@ export type SavedHand = {
   hero: string;
   board: string;
   pots: AnalyzerHandInput['pots'] & object;
+  stacks?: AnalyzerHandInput['stacks'];
   heroPosition?: string | undefined;
   villainPosition?: string | undefined;
   /** Villain's preflop range as text (`[NN]…[/NN]` text format). */
@@ -157,6 +160,7 @@ export function toSavedHand(
     hero: formatCards(hand.hero),
     board: formatCards(hand.board),
     pots: { ...hand.pots },
+    ...(hand.stacks && { stacks: { ...hand.stacks } }),
     ...(hand.heroPosition && { heroPosition: hand.heroPosition }),
     ...(hand.villainPosition && { villainPosition: hand.villainPosition }),
     range,
@@ -180,6 +184,7 @@ export function fromSavedHand(saved: SavedHand): {
       hero: [hero[0]!, hero[1]!] as [CardId, CardId],
       board,
       pots: { ...saved.pots },
+      stacks: saved.stacks ? { ...saved.stacks } : undefined,
       heroPosition: saved.heroPosition,
       villainPosition: saved.villainPosition,
     },

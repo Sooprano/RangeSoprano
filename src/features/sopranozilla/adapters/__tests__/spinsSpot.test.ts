@@ -22,6 +22,13 @@ const catalog = buildSpinsCatalog(data);
 /** [file, format, effective bb, line, seat=range per player in the pot]. */
 const EXPECTED: [string, string, number, string, string][] = [
   [
+    'ipoker_txt/HU_limp_check_turn_raise_12622361249.txt',
+    'HU',
+    16,
+    'SB limp · BB check',
+    'BTN=SBHU 16bb LP ; BB=BBHU 16bb X',
+  ],
+  [
     'ipoker_txt/3H_open_call_BU_12622249958.txt',
     '3H',
     23,

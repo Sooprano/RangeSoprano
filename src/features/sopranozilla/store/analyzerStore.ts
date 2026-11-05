@@ -61,10 +61,33 @@ function raiseRow(multiple: number): ActionRow {
   };
 }
 
-/** Rows shown for the street's current mode. */
+export function reraiseRowId(multiple: number): string {
+  return `reraise-${multiple}`;
+}
+
+/**
+ * The villain re-raising all-in over Hero's raise (D133): its range sits on
+ * the raise row's range (of what goes on vs the raise, what shoves). Starts
+ * empty, so the raise EV is the old one until hands are marked.
+ */
+function reraiseRow(multiple: number): ActionRow {
+  return {
+    id: reraiseRowId(multiple),
+    label: `Re-sube all-in (vs Raise ${multiple}x)`,
+    kind: 'reraise',
+    size: multiple,
+    mode: 'villain',
+    basedOn: raiseRowId(multiple),
+  };
+}
+
+/** A raise row and its re-raise all-in row, in that order. */
+const raiseRows = (m: number): ActionRow[] => [raiseRow(m), reraiseRow(m)];
+
+/** Rows shown as EV cards for the street's current mode (a re-raise lives inside its raise). */
 export function visibleRows(st: StreetState): ActionRow[] {
   const mode = st.mode ?? 'hero';
-  return st.actionRows.filter((r) => (r.mode ?? 'hero') === mode);
+  return st.actionRows.filter((r) => (r.mode ?? 'hero') === mode && r.kind !== 'reraise');
 }
 
 export function betRowId(size: number): string {
@@ -110,6 +133,8 @@ export type AnalyzerStreetState = StreetState & {
   /** How the other player answered the recorded action. */
   recordedResponse: Response | null;
   modeMemory: Record<AnalyzerMode, { selectedRow: string; playedRow: string }>;
+  /** Effective stack behind at the start of the street, typed by hand (bb); null = from the hand (D133). */
+  effStackBb: number | null;
 };
 
 /**
@@ -137,7 +162,7 @@ export function defaultStreetState(
     // "Villano apuesta": Fold has no range (the hand ends there).
     { id: FOLD_ROW_ID, label: 'Fold', kind: 'fold', mode: 'villain' },
     { id: CALL_ROW_ID, label: 'Call', kind: 'call', mode: 'villain' },
-    ...[...raiseMultiples].sort((a, b) => a - b).map(raiseRow),
+    ...[...raiseMultiples].sort((a, b) => a - b).flatMap(raiseRows),
   ];
 
   let recordedRow: string | null = null;
@@ -149,6 +174,12 @@ export function defaultStreetState(
   const presetRefs: Record<string, PresetRef> = {};
   for (const r of actionRows) {
     if (r.kind === 'fold') continue;
+    if (r.kind === 'reraise') {
+      // Nobody re-raises until hands are marked.
+      rows[r.id] = emptyActionRow();
+      presetRefs[r.id] = { kind: 'none', action: null };
+      continue;
+    }
     if (r.kind === 'check') {
       // §12: the Check preset is the whole range.
       rows[r.id] = fullActionRow();
@@ -187,6 +218,7 @@ export function defaultStreetState(
       hero: { selectedRow: heroPlayed, playedRow: heroPlayed },
       villain: { selectedRow: villainPlayed, playedRow: villainPlayed },
     },
+    effStackBb: null,
   };
 }
 
@@ -302,6 +334,10 @@ type AnalyzerActions = {
   replaceStart: (street: Street, weights: ComboWeights) => void;
   /** Turn / river: back to the range chained from the previous street. */
   clearStartOverride: (street: Street) => void;
+  /** «Inv» (D132): show / chain what does NOT pass this row of the active street. */
+  toggleInverse: (rowId: string) => void;
+  /** Effective stack behind on the active street, typed by hand (null = from the hand). */
+  setEffStack: (bb: number | null) => void;
   /**
    * Saves the current range and street edits before an edit, so «Deshacer»
    * can go back to them. Calls with the same `key` in a row are one step (a
@@ -476,20 +512,24 @@ export const useAnalyzerStore = create<AnalyzerStore>()((set, get) => {
       const st = streets[activeStreet];
       const ar = raiseRow(m);
       if (st.rows[ar.id]) return;
+      const rr = reraiseRow(m);
       const row = fullActionRow();
-      const others = st.actionRows.filter((r) => r.kind !== 'raise');
-      const raises = [...st.actionRows.filter((r) => r.kind === 'raise'), ar].sort(
-        (a, b) => (a.size ?? 0) - (b.size ?? 0),
-      );
+      const empty = emptyActionRow();
+      const others = st.actionRows.filter((r) => r.kind !== 'raise' && r.kind !== 'reraise');
+      const multiples = [
+        ...st.actionRows.filter((r) => r.kind === 'raise').map((r) => r.size ?? 0),
+        m,
+      ].sort((a, b) => a - b);
+      const none: PresetRef = { kind: 'none', action: null };
       set({
         streets: {
           ...streets,
           [activeStreet]: {
             ...st,
-            actionRows: [...others, ...raises],
-            rows: { ...st.rows, [ar.id]: row },
-            presets: { ...st.presets, [ar.id]: row },
-            presetRefs: { ...st.presetRefs, [ar.id]: { kind: 'none', action: null } },
+            actionRows: [...others, ...multiples.flatMap(raiseRows)],
+            rows: { ...st.rows, [ar.id]: row, [rr.id]: empty },
+            presets: { ...st.presets, [ar.id]: row, [rr.id]: empty },
+            presetRefs: { ...st.presetRefs, [ar.id]: none, [rr.id]: none },
           },
         },
       });
@@ -602,6 +642,21 @@ export const useAnalyzerStore = create<AnalyzerStore>()((set, get) => {
       set({
         streets: { ...streets, [street]: { ...st, startOverride: recordFromWeights(weights) } },
       });
+    },
+
+    setEffStack: (bb) => {
+      const { streets, activeStreet } = get();
+      const st = streets[activeStreet];
+      const v = bb !== null && Number.isFinite(bb) && bb > 0 ? Math.round(bb * 100) / 100 : null;
+      set({ streets: { ...streets, [activeStreet]: { ...st, effStackBb: v } } });
+    },
+
+    toggleInverse: (rowId) => {
+      const { streets, activeStreet } = get();
+      const st = streets[activeStreet];
+      const now = st.invertedRows ?? [];
+      const invertedRows = now.includes(rowId) ? now.filter((r) => r !== rowId) : [...now, rowId];
+      set({ streets: { ...streets, [activeStreet]: { ...st, invertedRows } } });
     },
 
     clearStartOverride: (street) => {

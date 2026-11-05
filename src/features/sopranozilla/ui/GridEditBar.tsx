@@ -5,7 +5,7 @@
 // that row's combos; the whole row at once is the violet control under the
 // grid (one job per control: the double click on these weights was dropped).
 
-import { Download, Paintbrush, Undo2, Upload } from 'lucide-react';
+import { ArrowLeftRight, Download, Paintbrush, Undo2, Upload } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import type { Street } from '../engine/equity';
 import type { GridTarget } from '../store/analyzerStore';
@@ -30,6 +30,14 @@ type Props = {
   targetLabel: string | null;
   canUndo: boolean;
   onUndo: () => void;
+  /** «Inv» (D132): the grid shows what does NOT pass the row. */
+  inverted: boolean;
+  onToggleInverse: () => void;
+  /** Weighted combos of the inverse, and whether it chains (the row is the played one). */
+  inverseCombos: number;
+  rowIsPlayed: boolean;
+  /** "turn" / "river"; null on the river (nothing comes after). */
+  nextStreet: string | null;
 };
 
 export function GridEditBar(p: Props) {
@@ -75,6 +83,22 @@ export function GridEditBar(p: Props) {
             </button>
           ))}
         </div>
+        {p.target === 'row' && (
+          <button
+            type="button"
+            aria-pressed={p.inverted}
+            onClick={p.onToggleInverse}
+            title={`Inverso (como «Inv» en Flopzilla): muestra lo que NO sigue en «${p.rowLabel}». Si es la fila jugada, eso es lo que pasa a la siguiente calle (ej. el rango con el que el villano checkea).`}
+            className={cn(
+              'flex items-center gap-1 rounded-md border px-2 py-1 font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light',
+              p.inverted
+                ? 'border-rose-500 bg-rose-500 text-white'
+                : 'border-border text-content-muted hover:bg-surface-hover hover:text-content',
+            )}
+          >
+            <ArrowLeftRight className="h-3.5 w-3.5" /> Inv
+          </button>
+        )}
         <span className="ml-auto flex gap-1">
           <button
             type="button"
@@ -104,6 +128,21 @@ export function GridEditBar(p: Props) {
         </span>
       </div>
 
+      {p.target === 'row' && p.inverted && (
+        <p
+          role="note"
+          className="mt-2 rounded-md bg-rose-500/10 px-2 py-1 text-rose-700 dark:text-rose-300"
+        >
+          <b>Inverso:</b> el grid muestra lo que <b>no</b> sigue en «{p.rowLabel}» (
+          <span className="tabular-nums">{p.inverseCombos.toFixed(2)}</span> combos).{' '}
+          {p.nextStreet === null
+            ? null
+            : p.rowIsPlayed
+              ? `Esto es lo que pasa al ${p.nextStreet}.`
+              : `Para que pase al ${p.nextStreet}, marca «${p.rowLabel}» como jugada.`}{' '}
+          Lo que pintas es lo que ves; la tabla sigue marcando lo que sí sigue.
+        </p>
+      )}
       {p.target === 'start' && p.startFixed && (
         <p role="note" className="mt-2 text-sky-700 dark:text-sky-300">
           El rango del {STREET_LABEL[p.street]} está fijado a mano: ya no sigue lo que filtres en la

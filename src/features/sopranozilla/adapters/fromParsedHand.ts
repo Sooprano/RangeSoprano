@@ -23,6 +23,8 @@ export type OpponentOption = {
   spotNote: string | null;
   /** Spins hands only (D128): the line and this player's wants. */
   spins?: SpinsInfo | null | undefined;
+  /** Effective stack behind (bb) at the start of each street vs Hero (D133). */
+  stacks?: Partial<Record<Street, number>> | undefined;
 };
 
 export type AdaptedHand = {
@@ -94,6 +96,35 @@ function cardIds(cards: ParsedHand['board']): CardId[] | null {
   return ids.every((c): c is CardId => c !== null) ? ids : null;
 }
 
+/**
+ * Smaller of the two stacks behind (in bb) when each postflop street starts:
+ * the most a re-raise all-in can put in on that street.
+ */
+export function stacksBehind(
+  hand: ParsedHand,
+  hero: string,
+  villain: string,
+): Partial<Record<Street, number>> {
+  const bb = hand.bigBlind;
+  if (!bb || bb <= 0) return {};
+  const start = (name: string) => hand.players.find((p) => p.name === name)?.stack ?? 0;
+  const left = new Map([
+    [hero, start(hero)],
+    [villain, start(villain)],
+  ]);
+  const out: Partial<Record<Street, number>> = {};
+  for (const sd of hand.streets) {
+    if (sd.street !== 'preflop') {
+      const eff = Math.min(left.get(hero)!, left.get(villain)!);
+      out[sd.street] = Math.max(0, Math.round((eff / bb) * 100) / 100);
+    }
+    for (const d of sd.decisions) {
+      if (left.has(d.actor)) left.set(d.actor, left.get(d.actor)! - d.amount);
+    }
+  }
+  return out;
+}
+
 function opponentOf(
   hand: ParsedHand,
   hero: string,
@@ -115,6 +146,7 @@ function opponentOf(
     spot: spot.ok ? spot.spot : null,
     spotNote: spot.ok ? null : spot.reason,
     spins: spinsInfoOf(hand, positions, name),
+    stacks: stacksBehind(hand, hero, name),
   };
 }
 
@@ -176,6 +208,7 @@ export function fromParsedHand(hand: ParsedHand, villainName?: string): AdaptRes
         hero: [heroCards[0]!, heroCards[1]!],
         board: board.slice(0, 5),
         pots,
+        stacks: villain.stacks,
         heroPosition,
         villainPosition: villain.position ?? undefined,
       },

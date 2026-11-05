@@ -1,0 +1,27 @@
+GAME #12622361249 Version:26.7.1.28 Uncalled:Y Texas Hold'em NL  Tournament 2026-11-04 03:03:47/GMT
+Table Info: Size: 3, Blinds: 15/30, Ante: 5
+Table Twister €20 SNG, 1183590775, 1183590774 (Tournament: Twister €20 SNG Buy-In: €18.60 + €1.40)
+Seat 6: Hero (€1,020.00 in chips)  DEALER
+Seat 10: Rival1 (€480.00 in chips)
+Hero: Post Ante €5.00
+Rival1: Post Ante €5.00
+Hero: Post SB €15.00
+Rival1: Post BB €30.00
+*** HOLE CARDS ***
+Dealt to Hero [D4 H10]
+Hero: Call €15.00
+Rival1: Check
+*** FLOP *** [HQ S5 S10]
+Rival1: Check
+Hero: Check
+*** TURN *** [S4]
+Rival1: Bet €30.00
+Hero: Raise (NF) €120.00
+Rival1: Raise (NF) €445.00
+Hero: Call €325.00
+*** RIVER *** [D3]
+*** SUMMARY ***
+Total pot €960.00 Rake €0.00
+Hero: Shows [D4 H10] Two Pair, Tens and Fours
+Rival1: Shows [CK D10] One Pair, Tens
+Hero: wins €960.00

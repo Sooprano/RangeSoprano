@@ -135,3 +135,47 @@ describe('"Villano apuesta" formulas', () => {
     expect(t.bestId).toBe('raise-3');
   });
 });
+
+describe('raise with a re-raise all-in (D133)', () => {
+  // The user's hand: turn pot 70 chips = 2.333bb, villain bets 1bb, Hero
+  // raises to 4bb, the villain has 14.833bb behind (all-in to 14.833).
+  const P = 70 / 30;
+  const base = { pot: P, bet: 1, raiseTo: 4, betRange: 100, cont: 40, eqCont: 0.45 };
+
+  it('without shoves it is the old formula', () => {
+    const old = raiseEv(base);
+    expect(old.reraise).toBeNull();
+    expect(old.ev).toBeCloseTo(0.6 * (P + 1) + 0.4 * (0.45 * (P + 8) - 4), 9);
+  });
+
+  it('splits what goes on into calls and all-ins; facing the all-in Hero folds when calling is worse', () => {
+    const r = raiseEv({
+      ...base,
+      shove: { cont: 20, eq: 0.3, eqCall: 0.5, allInTo: 14.833 },
+    });
+    const call = 0.3 * (P + 2 * 14.833) - 14.833; // −5.23: worse than folding (−4)
+    expect(r.reraise!.call).toBe(false);
+    expect(r.reraise!.callEv).toBeCloseTo(call, 9);
+    expect(r.reraise!.need).toBeCloseTo((14.833 - 4) / (P + 2 * 14.833), 9);
+    expect(r.reraise!.share).toBeCloseTo(0.5, 9);
+    expect(r.ev).toBeCloseTo(0.6 * (P + 1) + 0.2 * (0.5 * (P + 8) - 4) + 0.2 * -4, 9);
+  });
+
+  it('calls the all-in when the equity is enough', () => {
+    const r = raiseEv({ ...base, shove: { cont: 20, eq: 0.6, eqCall: 0.5, allInTo: 14.833 } });
+    expect(r.reraise!.call).toBe(true);
+    expect(r.ev).toBeCloseTo(
+      0.6 * (P + 1) + 0.2 * (0.5 * (P + 8) - 4) + 0.2 * (0.6 * (P + 2 * 14.833) - 14.833),
+      9,
+    );
+  });
+
+  it('a raise that is already all in cannot be re-raised', () => {
+    const r = raiseEv({
+      ...base,
+      raiseTo: 15,
+      shove: { cont: 20, eq: 0.3, eqCall: 0.5, allInTo: 14.833 },
+    });
+    expect(r.reraise).toBeNull();
+  });
+});

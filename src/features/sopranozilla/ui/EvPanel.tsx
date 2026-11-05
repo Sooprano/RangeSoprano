@@ -1,17 +1,21 @@
 // EV calculator (§9), two modes:
 // - "Hero decide": Check + bet sizes. Each bet has its own continuation range.
 // - "Villano apuesta": Fold / Call / Raise N×. Call's range is the villain's
-//   betting range; each raise's range ("calls the raise") sits on top of it.
+//   betting range; each raise's range ("goes on vs the raise") sits on top of
+//   it, and inside each raise card "Si te re-sube all-in" (D133): of what goes
+//   on, the hands that shove — like a solver's Fold / Call / All-in answer.
+//   Facing the all-in Hero takes the better of calling and folding.
 // Selecting a row makes the category table edit its range. Shows what
 // continues, fold equity, Hero equity, EV in bb / % of the pot, the played row
 // and the best EV, with the green / amber / rose rule of `tone.ts`.
 
 import { useState } from 'react';
-import { Flag, Plus, Trophy } from 'lucide-react';
+import { Flag, Plus, Trophy, Zap } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import type { ActionRow, AnalyzerMode } from '../engine/chain';
 import type { EvRowResult } from '../engine/ev';
-import { pct } from './format';
+import { reraiseRowId } from '../store/analyzerStore';
+import { combos as fmtCombos, pct } from './format';
 import { evTone, TONE_BAR, TONE_TEXT, toneVs, type Tone } from './tone';
 
 export type EvRowView = ActionRow & EvRowResult & { edited: boolean };
@@ -35,6 +39,13 @@ type Props = {
   onMarkPlayed: (id: string) => void;
   onAddSize: (size: number) => void;
   onAddRaise: (multiple: number) => void;
+  /** Effective stack behind on this street (bb): typed, or from the hand (D133). */
+  effStack: number | null;
+  /** The value the hand gives (null for a test hand). */
+  stackFromHand: number | null;
+  onEffStack: (bb: number | null) => void;
+  /** Weighted combos marked as re-raising all-in over the raise of `multiple`. */
+  reraiseCombos: (multiple: number) => number;
 };
 
 function signed(x: number, digits: number): string {
@@ -365,6 +376,22 @@ export function EvPanel(p: Props) {
                 </div>
               )}
 
+              {r.kind === 'raise' && r.size !== undefined && (
+                <ReraiseBlock
+                  multiple={r.size}
+                  raiseTo={r.bet}
+                  result={r.reraise ?? null}
+                  marked={p.reraiseCombos(r.size)}
+                  selected={p.selectedRow === reraiseRowId(r.size)}
+                  onSelect={() => p.onSelect(reraiseRowId(r.size!))}
+                  potKnown={p.pot !== undefined}
+                  pending={p.pending}
+                  effStack={p.effStack}
+                  stackFromHand={p.stackFromHand}
+                  onEffStack={p.onEffStack}
+                />
+              )}
+
               {r.bluffThreshold !== null && Number.isFinite(r.bluffThreshold) && (
                 <>
                   <FoldBar foldEq={r.foldEq} threshold={r.bluffThreshold} tone={foldTone} />
@@ -445,9 +472,127 @@ export function EvPanel(p: Props) {
         Supuesto: equity hasta el river sin apuestas posteriores; no modela la realización de
         equity.{' '}
         {villain
-          ? 'P = bote antes de la apuesta, V = apuesta del villano, R = tu raise (total). Call: EV = eq × (P + 2V) − V. Raise: EV = fold eq. × (P + V) + (1 − fold eq.) × (eq × (P + 2R) − R).'
+          ? 'P = bote antes de la apuesta, V = apuesta del villano, R = tu raise (total), A = su all-in (total). Call: EV = eq × (P + 2V) − V. Raise: EV = fold eq. × (P + V) + paga × (eq × (P + 2R) − R) + re-sube × máx(eq × (P + 2A) − A ; −R).'
           : 'Check: EV = tu equity × bote. Apuesta B: EV = fold eq. × bote + (1 − fold eq.) × (tu eq. × (bote + 2B) − B).'}
       </p>
+    </div>
+  );
+}
+
+/**
+ * Inside a raise card (D133): what happens if the villain re-raises all-in.
+ * "Elegir manos" selects the re-raise row, so the table and the grid mark,
+ * of what goes on vs the raise, the hands that shove.
+ */
+function ReraiseBlock(p: {
+  multiple: number;
+  raiseTo: number | null;
+  result: EvRowResult['reraise'] | null;
+  marked: number;
+  selected: boolean;
+  onSelect: () => void;
+  potKnown: boolean;
+  pending: boolean;
+  effStack: number | null;
+  stackFromHand: number | null;
+  onEffStack: (bb: number | null) => void;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const alreadyAllIn = p.effStack !== null && p.raiseTo !== null && p.raiseTo >= p.effStack;
+  const res = p.result;
+  return (
+    <div
+      className={cn(
+        'mt-2 rounded-md border border-dashed p-2 text-[11px]',
+        p.selected ? 'border-rose-400 bg-rose-500/10' : 'border-border',
+      )}
+    >
+      <div className="flex flex-wrap items-center gap-1.5">
+        <Zap className="h-3.5 w-3.5 text-rose-500" />
+        <span className="mr-auto font-semibold text-content">Si te re-sube all-in</span>
+        {!alreadyAllIn && (
+          <button
+            type="button"
+            aria-pressed={p.selected}
+            onClick={p.onSelect}
+            title="Marca en la tabla o en el grid qué manos van all-in, de las que siguen contra tu raise"
+            className={cn(
+              'rounded border px-1.5 py-px font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light',
+              p.selected
+                ? 'border-rose-500 bg-rose-500 text-white'
+                : 'border-border text-content-muted hover:bg-surface-hover hover:text-content',
+            )}
+          >
+            {p.selected ? 'Marcando manos…' : 'Elegir manos'}
+          </button>
+        )}
+      </div>
+
+      {alreadyAllIn ? (
+        <p className="mt-1 text-content-muted">Tu raise ya es all-in: no queda re-subida.</p>
+      ) : !p.potKnown ? (
+        <p className="mt-1 text-content-muted">Hace falta el bote en bb para calcularlo.</p>
+      ) : p.marked <= 0 ? (
+        <p className="mt-1 text-content-muted">
+          {p.selected
+            ? 'Marca en la tabla (✓ y peso) o pinta en el grid las manos que van all-in. Solo cuentan las que siguen contra tu raise.'
+            : 'Nadie re-sube todavía: el EV supone que todo lo que sigue solo paga. Toca «Elegir manos» para marcar las que van all-in.'}
+        </p>
+      ) : p.effStack === null ? (
+        <p className="mt-1 text-amber-700 dark:text-amber-300">
+          Escribe el stack efectivo de esta calle para calcular el all-in.
+        </p>
+      ) : res ? (
+        <p className="mt-1 text-content-muted">
+          Re-sube <span className="tabular-nums text-content">{pct(res.share, 0)}</span> de lo que
+          sigue ({fmtCombos(p.marked)} combos) a{' '}
+          <span className="tabular-nums text-content">{res.allInTo.toFixed(1)} bb</span> · tu eq.{' '}
+          <span className="tabular-nums text-content">{p.pending ? '…' : pct(res.eq)}</span> ·
+          necesitas <span className="tabular-nums text-content">{pct(res.need, 0)}</span> para pagar
+          →{' '}
+          {p.pending ? (
+            '…'
+          ) : res.call ? (
+            <b className="text-emerald-700 dark:text-emerald-300">
+              Pagar ({signed(res.callEv, 2)} bb, mejor que foldear {res.foldEv.toFixed(2)} bb)
+            </b>
+          ) : (
+            <b className="text-rose-700 dark:text-rose-300">
+              Foldear ({res.foldEv.toFixed(2)} bb; pagar daría {signed(res.callEv, 2)} bb)
+            </b>
+          )}
+          . Ya está dentro del EV del raise.
+        </p>
+      ) : null}
+
+      {!alreadyAllIn && (
+        <label className="mt-1.5 flex flex-wrap items-center gap-1.5 text-content-muted">
+          Stack efectivo en esta calle
+          <input
+            type="number"
+            min={0}
+            step={0.5}
+            inputMode="decimal"
+            value={draft ?? p.effStack ?? ''}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={() => {
+              if (draft === null) return;
+              const n = Number(draft.replace(',', '.'));
+              p.onEffStack(draft.trim() === '' || !(n > 0) ? null : n);
+              setDraft(null);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+            }}
+            className="w-16 rounded border border-border bg-bg px-1 py-px text-right tabular-nums text-content"
+            aria-label="Stack efectivo en esta calle, en bb"
+          />
+          bb
+          {p.stackFromHand !== null && p.effStack === p.stackFromHand && (
+            <span className="text-content-disabled">(de la mano)</span>
+          )}
+        </label>
+      )}
     </div>
   );
 }
