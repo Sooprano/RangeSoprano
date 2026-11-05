@@ -39,6 +39,12 @@ describe('opening a spins hand', () => {
     expect(meta.rangeLabel).toBe('BU OR 12bb · Regular');
   });
 
+  it('iPoker TEXT export (chips printed with €) is a spin too: BB gets «BBvsBU 22bb call»', async () => {
+    const meta = await open('ipoker_txt/3H_open_call_BU_12622249958.txt');
+    expect(meta.rangeLabel).toBe('BBvsBU 22bb call · Regular');
+    expect(meta.spot).toBe('BU abre a 2bb · BB paga');
+  });
+
   it('a spot without folder (SB 3-bets the BU) asks for a range', async () => {
     const meta = await open('pokerstars/3H_3bet_call_BU_251724712673.txt');
     expect(meta.rangeLabel).toBeNull();
@@ -48,6 +54,6 @@ describe('opening a spins hand', () => {
   it('a cash hand does not need the spins catalog', () => {
     const hand = handOf('pokerstars/HU_limp_check_SB_255189531825.txt');
     expect(needsSpinsCatalog(hand)).toBe(true);
-    expect(needsSpinsCatalog({ ...hand, currency: '€' })).toBe(false);
+    expect(needsSpinsCatalog({ ...hand, currency: '€', tournament: false })).toBe(false);
   });
 });

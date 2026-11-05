@@ -89,11 +89,14 @@ export function spinsSeat(position: Position, format: SpinsFormat): string {
   return position;
 }
 
-/** Is this hand a spin? Tournament chips (no currency) and 2 or 3 players dealt. */
+/**
+ * Is this hand a spin? A tournament hand (or tournament chips, with no
+ * currency) with 2 or 3 players dealt. iPoker's text export prints the chips
+ * with "€", so the tournament flag decides there.
+ */
 export function isSpinsHand(hand: ParsedHand, positions: Map<string, Position> | null): boolean {
-  return (
-    hand.currency === '' && positions !== null && (positions.size === 2 || positions.size === 3)
-  );
+  const tournament = hand.tournament === true || hand.currency === '';
+  return tournament && positions !== null && (positions.size === 2 || positions.size === 3);
 }
 
 export function detectSpinsLine(

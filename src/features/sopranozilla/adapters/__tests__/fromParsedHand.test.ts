@@ -92,7 +92,7 @@ describe('fromParsedHand', () => {
     expect(a.warnings).toEqual([]);
   });
 
-  it('a check-raise is recorded as the villain raising Hero\'s bet', () => {
+  it("a check-raise is recorded as the villain raising Hero's bet", () => {
     const hand = gg(
       `UTGp: folds
 HJp: folds
@@ -117,7 +117,11 @@ Hero: folds`,
   });
 
   it('a hand that ends preflop cannot be analyzed', () => {
-    const r = fromParsedHand(gg('UTGp: folds\nHJp: folds\nCOp: folds\nHero: raises $0.15 to $0.25\nSBp: folds\nBBp: folds'));
+    const r = fromParsedHand(
+      gg(
+        'UTGp: folds\nHJp: folds\nCOp: folds\nHero: raises $0.15 to $0.25\nSBp: folds\nBBp: folds',
+      ),
+    );
     expect(r.ok).toBe(false);
   });
 });
@@ -129,11 +133,15 @@ describe('preflop spot + library', () => {
   it('Hero opens, BB calls → "BB call vs BTN"', () => {
     const s = spotOf(BTN_VS_BB, 'BBp');
     if (!s.ok) throw new Error(s.reason);
-    expect(s.spot).toMatchObject({ heroPosition: 'BTN', villainPosition: 'BB', villainAction: 'call' });
+    expect(s.spot).toMatchObject({
+      heroPosition: 'BTN',
+      villainPosition: 'BB',
+      villainAction: 'call',
+    });
     expect(findVillainRange(s.spot, [], SAMPLE_RANGES)?.range.name).toBe('BB call vs BTN');
   });
 
-  it('the villain opens and Hero calls → the villain\'s RFI', () => {
+  it("the villain opens and Hero calls → the villain's RFI", () => {
     const hand = gg(`UTGp: folds
 HJp: folds
 COp: raises $0.15 to $0.25
@@ -150,7 +158,7 @@ BBp: folds`);
     expect(pick.source).toBe('gto');
   });
 
-  it('Hero opens and the villain 3-bets → the villain\'s 3-bet range', () => {
+  it("Hero opens and the villain 3-bets → the villain's 3-bet range", () => {
     const hand = gg(
       `UTGp: folds
 HJp: folds
@@ -158,10 +166,15 @@ COp: folds
 Hero: raises $0.15 to $0.25
 SBp: folds
 BBp: raises $0.75 to $0.85
-Hero: calls $0.60`);
+Hero: calls $0.60`,
+    );
     const s = spotOf(hand, 'BBp');
     if (!s.ok) throw new Error(s.reason);
-    expect(s.spot).toMatchObject({ heroPosition: 'BTN', villainPosition: 'BB', villainAction: '3bet' });
+    expect(s.spot).toMatchObject({
+      heroPosition: 'BTN',
+      villainPosition: 'BB',
+      villainAction: '3bet',
+    });
     expect(findVillainRange(s.spot, [], SAMPLE_RANGES)?.range.id).toBe('demo-gto3b-bb-vs-btn');
   });
 
@@ -217,14 +230,17 @@ describe('savedHandFromParsed', () => {
   });
 
   it('without a match, the range is empty and says why', () => {
-    const hand = gg(`UTGp: folds
+    const hand = gg(
+      `UTGp: folds
 HJp: folds
 COp: folds
 Hero: calls $0.10
 SBp: folds
-BBp: checks`, `*** FLOP *** [Kh 9h 4c]
+BBp: checks`,
+      `*** FLOP *** [Kh 9h 4c]
 BBp: checks
-Hero: checks`);
+Hero: checks`,
+    );
     const r = savedHandFromParsed(hand, [], SAMPLE_RANGES);
     if (!r.ok) throw new Error(r.error);
     expect(r.saved.range).toBe('');
@@ -247,7 +263,8 @@ describe('table info', () => {
   });
 
   it('heads-up: HU, and the effective stack is the shorter one', () => {
-    const { hand } = parseHandHistory(`Poker Hand #HU1: Hold'em No Limit ($0.50/$1.00) - 2026/10/01 12:00:00
+    const { hand } =
+      parseHandHistory(`Poker Hand #HU1: Hold'em No Limit ($0.50/$1.00) - 2026/10/01 12:00:00
 Table 'Duel' 2-max Seat #1 is the button
 Seat 1: Hero ($12.00 in chips)
 Seat 2: Vil ($85.50 in chips)
@@ -275,7 +292,9 @@ Hero: checks`);
   it('a 6-max table with fewer players says how many were dealt in', () => {
     const hand = { ...BTN_VS_BB, players: BTN_VS_BB.players.filter((p) => p.name !== 'UTGp') };
     hand.streets = hand.streets.map((s) =>
-      s.street === 'preflop' ? { ...s, decisions: s.decisions.filter((d) => d.actor !== 'UTGp') } : s,
+      s.street === 'preflop'
+        ? { ...s, decisions: s.decisions.filter((d) => d.actor !== 'UTGp') }
+        : s,
     );
     expect(tableInfoOf(hand, 'Hero', 'BBp', positionsOf(hand)).format).toBe('6-max · 5 jugadores');
   });
@@ -289,7 +308,8 @@ Hero: checks`);
 
 // The 3-way hand from the browser test ("Table Info" format): Hero opens on the BTN, SB and
 // BB call; on the river the SB bets and both fold.
-const THREE_WAY = parseHandHistory(`GAME #12614693534 Version:26.7.1.28 Uncalled:Y Texas Hold'em NL  Tournament 2026-10-31 20:35:01/GMT
+const THREE_WAY =
+  parseHandHistory(`GAME #12614693534 Version:26.7.1.28 Uncalled:Y Texas Hold'em NL  Tournament 2026-10-31 20:35:01/GMT
 Table Info: Size: 3, Blinds: 10/20
 Seat 3: mousefourth92 (€500.00 in chips)
 Seat 6: n1dimka (€500.00 in chips)
@@ -315,6 +335,10 @@ Balans3: Check
 mousefourth92: Bet €150.00
 n1dimka: Fold
 Balans3: Fold`).hand!;
+// The same hand read as cash: these tests are about the library pick (D96).
+// As the 3-handed tournament it is, it is a spin (D128) and a 3-way pot has
+// no spins ranges.
+const THREE_WAY_CASH: typeof THREE_WAY = { ...THREE_WAY, tournament: false };
 
 describe('multiway (D96)', () => {
   it('keeps every flop opponent with its own spot; the first to act is the default', () => {
@@ -331,7 +355,7 @@ describe('multiway (D96)', () => {
   });
 
   it('the BB as villain loads «BB call vs BTN» from the GTO ranges', () => {
-    const r = savedHandFromParsed(THREE_WAY, [], SAMPLE_RANGES, { villain: 'n1dimka' });
+    const r = savedHandFromParsed(THREE_WAY_CASH, [], SAMPLE_RANGES, { villain: 'n1dimka' });
     if (!r.ok) throw new Error(r.error);
     expect(r.saved.villainPosition).toBe('BB');
     expect(r.saved.meta?.rangeLabel).toBe('BB call vs BTN · Rangos GTO');
@@ -340,7 +364,7 @@ describe('multiway (D96)', () => {
   });
 
   it('switching villain or library later needs only the saved hand', () => {
-    const first = savedHandFromParsed(THREE_WAY, [], SAMPLE_RANGES);
+    const first = savedHandFromParsed(THREE_WAY_CASH, [], SAMPLE_RANGES);
     if (!first.ok) throw new Error(first.error);
     expect(first.saved.meta?.villainName).toBe('mousefourth92');
     const back = parseSavedHand(JSON.parse(JSON.stringify(first.saved)))!;
@@ -379,5 +403,14 @@ Hero: checks`,
     if (!r.ok) throw new Error(r.error);
     expect(r.value.spot).toBeNull();
     expect(r.value.spotNote).toMatch(/3-bet/);
+  });
+});
+
+describe('a 3-way pot in a spin (D128)', () => {
+  it('asks for a spins range instead of using the cash library', () => {
+    const r = savedHandFromParsed(THREE_WAY, [], SAMPLE_RANGES, { spins: [] });
+    if (!r.ok) throw new Error(r.error);
+    expect(r.saved.meta?.rangeLabel).toBeNull();
+    expect(r.saved.meta?.rangeMissing).toMatch(/tres jugadores/);
   });
 });

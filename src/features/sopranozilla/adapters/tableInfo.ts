@@ -78,13 +78,15 @@ export function tableInfoOf(
   const v = seats.find((s) => s.role === 'villain');
   const effective = h && v && h.stack > 0 && v.stack > 0 ? Math.min(h.stack, v.stack) : null;
 
+  // Tournament chips are not money, even when a room prints them with "€".
+  const currency = hand.tournament ? '' : hand.currency;
   return {
     format,
     blinds:
       hand.smallBlind !== null && hand.bigBlind !== null
-        ? `${money(hand.smallBlind, hand.currency)}/${money(hand.bigBlind, hand.currency)}`
+        ? `${money(hand.smallBlind, currency)}/${money(hand.bigBlind, currency)}`
         : null,
-    currency: hand.currency,
+    currency,
     seats,
     effectiveBb: effective !== null && bb ? round2(effective / bb) : null,
     effective: effective !== null ? round2(effective) : null,

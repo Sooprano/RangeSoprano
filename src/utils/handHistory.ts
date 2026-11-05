@@ -65,6 +65,12 @@ export type ParsedHand = {
   ante: number | null;
   /** Table size from the table line ("6-max" → 6); null when the room does not say. */
   maxSeats: number | null;
+  /**
+   * A tournament hand (spins included). Some rooms print tournament chips
+   * with a currency ("€500.00 in chips" in iPoker's text export), so the
+   * currency alone does not tell cash from tournament.
+   */
+  tournament?: boolean;
   players: PlayerInfo[];
   hero: string | null;
   heroCards: Card[];
@@ -578,9 +584,16 @@ export function parseHandHistory(raw: string): HandParseResult {
     return { hand: null, errors };
   }
 
+  // Every room names it in the first lines: "Tournament #…" (Stars),
+  // "Tournament \"Expresso\"" (Winamax), "NL  Tournament" / "(Tournament: …)" (iPoker).
+  const tournament = lines
+    .slice(0, 6)
+    .some((l) => /\btournament\b/i.test(l) && !/^Seat\s/i.test(l.trim()));
+
   const hand: ParsedHand = {
     gameId,
     dateTime,
+    tournament,
     currency,
     smallBlind,
     bigBlind,

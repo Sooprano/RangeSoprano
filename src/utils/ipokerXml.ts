@@ -235,6 +235,7 @@ export function parseIpokerXml(raw: string): HandParseResult {
     dateTime: text(gameGeneral, 'startdate'),
     // Tournament chips: no currency (the buy-in is in euros, the stacks are not).
     currency: '',
+    tournament: /<tournamentcode>/i.test(raw),
     smallBlind: num(text(gameGeneral, 'smallblind') ?? undefined),
     bigBlind: num(text(gameGeneral, 'bigblind') ?? undefined),
     ante: num(text(gameGeneral, 'ante') ?? undefined),
