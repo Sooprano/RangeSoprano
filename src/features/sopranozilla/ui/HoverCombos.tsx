@@ -2,6 +2,9 @@
 // custom filter builder (D108). With a table row selected, its combos get a
 // violet frame, so "Top pair solo con ♥" can be checked before painting.
 // Fixed height on purpose: a box that grows per hand makes the page jump.
+// Each combo shows its WEIGHT in the range (bold) and, in a row, «→ N%» when
+// the row lets only part of it through (the user missed the weight: before,
+// a row showed only the share that continues, 100% for a 50% combo).
 
 import type { HandNotation } from '@/types/poker';
 import { cn } from '@/lib/cn';
@@ -21,7 +24,7 @@ type Props = {
   /** Combos of the selected table row (null = no row selected). */
   inTarget: ReadonlySet<ComboId> | null;
   targetLabel: string | null;
-  /** 'start': the % is the weight in the range; 'row': the % that continues. */
+  /** 'start': only the weight in the range; 'row': also what continues («→ N%»). */
   mode: 'row' | 'start';
   /** What to show with no hand under the cursor. */
   hint: string;
@@ -44,8 +47,8 @@ export function HoverCombos({ hand, cells, inTarget, targetLabel, mode, hint }: 
         <>
           <p className="truncate">
             <b className="text-content">{hand}</b> · en rango{' '}
-            <span className="tabular-nums text-content">{inRange.toFixed(2)}</span> de{' '}
-            {live.length} combos
+            <span className="tabular-nums text-content">{inRange.toFixed(2)}</span> de {live.length}{' '}
+            combos
             {cells.length > live.length && (
               <span title="Usan una carta tuya o del board: no se pueden repartir">
                 {' '}
@@ -71,12 +74,9 @@ export function HoverCombos({ hand, cells, inTarget, targetLabel, mode, hint }: 
           <ul className="mt-1.5 flex flex-wrap gap-1">
             {cells.map((c) => {
               const out = !c.blocked && c.inRange <= 0;
-              const pct =
-                mode === 'start'
-                  ? c.inRange
-                  : c.inRange > 0
-                    ? c.follows / c.inRange
-                    : 0;
+              const weight = Math.round(c.inRange * 100);
+              const goes = Math.round(c.follows * 100);
+              const cut = mode === 'row' && goes !== weight;
               const target = inTarget?.has(c.combo) ?? false;
               return (
                 <li
@@ -87,8 +87,8 @@ export function HoverCombos({ hand, cells, inTarget, targetLabel, mode, hint }: 
                       : out
                         ? `${c.label}: fuera del rango`
                         : mode === 'start'
-                          ? `${c.label}: ${Math.round(c.inRange * 100)}% en el rango`
-                          : `${c.label}: sigue ${Math.round(pct * 100)}% · ${c.reason}`
+                          ? `${c.label}: peso ${weight}% en el rango`
+                          : `${c.label}: peso ${weight}% en el rango · sigue ${goes}% · ${c.reason}`
                   }
                   className={cn(
                     'flex items-center gap-1 rounded px-1 py-0.5 ring-1',
@@ -108,7 +108,12 @@ export function HoverCombos({ hand, cells, inTarget, targetLabel, mode, hint }: 
                     <span className={SUIT_TEXT[c.colSuit]}>{c.label[3]}</span>
                   </span>
                   {!c.blocked && !out && (
-                    <span className="tabular-nums text-[10px]">{Math.round(pct * 100)}%</span>
+                    <span className="tabular-nums text-[11px] font-semibold text-content">
+                      {weight}%
+                      {cut && (
+                        <span className="ml-0.5 font-normal text-content-muted">→ {goes}%</span>
+                      )}
+                    </span>
                   )}
                 </li>
               );
