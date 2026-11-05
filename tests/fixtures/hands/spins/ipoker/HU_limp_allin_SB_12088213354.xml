@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding='utf-8'?>
+<session sessioncode="0">
+  <general>
+    <client_version>25.9.1.9</client_version>
+    <mode>real</mode>
+    <gametype>Holdem NL</gametype>
+    <tablename>Twister €0.25 SNG, 1155988591</tablename>
+    <tournamentcurrency>EUR</tournamentcurrency>
+    <duration>00:12:19</duration>
+    <gamecount>35</gamecount>
+    <startdate>2026-03-04 22:11:40</startdate>
+    <currency>EUR</currency>
+    <nickname>Hero</nickname>
+    <bets>12,351</bets>
+    <wins>5,904</wins>
+    <chipsin>500</chipsin>
+    <chipsout>1,500</chipsout>
+    <statuspoints>RP0.10</statuspoints>
+    <awardpoints>RP0.30</awardpoints>
+    <ipoints>RP0.10</ipoints>
+    <tablesize>3</tablesize>
+    <tournamentcode>1155988589</tournamentcode>
+    <tournamentname>Twister €0.25 SNG</tournamentname>
+    <rewarddrawn>€0.75</rewarddrawn>
+    <place>1</place>
+    <buyin>€0 + €0.01 + €0.24</buyin>
+    <totalbuyin>€0.25</totalbuyin>
+    <win>€0.75</win>
+  </general>
+  <game gamecode="12088213354">
+    <general>
+      <startdate>2026-03-04 22:13:32</startdate>
+      <smallblind>10</smallblind>
+      <bigblind>20</bigblind>
+      <players>
+        <player bet="540" chips="540" dealer="0" name="Rival1" reg_code="" seat="3" win="40" />
+        <player bet="20" chips="960" dealer="1" name="Hero" reg_code="" seat="6" win="0" />
+      </players>
+    </general>
+    <round no="0">
+      <action no="1" player="Hero" sum="10" type="1" />
+      <action no="2" player="Rival1" sum="20" type="2" />
+    </round>
+    <round no="1">
+      <cards player="Hero" type="Pocket">H6 CJ</cards>
+      <action no="3" player="Hero" sum="10" type="3" />
+      <cards player="Rival1" type="Pocket">X X</cards>
+      <action no="4" player="Rival1" sum="540" type="23" />
+      <action no="5" player="Hero" sum="0" type="0" />
+    </round>
+  </game>
+</session>

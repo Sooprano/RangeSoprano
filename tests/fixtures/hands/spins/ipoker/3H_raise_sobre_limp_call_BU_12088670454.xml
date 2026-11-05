@@ -1,0 +1,64 @@
+<?xml version='1.0' encoding='utf-8'?>
+<session sessioncode="0">
+  <general>
+    <client_version>25.9.1.9</client_version>
+    <mode>real</mode>
+    <gametype>Holdem NL</gametype>
+    <tablename>Twister €20 SNG, 1156011652</tablename>
+    <tournamentcurrency>EUR</tournamentcurrency>
+    <duration>00:07:09</duration>
+    <gamecount>20</gamecount>
+    <startdate>2026-03-05 01:28:15</startdate>
+    <currency>EUR</currency>
+    <nickname>Hero</nickname>
+    <bets>3,736</bets>
+    <wins>931</wins>
+    <chipsin>490</chipsin>
+    <chipsout>0</chipsout>
+    <statuspoints>RP14</statuspoints>
+    <awardpoints>RP42</awardpoints>
+    <ipoints>RP14</ipoints>
+    <tablesize>3</tablesize>
+    <tournamentcode>1156011651</tournamentcode>
+    <tournamentname>Twister €20 SNG</tournamentname>
+    <rewarddrawn>€40</rewarddrawn>
+    <place>2</place>
+    <buyin>€0 + €1.40 + €18.60</buyin>
+    <totalbuyin>€20</totalbuyin>
+    <win>€0</win>
+  </general>
+  <game gamecode="12088670454">
+    <general>
+      <startdate>2026-03-05 01:30:40</startdate>
+      <smallblind>15</smallblind>
+      <bigblind>30</bigblind>
+      <ante>5</ante>
+      <players>
+        <player bet="20" chips="515" dealer="0" name="Rival1" reg_code="" seat="3" win="0" />
+        <player bet="585" chips="585" dealer="0" name="Hero" reg_code="" seat="6" win="426" />
+        <player bet="203" chips="400" dealer="1" name="Rival2" reg_code="" seat="10" win="0" />
+      </players>
+    </general>
+    <round no="0">
+      <action no="1" player="Rival1" sum="5" type="15" />
+      <action no="2" player="Hero" sum="5" type="15" />
+      <action no="3" player="Rival2" sum="5" type="15" />
+      <action no="4" player="Rival1" sum="15" type="1" />
+      <action no="5" player="Hero" sum="30" type="2" />
+    </round>
+    <round no="1">
+      <cards player="Rival2" type="Pocket">X X</cards>
+      <action no="6" player="Rival2" sum="30" type="3" />
+      <cards player="Rival1" type="Pocket">X X</cards>
+      <action no="7" player="Rival1" sum="0" type="0" />
+      <cards player="Hero" type="Pocket">S10 SK</cards>
+      <action no="8" player="Hero" sum="198" type="23" />
+      <action no="9" player="Rival2" sum="168" type="3" />
+    </round>
+    <round no="2">
+      <cards type="Flop">D9 D8 CJ</cards>
+      <action no="10" player="Hero" sum="382" type="5" />
+      <action no="11" player="Rival2" sum="0" type="0" />
+    </round>
+  </game>
+</session>

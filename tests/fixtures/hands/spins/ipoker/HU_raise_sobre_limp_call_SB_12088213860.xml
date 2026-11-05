@@ -1,0 +1,60 @@
+<?xml version='1.0' encoding='utf-8'?>
+<session sessioncode="0">
+  <general>
+    <client_version>25.9.1.9</client_version>
+    <mode>real</mode>
+    <gametype>Holdem NL</gametype>
+    <tablename>Twister €0.25 SNG, 1155988591</tablename>
+    <tournamentcurrency>EUR</tournamentcurrency>
+    <duration>00:12:19</duration>
+    <gamecount>35</gamecount>
+    <startdate>2026-03-04 22:11:40</startdate>
+    <currency>EUR</currency>
+    <nickname>Hero</nickname>
+    <bets>12,351</bets>
+    <wins>5,904</wins>
+    <chipsin>500</chipsin>
+    <chipsout>1,500</chipsout>
+    <statuspoints>RP0.10</statuspoints>
+    <awardpoints>RP0.30</awardpoints>
+    <ipoints>RP0.10</ipoints>
+    <tablesize>3</tablesize>
+    <tournamentcode>1155988589</tournamentcode>
+    <tournamentname>Twister €0.25 SNG</tournamentname>
+    <rewarddrawn>€0.75</rewarddrawn>
+    <place>1</place>
+    <buyin>€0 + €0.01 + €0.24</buyin>
+    <totalbuyin>€0.25</totalbuyin>
+    <win>€0.75</win>
+  </general>
+  <game gamecode="12088213860">
+    <general>
+      <startdate>2026-03-04 22:15:07</startdate>
+      <smallblind>15</smallblind>
+      <bigblind>30</bigblind>
+      <ante>5</ante>
+      <players>
+        <player bet="146" chips="447" dealer="1" name="Rival1" reg_code="" seat="3" win="0" />
+        <player bet="1,053" chips="1,053" dealer="0" name="Hero" reg_code="" seat="6" win="292" />
+      </players>
+    </general>
+    <round no="0">
+      <action no="1" player="Rival1" sum="5" type="15" />
+      <action no="2" player="Hero" sum="5" type="15" />
+      <action no="3" player="Rival1" sum="15" type="1" />
+      <action no="4" player="Hero" sum="30" type="2" />
+    </round>
+    <round no="1">
+      <cards player="Rival1" type="Pocket">X X</cards>
+      <action no="5" player="Rival1" sum="15" type="3" />
+      <cards player="Hero" type="Pocket">SQ HK</cards>
+      <action no="6" player="Hero" sum="141" type="23" />
+      <action no="7" player="Rival1" sum="111" type="3" />
+    </round>
+    <round no="2">
+      <cards type="Flop">HQ HJ CA</cards>
+      <action no="8" player="Hero" sum="907" type="5" />
+      <action no="9" player="Rival1" sum="0" type="0" />
+    </round>
+  </game>
+</session>

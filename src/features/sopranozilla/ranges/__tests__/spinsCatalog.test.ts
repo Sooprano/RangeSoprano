@@ -19,6 +19,7 @@ describe('spins Regular catalog', () => {
     expect(parseSpinsName('BU 3H', 'BU OR 25bb')).toEqual({
       format: '3H',
       position: 'BTN',
+      vs: null,
       action: 'open',
       stackBb: 25,
       size: null,

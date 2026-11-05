@@ -1,0 +1,55 @@
+<?xml version='1.0' encoding='utf-8'?>
+<session sessioncode="0">
+  <general>
+    <client_version>25.9.1.9</client_version>
+    <mode>real</mode>
+    <gametype>Holdem NL</gametype>
+    <tablename>Twister €0.25 SNG, 1155988568</tablename>
+    <tournamentcurrency>EUR</tournamentcurrency>
+    <duration>00:08:17</duration>
+    <gamecount>13</gamecount>
+    <startdate>2026-03-04 22:11:30</startdate>
+    <currency>EUR</currency>
+    <nickname>Hero</nickname>
+    <bets>2,602</bets>
+    <wins>2,694</wins>
+    <chipsin>500</chipsin>
+    <chipsout>1,500</chipsout>
+    <statuspoints>RP0.10</statuspoints>
+    <awardpoints>RP0.30</awardpoints>
+    <ipoints>RP0.10</ipoints>
+    <tablesize>3</tablesize>
+    <tournamentcode>1155988566</tournamentcode>
+    <tournamentname>Twister €0.25 SNG</tournamentname>
+    <rewarddrawn>€0.75</rewarddrawn>
+    <place>1</place>
+    <buyin>€0 + €0.01 + €0.24</buyin>
+    <totalbuyin>€0.25</totalbuyin>
+    <win>€0.75</win>
+  </general>
+  <game gamecode="12088209513">
+    <general>
+      <startdate>2026-03-04 22:11:58</startdate>
+      <smallblind>10</smallblind>
+      <bigblind>20</bigblind>
+      <players>
+        <player bet="500" chips="500" dealer="0" name="Hero" reg_code="" seat="3" win="40" />
+        <player bet="0" chips="520" dealer="1" name="Rival1" reg_code="" seat="6" win="0" />
+        <player bet="20" chips="480" dealer="0" name="Rival2" reg_code="" seat="10" win="0" />
+      </players>
+    </general>
+    <round no="0">
+      <action no="1" player="Rival2" sum="10" type="1" />
+      <action no="2" player="Hero" sum="20" type="2" />
+    </round>
+    <round no="1">
+      <cards player="Rival1" type="Pocket">X X</cards>
+      <action no="3" player="Rival1" sum="0" type="0" />
+      <cards player="Rival2" type="Pocket">X X</cards>
+      <action no="4" player="Rival2" sum="10" type="3" />
+      <cards player="Hero" type="Pocket">SA C8</cards>
+      <action no="5" player="Hero" sum="500" type="23" />
+      <action no="6" player="Rival2" sum="0" type="0" />
+    </round>
+  </game>
+</session>

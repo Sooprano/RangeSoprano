@@ -1,0 +1,24 @@
+Winamax Poker - Tournament "Expresso" buyIn: 0.93€ + 0.07€ level: 2 - HandId: #4643871970767667201-12-1773869496 - Holdem no limit (15/30) - 2026/03/18 21:31:36 UTC
+Table: 'Expresso(1081235700)#0' 3-max (real money) Seat #1 is the button
+Seat 1: Rival1 (455)
+Seat 2: Rival2 (540)
+Seat 3: Hero (505)
+*** ANTE/BLINDS ***
+Rival2 posts small blind 15
+Hero posts big blind 30
+Dealt to Hero [6h 7h]
+*** PRE-FLOP *** 
+Rival1 folds
+Rival2 raises 45 to 75
+Hero calls 45
+*** FLOP *** [4h 3d Jc]
+Rival2 bets 75
+Hero calls 75
+*** TURN *** [4h 3d Jc][9c]
+Rival2 bets 390 and is all-in
+Hero folds
+Rival2 collected 690 from pot
+*** SUMMARY ***
+Total pot 690 | No rake
+Board: [4h 3d Jc 9c]
+Seat 2: Rival2 (small blind) won 690

@@ -1,0 +1,20 @@
+PokerStars Hand #251725119760: Tournament #3783745178, $4.60+$0.40 USD Hold'em No Limit - Level II (15/30) - 2024/07/29 14:19:07 MT [2024/07/29 16:19:07 ET]
+Table '3783745178 1' 3-max Seat #2 is the button
+Seat 1: Rival1 (705 in chips) is sitting out
+Seat 2: Rival2 (460 in chips) 
+Seat 3: Hero (335 in chips) 
+Hero: posts small blind 15
+Rival1: posts big blind 30
+*** HOLE CARDS ***
+Dealt to Hero [Qs 3s]
+Rival1 has returned
+Rival2: folds 
+Hero: raises 305 to 335 and is all-in
+Rival1: folds 
+Uncalled bet (305) returned to Hero
+Hero collected 60 from pot
+*** SUMMARY ***
+Total pot 60 | Rake 0 
+Seat 1: Rival1 (big blind) folded before Flop
+Seat 2: Rival2 (button) folded before Flop (didn't bet)
+Seat 3: Rival3 (60)

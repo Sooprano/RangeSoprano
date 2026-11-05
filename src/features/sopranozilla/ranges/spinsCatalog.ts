@@ -38,6 +38,8 @@ export type SpinsRange = {
   format: SpinsFormat;
   /** Villain's seat. Heads-up the button (the SB) is "BTN", like positionsOf(). */
   position: Position;
+  /** The other player in the pot; null = anyone (the BU opening first in, 3H). */
+  vs: Position | null;
   action: SpinsAction;
   stackBb: number;
   /** Raise size in bb (open, ROL, 3-bet, or the raise that was called); 'AI' = all in. */
@@ -47,18 +49,24 @@ export type SpinsRange = {
   combos: number;
 };
 
-type Folder = { format: SpinsFormat; position: Position; prefix: RegExp | null };
+type Folder = {
+  format: SpinsFormat;
+  position: Position;
+  /** The other player in the pot; null = anyone (BU first in, 3H). */
+  vs: Position | null;
+  prefix: RegExp | null;
+};
 
 /** Folder → table format and villain seat. */
 const FOLDERS: Record<string, Folder> = {
-  'bu 3h': { format: '3H', position: 'BTN', prefix: /^bu\s+/ },
-  'bb vs bu 3h': { format: '3H', position: 'BB', prefix: /^bbvsbu\s+/ },
-  'sb vs bb 3h': { format: '3H', position: 'SB', prefix: null },
-  'bb vs sb 3h': { format: '3H', position: 'BB', prefix: null },
-  sbhu: { format: 'HU', position: 'BTN', prefix: /^sbhu\s+/ },
-  'sbhu call vs rol': { format: 'HU', position: 'BTN', prefix: /^sbhu\s+/ },
-  'bbhu vs lp': { format: 'HU', position: 'BB', prefix: /^bbhu\s+/ },
-  'bbhu vs or': { format: 'HU', position: 'BB', prefix: /^bbhu\s+/ },
+  'bu 3h': { format: '3H', position: 'BTN', vs: null, prefix: /^bu\s+/ },
+  'bb vs bu 3h': { format: '3H', position: 'BB', vs: 'BTN', prefix: /^bbvsbu\s+/ },
+  'sb vs bb 3h': { format: '3H', position: 'SB', vs: 'BB', prefix: null },
+  'bb vs sb 3h': { format: '3H', position: 'BB', vs: 'SB', prefix: null },
+  sbhu: { format: 'HU', position: 'BTN', vs: 'BB', prefix: /^sbhu\s+/ },
+  'sbhu call vs rol': { format: 'HU', position: 'BTN', vs: 'BB', prefix: /^sbhu\s+/ },
+  'bbhu vs lp': { format: 'HU', position: 'BB', vs: 'BTN', prefix: /^bbhu\s+/ },
+  'bbhu vs or': { format: 'HU', position: 'BB', vs: 'BTN', prefix: /^bbhu\s+/ },
 };
 
 const BB = /^(\d+(?:\.\d+)?)bb$/;
@@ -77,7 +85,7 @@ function sizeOf(token: string | undefined): number | 'AI' | null | undefined {
 export function parseSpinsName(
   group: string,
   name: string,
-): Pick<SpinsRange, 'format' | 'position' | 'action' | 'stackBb' | 'size'> | null {
+): Pick<SpinsRange, 'format' | 'position' | 'vs' | 'action' | 'stackBb' | 'size'> | null {
   const folder = FOLDERS[group.trim().toLowerCase()];
   if (!folder) return null;
   let rest = name.trim().toLowerCase().replace(/\s+/g, ' ');
@@ -96,7 +104,7 @@ export function parseSpinsName(
   const [kw, arg, extra] = tokens;
   if (kw === undefined || extra !== undefined) return null;
 
-  const base = { format: folder.format, position: folder.position, stackBb };
+  const base = { format: folder.format, position: folder.position, vs: folder.vs, stackBb };
   const size = sizeOf(arg);
   if (size === undefined) return null;
   switch (kw) {

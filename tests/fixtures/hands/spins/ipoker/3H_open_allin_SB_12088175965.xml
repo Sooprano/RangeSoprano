@@ -1,0 +1,54 @@
+<?xml version='1.0' encoding='utf-8'?>
+<session sessioncode="0">
+  <general>
+    <client_version>25.9.1.9</client_version>
+    <mode>real</mode>
+    <gametype>Holdem NL</gametype>
+    <tablename>Twister €0.25 SNG, 1155987423</tablename>
+    <tournamentcurrency>EUR</tournamentcurrency>
+    <duration>00:06:44</duration>
+    <gamecount>16</gamecount>
+    <startdate>2026-03-04 22:02:51</startdate>
+    <currency>EUR</currency>
+    <nickname>Hero</nickname>
+    <bets>2,415</bets>
+    <wins>655</wins>
+    <chipsin>500</chipsin>
+    <chipsout>0</chipsout>
+    <statuspoints>RP0.10</statuspoints>
+    <awardpoints>RP0.30</awardpoints>
+    <ipoints>RP0.10</ipoints>
+    <tablesize>3</tablesize>
+    <tournamentcode>1155987422</tournamentcode>
+    <tournamentname>Twister €0.25 SNG</tournamentname>
+    <rewarddrawn>€0.50</rewarddrawn>
+    <place>2</place>
+    <buyin>€0 + €0.01 + €0.24</buyin>
+    <totalbuyin>€0.25</totalbuyin>
+    <win>€0</win>
+  </general>
+  <game gamecode="12088175965">
+    <general>
+      <startdate>2026-03-04 22:03:39</startdate>
+      <smallblind>10</smallblind>
+      <bigblind>20</bigblind>
+      <players>
+        <player bet="0" chips="380" dealer="1" name="Rival1" reg_code="" seat="3" win="0" />
+        <player bet="480" chips="480" dealer="0" name="Hero" reg_code="" seat="6" win="40" />
+        <player bet="20" chips="640" dealer="0" name="Rival2" reg_code="" seat="10" win="0" />
+      </players>
+    </general>
+    <round no="0">
+      <action no="1" player="Hero" sum="10" type="1" />
+      <action no="2" player="Rival2" sum="20" type="2" />
+    </round>
+    <round no="1">
+      <cards player="Rival1" type="Pocket">X X</cards>
+      <action no="3" player="Rival1" sum="0" type="0" />
+      <cards player="Hero" type="Pocket">D5 S5</cards>
+      <action no="4" player="Hero" sum="480" type="23" />
+      <cards player="Rival2" type="Pocket">X X</cards>
+      <action no="5" player="Rival2" sum="0" type="0" />
+    </round>
+  </game>
+</session>

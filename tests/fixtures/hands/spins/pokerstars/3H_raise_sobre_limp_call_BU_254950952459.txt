@@ -1,0 +1,34 @@
+PokerStars Hand #254950952459: Tournament #3860926598, $0.46+$0.04 USD Hold'em No Limit - Level I (10/20) - 2025/02/19 19:59:29 MT [2025/02/19 21:59:29 ET]
+Table '3860926598 1' 3-max Seat #1 is the button
+Seat 1: Rival1 (500 in chips) 
+Seat 2: Hero (500 in chips) 
+Seat 3: Rival2 (500 in chips) 
+Hero: posts small blind 10
+Rival2: posts big blind 20
+*** HOLE CARDS ***
+Dealt to Hero [Qs Qd]
+Rival1: calls 20
+Hero: raises 50 to 70
+Rival2: folds 
+Rival1: calls 50
+*** FLOP *** [Ac 5s 6s]
+Hero: bets 32
+Rival1: calls 32
+*** TURN *** [Ac 5s 6s] [4d]
+Hero: checks 
+Rival1: bets 20
+Hero: calls 20
+*** RIVER *** [Ac 5s 6s 4d] [9c]
+Hero: checks 
+Rival1: bets 132
+Hero: calls 132
+*** SHOW DOWN ***
+Rival1: shows [7c Qh] (high card Ace)
+Hero: shows [Qs Qd] (a pair of Queens)
+Hero collected 528 from pot
+*** SUMMARY ***
+Total pot 528 | Rake 0 
+Board [Ac 5s 6s 4d 9c]
+Seat 1: Rival1 (button) showed [7c Qh] and lost with high card Ace
+Seat 2: Rival3 (528) with a pair of Queens
+Seat 3: Rival2 (big blind) folded before Flop

@@ -1,0 +1,20 @@
+PokerStars Hand #255189485227: Tournament #3866548837, $0.46+$0.04 USD Hold'em No Limit - Level II (15/30) - 2025/03/07 19:21:54 MT [2025/03/07 21:21:54 ET]
+Table '3866548837 1' 3-max Seat #3 is the button
+Seat 1: Hero (454 in chips) 
+Seat 2: Rival1 (606 in chips) 
+Seat 3: Rival2 (440 in chips) 
+Hero: posts small blind 15
+Rival1: posts big blind 30
+*** HOLE CARDS ***
+Dealt to Hero [5s 5c]
+Rival2: calls 30
+Hero: raises 424 to 454 and is all-in
+Rival1: folds 
+Rival2: folds 
+Uncalled bet (424) returned to Hero
+Hero collected 90 from pot
+*** SUMMARY ***
+Total pot 90 | Rake 0 
+Seat 1: Rival3 (90)
+Seat 2: Rival1 (big blind) folded before Flop
+Seat 3: Rival2 (button) folded before Flop

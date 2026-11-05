@@ -1,0 +1,28 @@
+PokerStars Hand #251724440973: Tournament #3783729825, $4.60+$0.40 USD Hold'em No Limit - Level II (15/30) - 2024/07/29 13:36:50 MT [2024/07/29 15:36:50 ET]
+Table '3783729825 1' 3-max Seat #2 is the button
+Seat 1: Rival1 (914 in chips) 
+Seat 2: Hero (586 in chips) 
+Hero: posts small blind 15
+Rival1: posts big blind 30
+*** HOLE CARDS ***
+Dealt to Hero [6c Jc]
+Hero: raises 30 to 60
+Rival1: raises 30 to 90
+Hero: calls 30
+*** FLOP *** [8c Kh Qc]
+Rival1: bets 90
+Hero: calls 90
+*** TURN *** [8c Kh Qc] [Tc]
+Rival1: bets 734 and is all-in
+Hero: calls 406 and is all-in
+Uncalled bet (328) returned to Rival1
+*** RIVER *** [8c Kh Qc Tc] [4d]
+*** SHOW DOWN ***
+Rival1: shows [4s Kc] (two pair, Kings and Fours)
+Hero: shows [6c Jc] (a flush, Queen high)
+Hero collected 1172 from pot
+*** SUMMARY ***
+Total pot 1172 | Rake 0 
+Board [8c Kh Qc Tc 4d]
+Seat 1: Rival1 (big blind) showed [4s Kc] and lost with two pair, Kings and Fours
+Seat 2: Rival2 (1172) with a flush, Queen high

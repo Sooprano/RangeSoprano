@@ -6,6 +6,8 @@
 // running-pot engine so each decision carries the pot that preceded it — the
 // numbers that seed the EV calculators in the análisis module.
 
+import { isIpokerXml, parseIpokerXml } from './ipokerXml';
+
 export type Suit = '♠' | '♥' | '♦' | '♣';
 export type Card = { rank: string; suit: Suit };
 
@@ -31,6 +33,8 @@ export type Decision = {
   amount: number;
   /** Running pot just before this action — feeds the calculators. */
   potBefore: number;
+  /** A 'post' that is an ante: in the pot, but not in the street total a raise is "to". */
+  isAnte?: boolean;
 };
 
 export type PlayerInfo = {
@@ -183,6 +187,8 @@ const STREET_OF_MARKER: Record<string, Street> = {
 };
 
 export function parseHandHistory(raw: string): HandParseResult {
+  // iPoker can also save its hands as XML (Twister spins): own reader, same result.
+  if (isIpokerXml(raw)) return parseIpokerXml(raw);
   const errors: HandParseError[] = [];
   const lines = raw.split(/\r?\n/);
 
@@ -247,12 +253,13 @@ export function parseHandHistory(raw: string): HandParseResult {
     actor: string,
     type: ActionType,
     amount: number,
+    isAnte = false,
   ): void => {
     const sd = ensureStreet(currentStreet, currentBoard);
     const potBefore = runningPot;
     if (amount > 0) {
       runningPot += amount;
-      committed[actor] = (committed[actor] ?? 0) + amount;
+      if (!isAnte) committed[actor] = (committed[actor] ?? 0) + amount;
     }
     sd.decisions.push({
       id: `${currentStreet}-${sd.decisions.length}`,
@@ -262,6 +269,7 @@ export function parseHandHistory(raw: string): HandParseResult {
       type,
       amount,
       potBefore,
+      ...(isAnte && { isAnte: true }),
     });
   };
 
@@ -483,7 +491,7 @@ export function parseHandHistory(raw: string): HandParseResult {
         const amt = parseAmount(rest);
         if (amt) {
           setCurrency(amt.currency);
-          pushDecision(actor, 'post', amt.amount);
+          pushDecision(actor, 'post', amt.amount, /\bante\b/.test(lower));
         }
         continue;
       }
