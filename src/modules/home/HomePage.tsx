@@ -96,7 +96,7 @@ const MODULES: readonly ModuleCard[] = [
     label: 'Sopranozilla (beta)',
     icon: Microscope,
     description:
-      'Analizador de manos postflop. Filtra el rango del villano por categorías (top pair, proyectos, filtros propios por palo) con pesos, calle por calle, y mira tu equity exacta y el EV de cada acción. Edita el rango desde el grid, deshace con Ctrl+Z e importa/exporta rangos. En spins elige solo el rango del rival, Regular (GTO) o Fish. Abre las manos de Análisis con un clic.',
+      'Analizador de manos postflop. Filtra el rango del villano por categorías (top pair, proyectos, filtros propios por palo) con pesos, calle por calle, y mira tu equity exacta y el EV de cada acción. Edita el rango desde el grid, deshace con Ctrl+Z e importa/exporta rangos. En spins y en cash elige solo el rango del villano según la línea preflop. Abre las manos de Análisis con un clic.',
   },
   {
     to: '/ejercicios',
@@ -487,12 +487,14 @@ const FAQS: readonly Faq[] = [
         shove), el stack efectivo y el tamaño: GTO para un{' '}
         <span className="font-medium text-content">Regular</span> o rangos de recreacional para
         un <span className="font-medium text-content">Fish</span>, y puedes pasar a otro stack
-        con un clic. Lee historiales de PokerStars,
+        con un clic. En <span className="font-medium text-content">cash</span> elige el rango
+        GTO del villano según su última decisión preflop (open, 3bet, 4bet o call) y el tamaño
+        más cercano. Lee historiales de PokerStars,
         Winamax e iPoker (también en XML).
       </>
     ),
     aPlain:
-      'Es el analizador de manos postflop de Range Soprano, en versión beta. Abres una mano (desde Análisis de manos, pegando el historial o con una mano de prueba) y en Sopranozilla filtras el rango del villano por categorías —set, top pair, proyectos de color o escalera, o filtros propios con reglas de palo— dándole a cada una un peso. La web calcula al instante tu equity exacta contra lo que queda y el EV de cada acción (check, bet de varios tamaños, call o raise), y encadena el rango del flop al turn y al river. Puedes editar el rango pintando el grid, ver los combos por palo, deshacer con Ctrl+Z e importar o exportar el rango de cada calle. En manos de spins (3 jugadores o heads-up) elige solo el rango del rival según la línea preflop (limp, open, raise sobre limp, 3bet, shove), el stack efectivo y el tamaño: GTO para un Regular o rangos de recreacional para un Fish, y puedes pasar a otro stack con un clic. Lee historiales de PokerStars, Winamax e iPoker (también en XML).',
+      'Es el analizador de manos postflop de Range Soprano, en versión beta. Abres una mano (desde Análisis de manos, pegando el historial o con una mano de prueba) y en Sopranozilla filtras el rango del villano por categorías —set, top pair, proyectos de color o escalera, o filtros propios con reglas de palo— dándole a cada una un peso. La web calcula al instante tu equity exacta contra lo que queda y el EV de cada acción (check, bet de varios tamaños, call o raise), y encadena el rango del flop al turn y al river. Puedes editar el rango pintando el grid, ver los combos por palo, deshacer con Ctrl+Z e importar o exportar el rango de cada calle. En manos de spins (3 jugadores o heads-up) elige solo el rango del rival según la línea preflop (limp, open, raise sobre limp, 3bet, shove), el stack efectivo y el tamaño: GTO para un Regular o rangos de recreacional para un Fish, y puedes pasar a otro stack con un clic. En cash elige el rango GTO del villano según su última decisión preflop (open, 3bet, 4bet o call) y el tamaño más cercano. Lee historiales de PokerStars, Winamax e iPoker (también en XML).',
   },
   {
     group: 'Entrenar y estudiar',

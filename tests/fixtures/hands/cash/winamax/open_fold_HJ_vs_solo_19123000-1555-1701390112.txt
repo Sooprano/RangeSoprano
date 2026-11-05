@@ -1,0 +1,21 @@
+Winamax Poker - CashGame - HandId: #19123000-1555-1701390112 - Holdem no limit (0.05€/0.10€) - 2023/12/01 00:21:52 UTC
+Table: 'Vienna' 5-max (real money) Seat #2 is the button
+Seat 1: Rival1 (11.31€)
+Seat 2: Rival2 (15.08€)
+Seat 3: Rival3 (34.50€)
+Seat 4: Rival4 (14.18€)
+Seat 5: Hero (10€)
+*** ANTE/BLINDS ***
+Rival3 posts small blind 0.05€
+Rival4 posts big blind 0.10€
+Dealt to Hero [Kd Js]
+*** PRE-FLOP *** 
+Hero raises 0.15€ to 0.25€
+Rival1 folds
+Rival2 folds
+Rival3 folds
+Rival4 folds
+Hero collected 0.40€ from pot
+*** SUMMARY ***
+Total pot 0.40€ | No rake
+Seat 5: Hero won 0.40€

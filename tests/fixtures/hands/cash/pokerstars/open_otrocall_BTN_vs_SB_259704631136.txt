@@ -1,0 +1,40 @@
+PokerStars Hand #259704631136:  Hold'em No Limit ($0.02/$0.05 USD) - 2026/02/12 19:18:06 MT [2026/02/12 21:18:06 ET]
+Table 'Yarilo II' 6-max Seat #3 is the button
+Seat 1: Rival1 ($4.71 in chips) 
+Seat 2: Rival2 ($5 in chips) 
+Seat 3: Hero ($8.78 in chips) 
+Seat 4: Rival3 ($4.71 in chips) 
+Seat 5: Rival4 ($5.01 in chips) 
+Seat 6: Rival5 ($5.36 in chips) 
+Rival3: posts small blind $0.02
+Rival4: posts big blind $0.05
+*** HOLE CARDS ***
+Dealt to Hero [Ks 2s]
+Rival5: folds 
+Rival1: folds 
+Rival2: folds 
+Hero: raises $0.10 to $0.15
+Rival3: calls $0.13
+Rival4: folds 
+*** FLOP *** [2d 9h Ts]
+Rival3: checks 
+Hero: checks 
+*** TURN *** [2d 9h Ts] [4c]
+Rival3: checks 
+Hero: checks 
+*** RIVER *** [2d 9h Ts 4c] [9c]
+Rival3: checks 
+Hero: checks 
+*** SHOW DOWN ***
+Rival3: shows [6s 8h] (a pair of Nines)
+Hero: shows [Ks 2s] (two pair, Nines and Deuces)
+Hero collected $0.33 from pot
+*** SUMMARY ***
+Total pot $0.35 | Rake $0.02 
+Board [2d 9h Ts 4c 9c]
+Seat 1: Rival1 folded before Flop (didn't bet)
+Seat 2: Rival2 folded before Flop (didn't bet)
+Seat 3: Rival6 ($0.33) with two pair, Nines and Deuces
+Seat 4: Rival3 (small blind) showed [6s 8h] and lost with a pair of Nines
+Seat 5: Rival4 (big blind) folded before Flop
+Seat 6: Rival5 folded before Flop (didn't bet)

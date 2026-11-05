@@ -1,0 +1,37 @@
+PokerStars Hand #255272975986:  Hold'em No Limit ($0.10/$0.25 USD) - 2025/03/13 14:23:14 MT [2025/03/13 16:23:14 ET]
+Table 'Noviomagum II' 6-max Seat #3 is the button
+Seat 1: Rival1 ($27.24 in chips) 
+Seat 2: Rival2 ($50.88 in chips) 
+Seat 3: Rival3 ($20.22 in chips) 
+Seat 4: Rival4 ($51.11 in chips) 
+Seat 5: Rival5 ($32.32 in chips) 
+Seat 6: Hero ($28.78 in chips) 
+Rival4: posts small blind $0.10
+Rival5: posts big blind $0.25
+*** HOLE CARDS ***
+Dealt to Hero [Kh 4c]
+Hero: folds 
+Rival1: raises $0.25 to $0.50
+Rival2: folds 
+Rival3: raises $1.35 to $1.85
+Rival4: folds 
+Rival5: folds 
+Rival1: raises $25.39 to $27.24 and is all-in
+Rival3: calls $18.37 and is all-in
+Uncalled bet ($7.02) returned to Rival1
+*** FLOP *** [4h 6s Ah]
+*** TURN *** [4h 6s Ah] [Qh]
+*** RIVER *** [4h 6s Ah Qh] [7s]
+*** SHOW DOWN ***
+Rival1: shows [8s 8d] (a pair of Eights)
+Rival3: shows [Qc Qs] (three of a kind, Queens)
+Rival3 collected $38.95 from pot
+*** SUMMARY ***
+Total pot $40.79 | Rake $1.84 
+Board [4h 6s Ah Qh 7s]
+Seat 1: Rival1 showed [8s 8d] and lost with a pair of Eights
+Seat 2: Rival2 folded before Flop (didn't bet)
+Seat 3: Rival6 ($38.95) with three of a kind, Queens
+Seat 4: Rival4 (small blind) folded before Flop
+Seat 5: Rival5 (big blind) folded before Flop
+Seat 6: Hero folded before Flop (didn't bet)

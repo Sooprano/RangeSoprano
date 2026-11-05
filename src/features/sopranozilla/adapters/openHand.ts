@@ -22,6 +22,9 @@ import {
 } from '../ranges/spinsCatalog';
 import { pickSpinsRange, spinsSpotRanges } from './spinsPick';
 import type { SpinsLine, SpinsRole } from './spinsSpot';
+import { cashRangeLabel, loadCashCatalog, type CashRange } from '../ranges/cashCatalog';
+import { pickCashRange } from './cashPick';
+import { isCashHand } from './cashSpot';
 import { positionsOf } from './positions';
 import { isSpinsHand, type SpinsInfo } from './spinsSpot';
 
@@ -38,6 +41,8 @@ export type OpenOptions = {
   spins?: readonly SpinsRange[] | null;
   /** Spins hands: the kind of rival (default: the one saved with the hand, else Regular). */
   rival?: SpinsRival;
+  /** Cash hands: the GTO catalog (D138). Without it they use the library. */
+  cash?: readonly CashRange[] | null;
 };
 
 export { spinsRangeLabel };
@@ -113,6 +118,11 @@ function pickSpins(
 
 type Library = { mine: readonly Range[]; gto: readonly Range[] };
 
+type Picked = Pick<
+  HandMeta,
+  'spot' | 'rangeLabel' | 'rangeMissing' | 'spinsRangeId' | 'spinsRival' | 'cashRangeId'
+> & { range: string };
+
 function formatOf(table: TableInfo | undefined): TableFormat | undefined {
   if (!table) return undefined;
   return table.format === 'HU' || table.seats.length === 2 ? 'HU' : '6max';
@@ -126,11 +136,10 @@ function pickRange(
   prefer: RangeSource,
   spins: readonly SpinsRange[] | null | undefined,
   rival: SpinsRival,
-): Pick<HandMeta, 'spot' | 'rangeLabel' | 'rangeMissing' | 'spinsRangeId' | 'spinsRival'> & {
-  range: string;
-} {
+  cash: readonly CashRange[] | null | undefined,
+): Picked {
   if (opp.spins) {
-    if (spins) return pickSpins(opp.spins, spins, rival);
+    if (spins) return { ...pickSpins(opp.spins, spins, rival), cashRangeId: undefined };
     // A spins hand never falls back to the cash library.
     return {
       range: '',
@@ -139,8 +148,10 @@ function pickRange(
       rangeMissing: 'Faltan los rangos de spins: vuelve a abrir la mano.',
       spinsRangeId: undefined,
       spinsRival: rival,
+      cashRangeId: undefined,
     };
   }
+  if (opp.cash && cash) return pickCash(opp, opp.cash, cash, table, lib.mine, prefer);
   const pick = opp.spot
     ? findVillainRange(opp.spot, lib.mine, lib.gto, prefer, {
         format: formatOf(table),
@@ -157,6 +168,70 @@ function pickRange(
         `No hay un rango para «${opp.spot?.description ?? 'este spot'}» en la biblioteca.`),
     spinsRangeId: undefined,
     spinsRival: undefined,
+    cashRangeId: undefined,
+  };
+}
+
+/**
+ * Cash (D138): the GTO catalog (the user's 93 ranges + the demo complement)
+ * or «Mis rangos» first, as the user chose; the other one is the fallback.
+ * Spots without a GTO range (limps, multiway, BB vs SB…) only take the
+ * user's own library, never an invented one.
+ */
+function pickCash(
+  opp: OpponentOption,
+  info: NonNullable<OpponentOption['cash']>,
+  catalog: readonly CashRange[],
+  table: TableInfo | undefined,
+  mine: readonly Range[],
+  prefer: RangeSource,
+): Picked {
+  const spot = info.description ?? opp.spot?.description ?? null;
+  const fromMine = (): Picked | null => {
+    const p = opp.spot
+      ? findVillainRange(opp.spot, mine, [], 'mine', {
+          format: formatOf(table),
+          effectiveBb: table?.effectiveBb,
+        })
+      : null;
+    return p
+      ? {
+          range: rangeToText(p.range, p.actionIds),
+          spot,
+          rangeLabel: `${p.range.name} · ${SOURCE_LABEL.mine}`,
+          rangeMissing: null,
+          spinsRangeId: undefined,
+          spinsRival: undefined,
+          cashRangeId: undefined,
+        }
+      : null;
+  };
+  const fromGto = (): Picked | null => {
+    const p = info.want ? pickCashRange(catalog, info.want) : null;
+    return p
+      ? {
+          range: p.range.range,
+          spot,
+          rangeLabel: cashRangeLabel(p.range),
+          rangeMissing: null,
+          spinsRangeId: undefined,
+          spinsRival: undefined,
+          cashRangeId: p.range.id,
+        }
+      : null;
+  };
+  const first = prefer === 'mine' ? (fromMine() ?? fromGto()) : (fromGto() ?? fromMine());
+  if (first) return first;
+  return {
+    range: '',
+    spot,
+    rangeLabel: null,
+    rangeMissing: info.want
+      ? `No hay rango GTO para «${spot ?? 'este spot'}». Elige uno de la lista de cash o de la biblioteca.`
+      : `${info.reason ?? 'No pude leer la línea preflop.'} Elige uno de la lista de cash o de la biblioteca.`,
+    spinsRangeId: undefined,
+    spinsRival: undefined,
+    cashRangeId: undefined,
   };
 }
 
@@ -198,6 +273,7 @@ export function savedHandFromParsed(
     prefer,
     options.spins,
     options.rival ?? 'regular',
+    options.cash,
   );
   return {
     ok: true,
@@ -237,6 +313,7 @@ export function repickSaved(
     options.prefer ?? 'gto',
     options.spins,
     options.rival ?? meta.spinsRival ?? 'regular',
+    options.cash,
   );
   const heroPosition = saved.heroPosition as Parameters<typeof handTitle>[1];
   return {
@@ -271,5 +348,6 @@ export async function openParsedHand(
   options: OpenOptions = {},
 ): Promise<OpenResult> {
   const spins = needsSpinsCatalog(parsed) ? await loadSpinsCatalog() : null;
-  return savedHandFromParsed(parsed, mine, gto, { ...options, spins });
+  const cash = !spins && isCashHand(parsed) ? await loadCashCatalog() : null;
+  return savedHandFromParsed(parsed, mine, gto, { ...options, spins, cash });
 }

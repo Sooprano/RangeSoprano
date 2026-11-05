@@ -1,0 +1,36 @@
+PokerStars Hand #255451362459:  Hold'em No Limit ($0.10/$0.25 USD) - 2025/03/25 15:06:22 MT [2025/03/25 17:06:22 ET]
+Table 'Mintaka' 6-max Seat #3 is the button
+Seat 1: Rival1 ($46.97 in chips) 
+Seat 2: Hero ($25.65 in chips) 
+Seat 3: Rival2 ($45.95 in chips) 
+Seat 4: Rival3 ($26.33 in chips) 
+Seat 5: Rival4 ($29.40 in chips) 
+Seat 6: Rival5 ($19.50 in chips) 
+Rival3: posts small blind $0.10
+Rival4: posts big blind $0.25
+*** HOLE CARDS ***
+Dealt to Hero [2h Ac]
+Rival5: raises $1 to $1.25
+Rival1: raises $5.95 to $7.20
+Hero: folds 
+Rival2: folds 
+Rival3: folds 
+Rival4: folds 
+Rival5: raises $12.30 to $19.50 and is all-in
+Rival1: calls $12.30
+*** FLOP *** [9c Ts 5c]
+*** TURN *** [9c Ts 5c] [7d]
+*** RIVER *** [9c Ts 5c 7d] [3c]
+*** SHOW DOWN ***
+Rival5: shows [9s Qs] (a pair of Nines)
+Rival1: shows [Qd Ah] (high card Ace)
+Rival5 cashed out the hand for $11.08 | Cash Out Fee $0.23
+*** SUMMARY ***
+Total pot $39.35 | Rake $1.77 
+Board [9c Ts 5c 7d 3c]
+Seat 1: Rival1 showed [Qd Ah] and lost with high card Ace
+Seat 2: Hero folded before Flop (didn't bet)
+Seat 3: Rival2 (button) folded before Flop (didn't bet)
+Seat 4: Rival3 (small blind) folded before Flop
+Seat 5: Rival4 (big blind) folded before Flop
+Seat 6: Rival6 ($37.58) with a pair of Nines (pot not awarded as player cashed out)

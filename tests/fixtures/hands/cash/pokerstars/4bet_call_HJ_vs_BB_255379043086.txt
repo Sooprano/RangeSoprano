@@ -1,0 +1,36 @@
+PokerStars Hand #255379043086:  Hold'em No Limit ($0.10/$0.25 USD) - 2025/03/20 19:11:31 MT [2025/03/20 21:11:31 ET]
+Table 'Philosophia' 6-max Seat #2 is the button
+Seat 1: Rival1 ($23.88 in chips) 
+Seat 2: Rival2 ($21.42 in chips) 
+Seat 3: Rival3 ($25 in chips) 
+Seat 4: Rival4 ($25 in chips) 
+Seat 5: Hero ($98.86 in chips) 
+Seat 6: Rival5 ($42.77 in chips) 
+Rival3: posts small blind $0.10
+Rival4: posts big blind $0.25
+*** HOLE CARDS ***
+Dealt to Hero [3s 3d]
+Hero: folds 
+Rival5: raises $0.37 to $0.62
+Rival1: folds 
+Rival2: folds 
+Rival3: folds 
+Rival4: raises $2.38 to $3
+Rival5: raises $3.50 to $6.50
+Rival4: calls $3.50
+*** FLOP *** [Jc 5d 6c]
+Rival4: checks 
+Rival5: bets $4.13
+Rival4: folds 
+Uncalled bet ($4.13) returned to Rival5
+Rival6 $12.51 from pot
+Rival5: doesn't show hand 
+*** SUMMARY ***
+Total pot $13.10 | Rake $0.59 
+Board [Jc 5d 6c]
+Seat 1: Rival1 folded before Flop (didn't bet)
+Seat 2: Rival2 (button) folded before Flop (didn't bet)
+Seat 3: Rival3 (small blind) folded before Flop
+Seat 4: Rival4 (big blind) folded on the Flop
+Seat 5: Hero folded before Flop (didn't bet)
+Seat 6: Rival6 ($12.51)

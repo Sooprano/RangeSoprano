@@ -1,0 +1,37 @@
+PokerStars Hand #255476316358:  Hold'em No Limit ($0.10/$0.25 USD) - 2025/03/27 14:04:58 MT [2025/03/27 16:04:58 ET]
+Table 'Diomedes' 6-max Seat #4 is the button
+Seat 1: Rival1 ($25.35 in chips) 
+Seat 2: Rival2 ($25.70 in chips) 
+Seat 3: Rival3 ($31.55 in chips) 
+Seat 4: Hero ($26.45 in chips) 
+Seat 5: Rival4 ($24.75 in chips) 
+Seat 6: Rival5 ($45.28 in chips) 
+Rival4: posts small blind $0.10
+Rival5: posts big blind $0.25
+*** HOLE CARDS ***
+Dealt to Hero [Kc Ac]
+Rival1: folds 
+Rival2: folds 
+Rival3: raises $0.50 to $0.75
+Hero: raises $1.75 to $2.50
+Rival4: folds 
+Rival5: folds 
+Rival3: raises $29.05 to $31.55 and is all-in
+Hero: calls $23.95 and is all-in
+Uncalled bet ($5.10) returned to Rival3
+*** FLOP *** [9d 6h Jh]
+*** TURN *** [9d 6h Jh] [2h]
+*** RIVER *** [9d 6h Jh 2h] [Tc]
+*** SHOW DOWN ***
+Rival3: shows [Ah As] (a pair of Aces)
+Hero: shows [Kc Ac] (high card Ace)
+Rival3 collected $51.25 from pot
+*** SUMMARY ***
+Total pot $53.25 | Rake $2 
+Board [9d 6h Jh 2h Tc]
+Seat 1: Rival1 folded before Flop (didn't bet)
+Seat 2: Rival2 folded before Flop (didn't bet)
+Seat 3: Rival6 ($51.25) with a pair of Aces
+Seat 4: Hero (button) showed [Kc Ac] and lost with high card Ace
+Seat 5: Rival4 (small blind) folded before Flop
+Seat 6: Rival5 (big blind) folded before Flop

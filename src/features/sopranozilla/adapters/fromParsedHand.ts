@@ -11,6 +11,7 @@ import type { RecordedAction, RecordedStreets, Response } from '../engine/record
 import { positionsOf } from './positions';
 import { detectPreflopSpot, type PreflopSpot } from './preflopSpot';
 import { spinsInfoOf, type SpinsInfo } from './spinsSpot';
+import { cashInfoOf, type CashInfo } from './cashSpot';
 import { tableInfoOf, type TableInfo } from './tableInfo';
 
 /** One opponent who saw the flop: everything that changes with the villain. */
@@ -23,6 +24,8 @@ export type OpponentOption = {
   spotNote: string | null;
   /** Spins hands only (D128): the line and this player's wants. */
   spins?: SpinsInfo | null | undefined;
+  /** Cash hands only (D138): the line and this player's last decision. */
+  cash?: CashInfo | null | undefined;
   /** Effective stack behind (bb) at the start of each street vs Hero (D133). */
   stacks?: Partial<Record<Street, number>> | undefined;
 };
@@ -146,6 +149,7 @@ function opponentOf(
     spot: spot.ok ? spot.spot : null,
     spotNote: spot.ok ? null : spot.reason,
     spins: spinsInfoOf(hand, positions, name),
+    cash: cashInfoOf(hand, positions, name),
     stacks: stacksBehind(hand, hero, name),
   };
 }

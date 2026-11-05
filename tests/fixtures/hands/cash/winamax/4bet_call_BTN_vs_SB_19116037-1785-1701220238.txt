@@ -1,0 +1,37 @@
+Winamax Poker - CashGame - HandId: #19116037-1785-1701220238 - Holdem no limit (0.05€/0.10€) - 2023/11/29 01:10:38 UTC
+Table: 'Vienna' 5-max (real money) Seat #2 is the button
+Seat 1: Rival1 (10€)
+Seat 2: Rival2 (10€)
+Seat 3: Rival3 (28.86€)
+Seat 4: Hero (10.15€)
+Seat 5: Rival4 (21.95€)
+*** ANTE/BLINDS ***
+Rival3 posts small blind 0.05€
+Hero posts big blind 0.10€
+Dealt to Hero [3c 2h]
+*** PRE-FLOP *** 
+Rival4 folds
+Rival1 folds
+Rival2 raises 0.20€ to 0.30€
+Rival3 raises 0.85€ to 1.15€
+Hero folds
+Rival2 raises 1.72€ to 2.87€
+Rival3 calls 1.72€
+*** FLOP *** [Ad Ks 7c]
+Rival3 checks
+Rival2 bets 1.75€
+Rival3 calls 1.75€
+*** TURN *** [Ad Ks 7c][Js]
+Rival3 checks
+Rival2 bets 5.38€ and is all-in
+Rival3 calls 5.38€
+*** RIVER *** [Ad Ks 7c Js][2s]
+*** SHOW DOWN ***
+Rival2 shows [Ah 3h] (One pair : Aces)
+Rival3 shows [Qc Ac] (One pair : Aces)
+Rival3 collected 18.94€ from pot
+*** SUMMARY ***
+Total pot 18.94€ | Rake 1.16€
+Board: [Ad Ks 7c Js 2s]
+Seat 2: Rival2 (button) showed [Ah 3h] and lost with One pair : Aces
+Seat 3: Rival3 (small blind) showed [Qc Ac] and won 18.94€ with One pair : Aces

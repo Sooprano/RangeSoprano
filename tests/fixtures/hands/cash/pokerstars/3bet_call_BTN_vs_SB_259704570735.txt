@@ -1,0 +1,45 @@
+PokerStars Hand #259704570735:  Hold'em No Limit ($0.02/$0.05 USD) - 2026/02/12 19:10:23 MT [2026/02/12 21:10:23 ET]
+Table 'Yarilo II' 6-max Seat #3 is the button
+Seat 1: Rival1 ($4.46 in chips) 
+Seat 2: Rival2 ($5.60 in chips) 
+Seat 3: Hero ($5.05 in chips) 
+Seat 4: Rival3 ($4.48 in chips) 
+Seat 5: Rival4 ($5.38 in chips) 
+Seat 6: Rival5 ($4.81 in chips) 
+Rival3: posts small blind $0.02
+Rival4: posts big blind $0.05
+*** HOLE CARDS ***
+Dealt to Hero [5d As]
+Rival5: folds 
+Rival1: folds 
+Rival2: folds 
+Hero: raises $0.08 to $0.13
+Rival3: raises $0.08 to $0.21
+Rival4: folds 
+Hero: calls $0.08
+*** FLOP *** [6s Jh 5c]
+Rival3: checks 
+Hero: bets $0.14
+Rival3: calls $0.14
+*** TURN *** [6s Jh 5c] [2d]
+Rival3: checks 
+Hero: bets $0.21
+Rival3: raises $0.42 to $0.63
+Hero: calls $0.42
+*** RIVER *** [6s Jh 5c 2d] [Ad]
+Rival3: checks 
+Hero: bets $1.83
+Rival3: calls $1.83
+*** SHOW DOWN ***
+Hero: shows [5d As] (two pair, Aces and Fives)
+Rival3: mucks hand 
+Hero collected $5.39 from pot
+*** SUMMARY ***
+Total pot $5.67 | Rake $0.28 
+Board [6s Jh 5c 2d Ad]
+Seat 1: Rival1 folded before Flop (didn't bet)
+Seat 2: Rival2 folded before Flop (didn't bet)
+Seat 3: Rival6 ($5.39) with two pair, Aces and Fives
+Seat 4: Rival3 (small blind) mucked [Jd Qs]
+Seat 5: Rival4 (big blind) folded before Flop
+Seat 6: Rival5 folded before Flop (didn't bet)

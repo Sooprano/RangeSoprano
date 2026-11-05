@@ -1,0 +1,37 @@
+PokerStars Zoom Hand #255675088611:  Hold'em No Limit ($0.05/$0.10) - 2025/04/10 10:25:55 MT [2025/04/10 12:25:55 ET]
+Table 'Aludra' 6-max Seat #1 is the button
+Seat 1: Rival1 ($5.97 in chips) 
+Seat 2: Rival2 ($5.97 in chips) 
+Seat 3: Rival3 ($16.13 in chips) 
+Seat 4: Rival4 ($10 in chips) 
+Seat 5: Rival5 ($14.78 in chips) 
+Seat 6: Hero ($10 in chips) 
+Rival2: posts small blind $0.05
+Rival3: posts big blind $0.10
+*** HOLE CARDS ***
+Dealt to Hero [Tc Kh]
+Rival4: raises $0.10 to $0.20
+Rival5: folds 
+Hero: folds 
+Rival1: folds 
+Rival2: raises $0.80 to $1
+Rival3: folds 
+Rival4: raises $9 to $10 and is all-in
+Rival2: calls $4.97 and is all-in
+Uncalled bet ($4.03) returned to Rival4
+*** FLOP *** [Js Qs 3d]
+*** TURN *** [Js Qs 3d] [7s]
+*** RIVER *** [Js Qs 3d 7s] [9s]
+*** SHOW DOWN ***
+Rival2: shows [Qh As] (a flush, Ace high)
+Rival4: shows [9h 9d] (three of a kind, Nines)
+Rival2 collected $11.50 from pot
+*** SUMMARY ***
+Total pot $12.04 | Rake $0.54 
+Board [Js Qs 3d 7s 9s]
+Seat 1: Rival1 (button) folded before Flop (didn't bet)
+Seat 2: Rival6 ($11.50) with a flush, Ace high
+Seat 3: Rival3 (big blind) folded before Flop
+Seat 4: Rival4 showed [9h 9d] and lost with three of a kind, Nines
+Seat 5: Rival5 folded before Flop (didn't bet)
+Seat 6: Hero folded before Flop (didn't bet)

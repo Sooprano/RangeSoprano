@@ -1,0 +1,30 @@
+PokerStars Hand #255350813181:  Hold'em No Limit ($0.10/$0.25 USD) - 2025/03/18 19:14:38 MT [2025/03/18 21:14:38 ET]
+Table 'Draco' 6-max Seat #6 is the button
+Seat 1: Hero ($41.58 in chips) 
+Seat 2: Rival1 ($25.95 in chips) 
+Seat 3: Rival2 ($26.31 in chips) 
+Seat 4: Rival3 ($25.94 in chips) 
+Seat 5: Rival4 ($32.23 in chips) 
+Seat 6: Rival5 ($24.65 in chips) 
+Hero: posts small blind $0.10
+Rival1: posts big blind $0.25
+*** HOLE CARDS ***
+Dealt to Hero [Qd Ah]
+Rival2: folds 
+Rival3: raises $0.35 to $0.60
+Rival4: folds 
+Rival5: folds 
+Hero: raises $3.40 to $4
+Rival1: folds 
+Rival3: raises $21.94 to $25.94 and is all-in
+Hero: folds 
+Uncalled bet ($21.94) returned to Rival3
+Rival6 $8.25 from pot
+*** SUMMARY ***
+Total pot $8.25 | Rake $0 
+Seat 1: Hero (small blind) folded before Flop
+Seat 2: Rival1 (big blind) folded before Flop
+Seat 3: Rival2 folded before Flop (didn't bet)
+Seat 4: Rival6 ($8.25)
+Seat 5: Rival4 folded before Flop (didn't bet)
+Seat 6: Rival5 (button) folded before Flop (didn't bet)

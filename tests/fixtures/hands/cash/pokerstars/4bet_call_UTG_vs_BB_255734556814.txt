@@ -1,0 +1,36 @@
+PokerStars Zoom Hand #255734556814:  Hold'em No Limit ($0.05/$0.10) - 2025/04/14 12:54:50 MT [2025/04/14 14:54:50 ET]
+Table 'Aludra' 6-max Seat #1 is the button
+Seat 1: Rival1 ($10.11 in chips) 
+Seat 2: Rival2 ($14.67 in chips) 
+Seat 3: Rival3 ($10.40 in chips) 
+Seat 4: Rival4 ($8.71 in chips) 
+Seat 5: Rival5 ($10.25 in chips) 
+Seat 6: Hero ($10 in chips) 
+Rival2: posts small blind $0.05
+Rival3: posts big blind $0.10
+*** HOLE CARDS ***
+Dealt to Hero [9h 6d]
+Rival4: raises $0.20 to $0.30
+Rival5: folds 
+Hero: folds 
+Rival1: folds 
+Rival2: folds 
+Rival3: raises $0.90 to $1.20
+Rival4: raises $0.90 to $2.10
+Rival3: calls $0.90
+*** FLOP *** [Th Kd 2d]
+Rival3: checks 
+Rival4: bets $2.03
+Rival3: folds 
+Uncalled bet ($2.03) returned to Rival4
+Rival6 $4.01 from pot
+Rival4: doesn't show hand 
+*** SUMMARY ***
+Total pot $4.25 | Rake $0.24 
+Board [Th Kd 2d]
+Seat 1: Rival1 (button) folded before Flop (didn't bet)
+Seat 2: Rival2 (small blind) folded before Flop
+Seat 3: Rival3 (big blind) folded on the Flop
+Seat 4: Rival6 ($4.01)
+Seat 5: Rival5 folded before Flop (didn't bet)
+Seat 6: Hero folded before Flop (didn't bet)

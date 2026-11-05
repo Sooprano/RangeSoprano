@@ -253,6 +253,8 @@ export type HandMeta = {
   spinsRangeId?: string | undefined;
   /** Spins hands: the kind of rival the villain's range is for (D137). Default Regular. */
   spinsRival?: SpinsRival | undefined;
+  /** Cash hands: the GTO range in use (`CashRange.id`), D138. */
+  cashRangeId?: string | undefined;
 };
 
 /** A table row: a category or a saved custom filter. */

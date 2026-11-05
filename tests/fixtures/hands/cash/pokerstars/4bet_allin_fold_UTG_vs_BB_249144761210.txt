@@ -1,0 +1,30 @@
+PokerStars Hand #249144761210:  Hold'em No Limit ($0.05/$0.10 USD) - 2024/02/28 12:21:50 CT [2024/02/28 13:21:50 ET]
+Table 'Utopia III' 6-max Seat #6 is the button
+Seat 1: Rival1 ($14.04 in chips) 
+Seat 2: Hero ($10.94 in chips) 
+Seat 3: Rival2 ($7.74 in chips) 
+Seat 4: Rival3 ($10.44 in chips) 
+Seat 5: Rival4 ($11.73 in chips) 
+Seat 6: Rival5 ($13.06 in chips) 
+Rival1: posts small blind $0.05
+Hero: posts big blind $0.10
+*** HOLE CARDS ***
+Dealt to Hero [As 7d]
+Rival2: raises $0.10 to $0.20
+Rival3: folds 
+Rival4: folds 
+Rival5: folds 
+Rival1: folds 
+Hero: raises $2.20 to $2.40
+Rival2: raises $5.34 to $7.74 and is all-in
+Hero: folds 
+Uncalled bet ($5.34) returned to Rival2
+Rival6 $4.85 from pot
+*** SUMMARY ***
+Total pot $4.85 | Rake $0 
+Seat 1: Rival1 (small blind) folded before Flop
+Seat 2: Hero (big blind) folded before Flop
+Seat 3: Rival6 ($4.85)
+Seat 4: Rival3 folded before Flop (didn't bet)
+Seat 5: Rival4 folded before Flop (didn't bet)
+Seat 6: Rival5 (button) folded before Flop (didn't bet)

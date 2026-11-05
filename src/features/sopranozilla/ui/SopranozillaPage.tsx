@@ -47,6 +47,8 @@ import {
 import type { OpenInSopranozillaState } from './OpenInSopranozillaButton';
 import { RangeLibraryDialog } from './RangeLibraryDialog';
 import { SpinsBar } from './SpinsBar';
+import { CashBar } from './CashBar';
+import { cashRangeLabel, loadCashCatalog, type CashRange } from '../ranges/cashCatalog';
 import { loadSpinsCatalog, type SpinsRange } from '../ranges/spinsCatalog';
 import { selectStreetView, useStreetView } from '../store/selectors';
 import {
@@ -326,6 +328,19 @@ export default function SopranozillaPage() {
       alive = false;
     };
   }, [hasSpins, spinsCatalog]);
+  // Cash hands (D138): the GTO catalog, loaded only when a cash hand is open.
+  const [cashCatalog, setCashCatalog] = useState<CashRange[] | null>(null);
+  const hasCash = useAnalyzerStore((s) => Boolean(s.meta?.opponents?.some((o) => o.cash)));
+  useEffect(() => {
+    if (!hasCash || cashCatalog) return;
+    let alive = true;
+    void loadCashCatalog().then((c) => {
+      if (alive) setCashCatalog(c);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [hasCash, cashCatalog]);
   const closeLibrary = useCallback(() => setLibraryOpen(false), []);
 
   // Saved custom filters (phase 7) and the filter builder.
@@ -447,7 +462,7 @@ export default function SopranozillaPage() {
     const current = toSavedHand(state.hand, '', state.recorded, state.meta);
     const next = repickSaved(
       current,
-      { prefer: rangeSource, spins: spinsCatalog, ...options },
+      { prefer: rangeSource, spins: spinsCatalog, cash: cashCatalog, ...options },
       useRangeStore.getState().ranges,
       SAMPLE_RANGES,
     );
@@ -466,6 +481,20 @@ export default function SopranozillaPage() {
       rangeMissing: null,
       spinsRangeId: r.id,
       spinsRival: r.rival,
+    });
+    writeLastHand(saved);
+    loadSaved(saved);
+  };
+
+  // Another range of the cash GTO catalog (other size, or a spot without range).
+  const applyCashRange = (r: CashRange) => {
+    const state = useAnalyzerStore.getState();
+    if (!state.hand) return;
+    const saved = toSavedHand(state.hand, r.range, state.recorded, {
+      ...(state.meta ?? { title: 'Mano', spot: null, warnings: [] }),
+      rangeLabel: cashRangeLabel(r),
+      rangeMissing: null,
+      cashRangeId: r.id,
     });
     writeLastHand(saved);
     loadSaved(saved);
@@ -770,6 +799,7 @@ export default function SopranozillaPage() {
 
   const villainSpins =
     meta?.opponents?.find((o) => o.name === meta.villainName)?.spins ?? null;
+  const villainCash = meta?.opponents?.find((o) => o.name === meta.villainName)?.cash ?? null;
   const available = availableStreets(hand);
   const tabs: StreetTab[] = STREETS.map((s, i) => {
     const prev = i > 0 ? streets[STREETS[i - 1]!] : null;
@@ -1122,6 +1152,14 @@ export default function SopranozillaPage() {
               onRival={(rival) => repick({ rival })}
             />
           )}
+          {villainCash && (
+            <CashBar
+              info={villainCash}
+              catalog={cashCatalog}
+              currentId={meta.cashRangeId}
+              onPick={applyCashRange}
+            />
+          )}
           {meta.table && (
             <TableSeats
               table={meta.table}
@@ -1142,7 +1180,7 @@ export default function SopranozillaPage() {
           {meta.rangeMissing && (
             <p role="alert" className="mt-1 text-xs text-amber-700 dark:text-amber-300">
               {meta.rangeMissing}
-              {!villainSpins && ' Elige el rango del villano en la biblioteca.'}
+              {!villainSpins && !villainCash && ' Elige el rango del villano en la biblioteca.'}
             </p>
           )}
           {meta.warnings.map((w) => (

@@ -4,6 +4,9 @@
 //
 //   node scripts/build-spins-ranges.mjs <spins_gto_ranges.json>        → spins-regular.json
 //   node scripts/build-spins-ranges.mjs --fish <rangos_fish.json>      → spins-fish.json
+//   node scripts/build-spins-ranges.mjs --cash <rangos_cash_gto.json>  → cash-gto.json
+//
+// The cash export writes weights with a percent sign: "[13.4%]5d5c[/13.4%]".
 //
 // The FISH export has no BU folder for 3-handed spins: the user's call
 // (D137) is to give the BU the ranges of the heads-up button, with the
@@ -24,13 +27,14 @@ const RANKS = 'AKQJT98765432';
 const SUITS = 'hdsc';
 const args = process.argv.slice(2);
 const FISH = args[0] === '--fish';
-const src = FISH ? args[1] : args[0];
+const CASH = args[0] === '--cash';
+const src = FISH || CASH ? args[1] : args[0];
 if (!src) {
   console.error('Uso: node scripts/build-spins-ranges.mjs [--fish] <export.json>');
   process.exit(1);
 }
 const OUT = resolve(
-  `src/features/sopranozilla/ranges/${FISH ? 'spins-fish' : 'spins-regular'}.json`,
+  `src/features/sopranozilla/ranges/${FISH ? 'spins-fish' : CASH ? 'cash-gto' : 'spins-regular'}.json`,
 );
 
 /** "Kh8d" → canonical "Kh8d" with the higher rank first (pairs: suit order). */
@@ -104,7 +108,7 @@ function expand(text) {
       throw new Error(`token desconocido: ${t}`);
     }
   };
-  const rest = text.replace(/\[(\d+(?:\.\d+)?)\]([\s\S]*?)\[\/\1\]/g, (_m, w, inner) => {
+  const rest = text.replace(/\[(\d+(?:\.\d+)?)%?\]([\s\S]*?)\[\/\1%?\]/g, (_m, w, inner) => {
     for (const t of inner.split(',')) put(t, Number(w));
     return '';
   });
@@ -221,7 +225,11 @@ for (const folder of folders) {
 writeFileSync(
   OUT,
   JSON.stringify(
-    { source: FISH ? 'spins FISH ranges' : tree.name, ranges: total, groups },
+    {
+      source: FISH ? 'spins FISH ranges' : CASH ? 'Cash GTO wizard range' : tree.name,
+      ranges: total,
+      groups,
+    },
     null,
     1,
   ) + '\n',

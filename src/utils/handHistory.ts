@@ -168,9 +168,10 @@ const BOARD_SIZE: Record<Street, number> = {
 
 /** Extracts the first monetary amount and currency symbol from a string. */
 function parseAmount(text: string): { amount: number; currency: string } | null {
-  const match = text.match(/([€$£]?)\s*([\d.,]+)/);
+  // The symbol goes before ("$0.30") or, in Winamax, after ("0.30€").
+  const match = text.match(/([€$£]?)\s*([\d.,]+)(€|\$|£)?/);
   if (!match) return null;
-  const currency = match[1] ?? '';
+  const currency = match[1] || match[3] || '';
   // Amounts use '.' as decimal and no thousands separators in this format;
   // strip stray commas defensively.
   const numeric = Number(match[2]!.replace(/,/g, ''));
@@ -297,14 +298,15 @@ export function parseHandHistory(raw: string): HandParseResult {
       );
       dateTime = dateMatch ? dateMatch[1]! : null;
       // Blinds in parens, with optional currency: GG "Level1(10/20)",
-      // Winamax "(40/80)", PokerStars cash "($0.02/$0.05 USD)".
+      // Winamax "(40/80)", PokerStars cash "($0.02/$0.05 USD)", Winamax cash
+      // "(0.05€/0.10€)" (the symbol after the amount).
       const blinds = line.match(
-        /\(\s*([€$£]?)(\d+(?:\.\d+)?)\s*\/\s*[€$£]?(\d+(?:\.\d+)?)/,
+        /\(\s*([€$£]?)(\d+(?:\.\d+)?)([€$£]?)\s*\/\s*[€$£]?(\d+(?:\.\d+)?)/,
       );
       if (blinds) {
-        setCurrency(blinds[1] ?? '');
+        setCurrency(blinds[1] || blinds[3] || '');
         smallBlind = Number(blinds[2]);
-        bigBlind = Number(blinds[3]);
+        bigBlind = Number(blinds[4]);
       }
       continue;
     }

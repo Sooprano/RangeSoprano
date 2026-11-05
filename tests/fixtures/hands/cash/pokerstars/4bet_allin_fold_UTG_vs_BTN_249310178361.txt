@@ -1,0 +1,34 @@
+PokerStars Hand #249310178361:  Hold'em No Limit ($0.05/$0.10 USD) - 2024/03/08 14:08:01 CT [2024/03/08 15:08:01 ET]
+Table 'Noviomagum II' 6-max Seat #6 is the button
+Seat 1: Rival1 ($16.44 in chips) 
+Seat 2: Rival2 ($10 in chips) 
+Seat 3: Rival3 ($7.42 in chips) 
+Seat 4: Rival4 ($12.50 in chips) 
+Seat 5: Rival5 ($24.20 in chips) 
+Seat 6: Hero ($11.90 in chips) 
+Rival1: posts small blind $0.05
+Rival2: posts big blind $0.10
+*** HOLE CARDS ***
+Dealt to Hero [Tc Th]
+Rival3: raises $0.17 to $0.27
+Rival4: folds 
+Rival5: folds 
+Hero: raises $0.69 to $0.96
+Rival1: folds 
+Rival2 is disconnected 
+Rival2 is connected 
+Rival2 has timed out
+Rival2: folds 
+Rival3: raises $6.46 to $7.42 and is all-in
+Hero: folds 
+Uncalled bet ($6.46) returned to Rival3
+Rival6 $2.07 from pot
+Rival3: doesn't show hand 
+*** SUMMARY ***
+Total pot $2.07 | Rake $0 
+Seat 1: Rival1 (small blind) folded before Flop
+Seat 2: Rival2 (big blind) folded before Flop
+Seat 3: Rival6 ($2.07)
+Seat 4: Rival4 folded before Flop (didn't bet)
+Seat 5: Rival5 folded before Flop (didn't bet)
+Seat 6: Hero (button) folded before Flop

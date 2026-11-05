@@ -99,6 +99,22 @@ const zSpins = z
   })
   .strict();
 
+const zCash = z
+  .object({
+    description: z.string().max(200).nullable(),
+    want: z
+      .object({
+        position: zPosition,
+        vs: zPosition.nullable(),
+        action: z.enum(['open', 'call-open', '3bet', 'call-3bet', '4bet', 'call-4bet']),
+        size: z.union([z.number().positive().max(10000), z.literal('AI')]),
+      })
+      .strict()
+      .nullable(),
+    reason: z.string().max(300).nullable(),
+  })
+  .strict();
+
 const zStreetMap = <T extends z.ZodTypeAny>(t: T) =>
   z.object({ flop: t.optional(), turn: t.optional(), river: t.optional() }).strict();
 
@@ -110,6 +126,7 @@ const zOpponent = z
     spot: zSpot.nullable(),
     spotNote: z.string().max(300).nullable(),
     spins: zSpins.nullable().optional(),
+    cash: zCash.nullable().optional(),
     stacks: zStreetMap(z.number().nonnegative().max(1e7)).optional(),
   })
   .strict();
@@ -140,6 +157,7 @@ const zSavedHand = z
         opponents: z.array(zOpponent).max(9).optional(),
         spinsRangeId: z.string().max(200).optional(),
         spinsRival: z.enum(['regular', 'fish']).optional(),
+        cashRangeId: z.string().max(200).optional(),
       })
       .strict()
       .nullable(),

@@ -1,0 +1,28 @@
+PokerStars Hand #259704870161:  Hold'em No Limit ($0.02/$0.05 USD) - 2026/02/12 19:49:49 MT [2026/02/12 21:49:49 ET]
+Table 'Yarilo II' 6-max Seat #3 is the button
+Seat 1: Rival1 ($5.39 in chips) 
+Seat 2: Rival2 ($2.66 in chips) 
+Seat 3: Hero ($9.42 in chips) 
+Seat 4: Rival3 ($4.18 in chips) 
+Seat 5: Rival4 ($7.03 in chips) 
+Seat 6: Rival5 ($3.96 in chips) 
+Rival3: posts small blind $0.02
+Rival4: posts big blind $0.05
+*** HOLE CARDS ***
+Dealt to Hero [Ah Js]
+Rival5: folds 
+Rival1: raises $0.10 to $0.15
+Rival2: folds 
+Hero: folds 
+Rival3: folds 
+Rival4: folds 
+Uncalled bet ($0.10) returned to Rival1
+Rival6 $0.12 from pot
+*** SUMMARY ***
+Total pot $0.12 | Rake $0 
+Seat 1: Rival6 ($0.12)
+Seat 2: Rival2 folded before Flop (didn't bet)
+Seat 3: Hero (button) folded before Flop (didn't bet)
+Seat 4: Rival3 (small blind) folded before Flop
+Seat 5: Rival4 (big blind) folded before Flop
+Seat 6: Rival5 folded before Flop (didn't bet)

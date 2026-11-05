@@ -1,0 +1,30 @@
+PokerStars Hand #255475622562:  Hold'em No Limit ($0.10/$0.25 USD) - 2025/03/27 13:20:00 MT [2025/03/27 15:20:00 ET]
+Table 'Sargas' 6-max Seat #5 is the button
+Seat 4: Rival1 ($25 in chips) is sitting out
+Seat 1: Rival2 ($15.17 in chips) 
+Seat 2: Rival3 ($42.72 in chips) 
+Seat 3: Rival4 ($49.48 in chips) 
+Seat 5: Rival5 ($33.28 in chips) 
+Seat 6: Hero ($26.69 in chips) 
+Hero: posts small blind $0.10
+Rival2: posts big blind $0.25
+Rival1: sits out 
+*** HOLE CARDS ***
+Dealt to Hero [7h 8s]
+Rival3: raises $0.50 to $0.75
+Rival4: raises $1.50 to $2.25
+Rival5: folds 
+Hero: folds 
+Rival2: folds 
+Rival3: raises $40.47 to $42.72 and is all-in
+Rival4: folds 
+Uncalled bet ($40.47) returned to Rival3
+Rival6 $4.85 from pot
+*** SUMMARY ***
+Total pot $4.85 | Rake $0 
+Seat 4: Rival1
+Seat 1: Rival2 (big blind) folded before Flop
+Seat 2: Rival6 ($4.85)
+Seat 3: Rival4 folded before Flop
+Seat 5: Rival5 (button) folded before Flop (didn't bet)
+Seat 6: Hero (small blind) folded before Flop
