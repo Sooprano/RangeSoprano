@@ -106,8 +106,16 @@ export function SuitPicker({
       <div className="mb-2 flex items-start justify-between gap-2">
         <div className="text-xs text-content-muted">
           <p>
-            <span className="font-semibold text-content">{hand}</span> · en rango{' '}
-            <span className="tabular-nums text-content">{inRange.toFixed(2)}</span> de{' '}
+            <span className="font-semibold text-content">{hand}</span>
+            {live.length > 0 && (
+              <span
+                title="Peso de la mano en el rango (promedio de sus combos que se pueden repartir)"
+                className="ml-1 rounded bg-surface-hover px-1 font-semibold tabular-nums text-content"
+              >
+                {Math.round((inRange / live.length) * 100)}%
+              </span>
+            )}{' '}
+            · en rango <span className="tabular-nums text-content">{inRange.toFixed(2)}</span> de{' '}
             {live.length} combos
             {!isStart && (
               <>
@@ -278,8 +286,8 @@ export function SuitPicker({
             </p>
           ) : (
             <p>
-              Tocar un combo le pone el peso elegido (borde azul); tocarlo otra vez lo devuelve a
-              lo que digan las filas. Pasa el cursor por un combo para ver por qué sigue.
+              Tocar un combo le pone el peso elegido (borde azul); tocarlo otra vez lo devuelve a lo
+              que digan las filas. Pasa el cursor por un combo para ver por qué sigue.
             </p>
           )}
         </div>

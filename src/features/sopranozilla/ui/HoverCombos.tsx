@@ -46,9 +46,17 @@ export function HoverCombos({ hand, cells, inTarget, targetLabel, mode, hint }: 
       ) : (
         <>
           <p className="truncate">
-            <b className="text-content">{hand}</b> · en rango{' '}
-            <span className="tabular-nums text-content">{inRange.toFixed(2)}</span> de {live.length}{' '}
-            combos
+            <b className="text-content">{hand}</b>
+            {live.length > 0 && (
+              <span
+                title="Peso de la mano en el rango (promedio de sus combos que se pueden repartir)"
+                className="ml-1 rounded bg-surface-hover px-1 font-semibold tabular-nums text-content"
+              >
+                {Math.round((inRange / live.length) * 100)}%
+              </span>
+            )}{' '}
+            · en rango <span className="tabular-nums text-content">{inRange.toFixed(2)}</span> de{' '}
+            {live.length} combos
             {cells.length > live.length && (
               <span title="Usan una carta tuya o del board: no se pueden repartir">
                 {' '}
