@@ -1,6 +1,7 @@
 import type { HandNotation, Range, RangeCellData } from '@/types/poker';
 import { ALL_HANDS, combosOf } from './handUtils';
 import { sampleWeights, type BorderFocus } from './borderHands';
+import { drawRotated, type BorderRotation } from './borderRotation';
 
 export type TrainerHand = {
   hand: HandNotation;
@@ -37,15 +38,21 @@ function sampleHandIndex(
  * strategy travels in `cell` and the grading lives in `trainerSource`.
  *
  * `focus` (Classic › "Enfocar bordes") multiplies border and mixed hands on
- * top of the combo weight; `'off'` is the natural deal.
+ * top of the combo weight; `'off'` is the natural deal. With a `rotation`
+ * the edge hands are dealt from a bag instead (each once per round), keeping
+ * the share the focus gives them.
  */
 export function sampleTrainerHand(
   range: Range,
   rng: () => number = Math.random,
   focus: BorderFocus = 'off',
+  rotation?: BorderRotation,
 ): TrainerHand {
   let idx: number;
-  if (focus === 'off') {
+  const rotated = rotation ? drawRotated(range, focus, rng, rotation) : null;
+  if (rotated !== null) {
+    idx = rotated;
+  } else if (focus === 'off') {
     idx = sampleHandIndex(rng);
   } else {
     const weights = sampleWeights(range, focus);

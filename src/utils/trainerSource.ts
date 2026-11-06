@@ -8,6 +8,7 @@ import {
 } from './actionMeta';
 import { sampleTrainerHand, type TrainerHand } from './trainerSampler';
 import type { BorderFocus } from './borderHands';
+import type { BorderRotation } from './borderRotation';
 
 /**
  * What a trainer session draws hands from: a single range (the classic mode) or
@@ -191,6 +192,7 @@ export function drawFromSource(
   source: TrainerSource,
   rng: () => number = Math.random,
   focus: BorderFocus = 'off',
+  rotation?: BorderRotation,
 ): TrainerDraw {
   const range =
     source.kind === 'range'
@@ -199,6 +201,6 @@ export function drawFromSource(
           source.ranges.length - 1,
           Math.floor(rng() * source.ranges.length),
         )]!;
-  const hand = sampleTrainerHand(range, rng, focus);
+  const hand = sampleTrainerHand(range, rng, focus, rotation);
   return { range, hand, strategy: strategyOf(source, range, hand.cell) };
 }

@@ -36,6 +36,11 @@ import { VILLAIN_ACTION_LABELS } from '@/data/positions';
 import { relativeGroupPath } from '@/utils/groupUtils';
 import { useTableThemeStore } from '@/store/tableThemeStore';
 import { useUiStore } from '@/store/uiStore';
+import {
+  createBorderRotation,
+  rotationProgress,
+  type BorderRotation,
+} from '@/utils/borderRotation';
 import type { PersistedUiState } from '@/store/schemas';
 import { CountdownBar } from './CountdownBar';
 import { SessionErrorsPanel, type ClassicMistake } from './SessionErrorsPanel';
@@ -115,11 +120,16 @@ export function ClassicTrainer({ source }: ClassicTrainerProps) {
   const showSpotName = useTableThemeStore((s) => s.showSpotName);
   const key = sourceKey(source);
   const sourceKeyRef = useRef(key);
+  // Edge hands are dealt in rounds (each once per round) while a focus is on.
+  // Session state: a new range or folder starts a new round. The draws
+  // mutate it; every draw also sets `current`, which re-renders the counter.
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `key` on purpose: a new range or folder starts a new round
+  const rotation = useMemo<BorderRotation>(() => createBorderRotation(), [key]);
 
   const drawNext = useCallback(() => {
-    setCurrent(drawFromSource(source, Math.random, borderFocus));
+    setCurrent(drawFromSource(source, Math.random, borderFocus, rotation));
     setFeedback(null);
-  }, [source, borderFocus]);
+  }, [source, borderFocus, rotation]);
 
   // Reset session when the range (or folder) being trained changes.
   useEffect(() => {
@@ -135,8 +145,9 @@ export function ClassicTrainer({ source }: ClassicTrainerProps) {
         Math.random,
         // Read here, not as a dependency: changing the focus must not redraw the hand.
         useUiStore.getState().trainerBorderFocus,
+        rotation,
       ));
-  }, [source, key]);
+  }, [source, key, rotation]);
 
   // Auto-advance once feedback is shown: after 1.5s, or after a short flash in
   // instant mode (misses are kept in the session errors list below the table).
@@ -383,13 +394,16 @@ export function ClassicTrainer({ source }: ClassicTrainerProps) {
           value={advanceMode}
           onChange={setAdvanceMode}
         />
-        <PillPicker
-          label="Enfocar bordes"
-          hint="Manos donde el rango cambia de acción (ej. Q2o y J2o en un shove Q2o+). Las mixtas salen algo menos que los bordes."
-          options={FOCUS_OPTIONS}
-          value={borderFocus}
-          onChange={setBorderFocus}
-        />
+        <div className="flex items-center gap-2">
+          <PillPicker
+            label="Enfocar bordes"
+            hint="Manos donde el rango cambia de acción (ej. Q2o y J2o en un shove Q2o+). Salen por vueltas: cada mano borde o mixta una vez por vuelta, en orden al azar, así recorres todas con la misma frecuencia."
+            options={FOCUS_OPTIONS}
+            value={borderFocus}
+            onChange={setBorderFocus}
+          />
+          {borderFocus !== 'off' && <RotationCounter source={source} rotation={rotation} />}
+        </div>
       </div>
 
       {/* Last on the page and always mounted: nothing above it moves when a
@@ -401,6 +415,30 @@ export function ClassicTrainer({ source }: ClassicTrainerProps) {
         live
       />
     </div>
+  );
+}
+
+/**
+ * How far the current round of edge hands has gone: quiet on purpose, a
+ * glance tells how many are left without pulling the eye from the table.
+ */
+function RotationCounter({
+  source,
+  rotation,
+}: {
+  source: TrainerSource;
+  rotation: BorderRotation;
+}) {
+  const ranges = source.kind === 'range' ? [source.range] : source.ranges;
+  const { seen, total } = rotationProgress(ranges, rotation);
+  if (total === 0) return null;
+  return (
+    <span
+      className="text-[11px] tabular-nums text-content-disabled"
+      title="Manos borde y mixtas que ya salieron en esta vuelta. Al completarla empieza otra."
+    >
+      vuelta {seen}/{total}
+    </span>
   );
 }
 
