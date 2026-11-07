@@ -13,6 +13,7 @@
 
 | Hito | Hash |
 |---|---|
+| Fase 62f — Sopranozilla: «Equity matrix» (`equityMatrix` en `ui/valueBluff.ts`, `eqVal` en `SzGrid`, botón en `GridEditBar`, `gridView` en la página). D145. | `52a71b8` → `9f79599` |
 | Fase 62e — Sopranozilla: colores de equity en `HoverCombos` (`ui/equityColors.ts`: `handEquityColor` absoluto, `comboEquityColor` relativo al promedio de la mano). D144. | `6f7b2cb` → `78a2153` |
 | Fase 62d — Sopranozilla: `HoverCombos` muestra la equity del combo del villano (1 − la de Hero, `comboEq`) con 2 decimales y el promedio de la mano (`handEq`), como la matriz de Flopzilla. D143. | `d0eb69b` → `0c77ea2` |
 | Fase 62c — Sopranozilla: «tu eq.» por combo en `HoverCombos` (prop `heroEq`, panel 9,25 rem) + `SzGrid` sin resaltado de categoría ni borde de override con «Valor / Farol». D142. | `9297ddb` → `cffbdfa` |
