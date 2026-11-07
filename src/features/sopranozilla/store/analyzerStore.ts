@@ -8,6 +8,7 @@ import type { HandNotation } from '@/types/poker';
 import type { OpponentOption } from '../adapters/fromParsedHand';
 import type { TableInfo } from '../adapters/tableInfo';
 import type { SpinsRival } from '../ranges/spinsCatalog';
+import type { CardId } from '../engine/cards';
 import type { CategoryId } from '../engine/categories';
 import {
   availableStreets,
@@ -292,6 +293,14 @@ type AnalyzerActions = {
     villainPreflop: ComboWeights,
     opts?: { recorded?: RecordedStreets; meta?: HandMeta | null },
   ) => void;
+  /**
+   * «Editar cartas» (D141): new Hero cards and / or board, everything else
+   * kept — the rows, weights, painted hands, sizes and played lines of every
+   * street — so the same filtered line can be replayed on another card ("would
+   * I call this river if a different card came?"). The categories re-read
+   * themselves on the new board.
+   */
+  replaceCards: (hero: readonly [CardId, CardId], board: readonly CardId[], meta?: HandMeta | null) => void;
   setActiveStreet: (street: Street) => void;
   selectRow: (rowId: string) => void;
   /** "Marcar como jugada". Selecting a row never does this. */
@@ -437,6 +446,21 @@ export const useAnalyzerStore = create<AnalyzerStore>()((set, get) => {
         streets: defaultStreets(opts?.recorded),
         activeStreet: 'flop',
         selectedCategory: null,
+      });
+    },
+
+    replaceCards: (hero, board, meta) => {
+      const { hand, activeStreet } = get();
+      if (!hand) return;
+      const next: AnalyzerHandInput = { ...hand, hero: [hero[0], hero[1]], board: [...board] };
+      const streets = availableStreets(next);
+      set({
+        hand: next,
+        // Stay on the street being analyzed (the river when the river changed).
+        activeStreet: streets.includes(activeStreet)
+          ? activeStreet
+          : (streets[streets.length - 1] ?? 'flop'),
+        ...(meta !== undefined && { meta }),
       });
     },
 

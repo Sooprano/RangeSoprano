@@ -413,7 +413,9 @@ export default function SopranozillaPage() {
     loadSaved(saved);
   };
 
-  // «Editar cartas» (D102): same hand, range, pots and recorded action; new cards.
+  // «Editar cartas» (D102, D141): same hand, range, pots and recorded action;
+  // new cards. The filtering of every street is kept (the same line on
+  // another card), not reset.
   const applyCards = (heroCards: [CardId, CardId], board: CardId[]) => {
     const state = useAnalyzerStore.getState();
     if (!state.hand) return;
@@ -423,7 +425,7 @@ export default function SopranozillaPage() {
       state.meta && !state.meta.warnings.includes(note)
         ? { ...state.meta, warnings: [...state.meta.warnings, note] }
         : state.meta;
-    loadHand(next, preflopWeights(state.villainPreflop), { recorded: state.recorded, meta });
+    useAnalyzerStore.getState().replaceCards(heroCards, board, meta);
     writeLastHand(toSavedHand(next, readLastHand()?.range ?? '', state.recorded, meta));
     setEditCardsOpen(false);
   };
