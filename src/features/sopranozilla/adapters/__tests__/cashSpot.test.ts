@@ -670,11 +670,29 @@ Dealt to Hero [Ah Kh]
     expect(r).toEqual({ ok: false, reason: 'Bote limpeado: no hay rangos de limp.' });
   });
 
-  it('a multiway pot', () => {
+  it('a multiway pot (D139): the open and the first call have a range, the overcall does not', () => {
     const r = line(
       HEAD +
         'A: raises $0.15 to $0.25\nB: folds\nC: folds\nHero: calls $0.25\nD: folds\nE: calls $0.15\n*** FLOP *** [2c 3d 4h]\n',
     );
-    expect(r).toEqual({ ok: false, reason: 'Bote multiway: no hay rangos para ese spot.' });
+    if (!r.ok) throw new Error(r.reason);
+    expect(r.line.description).toBe('UTG abre 2.5bb · BTN paga · BB paga');
+    expect(r.line.decisions.map((d) => [d.name, d.position, d.action, d.vs, d.size])).toEqual([
+      ['A', 'UTG', 'open', null, 2.5],
+      ['Hero', 'BTN', 'call-open', 'UTG', 2.5],
+    ]);
+    expect(r.line.skipped?.map((s) => s.name)).toEqual(['E']);
+    expect(pickCashRange(catalog, r.line.decisions[1]!)?.range.name).toBe('BTNvsUTG call cold');
+  });
+
+  it('a multiway pot with a squeeze has no range', () => {
+    const r = line(
+      HEAD +
+        'A: raises $0.15 to $0.25\nB: folds\nC: folds\nHero: calls $0.25\nD: folds\nE: raises $1 to $1.10\nA: calls $0.85\nHero: calls $0.85\n*** FLOP *** [2c 3d 4h]\n',
+    );
+    expect(r).toEqual({
+      ok: false,
+      reason: 'Bote multiway con resubida (squeeze o cold 4-bet): no hay rangos para ese spot.',
+    });
   });
 });

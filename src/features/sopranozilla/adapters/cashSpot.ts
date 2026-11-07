@@ -4,8 +4,9 @@
 // bb. A player's range is the one of their LAST decision (the CO who opened
 // and called the 3-bet → «COvsBTN callvs3Bet»).
 //
-// No range (the user's rule: do not invent one): limped pots, multiway pots
-// (squeeze, cold 4-bet, overcalls), 5-bets.
+// No range (the user's rule: do not invent one): limped pots, 5-bets, and in
+// a multiway pot (D139) everything but the open and the FIRST call of it —
+// an overcall plays vs two ranges, a squeeze / cold 4-bet has no folder.
 
 import type { Position } from '@/types/poker';
 import type { ParsedHand } from '@/utils/handHistory';
@@ -25,6 +26,8 @@ export type CashLine = {
   /** "CO abre 2.5bb · BTN 3-bet a 9bb · CO paga". */
   description: string;
   decisions: CashDecision[];
+  /** Multiway (D139): players in the pot with no range, and why. */
+  skipped?: { name: string; reason: string }[];
 };
 
 export type CashLineResult = { ok: true; line: CashLine } | { ok: false; reason: string };
@@ -65,6 +68,8 @@ export function detectCashLine(
   const voluntary = new Set<string>();
   let limped = false;
   let caller: string | null = null;
+  // Who called the current raise, in order (the first one is a cold call / defense).
+  let callers: string[] = [];
   const decisions = hand.streets.find((s) => s.street === 'preflop')?.decisions ?? [];
   for (const d of decisions) {
     if (d.isAnte) continue;
@@ -81,17 +86,51 @@ export function detectCashLine(
       level = total;
       raises.push({ name: d.actor, to: round2(total / bb), allin: d.type === 'allin' });
       caller = null;
+      callers = [];
     } else if (raises.length === 0) {
       limped = true;
     } else {
       caller = d.actor;
+      callers.push(d.actor);
     }
   }
 
   if (limped) return { ok: false, reason: 'Bote limpeado: no hay rangos de limp.' };
   if (raises.length === 0) return { ok: false, reason: 'Nadie subió preflop.' };
+  const seatOf = (name: string) => positions.get(name)!;
   if (voluntary.size > 2) {
-    return { ok: false, reason: 'Bote multiway: no hay rangos para ese spot.' };
+    // D139: the open and the first call of it are the same decisions as
+    // heads-up; the overcallers have no range.
+    if (raises.length > 1) {
+      return {
+        ok: false,
+        reason: 'Bote multiway con resubida (squeeze o cold 4-bet): no hay rangos para ese spot.',
+      };
+    }
+    const open = raises[0]!;
+    const first = callers[0]!;
+    const size = open.allin ? ('AI' as const) : open.to;
+    return {
+      ok: true,
+      line: {
+        description: `${seatOf(open.name)} abre ${open.allin ? 'all-in' : `${open.to}bb`} · ${callers.map((c) => `${seatOf(c)} paga`).join(' · ')}`,
+        decisions: [
+          { name: open.name, position: seatOf(open.name), vs: null, action: 'open', size },
+          {
+            name: first,
+            position: seatOf(first),
+            vs: seatOf(open.name),
+            action: 'call-open',
+            size,
+          },
+        ],
+        skipped: callers.slice(1).map((name) => ({
+          name,
+          reason:
+            'Paga contra dos rivales (overcall): los rangos son de un call contra uno solo, no hay rango para este spot.',
+        })),
+      },
+    };
   }
   if (raises.length > 3) return { ok: false, reason: 'Hubo 5-bet: no hay rangos para ese spot.' };
   // The raisers alternate between the two players (a 3-bet by the opener
@@ -147,7 +186,9 @@ export function cashInfoOf(
     return {
       description: result.line.description,
       want: null,
-      reason: 'Este jugador no tiene parte en la línea preflop.',
+      reason:
+        result.line.skipped?.find((s) => s.name === name)?.reason ??
+        'Este jugador no tiene parte en la línea preflop.',
     };
   }
   const want = { position: last.position, vs: last.vs, action: last.action, size: last.size };

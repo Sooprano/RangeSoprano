@@ -107,3 +107,50 @@ describe('opening a spins hand', () => {
     );
   });
 });
+
+// The user's hand (anonymized): BU opens, SB calls, BB calls — three-way (D139).
+const MULTIWAY = `GAME #12628758221 Version:26.7.1.28 Uncalled:Y Texas Hold'em NL  Tournament 2026-11-06 23:08:59/GMT
+Table Info: Size: 3, Blinds: 10/20
+Table Twister €20 SNG, 1183906910, 1183906909 (Tournament: Twister €20 SNG Buy-In: €18.60 + €1.40)
+Seat 3: Hero (€434.00 in chips)  DEALER
+Seat 6: Rival1 (€566.00 in chips)
+Seat 10: Rival2 (€500.00 in chips)
+Rival1: Post SB €10.00
+Rival2: Post BB €20.00
+*** HOLE CARDS ***
+Dealt to Hero [HQ C8]
+Hero: Raise (NF) €40.00
+Rival1: Call €30.00
+Rival2: Call €20.00
+*** FLOP *** [C9 S9 SQ]
+Rival1: Check
+Rival2: Check
+Hero: Bet €40.00
+Rival1: Call €40.00
+Rival2: Fold
+*** TURN *** [H6]
+Rival1: Bet €60.00
+Hero: Call €60.00
+*** RIVER *** [DK]
+Rival1: Bet €224.00
+Hero: Fold
+*** SUMMARY ***
+Total pot €320.00 Rake €0.00
+Rival1: wins €320.00
+`;
+
+describe('three-way spins pot (D139)', () => {
+  it('the SB who called the BU open gets the SB vs BU Fish range; the BB overcall none', async () => {
+    const { hand } = parseHandHistory(MULTIWAY);
+    const result = await openParsedHand(hand!, [], [], { rival: 'fish' });
+    if (!result.ok) throw new Error(result.error);
+    const meta = result.saved.meta!;
+    expect(meta.villainName).toBe('Rival1');
+    expect(meta.spot).toBe('BU abre a 2bb · SB paga · BB paga');
+    expect(meta.rangeLabel).toBe('FISH 3w SBvBU / CALL vs OR 18+ · Fish');
+    const spins = await loadSpinsCatalog();
+    const bb = repickSaved(result.saved, { villain: 'Rival2', spins, rival: 'fish' }, [], []);
+    expect(bb?.meta?.rangeLabel).toBeNull();
+    expect(bb?.meta?.rangeMissing).toMatch(/^Paga contra dos rivales \(overcall\)/);
+  });
+});

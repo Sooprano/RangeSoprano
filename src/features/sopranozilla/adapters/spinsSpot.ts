@@ -27,6 +27,8 @@ export type SpinsRole = {
   /** The other player in the pot. */
   vs: Position;
   wants: SpinsWant[];
+  /** Multiway (D139): the effective stack vs the player they faced, if not the line's. */
+  effectiveBb?: number;
 };
 
 export type SpinsLine = {
@@ -36,6 +38,8 @@ export type SpinsLine = {
   /** "BU limp · BB check" (spins seat names: BU / SB / BB, HU: SB / BB). */
   description: string;
   roles: SpinsRole[];
+  /** Multiway (D139): players in the pot with no range, and why. */
+  skipped?: { name: string; reason: string }[];
 };
 
 /**
@@ -66,12 +70,13 @@ export function spinsInfoOf(
     return { format, effectiveBb: null, description: null, role: null, reason: result.reason };
   }
   const role = result.line.roles.find((r) => r.name === name) ?? null;
+  const skipped = result.line.skipped?.find((s) => s.name === name);
   return {
     format,
-    effectiveBb: result.line.effectiveBb,
+    effectiveBb: role?.effectiveBb ?? result.line.effectiveBb,
     description: result.line.description,
     role: role ? { position: role.position, vs: role.vs, wants: role.wants } : null,
-    reason: role ? null : 'Este jugador no tiene parte en la línea preflop.',
+    reason: role ? null : (skipped?.reason ?? 'Este jugador no tiene parte en la línea preflop.'),
   };
 }
 
@@ -177,8 +182,7 @@ export function detectSpinsLine(
     };
   }
   if (inPot.length < 2) return { ok: false, reason: 'Nadie más entró en el bote.' };
-  if (inPot.length > 2)
-    return { ok: false, reason: 'Bote a tres jugadores: no hay rangos para ese spot.' };
+  if (inPot.length > 2) return multiwayLine(acts, format, positions, seat, stackBb);
   const [first, other] = inPot as [string, string];
   const effectiveBb = round2(Math.min(stackBb(first), stackBb(other)));
 
@@ -256,6 +260,97 @@ export function detectSpinsLine(
           wants: otherWants,
         },
       ],
+    },
+  };
+}
+
+export const OVERCALL_REASON =
+  'Paga contra dos rivales (overcall): sus rangos son de un call contra uno solo, no hay rango para este spot.';
+
+/**
+ * Three players in the pot (D139). A decision made against ONE opponent action
+ * is the same as heads-up, whatever comes after: the opener's open (or the
+ * first limp) and the FIRST call of the open (the SB vs the BU, with the BB
+ * still to act — exactly the spot its range is for). Calling after someone
+ * already called (an overcall: it plays vs two ranges) has no range, nor
+ * anything after a re-raise (squeeze / ROL in a three-way pot).
+ */
+function multiwayLine(
+  acts: Act[],
+  format: SpinsFormat,
+  positions: Map<string, Position>,
+  seat: (name: string) => string,
+  stackBb: (name: string) => number,
+): SpinsLineResult {
+  const raises = acts.filter((a) => a.kind === 'raise');
+  const names = [...new Set(acts.map((a) => a.name))];
+  const deepest = (but: string) => Math.max(...names.filter((n) => n !== but).map(stackBb));
+
+  if (raises.length === 0) {
+    // Limped three ways: only the first limper made a heads-up-like decision.
+    const first = acts[0]!.name;
+    const others = names.filter((n) => n !== first);
+    return {
+      ok: true,
+      line: {
+        format,
+        effectiveBb: round2(Math.min(stackBb(first), deepest(first))),
+        description: `${acts.map((a) => `${seat(a.name)} ${a.kind === 'check' ? 'check' : 'limp'}`).join(' · ')}`,
+        roles: [
+          {
+            name: first,
+            position: positions.get(first)!,
+            vs: positions.get(others[0]!)!,
+            wants: [{ action: 'limp', size: null, approx: false }],
+          },
+        ],
+        skipped: others.map((name) => ({
+          name,
+          reason: 'Bote limpeado a tres: solo el primero que limpea tiene rango.',
+        })),
+      },
+    };
+  }
+
+  const open = acts[0];
+  if (raises.length > 1 || !open || open.kind !== 'raise') {
+    return {
+      ok: false,
+      reason: 'Bote a tres con resubida (squeeze o raise sobre limp): no hay rangos para ese spot.',
+    };
+  }
+  const callers = acts.filter((a) => a.kind === 'call').map((a) => a.name);
+  const firstCaller = callers[0]!;
+  const opener = open.name;
+  const size: number | 'AI' = open.allin ? 'AI' : open.to;
+  const sizeText = open.allin ? 'va all-in' : `abre a ${open.to}bb`;
+  return {
+    ok: true,
+    line: {
+      format,
+      effectiveBb: round2(Math.min(stackBb(opener), deepest(opener))),
+      description: `${seat(opener)} ${sizeText} · ${callers.map((c) => `${seat(c)} paga`).join(' · ')}`,
+      roles: [
+        {
+          name: opener,
+          position: positions.get(opener)!,
+          vs: positions.get(firstCaller)!,
+          wants: [
+            open.allin
+              ? { action: 'shove', size: 'AI', approx: false }
+              : { action: 'open', size, approx: false },
+          ],
+        },
+        {
+          name: firstCaller,
+          position: positions.get(firstCaller)!,
+          vs: positions.get(opener)!,
+          // Calling a shove has no folder (same as heads-up).
+          wants: open.allin ? [] : [{ action: 'call-open', size, approx: false }],
+          effectiveBb: round2(Math.min(stackBb(firstCaller), stackBb(opener))),
+        },
+      ],
+      skipped: callers.slice(1).map((name) => ({ name, reason: OVERCALL_REASON })),
     },
   };
 }

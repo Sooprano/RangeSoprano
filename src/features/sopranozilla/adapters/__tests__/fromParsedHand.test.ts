@@ -406,11 +406,29 @@ Hero: checks`,
   });
 });
 
-describe('a 3-way pot in a spin (D128)', () => {
+describe('a 3-way pot in a spin (D128, D139)', () => {
   it('asks for a spins range instead of using the cash library', () => {
     const r = savedHandFromParsed(THREE_WAY, [], SAMPLE_RANGES, { spins: [] });
     if (!r.ok) throw new Error(r.error);
     expect(r.saved.meta?.rangeLabel).toBeNull();
-    expect(r.saved.meta?.rangeMissing).toMatch(/tres jugadores/);
+    expect(r.saved.meta?.rangeMissing).toBe(
+      'No hay rango de Regular para «BU abre a 2bb · SB paga · BB paga». Elige uno de la lista de spins.',
+    );
+  });
+
+  it('BU opens, SB calls, BB calls: the SB call is its heads-up spot; the BB overcall has no range', () => {
+    const r = fromParsedHand(THREE_WAY);
+    if (!r.ok) throw new Error(r.error);
+    const sb = r.value.opponents.find((o) => o.name === 'mousefourth92')!.spins!;
+    expect(sb.description).toBe('BU abre a 2bb · SB paga · BB paga');
+    expect(sb.role).toEqual({
+      position: 'SB',
+      vs: 'BTN',
+      wants: [{ action: 'call-open', size: 2, approx: false }],
+    });
+    expect(sb.effectiveBb).toBe(25);
+    const bb = r.value.opponents.find((o) => o.name === 'n1dimka')!.spins!;
+    expect(bb.role).toBeNull();
+    expect(bb.reason).toMatch(/^Paga contra dos rivales \(overcall\)/);
   });
 });

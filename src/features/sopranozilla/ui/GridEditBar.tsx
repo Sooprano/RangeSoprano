@@ -5,7 +5,7 @@
 // that row's combos; the whole row at once is the violet control under the
 // grid (one job per control: the double click on these weights was dropped).
 
-import { ArrowLeftRight, Download, Paintbrush, Undo2, Upload } from 'lucide-react';
+import { ArrowLeftRight, Download, Paintbrush, Scale, Undo2, Upload } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import type { Street } from '../engine/equity';
 import type { GridTarget } from '../store/analyzerStore';
@@ -40,6 +40,9 @@ type Props = {
   nextStreet: string | null;
   /** D135: what the colors mean when the row filters another row's range. */
   baseHint: string | null;
+  /** «Valor / Farol» (D140): the grid colors the range by what it does vs Hero. */
+  vb: boolean;
+  onToggleVb: () => void;
 };
 
 export function GridEditBar(p: Props) {
@@ -101,6 +104,24 @@ export function GridEditBar(p: Props) {
             <ArrowLeftRight className="h-3.5 w-3.5" /> Inv
           </button>
         )}
+        <button
+          type="button"
+          aria-pressed={p.vb}
+          onClick={p.onToggleVb}
+          title={
+            p.street === 'river'
+              ? 'Valor / Farol: rojo = te gana (valor), verde = le ganas (farol), gris = empate. El grid no se edita mientras está activo.'
+              : 'Por tu equity contra cada combo: rojo = te va ganando, verde = vas ganando, gris = disputada. El grid no se edita mientras está activo.'
+          }
+          className={cn(
+            'flex items-center gap-1 rounded-md border px-2 py-1 font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light',
+            p.vb
+              ? 'border-emerald-500/70 bg-emerald-500/15 text-content'
+              : 'border-border text-content-muted hover:bg-surface-hover hover:text-content',
+          )}
+        >
+          <Scale className="h-3.5 w-3.5" /> Valor / Farol
+        </button>
         <span className="ml-auto flex gap-1">
           <button
             type="button"

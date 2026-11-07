@@ -10,6 +10,8 @@ import type { HandNotation } from '@/types/poker';
 import { cn } from '@/lib/cn';
 import type { ComboId } from '../engine/combos';
 import type { ComboCell } from './viewModel';
+import type { VbKind } from './valueBluff';
+import { VB_COLORS } from './valueBluff';
 
 const SUIT_TEXT = [
   'text-slate-500 dark:text-slate-300',
@@ -28,9 +30,14 @@ type Props = {
   mode: 'row' | 'start';
   /** What to show with no hand under the cursor. */
   hint: string;
+  /** «Valor / Farol» on (D140): what each combo does vs Hero, and the words for it. */
+  vb?: {
+    kindOf: (combo: ComboCell['combo']) => VbKind | null;
+    words: Record<VbKind, string>;
+  } | null;
 };
 
-export function HoverCombos({ hand, cells, inTarget, targetLabel, mode, hint }: Props) {
+export function HoverCombos({ hand, cells, inTarget, targetLabel, mode, hint, vb }: Props) {
   const live = cells.filter((c) => !c.blocked);
   const inRange = live.reduce((s, c) => s + c.inRange, 0);
   const follows = live.reduce((s, c) => s + c.follows, 0);
@@ -86,6 +93,8 @@ export function HoverCombos({ hand, cells, inTarget, targetLabel, mode, hint }: 
               const goes = Math.round(c.follows * 100);
               const cut = mode === 'row' && goes !== weight;
               const target = inTarget?.has(c.combo) ?? false;
+              const kind = vb && !c.blocked && !out ? vb.kindOf(c.combo) : null;
+              const vbWord = kind && vb ? ` · ${vb.words[kind]}` : '';
               return (
                 <li
                   key={c.combo}
@@ -95,8 +104,8 @@ export function HoverCombos({ hand, cells, inTarget, targetLabel, mode, hint }: 
                       : out
                         ? `${c.label}: fuera del rango`
                         : mode === 'start'
-                          ? `${c.label}: peso ${weight}% en el rango`
-                          : `${c.label}: peso ${weight}% en el rango · sigue ${goes}% · ${c.reason}`
+                          ? `${c.label}: peso ${weight}% en el rango${vbWord}`
+                          : `${c.label}: peso ${weight}% en el rango · sigue ${goes}%${vbWord} · ${c.reason}`
                   }
                   className={cn(
                     'flex items-center gap-1 rounded px-1 py-0.5 ring-1',
@@ -109,6 +118,13 @@ export function HoverCombos({ hand, cells, inTarget, targetLabel, mode, hint }: 
                           : 'ring-border',
                   )}
                 >
+                  {kind && (
+                    <span
+                      aria-hidden
+                      className="inline-block h-2 w-2 rounded-full"
+                      style={{ backgroundColor: VB_COLORS[kind] }}
+                    />
+                  )}
                   <span className="font-medium text-content">
                     {c.label[0]}
                     <span className={SUIT_TEXT[c.rowSuit]}>{c.label[1]}</span>

@@ -8,11 +8,15 @@ import { cn } from '@/lib/cn';
 import { categoryOf } from '@/utils/handUtils';
 import type { HandCategory, HandNotation } from '@/types/poker';
 import type { GridCell } from './viewModel';
+import type { VbCell } from './valueBluff';
+import { VB_COLORS } from './valueBluff';
 
 const AMBER = 'rgb(245 158 11)';
 /** The part that re-raises all-in (D135), like a solver's raise color. */
 const ROSE = 'rgb(244 63 94)';
 const GREY = 'rgb(148 163 184 / 0.45)';
+/** «Valor / Farol»: the part of the range not shown (folded), barely there. */
+const FAINT = 'rgb(148 163 184 / 0.14)';
 
 const EMPTY_BG: Record<HandCategory, string> = {
   pair: 'bg-cell-empty-pair',
@@ -33,6 +37,10 @@ type CellProps = {
   open: boolean;
   /** Share of the class that re-raises all-in (inside `follows`). */
   shove: number;
+  /** «Valor / Farol» (D140): the shown part split by group; null = normal colors. */
+  vbValue: number | null;
+  vbTie: number;
+  vbBluff: number;
 };
 
 const Cell = memo(function Cell({
@@ -45,14 +53,22 @@ const Cell = memo(function Cell({
   overridden,
   open,
   shove,
+  vbValue,
+  vbTie,
+  vbBluff,
 }: CellProps) {
   const f = Math.round(follows * 1000) / 10;
   const r = Math.round(inRange * 1000) / 10;
   const s = Math.min(f, Math.round(shove * 1000) / 10);
-  const background =
-    live > 0 && r > 0
-      ? `linear-gradient(to right, ${ROSE} 0 ${s}%, ${AMBER} ${s}% ${f}%, ${GREY} ${f}% ${r}%, transparent ${r}% 100%)`
-      : undefined;
+  let background: string | undefined;
+  if (live > 0 && r > 0 && vbValue !== null) {
+    const v = Math.round(vbValue * 1000) / 10;
+    const t = v + Math.round(vbTie * 1000) / 10;
+    const b = Math.min(t + Math.round(vbBluff * 1000) / 10, 100);
+    background = `linear-gradient(to right, ${VB_COLORS.value} 0 ${v}%, ${VB_COLORS.tie} ${v}% ${t}%, ${VB_COLORS.bluff} ${t}% ${b}%, ${FAINT} ${b}% ${Math.max(b, r)}%, transparent ${Math.max(b, r)}% 100%)`;
+  } else if (live > 0 && r > 0) {
+    background = `linear-gradient(to right, ${ROSE} 0 ${s}%, ${AMBER} ${s}% ${f}%, ${GREY} ${f}% ${r}%, transparent ${r}% 100%)`;
+  }
   return (
     <button
       type="button"
@@ -113,6 +129,8 @@ type SzGridProps = {
   /** Shift + click: open that class's 4×4 suit picker. */
   onOpen: (hand: HandNotation) => void;
   openHand: HandNotation | null;
+  /** «Valor / Farol» (D140): per-hand groups; the grid is read-only meanwhile. */
+  vb?: ReadonlyMap<HandNotation, VbCell> | null;
 };
 
 function handAt(e: PointerEvent<HTMLDivElement>): HandNotation | null {
@@ -133,6 +151,7 @@ export function SzGrid({
   onHover,
   onOpen,
   openHand,
+  vb = null,
 }: SzGridProps) {
   const painting = useRef<{ stroke: PaintStroke } | null>(null);
 
@@ -201,6 +220,9 @@ export function SzGrid({
           overridden={c.overridden}
           open={c.hand === openHand}
           shove={c.shove}
+          vbValue={vb ? (vb.get(c.hand)?.value ?? 0) : null}
+          vbTie={vb?.get(c.hand)?.tie ?? 0}
+          vbBluff={vb?.get(c.hand)?.bluff ?? 0}
         />
       ))}
     </div>

@@ -47,6 +47,8 @@ import {
 import type { OpenInSopranozillaState } from './OpenInSopranozillaButton';
 import { RangeLibraryDialog } from './RangeLibraryDialog';
 import { SpinsBar } from './SpinsBar';
+import { ValueBluffBar } from './ValueBluffBar';
+import { valueBluffCells, valueBluffSummary, vbKindOf } from './valueBluff';
 import { CashBar } from './CashBar';
 import { cashRangeLabel, loadCashCatalog, type CashRange } from '../ranges/cashCatalog';
 import { loadSpinsCatalog, type SpinsRange } from '../ranges/spinsCatalog';
@@ -538,6 +540,32 @@ export default function SopranozillaPage() {
           ? (cont ?? undefined)
           : undefined;
   const eq = useEquity(hand?.hero ?? null, view?.board ?? null, view?.start ?? null);
+
+  // «Valor / Farol» (D140): the grid colors what it shows by what each combo
+  // does vs Hero; the summary sits above it (always on the river).
+  const [vbOn, setVbOn] = useState(false);
+  const vbWeights = view ? (editingStart ? view.start : (shown ?? null)) : null;
+  const vbCells = useMemo(
+    () =>
+      vbOn && view && vbWeights
+        ? valueBluffCells(view, vbWeights, eq.table, activeStreet)
+        : null,
+    // eq.version: the table is mutable and fills while the worker runs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [vbOn, view, vbWeights, eq.table, eq.version, activeStreet],
+  );
+  // In «Villano apuesta» the summary is about his betting range (the Call
+  // row): that is what the call is up against, whatever row the grid shows.
+  const betRangeRow = st.mode === 'villain' ? view?.rows[CALL_ROW_ID] : undefined;
+  const vbSummaryWeights = betRangeRow ?? vbWeights;
+  const vbSummary = useMemo(
+    () =>
+      view && vbSummaryWeights && (vbOn || activeStreet === 'river')
+        ? valueBluffSummary(view, vbSummaryWeights, eq.table, activeStreet)
+        : null,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [vbOn, view, vbSummaryWeights, eq.table, eq.version, activeStreet],
+  );
 
   const cells = useMemo(
     () =>
@@ -1385,9 +1413,37 @@ export default function SopranozillaPage() {
               nextStreet={
                 activeStreet === 'flop' ? 'turn' : activeStreet === 'turn' ? 'river' : null
               }
+              vb={vbOn}
+              onToggleVb={() => {
+                setVbOn((v) => !v);
+                setOpenHand(null);
+              }}
             />
+            {vbSummary && (
+              <ValueBluffBar
+                street={activeStreet}
+                summary={vbSummary}
+                title={
+                  betRangeRow
+                    ? 'Su rango de apuesta'
+                    : editingStart
+                      ? `Rango al empezar el ${activeStreet}`
+                      : `Lo que sigue en «${actionLabel}»`
+                }
+                call={
+                  betRangeRow && pot !== undefined && pot > 0
+                    ? {
+                        need: potOddsNeeded(pot, (pot * st.villainBetPct) / 100),
+                        bet: (pot * st.villainBetPct) / 100,
+                      }
+                    : null
+                }
+              />
+            )}
             <SzGrid
               cells={cells}
+              readOnly={vbOn}
+              vb={vbCells}
               onPaint={paintCell}
               onStrokeStart={() => checkpoint()}
               onHover={setHovered}
@@ -1400,6 +1456,17 @@ export default function SopranozillaPage() {
               inTarget={hoverTarget}
               targetLabel={highlightLabel}
               mode={editingStart ? 'start' : 'row'}
+              vb={
+                vbOn
+                  ? {
+                      kindOf: (id) => vbKindOf(eq.table?.[id] ?? Number.NaN, activeStreet),
+                      words:
+                        activeStreet === 'river'
+                          ? { value: 'te gana (valor)', tie: 'empata', bluff: 'le ganas (farol)' }
+                          : { value: 'te va ganando', tie: 'disputada', bluff: 'vas ganando' },
+                    }
+                  : null
+              }
               hint={
                 highlightLabel
                   ? `Marco violeta: manos con «${highlightLabel}». Pasa el cursor por una mano para ver qué palos entran.`
