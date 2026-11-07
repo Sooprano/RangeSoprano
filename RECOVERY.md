@@ -13,6 +13,7 @@
 
 | Hito | Hash |
 |---|---|
+| Fase 62e — Sopranozilla: colores de equity en `HoverCombos` (`ui/equityColors.ts`: `handEquityColor` absoluto, `comboEquityColor` relativo al promedio de la mano). D144. | `6f7b2cb` → `78a2153` |
 | Fase 62d — Sopranozilla: `HoverCombos` muestra la equity del combo del villano (1 − la de Hero, `comboEq`) con 2 decimales y el promedio de la mano (`handEq`), como la matriz de Flopzilla. D143. | `d0eb69b` → `0c77ea2` |
 | Fase 62c — Sopranozilla: «tu eq.» por combo en `HoverCombos` (prop `heroEq`, panel 9,25 rem) + `SzGrid` sin resaltado de categoría ni borde de override con «Valor / Farol». D142. | `9297ddb` → `cffbdfa` |
 | Fase 62b — Sopranozilla: «Editar cartas» conserva el filtrado (sesión 2026-11-06). `replaceCards` en `analyzerStore.ts` (cambia solo `hand.hero`/`hand.board`, mantiene `streets`, deshacer y la calle activa si sigue existiendo) usado por `applyCards` en `SopranozillaPage.tsx` en lugar de `loadHand`. Test `replaceCards.test.ts`. D141. | `73ec61e` → `259c94c` |
