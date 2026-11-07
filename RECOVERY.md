@@ -13,6 +13,7 @@
 
 | Hito | Hash |
 |---|---|
+| Fase 62d — Sopranozilla: `HoverCombos` muestra la equity del combo del villano (1 − la de Hero, `comboEq`) con 2 decimales y el promedio de la mano (`handEq`), como la matriz de Flopzilla. D143. | `d0eb69b` → `0c77ea2` |
 | Fase 62c — Sopranozilla: «tu eq.» por combo en `HoverCombos` (prop `heroEq`, panel 9,25 rem) + `SzGrid` sin resaltado de categoría ni borde de override con «Valor / Farol». D142. | `9297ddb` → `cffbdfa` |
 | Fase 62b — Sopranozilla: «Editar cartas» conserva el filtrado (sesión 2026-11-06). `replaceCards` en `analyzerStore.ts` (cambia solo `hand.hero`/`hand.board`, mantiene `streets`, deshacer y la calle activa si sigue existiendo) usado por `applyCards` en `SopranozillaPage.tsx` en lugar de `loadHand`. Test `replaceCards.test.ts`. D141. | `73ec61e` → `259c94c` |
 | Fase 62 — Sopranozilla: multiway + «Valor / Farol» (sesión 2026-11-06). (a) D139: `spinsSpot.ts` `multiwayLine` (open + primer call con rango, overcall / squeeze / limp detrás sin rango, `SpinsLine.skipped`, `SpinsRole.effectiveBb`) y lo mismo en `cashSpot.ts` (`CashLine.skipped`, `callers`). (b) D140: `ui/valueBluff.ts` (`vbKindOf`, `valueBluffSummary`, `valueBluffCells`, `bluffsNeeded`, `VB_COLORS`), `ValueBluffBar.tsx`, botón en `GridEditBar`, `SzGrid` con `vb` (solo lectura), puntos en `HoverCombos`. Tests: `valueBluff.test.ts`, mano multiway del usuario en `openSpins.test.ts`, multiway en `cashSpot.test.ts` y `fromParsedHand.test.ts`. | `4e4badb` → `bfb8042` |
