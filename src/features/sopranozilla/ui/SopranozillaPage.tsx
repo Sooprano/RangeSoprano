@@ -1458,6 +1458,7 @@ export default function SopranozillaPage() {
               inTarget={hoverTarget}
               targetLabel={highlightLabel}
               mode={editingStart ? 'start' : 'row'}
+              heroEq={(id) => eq.table?.[id] ?? Number.NaN}
               vb={
                 vbOn
                   ? {

@@ -30,6 +30,8 @@ type Props = {
   mode: 'row' | 'start';
   /** What to show with no hand under the cursor. */
   hint: string;
+  /** Hero's equity vs each combo on this street (NaN while it is computed). */
+  heroEq?: (combo: ComboCell['combo']) => number;
   /** «Valor / Farol» on (D140): what each combo does vs Hero, and the words for it. */
   vb?: {
     kindOf: (combo: ComboCell['combo']) => VbKind | null;
@@ -37,7 +39,7 @@ type Props = {
   } | null;
 };
 
-export function HoverCombos({ hand, cells, inTarget, targetLabel, mode, hint, vb }: Props) {
+export function HoverCombos({ hand, cells, inTarget, targetLabel, mode, hint, vb, heroEq }: Props) {
   const live = cells.filter((c) => !c.blocked);
   const inRange = live.reduce((s, c) => s + c.inRange, 0);
   const follows = live.reduce((s, c) => s + c.follows, 0);
@@ -45,7 +47,7 @@ export function HoverCombos({ hand, cells, inTarget, targetLabel, mode, hint, vb
 
   return (
     <div
-      className="mt-1.5 h-[6.75rem] overflow-hidden rounded-lg border border-border bg-surface/40 p-2 text-xs text-content-muted"
+      className="mt-1.5 h-[9.25rem] overflow-hidden rounded-lg border border-border bg-surface/40 p-2 text-xs text-content-muted"
       aria-live="polite"
     >
       {!hand ? (
@@ -95,6 +97,9 @@ export function HoverCombos({ hand, cells, inTarget, targetLabel, mode, hint, vb
               const target = inTarget?.has(c.combo) ?? false;
               const kind = vb && !c.blocked && !out ? vb.kindOf(c.combo) : null;
               const vbWord = kind && vb ? ` · ${vb.words[kind]}` : '';
+              const e = heroEq && !c.blocked ? heroEq(c.combo) : Number.NaN;
+              const eqText = Number.isFinite(e) ? `${Math.round(e * 100)}%` : null;
+              const eqWord = eqText ? ` · tu equity ${eqText}` : '';
               return (
                 <li
                   key={c.combo}
@@ -104,11 +109,11 @@ export function HoverCombos({ hand, cells, inTarget, targetLabel, mode, hint, vb
                       : out
                         ? `${c.label}: fuera del rango`
                         : mode === 'start'
-                          ? `${c.label}: peso ${weight}% en el rango${vbWord}`
-                          : `${c.label}: peso ${weight}% en el rango · sigue ${goes}%${vbWord} · ${c.reason}`
+                          ? `${c.label}: peso ${weight}% en el rango${eqWord}${vbWord}`
+                          : `${c.label}: peso ${weight}% en el rango · sigue ${goes}%${eqWord}${vbWord} · ${c.reason}`
                   }
                   className={cn(
-                    'flex items-center gap-1 rounded px-1 py-0.5 ring-1',
+                    'flex flex-col rounded px-1 py-0.5 leading-tight ring-1',
                     c.blocked
                       ? 'line-through opacity-25 ring-border'
                       : out
@@ -118,25 +123,33 @@ export function HoverCombos({ hand, cells, inTarget, targetLabel, mode, hint, vb
                           : 'ring-border',
                   )}
                 >
-                  {kind && (
-                    <span
-                      aria-hidden
-                      className="inline-block h-2 w-2 rounded-full"
-                      style={{ backgroundColor: VB_COLORS[kind] }}
-                    />
-                  )}
-                  <span className="font-medium text-content">
-                    {c.label[0]}
-                    <span className={SUIT_TEXT[c.rowSuit]}>{c.label[1]}</span>
-                    {c.label[2]}
-                    <span className={SUIT_TEXT[c.colSuit]}>{c.label[3]}</span>
+                  <span className="flex items-center gap-1">
+                    {kind && (
+                      <span
+                        aria-hidden
+                        className="inline-block h-2 w-2 rounded-full"
+                        style={{ backgroundColor: VB_COLORS[kind] }}
+                      />
+                    )}
+                    <span className="font-medium text-content">
+                      {c.label[0]}
+                      <span className={SUIT_TEXT[c.rowSuit]}>{c.label[1]}</span>
+                      {c.label[2]}
+                      <span className={SUIT_TEXT[c.colSuit]}>{c.label[3]}</span>
+                    </span>
+                    {!c.blocked && !out && (
+                      <span className="tabular-nums text-[11px] font-semibold text-content">
+                        {weight}%
+                        {cut && (
+                          <span className="ml-0.5 font-normal text-content-muted">→ {goes}%</span>
+                        )}
+                      </span>
+                    )}
                   </span>
-                  {!c.blocked && !out && (
-                    <span className="tabular-nums text-[11px] font-semibold text-content">
-                      {weight}%
-                      {cut && (
-                        <span className="ml-0.5 font-normal text-content-muted">→ {goes}%</span>
-                      )}
+                  {/* Hero's equity vs this combo, now (the street on screen). */}
+                  {eqText && !out && (
+                    <span className="text-[10px] tabular-nums text-content-muted">
+                      tu eq. <span className="text-content">{eqText}</span>
                     </span>
                   )}
                 </li>

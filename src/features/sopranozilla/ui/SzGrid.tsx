@@ -215,9 +215,11 @@ export function SzGrid({
           live={c.live}
           inRange={c.inRange}
           follows={c.follows}
-          highlighted={c.highlighted}
           categoryShare={c.categoryShare}
-          overridden={c.overridden}
+          // «Valor / Farol» is a reading view: no row highlight (it dimmed the
+          // rest of the grid) and no «painted by hand» frames.
+          highlighted={vb ? null : c.highlighted}
+          overridden={vb ? false : c.overridden}
           open={c.hand === openHand}
           shove={c.shove}
           vbValue={vb ? (vb.get(c.hand)?.value ?? 0) : null}
