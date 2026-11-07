@@ -48,7 +48,7 @@ import type { OpenInSopranozillaState } from './OpenInSopranozillaButton';
 import { RangeLibraryDialog } from './RangeLibraryDialog';
 import { SpinsBar } from './SpinsBar';
 import { ValueBluffBar } from './ValueBluffBar';
-import { valueBluffCells, valueBluffSummary, vbKindOf } from './valueBluff';
+import { equityMatrix, valueBluffCells, valueBluffSummary, vbKindOf } from './valueBluff';
 import { CashBar } from './CashBar';
 import { cashRangeLabel, loadCashCatalog, type CashRange } from '../ranges/cashCatalog';
 import { loadSpinsCatalog, type SpinsRange } from '../ranges/spinsCatalog';
@@ -545,8 +545,17 @@ export default function SopranozillaPage() {
 
   // «Valor / Farol» (D140): the grid colors what it shows by what each combo
   // does vs Hero; the summary sits above it (always on the river).
-  const [vbOn, setVbOn] = useState(false);
+  // «Valor / Farol» (D140) or «Equity matrix» (D145): reading views of the
+  // grid, one at a time.
+  const [gridView, setGridView] = useState<'normal' | 'vb' | 'eq'>('normal');
+  const vbOn = gridView === 'vb';
+  const eqOn = gridView === 'eq';
   const vbWeights = view ? (editingStart ? view.start : (shown ?? null)) : null;
+  const eqMatrixCells = useMemo(
+    () => (eqOn && view && vbWeights ? equityMatrix(view, vbWeights, eq.table) : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [eqOn, view, vbWeights, eq.table, eq.version],
+  );
   const vbCells = useMemo(
     () =>
       vbOn && view && vbWeights
@@ -1416,8 +1425,13 @@ export default function SopranozillaPage() {
                 activeStreet === 'flop' ? 'turn' : activeStreet === 'turn' ? 'river' : null
               }
               vb={vbOn}
+              eqMatrix={eqOn}
+              onToggleEqMatrix={() => {
+                setGridView((v) => (v === 'eq' ? 'normal' : 'eq'));
+                setOpenHand(null);
+              }}
               onToggleVb={() => {
-                setVbOn((v) => !v);
+                setGridView((v) => (v === 'vb' ? 'normal' : 'vb'));
                 setOpenHand(null);
               }}
             />
@@ -1444,7 +1458,8 @@ export default function SopranozillaPage() {
             )}
             <SzGrid
               cells={cells}
-              readOnly={vbOn}
+              readOnly={vbOn || eqOn}
+              eqMatrix={eqMatrixCells}
               vb={vbCells}
               onPaint={paintCell}
               onStrokeStart={() => checkpoint()}

@@ -10,6 +10,7 @@ import type { HandCategory, HandNotation } from '@/types/poker';
 import type { GridCell } from './viewModel';
 import type { VbCell } from './valueBluff';
 import { VB_COLORS } from './valueBluff';
+import { handEquityColor } from './equityColors';
 
 const AMBER = 'rgb(245 158 11)';
 /** The part that re-raises all-in (D135), like a solver's raise color. */
@@ -41,6 +42,8 @@ type CellProps = {
   vbValue: number | null;
   vbTie: number;
   vbBluff: number;
+  /** «Equity matrix» (D145): the hand's equity vs Hero (null = off, NaN = not in range). */
+  eqVal: number | null;
 };
 
 const Cell = memo(function Cell({
@@ -56,12 +59,19 @@ const Cell = memo(function Cell({
   vbValue,
   vbTie,
   vbBluff,
+  eqVal,
 }: CellProps) {
   const f = Math.round(follows * 1000) / 10;
   const r = Math.round(inRange * 1000) / 10;
   const s = Math.min(f, Math.round(shove * 1000) / 10);
   let background: string | undefined;
-  if (live > 0 && r > 0 && vbValue !== null) {
+  const matrix = eqVal !== null;
+  const eqShown = matrix && Number.isFinite(eqVal);
+  if (eqShown) {
+    background = `linear-gradient(${handEquityColor(eqVal)}, ${handEquityColor(eqVal)})`;
+  } else if (matrix) {
+    background = undefined;
+  } else if (live > 0 && r > 0 && vbValue !== null) {
     const v = Math.round(vbValue * 1000) / 10;
     const t = v + Math.round(vbTie * 1000) / 10;
     const b = Math.min(t + Math.round(vbBluff * 1000) / 10, 100);
@@ -79,12 +89,17 @@ const Cell = memo(function Cell({
         'relative flex aspect-square min-w-0 items-center justify-center rounded-[3px] text-[10px] font-medium leading-none transition-opacity sm:text-[11px]',
         EMPTY_BG[categoryOf(hand)],
         // Dark text on amber (white on amber is hard to read); white on the grey
-        // "in range" part; muted on empty cells.
-        follows >= 0.5
-          ? 'font-semibold text-slate-950'
-          : inRange > 0
-            ? 'text-white'
-            : 'text-content-muted',
+        // "in range" part; muted on empty cells. The equity matrix: dark text
+        // on its colors, blank cells (not in the range) faded out.
+        eqShown
+          ? 'flex-col font-semibold text-slate-950'
+          : matrix
+            ? 'text-content-muted opacity-40'
+            : follows >= 0.5
+              ? 'font-semibold text-slate-950'
+              : inRange > 0
+                ? 'text-white'
+                : 'text-content-muted',
         // Selected table row: its hands get a violet frame, the rest fade out.
         highlighted === false && 'opacity-15',
         highlighted === true && 'ring-2 ring-inset ring-violet-400',
@@ -98,11 +113,16 @@ const Cell = memo(function Cell({
       <span
         className={cn(
           'pointer-events-none',
-          follows < 0.5 && inRange > 0 && 'drop-shadow-[0_1px_1px_rgb(0_0_0/0.6)]',
+          !matrix && follows < 0.5 && inRange > 0 && 'drop-shadow-[0_1px_1px_rgb(0_0_0/0.6)]',
         )}
       >
         {hand}
       </span>
+      {eqShown && (
+        <span className="pointer-events-none text-[7px] font-medium leading-none tabular-nums sm:text-[8px]">
+          {(eqVal * 100).toFixed(2)}
+        </span>
+      )}
       {highlighted === true && categoryShare !== null && (
         // How much of the class the category explains (e.g. 2 of 4 combos).
         <span
@@ -131,6 +151,8 @@ type SzGridProps = {
   openHand: HandNotation | null;
   /** «Valor / Farol» (D140): per-hand groups; the grid is read-only meanwhile. */
   vb?: ReadonlyMap<HandNotation, VbCell> | null;
+  /** «Equity matrix» (D145): per-hand villain equity vs Hero; the grid is read-only. */
+  eqMatrix?: ReadonlyMap<HandNotation, number> | null;
 };
 
 function handAt(e: PointerEvent<HTMLDivElement>): HandNotation | null {
@@ -152,6 +174,7 @@ export function SzGrid({
   onOpen,
   openHand,
   vb = null,
+  eqMatrix = null,
 }: SzGridProps) {
   const painting = useRef<{ stroke: PaintStroke } | null>(null);
 
@@ -218,13 +241,14 @@ export function SzGrid({
           categoryShare={c.categoryShare}
           // «Valor / Farol» is a reading view: no row highlight (it dimmed the
           // rest of the grid) and no «painted by hand» frames.
-          highlighted={vb ? null : c.highlighted}
-          overridden={vb ? false : c.overridden}
+          highlighted={vb || eqMatrix ? null : c.highlighted}
+          overridden={vb || eqMatrix ? false : c.overridden}
           open={c.hand === openHand}
           shove={c.shove}
           vbValue={vb ? (vb.get(c.hand)?.value ?? 0) : null}
           vbTie={vb?.get(c.hand)?.tie ?? 0}
           vbBluff={vb?.get(c.hand)?.bluff ?? 0}
+          eqVal={eqMatrix ? (eqMatrix.get(c.hand) ?? Number.NaN) : null}
         />
       ))}
     </div>

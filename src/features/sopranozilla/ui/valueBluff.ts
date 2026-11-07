@@ -105,3 +105,30 @@ export function bluffsNeeded(s: Pick<VbSummary, 'value' | 'tie'>, need: number):
   if (!(need > 0) || need >= 1) return Number.NaN;
   return Math.max(0, (need * (s.value + s.tie) - s.tie / 2) / (1 - need));
 }
+
+/**
+ * «Equity matrix» (D145): per hand class, the villain's equity vs Hero's hand
+ * — the mean of its dealable combos in the shown range, weighted by their
+ * weight — like the user's reference tool. NaN when the hand is not in the
+ * range (blank cell) or its equity is still being computed.
+ */
+export function equityMatrix(
+  view: StreetView,
+  weights: ComboWeights,
+  eq: EqComboTable | null,
+): Map<HandNotation, number> {
+  const out = new Map<HandNotation, number>();
+  for (const hand of ALL_HANDS) {
+    let sw = 0;
+    let se = 0;
+    for (const id of combosOfClass(hand)) {
+      const w = weights[id] ?? 0;
+      const h = eq?.[id] ?? Number.NaN;
+      if (w <= 0 || view.liveMask[id] !== 1 || Number.isNaN(h)) continue;
+      sw += w;
+      se += w * (1 - h);
+    }
+    out.set(hand, sw > 0 ? se / sw : Number.NaN);
+  }
+  return out;
+}

@@ -5,7 +5,7 @@
 // that row's combos; the whole row at once is the violet control under the
 // grid (one job per control: the double click on these weights was dropped).
 
-import { ArrowLeftRight, Download, Paintbrush, Scale, Undo2, Upload } from 'lucide-react';
+import { ArrowLeftRight, Download, Grid3x3, Paintbrush, Scale, Undo2, Upload } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import type { Street } from '../engine/equity';
 import type { GridTarget } from '../store/analyzerStore';
@@ -43,6 +43,9 @@ type Props = {
   /** «Valor / Farol» (D140): the grid colors the range by what it does vs Hero. */
   vb: boolean;
   onToggleVb: () => void;
+  /** «Equity matrix» (D145): each hand colored by its equity vs Hero's hand. */
+  eqMatrix: boolean;
+  onToggleEqMatrix: () => void;
 };
 
 export function GridEditBar(p: Props) {
@@ -121,6 +124,20 @@ export function GridEditBar(p: Props) {
           )}
         >
           <Scale className="h-3.5 w-3.5" /> Valor / Farol
+        </button>
+        <button
+          type="button"
+          aria-pressed={p.eqMatrix}
+          onClick={p.onToggleEqMatrix}
+          title="Equity matrix: cada mano del rango con su equity contra tu mano, en colores (rojo = poca, amarillo = 50 %, verde = mucha). El grid no se edita mientras está activo."
+          className={cn(
+            'flex items-center gap-1 rounded-md border px-2 py-1 font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-light',
+            p.eqMatrix
+              ? 'border-amber-500/70 bg-amber-500/15 text-content'
+              : 'border-border text-content-muted hover:bg-surface-hover hover:text-content',
+          )}
+        >
+          <Grid3x3 className="h-3.5 w-3.5" /> Equity matrix
         </button>
         <span className="ml-auto flex gap-1">
           <button
