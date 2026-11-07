@@ -44,6 +44,16 @@ export function HoverCombos({ hand, cells, inTarget, targetLabel, mode, hint, vb
   const inRange = live.reduce((s, c) => s + c.inRange, 0);
   const follows = live.reduce((s, c) => s + c.follows, 0);
   const marked = inTarget ? live.filter((c) => inTarget.has(c.combo)).length : 0;
+  // Equity of the villain's combos vs Hero's hand, like a Flopzilla equity
+  // matrix (D143): per combo, and the plain mean of the dealable combos for
+  // the hand (88 = (9.39 + 9.39 + 4.90) / 3 = 7.89 %).
+  const comboEq = (combo: ComboCell['combo']) => {
+    const h = heroEq ? heroEq(combo) : Number.NaN;
+    return Number.isFinite(h) ? 1 - h : Number.NaN;
+  };
+  const eqs = live.map((c) => comboEq(c.combo)).filter((x) => Number.isFinite(x));
+  const handEq = eqs.length > 0 ? eqs.reduce((a, b) => a + b, 0) / eqs.length : Number.NaN;
+  const eq2 = (x: number) => `${(x * 100).toFixed(2)}%`;
 
   return (
     <div
@@ -62,6 +72,14 @@ export function HoverCombos({ hand, cells, inTarget, targetLabel, mode, hint, vb
                 className="ml-1 rounded bg-surface-hover px-1 font-semibold tabular-nums text-content"
               >
                 {Math.round((inRange / live.length) * 100)}%
+              </span>
+            )}
+            {Number.isFinite(handEq) && (
+              <span
+                title="Equity de la mano contra la tuya: promedio de sus combos que se pueden repartir (como la matriz de equity de Flopzilla)"
+                className="ml-1 tabular-nums"
+              >
+                eq. <b className="text-content">{eq2(handEq)}</b>
               </span>
             )}{' '}
             · en rango <span className="tabular-nums text-content">{inRange.toFixed(2)}</span> de{' '}
@@ -97,9 +115,11 @@ export function HoverCombos({ hand, cells, inTarget, targetLabel, mode, hint, vb
               const target = inTarget?.has(c.combo) ?? false;
               const kind = vb && !c.blocked && !out ? vb.kindOf(c.combo) : null;
               const vbWord = kind && vb ? ` · ${vb.words[kind]}` : '';
-              const e = heroEq && !c.blocked ? heroEq(c.combo) : Number.NaN;
-              const eqText = Number.isFinite(e) ? `${Math.round(e * 100)}%` : null;
-              const eqWord = eqText ? ` · tu equity ${eqText}` : '';
+              const e = c.blocked ? Number.NaN : comboEq(c.combo);
+              const eqText = Number.isFinite(e) ? eq2(e) : null;
+              const eqWord = eqText
+                ? ` · equity de este combo contra tu mano ${eqText} (la tuya ${eq2(1 - e)})`
+                : '';
               return (
                 <li
                   key={c.combo}
@@ -149,7 +169,7 @@ export function HoverCombos({ hand, cells, inTarget, targetLabel, mode, hint, vb
                   {/* Hero's equity vs this combo, now (the street on screen). */}
                   {eqText && !out && (
                     <span className="text-[10px] tabular-nums text-content-muted">
-                      tu eq. <span className="text-content">{eqText}</span>
+                      eq. <span className="text-content">{eqText}</span>
                     </span>
                   )}
                 </li>
