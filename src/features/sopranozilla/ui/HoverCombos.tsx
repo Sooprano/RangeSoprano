@@ -11,6 +11,7 @@ import { cn } from '@/lib/cn';
 import type { ComboId } from '../engine/combos';
 import type { ComboCell } from './viewModel';
 import type { VbKind } from './valueBluff';
+import { comboEquityColor, handEquityColor } from './equityColors';
 import { VB_COLORS } from './valueBluff';
 
 const SUIT_TEXT = [
@@ -79,7 +80,13 @@ export function HoverCombos({ hand, cells, inTarget, targetLabel, mode, hint, vb
                 title="Equity de la mano contra la tuya: promedio de sus combos que se pueden repartir (como la matriz de equity de Flopzilla)"
                 className="ml-1 tabular-nums"
               >
-                eq. <b className="text-content">{eq2(handEq)}</b>
+                eq.{' '}
+                <b
+                  className="rounded px-1 text-slate-950"
+                  style={{ backgroundColor: handEquityColor(handEq) }}
+                >
+                  {eq2(handEq)}
+                </b>
               </span>
             )}{' '}
             · en rango <span className="tabular-nums text-content">{inRange.toFixed(2)}</span> de{' '}
@@ -166,10 +173,21 @@ export function HoverCombos({ hand, cells, inTarget, targetLabel, mode, hint, vb
                       </span>
                     )}
                   </span>
-                  {/* Hero's equity vs this combo, now (the street on screen). */}
+                  {/* This combo's equity vs Hero's hand on the street on screen,
+                      colored vs the hand's mean (D144). */}
                   {eqText && !out && (
                     <span className="text-[10px] tabular-nums text-content-muted">
-                      eq. <span className="text-content">{eqText}</span>
+                      eq.{' '}
+                      <span
+                        className="font-semibold"
+                        style={
+                          Number.isFinite(handEq)
+                            ? { color: comboEquityColor(e, handEq) }
+                            : undefined
+                        }
+                      >
+                        {eqText}
+                      </span>
                     </span>
                   )}
                 </li>
