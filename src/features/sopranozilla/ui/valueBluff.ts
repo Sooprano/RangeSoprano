@@ -13,6 +13,26 @@ import type { EqComboTable, Street } from '../engine/equity';
 
 export type VbKind = 'value' | 'tie' | 'bluff';
 
+/**
+ * Who bets decides the words (D146): «Valor / Farol» is right when the
+ * villain bets and Hero decides whether to call; when Hero bets, the grid
+ * shows what CALLS him — «te paga y te gana / te paga y pierde»; otherwise
+ * (a check, the start range, the inverse) it is just who wins at showdown.
+ */
+export type VbContext = 'villain-bet' | 'hero-bet' | 'showdown';
+
+/** The three group names, per context and street. */
+export function vbLabels(context: VbContext, street: Street): Record<VbKind, string> {
+  if (street !== 'river') {
+    return { value: 'Te va ganando', tie: 'Disputada', bluff: 'Vas ganando' };
+  }
+  if (context === 'villain-bet') return { value: 'Valor', tie: 'Empate', bluff: 'Farol' };
+  if (context === 'hero-bet') {
+    return { value: 'Te paga y te gana', tie: 'Te paga y empata', bluff: 'Te paga y pierde' };
+  }
+  return { value: 'Te gana', tie: 'Empate', bluff: 'Le ganas' };
+}
+
 /** Soft enough to look at for a while on a dark background. */
 export const VB_COLORS = {
   value: 'rgb(248 113 113 / 0.8)', // red-400

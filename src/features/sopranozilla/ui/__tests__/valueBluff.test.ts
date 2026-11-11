@@ -62,3 +62,21 @@ describe('valor / farol (D140)', () => {
     expect(valueBluffSummary(view, w, null, 'river').pending).toBe(4.5);
   });
 });
+
+describe('the words depend on who bets (D146)', () => {
+  it('villain bets → valor / farol; Hero bets → what calls him; else showdown', async () => {
+    const { vbLabels } = await import('../valueBluff');
+    expect(vbLabels('villain-bet', 'river')).toEqual({
+      value: 'Valor',
+      tie: 'Empate',
+      bluff: 'Farol',
+    });
+    expect(vbLabels('hero-bet', 'river')).toEqual({
+      value: 'Te paga y te gana',
+      tie: 'Te paga y empata',
+      bluff: 'Te paga y pierde',
+    });
+    expect(vbLabels('showdown', 'river').value).toBe('Te gana');
+    expect(vbLabels('hero-bet', 'turn').value).toBe('Te va ganando');
+  });
+});

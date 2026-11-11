@@ -48,7 +48,14 @@ import type { OpenInSopranozillaState } from './OpenInSopranozillaButton';
 import { RangeLibraryDialog } from './RangeLibraryDialog';
 import { SpinsBar } from './SpinsBar';
 import { ValueBluffBar } from './ValueBluffBar';
-import { equityMatrix, valueBluffCells, valueBluffSummary, vbKindOf } from './valueBluff';
+import {
+  equityMatrix,
+  valueBluffCells,
+  valueBluffSummary,
+  vbKindOf,
+  vbLabels,
+  type VbContext,
+} from './valueBluff';
 import { CashBar } from './CashBar';
 import { cashRangeLabel, loadCashCatalog, type CashRange } from '../ranges/cashCatalog';
 import { loadSpinsCatalog, type SpinsRange } from '../ranges/spinsCatalog';
@@ -569,6 +576,16 @@ export default function SopranozillaPage() {
   // row): that is what the call is up against, whatever row the grid shows.
   const betRangeRow = st.mode === 'villain' ? view?.rows[CALL_ROW_ID] : undefined;
   const vbSummaryWeights = betRangeRow ?? vbWeights;
+  // D146: who bets names the groups (the villain's bet → valor / farol; Hero's
+  // bet → what calls him and wins / loses; otherwise who wins at showdown).
+  const vbContext: VbContext = betRangeRow
+    ? 'villain-bet'
+    : st.mode !== 'villain' &&
+        (selRow?.kind === 'bet' || selRow?.kind === 'raise') &&
+        !editingStart &&
+        !inverted
+      ? 'hero-bet'
+      : 'showdown';
   const vbSummary = useMemo(
     () =>
       view && vbSummaryWeights && (vbOn || activeStreet === 'river')
@@ -1439,12 +1456,15 @@ export default function SopranozillaPage() {
               <ValueBluffBar
                 street={activeStreet}
                 summary={vbSummary}
+                context={vbContext}
                 title={
                   betRangeRow
                     ? 'Su rango de apuesta'
-                    : editingStart
-                      ? `Rango al empezar el ${activeStreet}`
-                      : `Lo que sigue en «${actionLabel}»`
+                    : vbContext === 'hero-bet'
+                      ? `Lo que te paga «${actionLabel}»`
+                      : editingStart
+                        ? `Rango al empezar el ${activeStreet}`
+                        : `Lo que sigue en «${actionLabel}»`
                 }
                 call={
                   betRangeRow && pot !== undefined && pot > 0
@@ -1478,10 +1498,7 @@ export default function SopranozillaPage() {
                 vbOn
                   ? {
                       kindOf: (id) => vbKindOf(eq.table?.[id] ?? Number.NaN, activeStreet),
-                      words:
-                        activeStreet === 'river'
-                          ? { value: 'te gana (valor)', tie: 'empata', bluff: 'le ganas (farol)' }
-                          : { value: 'te va ganando', tie: 'disputada', bluff: 'vas ganando' },
+                      words: vbLabels(vbContext, activeStreet),
                     }
                   : null
               }

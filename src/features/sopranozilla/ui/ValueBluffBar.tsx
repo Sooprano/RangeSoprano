@@ -7,7 +7,15 @@
 
 import { cn } from '@/lib/cn';
 import type { Street } from '../engine/equity';
-import { bluffsNeeded, VB_AHEAD, VB_BEHIND, VB_COLORS, type VbSummary } from './valueBluff';
+import {
+  bluffsNeeded,
+  VB_AHEAD,
+  VB_BEHIND,
+  VB_COLORS,
+  vbLabels,
+  type VbContext,
+  type VbSummary,
+} from './valueBluff';
 
 type Props = {
   street: Street;
@@ -16,25 +24,30 @@ type Props = {
   title: string;
   /** Villain bets: the equity the call needs (pot odds) and the bet, in bb. */
   call: { need: number; bet: number } | null;
+  /** Who bets (D146): it names the groups and picks the line under them. */
+  context: VbContext;
 };
 
 const pct = (x: number) => `${Math.round(x * 100)}%`;
 const n = (x: number) =>
   x >= 10 ? Math.round(x).toString() : (Math.round(x * 10) / 10).toString();
 
-export function ValueBluffBar({ street, summary: s, title, call }: Props) {
+export function ValueBluffBar({ street, summary: s, title, call, context }: Props) {
   const total = s.value + s.tie + s.bluff;
   const river = street === 'river';
-  const label = river
-    ? { value: 'Valor', tie: 'Empate', bluff: 'Farol' }
-    : { value: 'Te va ganando', tie: 'Disputada', bluff: 'Vas ganando' };
-  const need = call && river ? bluffsNeeded(s, call.need) : Number.NaN;
+  const label = vbLabels(context, street);
+  const need = call && river && context === 'villain-bet' ? bluffsNeeded(s, call.need) : Number.NaN;
+  // Hero bets for value: vs checking behind, each worse call wins the bet and
+  // each better call loses it (a chop changes nothing) → worth it when more
+  // of what calls is worse than better.
+  const valueBet = river && context === 'hero-bet';
+  const worseShare = s.bluff + s.value > 0 ? s.bluff / (s.bluff + s.value) : Number.NaN;
   const diff = s.bluff - need;
 
   if (total <= 0) {
     return (
       <div className="mb-2 rounded-xl border border-border bg-surface/40 px-2.5 py-2 text-xs text-content-muted">
-        {s.pending > 0 ? 'Calculando valor y farol…' : `${title}: sin combos.`}
+        {s.pending > 0 ? 'Calculando…' : `${title}: sin combos.`}
       </div>
     );
   }
@@ -98,6 +111,29 @@ export function ValueBluffBar({ street, summary: s, title, call }: Props) {
             {diff >= 0
               ? `le sobran ${n(diff)}: pagar gana`
               : `le faltan ${n(-diff)}: hay sobre-valor, pagar pierde`}
+          </span>
+        </p>
+      )}
+      {valueBet && Number.isFinite(worseShare) && (
+        <p className="mt-1.5 border-t border-border pt-1.5 leading-snug text-content-muted">
+          Apostar por valor gana más que checkear si más de la mitad de lo que te paga es peor que
+          tu mano. Sin contar empates, le ganas al{' '}
+          <b className="tabular-nums text-content">{pct(worseShare)}</b> (
+          <span className="tabular-nums">
+            {n(s.bluff)} de {n(s.bluff + s.value)}
+          </span>
+          ){' · '}
+          <span
+            className={cn(
+              'font-semibold',
+              worseShare > 0.5
+                ? 'text-emerald-700 dark:text-emerald-300'
+                : 'text-rose-700 dark:text-rose-300',
+            )}
+          >
+            {worseShare > 0.5
+              ? 'te paga más peor que mejor: la apuesta de valor funciona'
+              : 'te paga más mejor que peor: apostar por valor pierde'}
           </span>
         </p>
       )}

@@ -113,7 +113,7 @@ export function GridEditBar(p: Props) {
           onClick={p.onToggleVb}
           title={
             p.street === 'river'
-              ? 'Valor / Farol: rojo = te gana (valor), verde = le ganas (farol), gris = empate. El grid no se edita mientras está activo.'
+              ? 'Rojo = te gana, verde = le ganas, gris = empate. Si el villano apuesta: valor / farol; si apuestas tú: lo que te paga y te gana / te paga y pierde. El grid no se edita mientras está activo.'
               : 'Por tu equity contra cada combo: rojo = te va ganando, verde = vas ganando, gris = disputada. El grid no se edita mientras está activo.'
           }
           className={cn(
