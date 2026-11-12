@@ -1,7 +1,7 @@
 // The last hand loaded in Sopranozilla, saved in localStorage (D3) so a
 // reload, or the "Abrir en Sopranozilla" button in /analisis, finds it.
-// Only the inputs are saved (cards, pots, range text, recorded action): the
-// edits of each row are not, every load starts again from the presets.
+// Only the inputs are saved (cards, pots, range text, recorded action); each
+// street's filtering is saved apart, keyed to the hand (`savedStreets.ts`, D148).
 
 import { z } from 'zod';
 import type { RangeSource } from '../adapters/villainRange';

@@ -44,6 +44,7 @@ import {
   writeRangeSource,
   type SavedHand,
 } from '../store/lastHand';
+import { handKey, readSavedStreets, writeSavedStreets } from '../store/savedStreets';
 import type { OpenInSopranozillaState } from './OpenInSopranozillaButton';
 import { RangeLibraryDialog } from './RangeLibraryDialog';
 import { SpinsBar } from './SpinsBar';
@@ -397,9 +398,55 @@ export default function SopranozillaPage() {
     if (!fromAnalysis && useAnalyzerStore.getState().hand) return;
     const saved = readLastHand();
     if (!saved || !loadSaved(saved)) loadDefaultTestHand(loadHand);
+    else if (!fromAnalysis) {
+      // A reload: each street's filtering as it was left (D148).
+      const s = useAnalyzerStore.getState();
+      const kept = s.hand ? readSavedStreets(handKey(s.hand, s.meta)) : null;
+      if (kept) s.restoreStreets(kept.streets, kept.activeStreet);
+    }
     // Clear the flag so going back and forth does not reload (and reset) the hand.
     if (fromAnalysis) void navigate('.', { replace: true, state: null });
   }, [fromAnalysis, loadHand, loadSaved, navigate]);
+
+  // Saves each street's filtering with the hand (D148): a moment after every
+  // change, and right away when the page goes (a reload right after an edit).
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const save = () => {
+      timer = null;
+      const s = useAnalyzerStore.getState();
+      if (s.hand) {
+        writeSavedStreets({
+          key: handKey(s.hand, s.meta),
+          activeStreet: s.activeStreet,
+          streets: s.streets,
+        });
+      }
+    };
+    const unsub = useAnalyzerStore.subscribe((s, prev) => {
+      if (
+        s.streets === prev.streets &&
+        s.activeStreet === prev.activeStreet &&
+        s.hand === prev.hand &&
+        s.meta === prev.meta
+      ) {
+        return;
+      }
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(save, 300);
+    });
+    const flush = () => {
+      if (!timer) return;
+      clearTimeout(timer);
+      save();
+    };
+    window.addEventListener('pagehide', flush);
+    return () => {
+      unsub();
+      window.removeEventListener('pagehide', flush);
+      flush();
+    };
+  }, []);
 
   const loadTestHand = (h: AnalyzerHandInput, v: ComboWeights, rangeText: string) => {
     loadHand(h, v);

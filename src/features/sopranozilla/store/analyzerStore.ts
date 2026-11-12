@@ -443,6 +443,8 @@ type AnalyzerActions = {
   clearStartOverride: (street: Street) => void;
   /** «Inv» (D132): show / chain what does NOT pass this row of the active street. */
   toggleInverse: (rowId: string) => void;
+  /** Puts back each street's filtering saved for this hand (D148, after a reload). */
+  restoreStreets: (streets: Record<Street, AnalyzerStreetState>, activeStreet: Street) => void;
   /** Effective stack behind on the active street, typed by hand (null = from the hand). */
   setEffStack: (bb: number | null) => void;
   /**
@@ -842,6 +844,19 @@ export const useAnalyzerStore = create<AnalyzerStore>()((set, get) => {
           ...streets,
           [activeStreet]: capBetSizes({ ...st, effStackBb: v }, activeStreet, max),
         },
+      });
+    },
+
+    restoreStreets: (streets, activeStreet) => {
+      const { hand } = get();
+      if (!hand) return;
+      history = [];
+      lastKey = null;
+      set({
+        streets,
+        undoDepth: 0,
+        selectedCategory: null,
+        activeStreet: availableStreets(hand).includes(activeStreet) ? activeStreet : 'flop',
       });
     },
 
