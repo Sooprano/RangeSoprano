@@ -15,6 +15,7 @@
 |---|---|
 | Fase 62g — Sopranozilla: `VbContext` + `vbLabels` en `ui/valueBluff.ts`, prop `context` y línea de apuesta de valor en `ValueBluffBar`, `vbContext` en la página (villain-bet / hero-bet / showdown). D146. | `9ceb9c2` → `52e7cde` |
 | Fase 62h — Sopranozilla: `maxBetPct` + `capBetSizes` en `store/analyzerStore.ts` (fila `bet-allin`; loadHand, «+ Tamaño», apuesta del villano y stack a mano). D147. | `b3a0a52` → `d7d31aa` |
+| Fase 62i — Sopranozilla: `store/savedStreets.ts` (schema + `handKey`), `restoreStreets` en el store, guardado con debounce + `pagehide` y restauración al recargar en `SopranozillaPage`. D148. | `947b862` → `88e6032` |
 | Fase 62f — Sopranozilla: «Equity matrix» (`equityMatrix` en `ui/valueBluff.ts`, `eqVal` en `SzGrid`, botón en `GridEditBar`, `gridView` en la página). D145. | `52a71b8` → `9f79599` |
 | Fase 62e — Sopranozilla: colores de equity en `HoverCombos` (`ui/equityColors.ts`: `handEquityColor` absoluto, `comboEquityColor` relativo al promedio de la mano). D144. | `6f7b2cb` → `78a2153` |
 | Fase 62d — Sopranozilla: `HoverCombos` muestra la equity del combo del villano (1 − la de Hero, `comboEq`) con 2 decimales y el promedio de la mano (`handEq`), como la matriz de Flopzilla. D143. | `d0eb69b` → `0c77ea2` |
