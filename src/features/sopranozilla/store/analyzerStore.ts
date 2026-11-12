@@ -100,6 +100,94 @@ function betRow(size: number): ActionRow {
   return { id: betRowId(size), label: `Bet ${size}%`, kind: 'bet', size, mode: 'hero' };
 }
 
+/** Hero's all-in row (D147): one per street, its size follows the stack. */
+export const ALL_IN_ROW_ID = 'bet-allin';
+
+function allInRow(pct: number): ActionRow {
+  return { id: ALL_IN_ROW_ID, label: `All-in ${Math.round(pct)}%`, kind: 'bet', size: pct, mode: 'hero' };
+}
+
+/**
+ * The biggest bet the effective stack allows on a street, in % of the pot
+ * (D147); null when the pot or the stack is unknown (test hand).
+ */
+export function maxBetPct(
+  pot: number | null | undefined,
+  stack: number | null | undefined,
+): number | null {
+  if (pot == null || stack == null || !(pot > 0) || !(stack > 0)) return null;
+  return Math.round((stack / pot) * 10000) / 100;
+}
+
+/**
+ * Caps Hero's bet sizes at the effective stack (D147): sizes that do not fit
+ * go and an «All-in N%» row takes their place (and their state when one of
+ * them was played / recorded). The all-in row keeps its id, so a new stack
+ * only moves its size. Villain's bet is capped too. `forceAllIn` adds the
+ * all-in row even if nothing is over the stack («+ Tamaño» past the stack).
+ */
+export function capBetSizes(
+  st: AnalyzerStreetState,
+  street: Street,
+  max: number | null,
+  forceAllIn = false,
+): AnalyzerStreetState {
+  if (max === null) return st;
+  const over = (r: ActionRow) =>
+    r.kind === 'bet' && r.id !== ALL_IN_ROW_ID && (r.size ?? 0) >= max - 0.5;
+  const gone = new Set(st.actionRows.filter(over).map((r) => r.id));
+  const hasAllIn = st.actionRows.some((r) => r.id === ALL_IN_ROW_ID);
+  const villainBetPct = Math.min(st.villainBetPct, Math.max(1, Math.round(max)));
+  if (gone.size === 0 && !hasAllIn && !forceAllIn) {
+    return villainBetPct === st.villainBetPct ? st : { ...st, villainBetPct };
+  }
+  const moved = (id: string) => (gone.has(id) ? ALL_IN_ROW_ID : id);
+  // The all-in row inherits the state of a dropped row that was played.
+  const heir = [st.playedRow, st.recordedRow, st.modeMemory.hero.playedRow].find(
+    (id): id is string => id !== null && gone.has(id),
+  );
+  const drop = <T,>(m: Record<string, T>) =>
+    Object.fromEntries(Object.entries(m).filter(([k]) => !gone.has(k)));
+  const rows = drop(st.rows);
+  const presets = drop(st.presets);
+  const presetRefs = drop(st.presetRefs);
+  if (!hasAllIn) {
+    if (heir !== undefined) {
+      rows[ALL_IN_ROW_ID] = st.rows[heir]!;
+      presets[ALL_IN_ROW_ID] = st.presets[heir]!;
+      presetRefs[ALL_IN_ROW_ID] = st.presetRefs[heir]!;
+    } else {
+      const p = betPreset(street, Math.round(max), 'call', ACTIVE_PRESETS);
+      rows[ALL_IN_ROW_ID] = p.row;
+      presets[ALL_IN_ROW_ID] = p.row;
+      presetRefs[ALL_IN_ROW_ID] = p.ref;
+    }
+  }
+  const kept = st.actionRows.filter((r) => !gone.has(r.id) && r.id !== ALL_IN_ROW_ID);
+  const heroRows = [...kept.filter((r) => (r.mode ?? 'hero') === 'hero'), allInRow(max)].sort(
+    (a, b) => (a.kind === 'check' ? -1 : b.kind === 'check' ? 1 : (a.size ?? 0) - (b.size ?? 0)),
+  );
+  return {
+    ...st,
+    actionRows: [...heroRows, ...kept.filter((r) => (r.mode ?? 'hero') !== 'hero')],
+    rows,
+    presets,
+    presetRefs,
+    invertedRows: (st.invertedRows ?? []).filter((r) => !gone.has(r)),
+    selectedRow: moved(st.selectedRow),
+    playedRow: moved(st.playedRow),
+    recordedRow: st.recordedRow === null ? null : moved(st.recordedRow),
+    modeMemory: {
+      hero: {
+        selectedRow: moved(st.modeMemory.hero.selectedRow),
+        playedRow: moved(st.modeMemory.hero.playedRow),
+      },
+      villain: st.modeMemory.villain,
+    },
+    villainBetPct,
+  };
+}
+
 /** Where a row's initial state came from, for the preset band. */
 export type PresetRef =
   | { kind: 'check' }
@@ -224,12 +312,17 @@ export function defaultStreetState(
   };
 }
 
-function defaultStreets(recorded: RecordedStreets = {}): Record<Street, AnalyzerStreetState> {
-  return {
-    flop: defaultStreetState('flop', recorded.flop),
-    turn: defaultStreetState('turn', recorded.turn),
-    river: defaultStreetState('river', recorded.river),
-  };
+function defaultStreets(
+  recorded: RecordedStreets = {},
+  hand: AnalyzerHandInput | null = null,
+): Record<Street, AnalyzerStreetState> {
+  const of = (street: Street) =>
+    capBetSizes(
+      defaultStreetState(street, recorded[street]),
+      street,
+      maxBetPct(hand?.pots?.[street], hand?.stacks?.[street]),
+    );
+  return { flop: of('flop'), turn: of('turn'), river: of('river') };
 }
 
 /** Where the loaded hand came from, shown above the analyzer. */
@@ -443,7 +536,7 @@ export const useAnalyzerStore = create<AnalyzerStore>()((set, get) => {
         villainPreflop: recordFromWeights(villainPreflop),
         recorded: opts?.recorded ?? {},
         meta: opts?.meta ?? null,
-        streets: defaultStreets(opts?.recorded),
+        streets: defaultStreets(opts?.recorded, hand),
         activeStreet: 'flop',
         selectedCategory: null,
       });
@@ -486,8 +579,17 @@ export const useAnalyzerStore = create<AnalyzerStore>()((set, get) => {
     addBetSize: (size) => {
       if (!Number.isFinite(size) || size <= 0) return;
       const rounded = Math.round(size);
-      const { streets, activeStreet } = get();
+      const { streets, activeStreet, hand } = get();
       const st = streets[activeStreet];
+      // Past the effective stack it is the all-in (D147).
+      const max = maxBetPct(
+        hand?.pots?.[activeStreet],
+        st.effStackBb ?? hand?.stacks?.[activeStreet],
+      );
+      if (max !== null && rounded >= max - 0.5) {
+        set({ streets: { ...streets, [activeStreet]: capBetSizes(st, activeStreet, max, true) } });
+        return;
+      }
       const id = betRowId(rounded);
       if (st.rows[id]) return;
       const { row, ref } = betPreset(activeStreet, rounded, 'call', ACTIVE_PRESETS);
@@ -533,10 +635,16 @@ export const useAnalyzerStore = create<AnalyzerStore>()((set, get) => {
 
     setVillainBet: (pct) => {
       if (!Number.isFinite(pct) || pct <= 0) return;
-      const { streets, activeStreet } = get();
+      const { streets, activeStreet, hand } = get();
       const st = streets[activeStreet];
+      // Never more than the effective stack (D147).
+      const max = maxBetPct(
+        hand?.pots?.[activeStreet],
+        st.effStackBb ?? hand?.stacks?.[activeStreet],
+      );
+      const v = max === null ? Math.round(pct) : Math.min(Math.round(pct), Math.max(1, Math.round(max)));
       set({
-        streets: { ...streets, [activeStreet]: { ...st, villainBetPct: Math.round(pct) } },
+        streets: { ...streets, [activeStreet]: { ...st, villainBetPct: v } },
       });
     },
 
@@ -726,7 +834,15 @@ export const useAnalyzerStore = create<AnalyzerStore>()((set, get) => {
       const { streets, activeStreet } = get();
       const st = streets[activeStreet];
       const v = bb !== null && Number.isFinite(bb) && bb > 0 ? Math.round(bb * 100) / 100 : null;
-      set({ streets: { ...streets, [activeStreet]: { ...st, effStackBb: v } } });
+      const { hand } = get();
+      // A new stack moves the all-in and drops the sizes past it (D147).
+      const max = maxBetPct(hand?.pots?.[activeStreet], v ?? hand?.stacks?.[activeStreet]);
+      set({
+        streets: {
+          ...streets,
+          [activeStreet]: capBetSizes({ ...st, effStackBb: v }, activeStreet, max),
+        },
+      });
     },
 
     toggleInverse: (rowId) => {
